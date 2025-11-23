@@ -1,0 +1,99 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a9b23c352b96ca40a65cef0e81e0d73, type: 3}
+  m_Name: TestConfigContainerSO
+  m_EditorClassIdentifier: 
+  Configs:
+  - Name: 
+    Id: 1
+    Count: 10
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 2
+    Count: 20
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 3
+    Count: 30
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 4
+    Count: 40
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 5
+    Count: 50
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 6
+    Count: 60
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 7
+    Count: 70
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 8
+    Count: 80
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 9
+    Count: 90
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 10
+    Count: 100
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 11
+    Count: 110
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 12
+    Count: 120
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 13
+    Count: 130
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 14
+    Count: 140
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 15
+    Count: 150
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 16
+    Count: 160
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 17
+    Count: 170
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 18
+    Count: 180
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 19
+    Count: 190
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 20
+    Count: 200
+    Recipes: 0100000002000000030000000400000005000000
+  - Name: 
+    Id: 21
+    Count: 210
+    Recipes: 0100000002000000030000000400000005000000

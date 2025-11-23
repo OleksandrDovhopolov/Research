@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17a59e50860f614479a387d5bceec771, type: 3}
+  m_Name: DefaultCsvLoader
+  m_EditorClassIdentifier: 
+  _clientSecretFileName: client_secret.json
+  _saveFolder: Resources
+  _tableCode: 1a9EHFUvuSAFBAiD7HYh1u5IgngN6QtZCxiKZLbrvG4w
+  _relativeTableCode: 1a9EHFUvuSAFBAiD7HYh1u5IgngN6QtZCxiKZLbrvG4w
+  loaderPipeline: {fileID: 11400000, guid: 1075e26192c2b504e8060d588fefe362, type: 2}
+  saveStrategy: {fileID: 11400000, guid: 15a54d5a88c1bf341b4951825b88e3e7, type: 2}
+  _csvTableInfos:
+  - {fileID: 11400000, guid: cbb738dad52cd6849bb1072bd4d8c7ee, type: 2}
+  - {fileID: 11400000, guid: d15f262aeaff64044bf45cb45f5979ff, type: 2}
