@@ -21,13 +21,20 @@ MonoBehaviour:
     m_Address: SettingsWindow
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2d7a41fb5aea44a4db537ecdc7c0d25a
+    m_Address: CardGroupWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a1cd2d916a299c64a8e60b385e9f1683
     m_Address: CardCollectionWindow
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: c7236b2e70f2a9f4eb9a1c78df452a70, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: f9d15bdba74bedb46a6c0b397da14061, type: 2}
     - {fileID: 11400000, guid: f0ce846738eee964e83c544dc75faf6a, type: 2}
+    - {fileID: 11400000, guid: f9d15bdba74bedb46a6c0b397da14061, type: 2}
