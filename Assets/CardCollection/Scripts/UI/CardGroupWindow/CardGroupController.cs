@@ -12,7 +12,7 @@ namespace core
         }
     }
     
-    [Window("CardGroupWindow")]
+    [Window("CardGroupWindow", WindowType.Popup)]
     public class CardGroupController :  WindowController<CardGroupView>
     {
         private UIManager _uiManager;

@@ -37,7 +37,7 @@ namespace core
         private void OpenGroupWindow()
         {
             var args = new CardGroupArgs(Args.UiManager);
-            Args.UiManager.Show<CardGroupController>(args, UIShowCommand.UIShowType.Ordered);
+            Args.UiManager.Show<CardGroupController>(args);
         }
     }
 }
