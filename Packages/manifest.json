@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.coffee.ui-particle": "https://github.com/mob-sakai/ParticleEffectForUGUI.git#4.11.3",
     "com.dovhopolov.cheatmodule": "https://github.com/OleksandrDovhopolov/CheatModule.git",
     "com.dovhopolov.csvloader": "https://github.com/OleksandrDovhopolov/CsvLoader.git",
     "com.dovhopolov.uisystem": "https://github.com/OleksandrDovhopolov/UISystem.git",
