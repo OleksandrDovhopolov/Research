@@ -10,6 +10,7 @@ namespace core
         public event Action OnButtonPressed;
         
         [SerializeField] private Button _openGroupWindowButton;
+        [SerializeField] public Sprite Sprite;
         
         protected override void Awake()
         {

@@ -24,6 +24,14 @@ namespace core
             SetStars(starsCount);
         }
 
+        public void Configure(CardModel cardModel)
+        {
+            SetCardSprite(cardModel.Sprite);
+            SetContainersActive(cardModel.Collected);
+            SetCardName(cardModel.CardName);
+            SetStars(cardModel.StarsCount);
+        }
+        
         private void SetCardSprite(Sprite sprite)
         {
             _cardImage.sprite  = sprite;

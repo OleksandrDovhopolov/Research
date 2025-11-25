@@ -12,6 +12,9 @@ namespace core
         [SerializeField] private Button _button;
         [SerializeField] private Button _cheatButton;
 
+        private CollectionService _collectionService;
+        private CollectionService CollectionService => _collectionService ??= new CollectionService();
+        
         private void Awake()
         {
             Application.targetFrameRate = 60;
@@ -30,17 +33,14 @@ namespace core
 
         private void OpenSettings()
         {
-            /*var args = new SettingsArgs(_uiManager);
-            _uiManager.Show<SettingsPopupController>(args);*/
-            
-            
-            var args = new CardCollectionArgs(_uiManager);
+            var cardsData = CollectionService.Cards;
+            var args = new CardCollectionArgs(_uiManager, cardsData);
             _uiManager.Show<CardCollectionController>(args);
         }
 
         private void OpenCheatsPanel()
         {
-            var collectionService = new CollectionService();
+            CollectionService.PrintData();
             //_researchCheatModule.OpenCheatPanel();
         }
         

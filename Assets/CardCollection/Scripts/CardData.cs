@@ -41,7 +41,6 @@ namespace core
     [Serializable]
     public class CardData
     {
-        
         [JsonProperty("id")] 
         public int CardId;
 

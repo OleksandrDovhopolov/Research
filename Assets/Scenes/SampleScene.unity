@@ -221,6 +221,10 @@ PrefabInstance:
       propertyPath: m_MatchWidthOrHeight
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 1466821343620153976, guid: b217eb8861cfdc346a019946f8c837ec, type: 3}
+      propertyPath: m_ReferenceResolution.x
+      value: 1920
+      objectReference: {fileID: 0}
     - target: {fileID: 1466821343620153977, guid: b217eb8861cfdc346a019946f8c837ec, type: 3}
       propertyPath: m_AdditionalShaderChannelsFlag
       value: 25
