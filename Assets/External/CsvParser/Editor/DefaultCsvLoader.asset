@@ -19,5 +19,5 @@ MonoBehaviour:
   loaderPipeline: {fileID: 11400000, guid: 1075e26192c2b504e8060d588fefe362, type: 2}
   saveStrategy: {fileID: 11400000, guid: 15a54d5a88c1bf341b4951825b88e3e7, type: 2}
   _csvTableInfos:
-  - {fileID: 11400000, guid: cbb738dad52cd6849bb1072bd4d8c7ee, type: 2}
+  - {fileID: 11400000, guid: cebf3837aa8bdf14f97418eb5abb1a89, type: 2}
   - {fileID: 11400000, guid: d15f262aeaff64044bf45cb45f5979ff, type: 2}
