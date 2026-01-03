@@ -11,7 +11,9 @@ namespace core
         [SerializeField] private ResearchCheatModule _researchCheatModule;
         [SerializeField] private Button _button;
         [SerializeField] private Button _cheatButton;
-
+        
+        private readonly Lazy<CollectionService> _collectionService = new(() => new CollectionService());
+        
         private void Awake()
         {
             Application.targetFrameRate = 60;
@@ -40,7 +42,7 @@ namespace core
 
         private void OpenCheatsPanel()
         {
-            var collectionService = new CollectionService();
+            _collectionService.Value.PrintData();
             //_researchCheatModule.OpenCheatPanel();
         }
         

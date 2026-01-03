@@ -33,18 +33,17 @@ namespace core
                 CollectionName = "DefaultCollection",
                 Cards = cards
             };
+        }
 
+        public void PrintData()
+        {
             Debug.Log($"Loaded {_cardCollectionData.Cards.Count} cards!");
 
             foreach (var cardData in _cardCollectionData.Cards)
             {
-                Debug.LogWarning(
-                    $"CardId: {cardData.CardId}, " +
-                    $"Name: {cardData.CardName}, " +
-                    $"Group: {cardData.GroupType}, " +
-                    $"Stars: {cardData.Stars}, " +
-                    $"Premium: {cardData.PremiumCard}"
-                );
+                Debug.LogWarning($"CardId: {cardData.CardId}, " + $"Name: {cardData.CardName}, " +
+                                 $"Group: {cardData.GroupType}, " + $"Stars: {cardData.Stars}, " +
+                                 $"Premium: {cardData.PremiumCard}");
             }
         }
     }

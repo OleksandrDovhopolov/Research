@@ -3,6 +3,7 @@
     "com.dovhopolov.cheatmodule": "https://github.com/OleksandrDovhopolov/CheatModule.git",
     "com.dovhopolov.csvloader": "https://github.com/OleksandrDovhopolov/CsvLoader.git",
     "com.dovhopolov.uisystem": "https://github.com/OleksandrDovhopolov/UISystem.git",
+	"com.coffee.ui-particle": "https://github.com/mob-sakai/ParticleEffectForUGUI.git#4.9.0",
     "com.unity.addressables": "1.22.2",
     "com.unity.ai.navigation": "1.1.5",
     "com.unity.collab-proxy": "2.5.2",
