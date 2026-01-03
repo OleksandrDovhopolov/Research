@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,6 +15,8 @@ namespace core
         
         private readonly Lazy<CollectionService> _collectionService = new(() => new CollectionService());
         
+        private ConfigManager _configManager;
+        
         private void Awake()
         {
             Application.targetFrameRate = 60;
@@ -21,6 +24,8 @@ namespace core
 
         private void Start()
         {
+            LoadConfig().Forget();
+            
             WindowFactoryBase windowFactoryBase = new WindowFactoryDI(_uiManager);
             UIManagerEventHandlerBase eventHandler = new UIManagerSignalHandler();
             
@@ -30,6 +35,27 @@ namespace core
             _cheatButton.onClick.AddListener(OpenCheatsPanel);
         }
 
+        private async UniTask LoadConfig()
+        {
+            if (_configManager != null) return;
+            
+            _configManager = new ConfigManager();
+            var configStorages = _configManager.GetAllConfigStorages();
+            foreach (var configStorage in configStorages)
+            {
+                configStorage.Configurate(_configManager);
+            }
+            
+            var groudId = "cardGroups";
+            //_configManager.GetConfigFile(groudId).CurLoader = ConfigManager.LocalLoader;
+            _configManager.GetConfigFile(groudId).CurLoader = ConfigManager.ResourcesLoader;
+            
+            
+            Debug.LogWarning($"Start Config Load");
+            await _configManager.ApplyParsedConfigs(configStorages);
+            Debug.LogWarning($"Complete Config Load");
+        }
+        
         private void OpenSettings()
         {
             /*var args = new SettingsArgs(_uiManager);
