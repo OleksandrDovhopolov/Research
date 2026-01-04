@@ -8,8 +8,9 @@ namespace core
     {
         [JsonProperty("id")] public string Id;
         [JsonProperty("cardName")] public string CardName;
-        [JsonProperty("groupType")] public CardCollectionGroups GroupType;
+        [JsonProperty("groupType")] public string GroupType;
         [JsonProperty("stars")] public int Start;
         [JsonProperty("premiumCard")] public bool PremiumCard;
+        [JsonProperty("icon")] public string Icon;
     }
 }

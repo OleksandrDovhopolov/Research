@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -16,18 +15,15 @@ namespace core
         
         private void LoadCardCollection()
         {
-            // Загружаем файл из Resources
-            TextAsset jsonFile = Resources.Load<TextAsset>("cardCollection");
+            var jsonFile = Resources.Load<TextAsset>("cardCollection");
             if (jsonFile == null)
             {
                 Debug.LogError("cards.json not found in Resources!");
                 return;
             }
 
-            // Десериализуем список карт
-            List<CardData> cards = JsonConvert.DeserializeObject<List<CardData>>(jsonFile.text);
+            var cards = JsonConvert.DeserializeObject<List<CardData>>(jsonFile.text);
 
-            // Собираем коллекцию
             _cardCollectionData = new CardCollectionData
             {
                 CollectionName = "DefaultCollection",

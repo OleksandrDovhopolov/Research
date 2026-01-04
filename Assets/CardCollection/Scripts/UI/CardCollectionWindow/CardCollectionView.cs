@@ -15,7 +15,7 @@ namespace core
         [SerializeField] private UIListPool<CardsCollectionView> _cardGroupsPool;
         [SerializeField] private GameObject _loadingAnimationObject;
         
-        private Dictionary<string, CardsCollectionView> _viewsDict = new();
+        private readonly Dictionary<string, CardsCollectionView> _viewsDict = new();
         
         protected override void Awake()
         {
@@ -41,32 +41,13 @@ namespace core
                 var collectedGroupAmount = 0;
                 
                 groupView.SetData(groupType, groupName, collectedGroupAmount.ToString());
+                groupView.OnButtonPressed += OnButtonPressedHandler;
                 _viewsDict.Add(groupsConfig.Id, groupView);
             }
         }
         
         public async UniTask CreateGroupViews(List<CardGroupsConfig> groupsData)
         {
-            /*if (_groupsCreated) return;
-            _groupsCreated = true;
-            
-            Debug.LogWarning($"ShowLoader called : groupsData {groupsData.Count}");
-            _cardGroupsPool.DisableNonActive();
-
-            _viewsDict.Clear();
-            
-            foreach (var groupsConfig in groupsData)
-            {
-                var groupView = _cardGroupsPool.GetNext();
-                
-                var groupType = groupsConfig.GroupType;
-                var groupName = groupsConfig.GroupName;
-                var collectedGroupAmount = 0;
-                
-                groupView.SetData(groupType, groupName, collectedGroupAmount.ToString(), null);
-                _viewsDict.Add(groupsConfig.Id, groupView);
-            }*/
-            
             var loadTasks = groupsData.Select(async config => {
                     try 
                     {
@@ -84,10 +65,15 @@ namespace core
             await UniTask.WaitForSeconds(2f);
         }
         
+        private void OnButtonPressedHandler(string groupType)
+        {
+            var cardConfigs = CardCollectionConfigStorage.Instance.Get(groupType);
+            Debug.LogWarning($"Debug groupType {groupType}, cardConfigs {cardConfigs.Count}");
+        }
+        
         public void ShowLoader(bool show)
         {
             _loadingAnimationObject.gameObject.SetActive(show);
-            Debug.LogWarning($"ShowLoader called : show {show}");
         }
         
         private void OnButtonClicked()
@@ -98,6 +84,11 @@ namespace core
         protected override void OnDestroy()
         {
             base.OnDestroy();
+
+            foreach (var view in _viewsDict.Values)
+            {
+                view.OnButtonPressed -= OnButtonPressedHandler;
+            }
             
             _openGroupWindowButton.onClick.AddListener(OnButtonClicked);
         }

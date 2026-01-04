@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
-using Newtonsoft.Json;
 using UnityEngine;
 
 namespace core
@@ -41,8 +40,6 @@ namespace core
         [CanBeNull]
         public ConfigFileMeta GetConfigFile(string id, bool includeOverrides = false)
         {
-            Debug.LogWarning($"_configFiles {_configFiles.Count}");
-            Debug.LogWarning($"_configFilesWithOverrides {_configFilesWithOverrides.Count}");
             var targetDict = includeOverrides ? _configFilesWithOverrides : _configFiles;
             return targetDict.GetValueOrDefault(id);
         }
@@ -93,6 +90,7 @@ namespace core
             if (_configStorages.Count > 0) return _configStorages;
 
             _configStorages.Add(CardGroupsConfigStorage.Instance);
+            _configStorages.Add(CardCollectionConfigStorage.Instance);
 
             return _configStorages;
         }

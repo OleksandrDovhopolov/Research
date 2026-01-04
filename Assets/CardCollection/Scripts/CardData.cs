@@ -3,26 +3,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace core
-{
-    public enum CardCollectionGroups
-    {
-        Farming,
-        Worksite,
-        Railroads,
-        Factories,
-        NextDoor,
-        Delivery,
-        Mining,
-        Picnic,
-        FarmStore,
-        Animals,
-        Museum,
-        Cafe,
-        BigCity,
-        Park,
-        TownHall
-    }
-    
+{    
     [Serializable]
     public class CardCollectionData 
     {
@@ -30,18 +11,9 @@ namespace core
         public List<CardData> Cards;
     }
 
-    /*[Serializable]
-    public class CollectionGroup
-    {
-        public int GroupId;
-        public CardCollectionGroups Gropu;
-        public List<CardData> GroupCollection;
-    }*/
-
     [Serializable]
     public class CardData
     {
-        
         [JsonProperty("id")] 
         public int CardId;
 
@@ -49,7 +21,7 @@ namespace core
         public string CardName;
 
         [JsonProperty("groupType")] 
-        public CardCollectionGroups GroupType;
+        public string GroupType;
 
         [JsonProperty("stars")] 
         public int Stars;

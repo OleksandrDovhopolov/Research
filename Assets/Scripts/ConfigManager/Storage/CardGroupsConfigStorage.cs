@@ -7,10 +7,7 @@ namespace core
     {
         public string DefaultConfigFileName => "cardGroups"; 
         private string OverrideName => "cardGroups_override";
-
-        private CardGroupsConfig _config;
-
-        //public Dictionary<string, CardGroupsConfig> Data { get; } = new();
+        
         public List<CardGroupsConfig> Data { get; } = new();
 
         public CardGroupsConfig Get(string id)

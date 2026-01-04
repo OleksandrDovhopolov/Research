@@ -27,13 +27,53 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1a446817ead67a04c8cdc20caf74a5a1
+    m_Address: Element3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2034a4cbbf9d7e84286e2841b6b04b31
+    m_Address: Element4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 20ed937f10179304cb76b9844912c748
+    m_Address: Element2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 216e8523bf73c4e4496ca9542e2dc639
     m_Address: icon_scale
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 21fd7d615c8ecc24e8598309ce5eed08
+    m_Address: Element6
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 36b90eee0f43a0143871654a95c9e79d
+    m_Address: Element10
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3798c685d88fb864cbcc8af5a848fd87
+    m_Address: Element7
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 39db44b7820e8c640a820e9b1992424e
     m_Address: icon_megaphone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3b50de33cca154445858648d7aa3fed0
+    m_Address: Element5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 489ed91ed2ef77644a3faa9312b520b6
+    m_Address: Element9
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -57,6 +97,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 624915b2e2b8c5d4e93d5bb2abfe531a
+    m_Address: Element1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 693e7d0a7a3dadb4eaf00d59592e11c4
     m_Address: icon_potion_purple
     m_ReadOnly: 0
@@ -74,6 +119,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a98788304d20d7a40abf0bfb21621789
     m_Address: icon_potion_red
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1525d006a890f446b6ab6257a082a01
+    m_Address: Element8
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
