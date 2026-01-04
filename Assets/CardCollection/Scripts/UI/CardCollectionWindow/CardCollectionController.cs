@@ -20,50 +20,42 @@ namespace core
     {
         private CardCollectionArgs Args => (CardCollectionArgs) Arguments;
         
+        
+        private bool _groupsCreated;
+        
         protected override void OnShowStart()
         {
-            //var groupsConfigs = CardGroupsConfigStorage.Instance.Data;
-            CreateGroupViews().Forget(); // Fire & forget ✅
-            /*View.ShowLoader(true); 
-    
-            try 
-            {
-                await View.CreateGroupViews(groupsConfigs);
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Failed to load groups: {e}");
-            }
-            finally 
-            {
-                View.ShowLoader(false); 
-            }*/
-        }
-        
-        private async UniTask CreateGroupViews()
-        {
-            var groupsConfigs = CardGroupsConfigStorage.Instance.Data;
+            if (_groupsCreated) return;
             
             View.ShowLoader(true); 
-    
-            try 
-            {
-                await View.CreateGroupViews(groupsConfigs);
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Failed to load groups: {e}");
-            }
-            finally 
-            {
-                View.ShowLoader(false); 
-            }
+            View.CreateViews(CardGroupsConfigStorage.Instance.Data);
+            //CreateGroupViews().Forget();
         }
         
         protected override void OnShowComplete()
         {
             View.CloseClick += CloseWindow;
             View.OnButtonPressed += OpenGroupWindow;
+            
+            if (_groupsCreated) return;
+            CreateGroupViews().Forget();
+        }
+
+        private async UniTask CreateGroupViews()
+        {
+            try
+            {
+                await View.CreateGroupViews(CardGroupsConfigStorage.Instance.Data);
+                _groupsCreated = true;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Failed to load groups: {e}");
+            }
+            finally
+            {
+                View.ShowLoader(false);
+            }
         }
         
         protected override void OnHideStart(bool isClosed)

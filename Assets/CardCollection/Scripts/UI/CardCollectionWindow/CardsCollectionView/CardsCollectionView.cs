@@ -30,12 +30,11 @@ namespace core
             OnButtonPressed?.Invoke(_groupType);
         }
         
-        public void SetData(string groupType, string groupName, string collectedAmount, Sprite groupSprite)
+        public void SetData(string groupType, string groupName, string collectedAmount)
         {
             _groupType = groupType;
             _cardsGroupName.text = groupName;
             _grouoCollectedAmountText.text = collectedAmount;
-            _cardsGrouopImage.sprite = groupSprite;
         }
 
         private void OnDestroy()
@@ -43,7 +42,7 @@ namespace core
             _cardsGrouopButton.onClick.RemoveAllListeners();
         }
 
-        public void UpdateSprite(Sprite groupSprite)
+        public void SetSprite(Sprite groupSprite)
         {
             _cardsGrouopImage.sprite = groupSprite;
         }

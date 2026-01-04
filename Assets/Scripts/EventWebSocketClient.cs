@@ -9,6 +9,7 @@ public class EventWebSocketClient : MonoBehaviour
 
     void Start()
     {
+        return;
         ws = new WebSocket(_apiUrl);
 
         ws.Log.Level = LogLevel.Debug;

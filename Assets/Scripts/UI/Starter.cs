@@ -64,6 +64,9 @@ namespace core
             
             var args = new CardCollectionArgs(_uiManager);
             _uiManager.Show<CardCollectionController>(args);
+            
+            //var args = new CardGroupArgs(_uiManager);
+            //_uiManager.Show<CardGroupController>(args);
         }
 
         private void OpenCheatsPanel()
