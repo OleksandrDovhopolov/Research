@@ -10,11 +10,12 @@ namespace core
 
         private CardGroupsConfig _config;
 
-        public Dictionary<string, CardGroupsConfig> Data { get; } = new();
+        //public Dictionary<string, CardGroupsConfig> Data { get; } = new();
+        public List<CardGroupsConfig> Data { get; } = new();
 
         public CardGroupsConfig Get(string id)
         {
-            return Data.GetValueOrDefault(id);
+            return Data.Find(config => id == config.Id);
         }
         
         public override void Configurate(ConfigManager configManager)
@@ -25,10 +26,10 @@ namespace core
         public override UniTask LoadConfigData(ConfigManager configManager)
         {
             var data = configManager.GetParsedJsonData<CardGroupsConfig>(DefaultConfigFileName);
-
+            
             foreach (var config in data)
             {
-                Data.Add(config.Id, config);
+                Data.Add(config);
             }
 
             return UniTask.CompletedTask;

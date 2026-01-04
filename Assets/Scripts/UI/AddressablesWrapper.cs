@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -7,9 +6,6 @@ using Object = UnityEngine.Object;
 
 namespace core
 {
-    /// <summary>
-    /// Wrapper class for addressable logic
-    /// </summary>
     public static class AddressablesWrapper
     {
         private static readonly Dictionary<string, AssetReference> Cache = new();
@@ -52,16 +48,6 @@ namespace core
                 return assetRef.OperationHandle.Convert<T>().WaitForCompletion();
 
             return assetRef.LoadAssetAsync<T>().WaitForCompletion();
-        }
-        /// <summary>
-        /// Общий метод для асинхронной установки спрайта 
-        /// </summary>
-        public static async void SetSpriteAsync(AssetReferenceSprite key, Action<Sprite> setter)
-        {
-            if (setter == null) throw new ArgumentNullException($"Sprite setter cant be null");
-
-            var sprite = await LoadFromTask<Sprite>(key);
-            setter(sprite);
         }
         
         public static void ReleaseLoaded()

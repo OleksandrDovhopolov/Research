@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UISystem;
+using UnityEngine;
 
 namespace core
 {
@@ -16,6 +19,46 @@ namespace core
     public class CardCollectionController :  WindowController<CardCollectionView>
     {
         private CardCollectionArgs Args => (CardCollectionArgs) Arguments;
+        
+        protected override void OnShowStart()
+        {
+            //var groupsConfigs = CardGroupsConfigStorage.Instance.Data;
+            CreateGroupViews().Forget(); // Fire & forget ✅
+            /*View.ShowLoader(true); 
+    
+            try 
+            {
+                await View.CreateGroupViews(groupsConfigs);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Failed to load groups: {e}");
+            }
+            finally 
+            {
+                View.ShowLoader(false); 
+            }*/
+        }
+        
+        private async UniTask CreateGroupViews()
+        {
+            var groupsConfigs = CardGroupsConfigStorage.Instance.Data;
+            
+            View.ShowLoader(true); 
+    
+            try 
+            {
+                await View.CreateGroupViews(groupsConfigs);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Failed to load groups: {e}");
+            }
+            finally 
+            {
+                View.ShowLoader(false); 
+            }
+        }
         
         protected override void OnShowComplete()
         {
