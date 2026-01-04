@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
@@ -20,7 +20,6 @@ namespace core
     {
         private CardCollectionArgs Args => (CardCollectionArgs) Arguments;
         
-        
         private bool _groupsCreated;
         
         protected override void OnShowStart()
@@ -29,13 +28,13 @@ namespace core
             
             View.ShowLoader(true); 
             View.CreateViews(CardGroupsConfigStorage.Instance.Data);
-            //CreateGroupViews().Forget();
         }
         
         protected override void OnShowComplete()
         {
             View.CloseClick += CloseWindow;
             View.OnButtonPressed += OpenGroupWindow;
+            View.OnGroupButtonPressed += OnGroupButtonPressedHandler;
             
             if (_groupsCreated) return;
             CreateGroupViews().Forget();
@@ -48,7 +47,7 @@ namespace core
                 await View.CreateGroupViews(CardGroupsConfigStorage.Instance.Data);
                 _groupsCreated = true;
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Debug.LogError($"Failed to load groups: {e}");
             }
@@ -62,8 +61,15 @@ namespace core
         {
             View.CloseClick -= CloseWindow;
             View.OnButtonPressed -= OpenGroupWindow;
+            View.OnGroupButtonPressed -= OnGroupButtonPressedHandler;
         }
 
+        private void OnGroupButtonPressedHandler(string groupType)
+        {
+            var args = new CardGroupArgs(Args.UiManager, groupType);
+            Args.UiManager.Show<CardGroupController>(args);
+        }
+        
         private void CloseWindow()
         {
             Args.UiManager.Hide<CardCollectionController>();
@@ -71,7 +77,7 @@ namespace core
         
         private void OpenGroupWindow()
         {
-            var args = new CardGroupArgs(Args.UiManager);
+            var args = new CardGroupArgs(Args.UiManager, "farming");
             Args.UiManager.Show<CardGroupController>(args);
         }
     }

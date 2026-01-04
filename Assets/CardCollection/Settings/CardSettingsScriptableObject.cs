@@ -13,7 +13,7 @@ namespace core
         [Header("Sprites for each card")]
         public List<CardSpriteSetting> CardSprites;
         
-        public Sprite GetBackgroundForGroup(CardCollectionGroups group)
+        /*public Sprite GetBackgroundForGroup(CardCollectionGroups group)
         {
             foreach (var item in GroupBackgrounds)
             {
@@ -21,7 +21,7 @@ namespace core
                     return item.Background;
             }
             return null;
-        }
+        }*/
         
         public Sprite GetCardSprite(int cardId)
         {
@@ -37,7 +37,7 @@ namespace core
     [Serializable]
     public class GroupBackgroundSetting
     {
-        public CardCollectionGroups GroupType;
+        //public CardCollectionGroups GroupType;
         public Sprite Background;
     }
 

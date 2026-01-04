@@ -17,6 +17,8 @@ namespace core
         
         private readonly Dictionary<string, CardsCollectionView> _viewsDict = new();
         
+        public event Action<string> OnGroupButtonPressed;
+        
         protected override void Awake()
         {
             base.Awake();
@@ -67,8 +69,7 @@ namespace core
         
         private void OnButtonPressedHandler(string groupType)
         {
-            var cardConfigs = CardCollectionConfigStorage.Instance.Get(groupType);
-            Debug.LogWarning($"Debug groupType {groupType}, cardConfigs {cardConfigs.Count}");
+            OnGroupButtonPressed?.Invoke(groupType);
         }
         
         public void ShowLoader(bool show)
