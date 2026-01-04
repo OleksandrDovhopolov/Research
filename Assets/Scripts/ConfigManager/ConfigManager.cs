@@ -67,7 +67,7 @@ namespace core
                 throw new InvalidOperationException($"Failed to find config file with ID {id}");
             }
             
-            return  configFile.GetParsedData<T>();
+            return configFile.GetParsedData<T>();
         }
         
         public async UniTask ApplyParsedConfigs(List<IConfigStorage> storages = null)

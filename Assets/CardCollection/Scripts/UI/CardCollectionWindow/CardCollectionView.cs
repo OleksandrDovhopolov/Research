@@ -11,6 +11,8 @@ namespace core
         
         [SerializeField] private Button _openGroupWindowButton;
         
+        
+        
         protected override void Awake()
         {
             base.Awake();

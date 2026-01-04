@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -13,5 +12,7 @@ namespace core
 
             return default(ValType);
         }
+        
+        public static bool IsNull(this Object o) => o == null || !o;
     }
 }
