@@ -13,8 +13,9 @@ namespace core
         
         [SerializeField] private Button _openGroupWindowButton;
         [SerializeField] private UIListPool<CardsCollectionView> _cardGroupsPool;
+        [SerializeField] private GameObject _loadingAnimationObject;
         
-        private List<CardsCollectionView> _views = new();
+        private Dictionary<string, CardsCollectionView> _viewsDict = new();
         
         protected override void Awake()
         {
@@ -30,29 +31,45 @@ namespace core
             if (_groupsCreated) return;
             _groupsCreated = true;
             
-            
             Debug.LogWarning($"ShowLoader called : groupsData {groupsData.Count}");
             _cardGroupsPool.DisableNonActive();
 
-            _views.Clear();
+            _viewsDict.Clear();
             
             foreach (var groupsConfig in groupsData)
             {
-                var groupSprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(groupsConfig.GroupIcon);
-                 
                 var groupView = _cardGroupsPool.GetNext();
                 
                 var groupType = groupsConfig.GroupType;
                 var groupName = groupsConfig.GroupName;
                 var collectedGroupAmount = 0;
                 
-                groupView.SetData(groupType, groupName, collectedGroupAmount.ToString(), groupSprite);
-                _views.Add(groupView);
+                groupView.SetData(groupType, groupName, collectedGroupAmount.ToString(), null);
+                _viewsDict.Add(groupsConfig.Id, groupView);
             }
+            
+            var loadTasks = groupsData.Select(async config => {
+                    try 
+                    {
+                        var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(config.GroupIcon);
+                        if (_viewsDict.TryGetValue(config.Id, out var view))
+                            view.UpdateSprite(sprite);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError($"Failed sprite {config.GroupIcon}: {e}");
+                        if (_viewsDict.TryGetValue(config.Id, out var view))
+                            view.UpdateSprite(null);
+                    }
+            });
+                
+            await UniTask.WhenAll(loadTasks);
+            await UniTask.WaitForSeconds(3f);
         }
         
         public void ShowLoader(bool show)
         {
+            _loadingAnimationObject.gameObject.SetActive(show);
             Debug.LogWarning($"ShowLoader called : show {show}");
         }
         

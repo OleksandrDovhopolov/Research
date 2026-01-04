@@ -42,6 +42,11 @@ namespace core
         {
             _cardsGrouopButton.onClick.RemoveAllListeners();
         }
+
+        public void UpdateSprite(Sprite groupSprite)
+        {
+            _cardsGrouopImage.sprite = groupSprite;
+        }
     }
 }
 
