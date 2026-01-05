@@ -1,0 +1,18 @@
+{
+  "hosting": {
+    "public": "ServerData",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "**/catalog_10.json",
+        "headers": [
+          {"key": "Cache-Control", "value": "no-cache"}
+        ]
+      }
+    ]
+  }
+}

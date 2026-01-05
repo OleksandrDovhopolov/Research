@@ -48,6 +48,12 @@ desktop.ini
 *.app
 *.exe
 
+# Addressables / Remote Content
+/ServerData/
+/Assets/ServerData/
+/**/catalog_*.json
+/**/*.bundle
+
 # Misc
 MemoryCaptures/
 ProfilerCaptures/
