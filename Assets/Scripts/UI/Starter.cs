@@ -2,6 +2,7 @@ using System;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.UI;
 
 namespace core
@@ -24,6 +25,7 @@ namespace core
 
         private void Start()
         {
+            LoadAddressables().Forget();
             LoadConfig().Forget();
             
             WindowFactoryBase windowFactoryBase = new WindowFactoryDI(_uiManager);
@@ -35,6 +37,11 @@ namespace core
             _cheatButton.onClick.AddListener(OpenCheatsPanel);
         }
 
+         private async UniTask LoadAddressables()
+         {
+             await AddressablesUpdater.CheckAndUpdateAsync();
+         }
+         
         private async UniTask LoadConfig()
         {
             if (_configManager != null) return;
