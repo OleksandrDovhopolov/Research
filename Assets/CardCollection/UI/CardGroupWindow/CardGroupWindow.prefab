@@ -2591,6 +2591,7 @@ MonoBehaviour:
   _openCardContainer: {fileID: 7564261811739978818}
   _animationDuration: 0.3
   _scaleFactor: 1.75
+  _test: {fileID: 4945420948686402936}
 --- !u!1 &4957709697584531253
 GameObject:
   m_ObjectHideFlags: 0
@@ -3993,7 +3994,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &353954302303015932
 RectTransform:
   m_ObjectHideFlags: 0

@@ -8,8 +8,10 @@ namespace core
         [Space, Space, Header("Animations")]
         [SerializeField] private float _animationDuration = 1f;
         [SerializeField] private float _scaleFactor = 1.5f;
+        [SerializeField] private GameObject _test;
         
-        private RectTransform _rt;
+        private RectTransform _openCardRectTransform;
+        private RectTransform _closedCardRectTransform;
         private Vector3 _startScale;
         private Coroutine _moveRoutine;
         private Coroutine _scaleRoutine;
@@ -19,33 +21,37 @@ namespace core
         protected override void Awake()
         { 
             base.Awake();
-            _rt = (RectTransform)_openCardContainer.transform;
-            _startScale = _rt.localScale;
+            _openCardRectTransform = (RectTransform)_openCardContainer.transform;
+            _closedCardRectTransform = (RectTransform)_closedCardContainer.transform;
+            _startScale = _openCardRectTransform.localScale;
         }
                 
-        public void PlayCardPreview(Vector2 targetPosition)
+        public void PlayCardPreview(Vector2 targetPosition, bool isOpen)
         {
+            var rect = isOpen ? _openCardRectTransform : _closedCardRectTransform;
             if (_moveRoutine != null) StopCoroutine(_moveRoutine);
             if (_scaleRoutine != null) StopCoroutine(_scaleRoutine);
 
-            _moveRoutine = StartCoroutine(AnimateAnchoredPos(_rt.anchoredPosition, targetPosition, _animationDuration));
-            _scaleRoutine = StartCoroutine(AnimateScale(_rt.localScale, _startScale * _scaleFactor, _animationDuration));
+            _moveRoutine = StartCoroutine(AnimateAnchoredPos(rect, rect.anchoredPosition, targetPosition, _animationDuration));
+            _scaleRoutine = StartCoroutine(AnimateScale(rect, rect.localScale, _startScale * _scaleFactor, _animationDuration));
         }
 
-        public void HideCard(Vector2 targetPosition)
+        public void HideCard(Vector2 targetPosition, bool isOpen)
         {
+            var rect = isOpen ? _openCardRectTransform : _closedCardRectTransform;
+            
             if (_moveRoutine != null) StopCoroutine(_moveRoutine);
             if (_scaleRoutine != null) StopCoroutine(_scaleRoutine);
 
-            _moveRoutine = StartCoroutine(AnimateAnchoredPos(_rt.anchoredPosition, targetPosition, _animationDuration));
-            _scaleRoutine = StartCoroutine(AnimateScale(_rt.localScale, _startScale, _animationDuration));
+            _moveRoutine = StartCoroutine(AnimateAnchoredPos(rect, rect.anchoredPosition, targetPosition, _animationDuration));
+            _scaleRoutine = StartCoroutine(AnimateScale(rect, rect.localScale, _startScale, _animationDuration));
         }
         
-        private IEnumerator AnimateAnchoredPos(Vector2 from, Vector2 to, float duration)
+        private IEnumerator AnimateAnchoredPos(RectTransform rect, Vector2 from, Vector2 to, float duration)
         {
             if (duration <= 0f)
             {
-                _rt.anchoredPosition = to;
+                rect.anchoredPosition = to;
                 yield break;
             }
 
@@ -54,18 +60,18 @@ namespace core
             {
                 t += Time.unscaledDeltaTime;
                 var k = Mathf.Clamp01(t / duration);
-                _rt.anchoredPosition = Vector2.Lerp(from, to, k);
+                rect.anchoredPosition = Vector2.Lerp(from, to, k);
                 yield return null;
             }
 
-            _rt.anchoredPosition = to;
+            rect.anchoredPosition = to;
         }
 
-        private IEnumerator AnimateScale(Vector3 from, Vector3 to, float duration)
+        private IEnumerator AnimateScale(RectTransform rect, Vector3 from, Vector3 to, float duration)
         {
             if (duration <= 0f)
             {
-                _rt.localScale = to;
+                rect.localScale = to;
                 yield break;
             }
 
@@ -76,11 +82,11 @@ namespace core
                 var k = Mathf.Clamp01(t / duration);
                 k = 1f - (1f - k) * (1f - k);
 
-                _rt.localScale = Vector3.Lerp(from, to, k);
+                rect.localScale = Vector3.Lerp(from, to, k);
                 yield return null;
             }
 
-            _rt.localScale = to;
+            rect.localScale = to;
         }
     }
 }

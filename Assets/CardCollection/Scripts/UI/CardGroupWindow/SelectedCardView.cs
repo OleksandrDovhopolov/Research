@@ -11,22 +11,28 @@ namespace core
         [SerializeField] private Button _selectedCardBackgroundButton;
         [SerializeField] private AnimatedCardView _selectedCardView;
         
+        private bool _isCardOpen;
         private CollectionCardView _clickedCardView;
         
-        public void OnCardPressedHandler(CollectionCardView cardView, CardCollectionConfig config)
+        public void OnCardPressedHandler(CollectionCardView cardView, CardCollectionConfig config, bool isOpen = false)
         {
+            _isCardOpen = isOpen;
             _clickedCardView = cardView;
             
+            _clickedCardView.OnCardAnimationStarted();
             _selectedCardContainer.gameObject.SetActive(true); 
-            _clickedCardView.SetOpenCardContainerActive(false);
+            
+            _selectedCardView.SetOpenCardContainerActive(isOpen);
+            _selectedCardView.SetClosedCardContainerActive(!isOpen);
+            
             UniTaskUtils.DelayCallbackAsync(SelectedCardCallback, _selectedCardView.AnimationDuration).Forget();
-        
-            _selectedCardView.RectTransform.position = _clickedCardView.RectTransform.position;
+
+            _selectedCardView.GetRectTransform(isOpen).position = _clickedCardView.GetRectTransform(isOpen).position;
             _selectedCardView.SetCardName(config.CardName);
             _selectedCardView.SetStars(config.Stars);
             
             SetSprite().Forget();
-            _selectedCardView.PlayCardPreview(Vector2.zero);
+            _selectedCardView.PlayCardPreview(Vector2.zero, isOpen);
 
             async UniTask SetSprite()
             {
@@ -43,12 +49,15 @@ namespace core
         private void HideSelectedCard()
         {
             _selectedCardBackgroundButton.onClick.RemoveAllListeners();
-            var targetPosition = UIUtils.ConvertWorldToLocalOfTargetParent(_clickedCardView.RectTransform, _selectedCardView.RectTransform);
-            _selectedCardView.HideCard(targetPosition);
+            
+            var sourceRect = _clickedCardView.GetRectTransform(_isCardOpen);
+            var targetRect = _selectedCardView.GetRectTransform(_isCardOpen);
+            var targetPosition = UIUtils.ConvertWorldToLocalOfTargetParent(sourceRect, targetRect);
+            _selectedCardView.HideCard(targetPosition, _isCardOpen);
             
             UniTaskUtils.DelayCallbackAsync(() =>
             {
-                _clickedCardView.SetOpenCardContainerActive(true);
+                _clickedCardView.OnCardAnimationCompleted();
                 _selectedCardContainer.gameObject.SetActive(false); 
             }, _selectedCardView.AnimationDuration).Forget();
         }

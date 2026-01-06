@@ -27,7 +27,6 @@ namespace core
         protected override void OnShowStart()
         {
             var data = CardCollectionConfigStorage.Instance.Get(Args.GroupType);
-            Debug.LogWarning($"Debug groupType {Args.GroupType}, cardConfigs {data.Count}");
             View.CreateViews(data);
 
             CreateGroupViews(data).Forget();

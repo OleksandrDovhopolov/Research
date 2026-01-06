@@ -21,15 +21,23 @@ namespace core
         [SerializeField] protected GameObject _closedCardContainer;
         [SerializeField] protected GameObject _openCardContainer;
 
-        public RectTransform RectTransform { get; private set; }
+        private bool _isOpen;
+        private RectTransform _rectTransformOpen;
+        private RectTransform _rectTransformClosed;
 
         public event Action<CollectionCardView> OnCardPressed;
 
         protected virtual void Awake()
         {
-            RectTransform = _openCardContainer.GetComponent<RectTransform>();
+            _rectTransformOpen = _openCardContainer.GetComponent<RectTransform>();
+            _rectTransformClosed = _closedCardContainer.GetComponent<RectTransform>();
         }
 
+        public RectTransform GetRectTransform(bool isOpen)
+        {
+            return isOpen ? _rectTransformOpen : _rectTransformClosed;
+        }
+        
         private void Start()
         {
             if (_cardButton != null)
@@ -43,6 +51,12 @@ namespace core
             OnCardPressed?.Invoke(this);
         }
         
+        public void SetCardIsOpen(bool isOpen)
+        {
+            _isOpen = isOpen;
+            UpdateCardView();
+        }
+                
         public void SetCardName(string cardName)
         {
             _closedCardName.text = cardName;
@@ -76,7 +90,12 @@ namespace core
         {
             _cardImage.sprite = cardSprite;
         }
-
+        
+        public void UpdateCardView()
+        {
+            SetOpenCardContainerActive(_isOpen);
+        }
+        
         public void SetOpenCardContainerActive(bool isActive)
         {
             _openCardContainer.SetActive(isActive);
@@ -86,13 +105,23 @@ namespace core
         {
             _closedCardContainer.SetActive(isActive);
         }
-        
+
         private void OnDestroy()
         {
-            if (_cardButton != null) 
-            { 
-                _cardButton.onClick.RemoveAllListeners(); 
+            if (_cardButton != null)
+            {
+                _cardButton.onClick.RemoveAllListeners();
             }
+        }
+
+        public void OnCardAnimationStarted()
+        {
+            SetOpenCardContainerActive(false);
+        }
+
+        public void OnCardAnimationCompleted()
+        {
+            SetOpenCardContainerActive(_isOpen);
         }
     }
 }
