@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,25 +11,25 @@ namespace core
         [SerializeField] private TextMeshProUGUI _closedCardName;
         [SerializeField] private TextMeshProUGUI _openCardName;
         [SerializeField] private Image _cardImage;
-        [SerializeField] public RectTransform RectTransform;
         
         [SerializeField] private GameObject star1;
         [SerializeField] private GameObject star2;
         [SerializeField] private GameObject star3;
         [SerializeField] private GameObject star4;
         [SerializeField] private GameObject star5;
+        
+        [SerializeField] protected GameObject _closedCardContainer;
+        [SerializeField] protected GameObject _openCardContainer;
+
+        public RectTransform RectTransform { get; private set; }
 
         public event Action<CollectionCardView> OnCardPressed;
-        
-        private void Awake()
+
+        protected virtual void Awake()
         {
-            _rt = (RectTransform)_openCardContainer.transform;
-            //_rt = (RectTransform)transform;
-            _parentRt = (RectTransform)_rt.parent;
-            _startAnchoredPos = _rt.anchoredPosition;
-            _startScale = _rt.localScale;
+            RectTransform = _openCardContainer.GetComponent<RectTransform>();
         }
-        
+
         private void Start()
         {
             if (_cardButton != null)
@@ -83,93 +82,9 @@ namespace core
             _openCardContainer.SetActive(isActive);
         }
         
-        [Space, Space, Header("Animations")]
-        [SerializeField] private GameObject _closedCardContainer;
-        [SerializeField] private GameObject _openCardContainer;
-        [SerializeField] private float _animationDuration = 1f;
-        [SerializeField] private float _scaleFactor = 1.5f;
-        
-        public float AnimationDuration => _animationDuration;
-        
-        private RectTransform _rt;
-        private RectTransform _parentRt;
-        private Vector2 _startAnchoredPos;
-        private Vector3 _startScale;
-        private Coroutine _moveRoutine;
-        private Coroutine _scaleRoutine;
-
-        public void PlayCardPreview(Vector2 targetPosition)
+        public void SetClosedCardContainerActive(bool isActive)
         {
-            if (_moveRoutine != null) StopCoroutine(_moveRoutine);
-            if (_scaleRoutine != null) StopCoroutine(_scaleRoutine);
-
-            //Vector2 screenCenter = GetScreenCenterAnchoredPos();
-
-            _moveRoutine = StartCoroutine(AnimateAnchoredPos(_rt.anchoredPosition, targetPosition, _animationDuration));
-            _scaleRoutine = StartCoroutine(AnimateScale(_rt.localScale, _startScale * _scaleFactor, _animationDuration));
-        }
-
-        public void HideCard(Vector2 targetPosition)
-        {
-            if (_moveRoutine != null) StopCoroutine(_moveRoutine);
-            if (_scaleRoutine != null) StopCoroutine(_scaleRoutine);
-
-            //_moveRoutine = StartCoroutine(AnimateAnchoredPos(_rt.anchoredPosition, _startAnchoredPos, _animationDuration));
-            _moveRoutine = StartCoroutine(AnimateAnchoredPos(_rt.anchoredPosition, targetPosition, _animationDuration));
-            _scaleRoutine = StartCoroutine(AnimateScale(_rt.localScale, _startScale, _animationDuration));
-        }
-
-        private Vector2 GetScreenCenterAnchoredPos()
-            {
-                var screenCenter = new Vector2(Screen.width / 2f, Screen.height / 2f);
-
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    _parentRt, screenCenter, null, out var localPoint); 
-        
-                return localPoint;
-            }
-            
-        IEnumerator AnimateAnchoredPos(Vector2 from, Vector2 to, float duration)
-        {
-            if (duration <= 0f)
-            {
-                _rt.anchoredPosition = to;
-                yield break;
-            }
-
-            float t = 0f;
-            while (t < duration)
-            {
-                t += Time.unscaledDeltaTime; // чтобы не зависело от Time.timeScale
-                float k = Mathf.Clamp01(t / duration);
-                _rt.anchoredPosition = Vector2.Lerp(from, to, k);
-                yield return null;
-            }
-
-            _rt.anchoredPosition = to;
-        }
-
-        IEnumerator AnimateScale(Vector3 from, Vector3 to, float duration)
-        {
-            if (duration <= 0f)
-            {
-                _rt.localScale = to;
-                yield break;
-            }
-
-            float t = 0f;
-            while (t < duration)
-            {
-                t += Time.unscaledDeltaTime;
-                float k = Mathf.Clamp01(t / duration);
-                // можно добавить лёгкий "ease out" для красоты
-                k = 1f - (1f - k) * (1f - k); // квадратичный ease-out
-
-                _rt.localScale = Vector3.Lerp(from, to, k);
-                yield return null;
-            }
-
-            _rt.localScale = to;
+            _closedCardContainer.SetActive(isActive);
         }
         
         private void OnDestroy()
