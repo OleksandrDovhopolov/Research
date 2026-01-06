@@ -46,6 +46,7 @@ namespace core
         protected override void OnHideStart(bool isClosed)
         {
             View.CloseClick -= CloseWindow;
+            View.DisableAll();
         }
         
         protected override void OnHideComplete(bool isClosed) 

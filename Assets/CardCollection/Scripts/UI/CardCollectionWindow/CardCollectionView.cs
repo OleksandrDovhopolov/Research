@@ -64,7 +64,7 @@ namespace core
             });
                 
             await UniTask.WhenAll(loadTasks);
-            await UniTask.WaitForSeconds(2f);
+            await UniTask.WaitForSeconds(0.5f);
         }
         
         private void OnButtonPressedHandler(string groupType)
