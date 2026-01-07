@@ -905,6 +905,7 @@ MonoBehaviour:
   _selectedCardContainer: {fileID: 6082401210980708035}
   _selectedCardBackgroundButton: {fileID: 7243024964924849649}
   _selectedCardView: {fileID: 6243133768110268961}
+  _targetRect: {fileID: 2295686334551020494}
 --- !u!114 &-4344370285081404344
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1391,7 +1392,7 @@ RectTransform:
   m_Children:
   - {fileID: 5075951100972258591}
   - {fileID: 8918428950365538578}
-  m_Father: {fileID: 4938972588739479157}
+  m_Father: {fileID: 2759950512654801742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
@@ -2559,6 +2560,7 @@ RectTransform:
   m_Children:
   - {fileID: 353954302303015932}
   - {fileID: 4938972588739479157}
+  - {fileID: 1418470349184255062}
   m_Father: {fileID: 2295686334551020494}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -2589,9 +2591,9 @@ MonoBehaviour:
   star5: {fileID: 4957709697584531253}
   _closedCardContainer: {fileID: 8661122970694676598}
   _openCardContainer: {fileID: 7564261811739978818}
+  _cardRect: {fileID: 4945420948686402936}
   _animationDuration: 0.3
   _scaleFactor: 1.75
-  _test: {fileID: 4945420948686402936}
 --- !u!1 &4957709697584531253
 GameObject:
   m_ObjectHideFlags: 0
@@ -3695,7 +3697,6 @@ RectTransform:
   - {fileID: 4341604921741146267}
   - {fileID: 3376731924167489084}
   - {fileID: 5889352074310087699}
-  - {fileID: 1418470349184255062}
   m_Father: {fileID: 2759950512654801742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}

@@ -8,10 +8,7 @@ namespace core
         [Space, Space, Header("Animations")]
         [SerializeField] private float _animationDuration = 1f;
         [SerializeField] private float _scaleFactor = 1.5f;
-        [SerializeField] private GameObject _test;
         
-        private RectTransform _openCardRectTransform;
-        private RectTransform _closedCardRectTransform;
         private Vector3 _startScale;
         private Coroutine _moveRoutine;
         private Coroutine _scaleRoutine;
@@ -21,14 +18,13 @@ namespace core
         protected override void Awake()
         { 
             base.Awake();
-            _openCardRectTransform = (RectTransform)_openCardContainer.transform;
-            _closedCardRectTransform = (RectTransform)_closedCardContainer.transform;
-            _startScale = _openCardRectTransform.localScale;
+            
+            _startScale = CardRect.localScale;
         }
-                
+        
         public void PlayCardPreview(Vector2 targetPosition, bool isOpen)
         {
-            var rect = isOpen ? _openCardRectTransform : _closedCardRectTransform;
+            var rect = CardRect;
             if (_moveRoutine != null) StopCoroutine(_moveRoutine);
             if (_scaleRoutine != null) StopCoroutine(_scaleRoutine);
 
@@ -38,7 +34,7 @@ namespace core
 
         public void HideCard(Vector2 targetPosition, bool isOpen)
         {
-            var rect = isOpen ? _openCardRectTransform : _closedCardRectTransform;
+            var rect = CardRect;
             
             if (_moveRoutine != null) StopCoroutine(_moveRoutine);
             if (_scaleRoutine != null) StopCoroutine(_scaleRoutine);

@@ -20,22 +20,22 @@ namespace core
         
         [SerializeField] protected GameObject _closedCardContainer;
         [SerializeField] protected GameObject _openCardContainer;
+        [SerializeField] protected GameObject _cardRect;
 
         private bool _isOpen;
-        private RectTransform _rectTransformOpen;
-        private RectTransform _rectTransformClosed;
 
+        protected RectTransform CardRect;
+        
         public event Action<CollectionCardView> OnCardPressed;
-
+        
         protected virtual void Awake()
         {
-            _rectTransformOpen = _openCardContainer.GetComponent<RectTransform>();
-            _rectTransformClosed = _closedCardContainer.GetComponent<RectTransform>();
+            CardRect = (RectTransform)_cardRect.transform;
         }
 
-        public RectTransform GetRectTransform(bool isOpen)
+        public virtual RectTransform GetRectTransform(bool isOpen)
         {
-            return isOpen ? _rectTransformOpen : _rectTransformClosed;
+            return CardRect;
         }
         
         private void Start()

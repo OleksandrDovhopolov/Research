@@ -10,11 +10,12 @@ namespace core
         [SerializeField] private GameObject _selectedCardContainer;
         [SerializeField] private Button _selectedCardBackgroundButton;
         [SerializeField] private AnimatedCardView _selectedCardView;
+        [SerializeField] private RectTransform _targetRect;
         
         private bool _isCardOpen;
         private CollectionCardView _clickedCardView;
         
-        public void OnCardPressedHandler(CollectionCardView cardView, CardCollectionConfig config, bool isOpen = false)
+        public void OnCardPressedHandler(CollectionCardView cardView, CardCollectionConfig config, bool isOpen = true)
         {
             _isCardOpen = isOpen;
             _clickedCardView = cardView;
@@ -32,7 +33,7 @@ namespace core
             _selectedCardView.SetStars(config.Stars);
             
             SetSprite().Forget();
-            _selectedCardView.PlayCardPreview(Vector2.zero, isOpen);
+            _selectedCardView.PlayCardPreview(_targetRect.localPosition, isOpen);
 
             async UniTask SetSprite()
             {

@@ -15,7 +15,7 @@ namespace core
 
         private readonly Dictionary<CardCollectionConfig, CollectionCardView> _viewsDict = new();
 
-        public void CreateViews(List<CardCollectionConfig> cardsData, bool isOpen = false)
+        public void CreateViews(List<CardCollectionConfig> cardsData, bool isOpen = true)
         {
             _upperCardsPool.DisableNonActive();
             _bottomCardsPool.DisableNonActive();
