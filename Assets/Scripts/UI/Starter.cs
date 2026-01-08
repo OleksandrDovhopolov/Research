@@ -1,8 +1,6 @@
-using System;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 using UnityEngine.UI;
 
 namespace core
@@ -13,8 +11,6 @@ namespace core
         [SerializeField] private ResearchCheatModule _researchCheatModule;
         [SerializeField] private Button _button;
         [SerializeField] private Button _cheatButton;
-        
-        private readonly Lazy<CollectionService> _collectionService = new(() => new CollectionService());
         
         private ConfigManager _configManager;
         
@@ -58,28 +54,18 @@ namespace core
             _configManager.GetConfigFile(groudId).CurLoader = ConfigManager.ResourcesLoader;
             
             
-            Debug.LogWarning($"Start Config Load");
             await _configManager.ApplyParsedConfigs(configStorages);
-            Debug.LogWarning($"Complete Config Load");
         }
         
         private void OpenSettings()
         {
-            /*var args = new SettingsArgs(_uiManager);
-            _uiManager.Show<SettingsPopupController>(args);*/
-            
-            
             var args = new CardCollectionArgs(_uiManager);
             _uiManager.Show<CardCollectionController>(args);
-            
-            //var args = new CardGroupArgs(_uiManager);
-            //_uiManager.Show<CardGroupController>(args);
         }
 
         private void OpenCheatsPanel()
         {
-            _collectionService.Value.PrintData();
-            //_researchCheatModule.OpenCheatPanel();
+            _researchCheatModule.OpenCheatPanel();
         }
         
         private void OnDestroy()
