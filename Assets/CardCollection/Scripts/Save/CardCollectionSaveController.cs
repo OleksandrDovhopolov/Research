@@ -4,10 +4,16 @@ using UnityEngine.UI;
 
 namespace core
 {
-    public class CardCollectionSaveController : MonoBehaviour
+    public interface ICollectionUpdater
+    {
+        public bool OpenCard(string cardId);
+    }
+    
+    public class CardCollectionSaveController : MonoBehaviour, ICollectionUpdater
     {
         [SerializeField] private Button _saveButton;
         [SerializeField] private Button _loadButton;
+        [SerializeField] private Button _clearButton;
         
         private const string TestEventId = "test";
         
@@ -17,30 +23,18 @@ namespace core
         {
             _saveButton.onClick.AddListener(() => Save().Forget());
             _loadButton.onClick.AddListener(() => Load().Forget());
-        }
-
-        private async UniTask<IEventCardsStorage> GetCardStorage()
-        {
-            if (_eventCardsStorage != null) return _eventCardsStorage;
-            
-            _eventCardsStorage = new ServerEventCardsStorage();
-            await _eventCardsStorage.InitializeAsync();
-
-            return _eventCardsStorage;
+            _clearButton.onClick.AddListener(() => Clear().Forget());
         }
         
         private async UniTask Save()
         {
             var cardCollectionData = new EventCardsSaveData{ EventId = TestEventId };
             
-            var card1 = new CardProgressData { CardId = "1", IsUnlocked = false };
-            cardCollectionData.Cards.Add(card1);
-            
-            var card2 = new CardProgressData { CardId = "2", IsUnlocked = false };
-            cardCollectionData.Cards.Add(card2);
-            
-            var card3 = new CardProgressData { CardId = "3", IsUnlocked = true };
-            cardCollectionData.Cards.Add(card3);
+            foreach (var cardCollectionConfig in CardCollectionConfigStorage.Instance.Data)
+            {
+                var cardData = new CardProgressData { CardId = cardCollectionConfig.Id, IsUnlocked = false };
+                cardCollectionData.Cards.Add(cardData);
+            }
 
             var storage = await GetCardStorage();
             await storage.SaveAsync(cardCollectionData);
@@ -58,11 +52,34 @@ namespace core
                 Debug.LogWarning($"Debug card {card.CardId} / {card.IsUnlocked}");
             }
         }
+
+        private async UniTask Clear()
+        {
+            var storage = await GetCardStorage();
+            await storage.ClearCollectionAsync();
+            Debug.LogWarning($"Debug Clear Completed");
+        }
+
+        private async UniTask<IEventCardsStorage> GetCardStorage()
+        {
+            if (_eventCardsStorage != null) return _eventCardsStorage;
+            
+            _eventCardsStorage = new JsonEventCardsStorage();
+            await _eventCardsStorage.InitializeAsync();
+
+            return _eventCardsStorage;
+        }
         
         private void OnDestroy()
         {
             _saveButton.onClick.RemoveAllListeners();
             _loadButton.onClick.RemoveAllListeners();
+            _clearButton.onClick.RemoveAllListeners();
+        }
+
+        public bool OpenCard(string cardId)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

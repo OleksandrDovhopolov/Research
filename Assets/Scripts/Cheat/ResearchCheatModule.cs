@@ -8,6 +8,7 @@ namespace core
     public class ResearchCheatModule : MonoBehaviour, ICheatsContainer
     {
         [SerializeField] private CheatsManager _cheatsManagerPrefab;
+        [SerializeField] private CardCollectionSaveController _saveController;
         private CheatsManager _cheatsManager;
         
         private CheatPanelItem _rootPanel;

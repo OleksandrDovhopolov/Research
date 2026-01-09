@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Firebase;
 using Firebase.Auth;
@@ -76,6 +77,16 @@ namespace core
             await docRef.SetAsync(data);
 
             Debug.LogWarning($"[Firebase] Saved event {data.EventId}");
+        }
+
+        public UniTask UnlockCardsAsync(string eventId, IReadOnlyCollection<string> cardIds)
+        {
+            throw new NotImplementedException("not implemented");
+        }
+
+        public UniTask ClearCollectionAsync()
+        {
+            throw new NotImplementedException("not implemented");
         }
     }
 }
