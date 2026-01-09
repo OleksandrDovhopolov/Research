@@ -6,7 +6,7 @@ namespace core
 {
     public interface ICollectionUpdater
     {
-        public bool OpenCard(string cardId);
+        public UniTask OpenCard(string cardId);
     }
     
     public class CardCollectionSaveController : MonoBehaviour, ICollectionUpdater
@@ -17,7 +17,7 @@ namespace core
         
         private const string TestEventId = "test";
         
-        private IEventCardsStorage _eventCardsStorage;
+        private EventCardsService _eventCardService;
 
         private void Start()
         {
@@ -36,14 +36,14 @@ namespace core
                 cardCollectionData.Cards.Add(cardData);
             }
 
-            var storage = await GetCardStorage();
+            var storage = await GetCardService();
             await storage.SaveAsync(cardCollectionData);
             Debug.LogWarning($"Debug Save Completed");
         }
         
         private async UniTask Load()
         {
-            var storage = await GetCardStorage();
+            var storage = await GetCardService();
             var saveData = await storage.LoadAsync(TestEventId);
 
             Debug.LogWarning($"Debug saveData {saveData.EventId} / {saveData.Cards.Count}");
@@ -55,19 +55,20 @@ namespace core
 
         private async UniTask Clear()
         {
-            var storage = await GetCardStorage();
+            var storage = await GetCardService();
             await storage.ClearCollectionAsync();
             Debug.LogWarning($"Debug Clear Completed");
         }
 
-        private async UniTask<IEventCardsStorage> GetCardStorage()
+        private async UniTask<EventCardsService> GetCardService()
         {
-            if (_eventCardsStorage != null) return _eventCardsStorage;
+            if (_eventCardService != null) return _eventCardService;
             
-            _eventCardsStorage = new JsonEventCardsStorage();
-            await _eventCardsStorage.InitializeAsync();
+            _eventCardService = new EventCardsService(new JsonEventCardsStorage());
+            
+            await _eventCardService.InitializeAsync();
 
-            return _eventCardsStorage;
+            return _eventCardService;
         }
         
         private void OnDestroy()
@@ -77,9 +78,11 @@ namespace core
             _clearButton.onClick.RemoveAllListeners();
         }
 
-        public bool OpenCard(string cardId)
+        public async UniTask OpenCard(string cardId)
         {
-            throw new System.NotImplementedException();
+            var storage = await GetCardService();
+            await storage.UnlockCardAsync(TestEventId, cardId);
+
         }
     }
 }
