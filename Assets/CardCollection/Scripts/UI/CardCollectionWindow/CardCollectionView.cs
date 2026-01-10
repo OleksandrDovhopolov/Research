@@ -3,15 +3,11 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace core
 {
     public class CardCollectionView : WindowView
     {
-        public event Action OnButtonPressed;
-        
-        [SerializeField] private Button _openGroupWindowButton;
         [SerializeField] private UIListPool<CardsCollectionView> _cardGroupsPool;
         [SerializeField] private GameObject _loadingAnimationObject;
         
@@ -22,8 +18,6 @@ namespace core
         protected override void Awake()
         {
             base.Awake();
-        
-            _openGroupWindowButton.onClick.AddListener(OnButtonClicked);
         }
 
         private bool _groupsCreated;
@@ -77,11 +71,6 @@ namespace core
             _loadingAnimationObject.gameObject.SetActive(show);
         }
         
-        private void OnButtonClicked()
-        {
-            OnButtonPressed?.Invoke();
-        }
-        
         protected override void OnDestroy()
         {
             base.OnDestroy();
@@ -90,8 +79,6 @@ namespace core
             {
                 view.OnButtonPressed -= OnButtonPressedHandler;
             }
-            
-            _openGroupWindowButton.onClick.AddListener(OnButtonClicked);
         }
     }
 }

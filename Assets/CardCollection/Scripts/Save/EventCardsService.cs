@@ -7,6 +7,7 @@ namespace core
     public class EventCardsService
     {
         private readonly IEventCardsStorage _storage;
+        private readonly Dictionary<string, EventCardsSaveData> _cache = new();
 
         public EventCardsService(IEventCardsStorage storage)
         {
@@ -18,19 +19,36 @@ namespace core
             await _storage.InitializeAsync();
         }
 
-        public UniTask<EventCardsSaveData> LoadAsync(string eventId)
+        public async UniTask<EventCardsSaveData> LoadAsync(string eventId)
         {
-            return _storage.LoadAsync(eventId);
+            if (string.IsNullOrEmpty(eventId))
+                throw new ArgumentException("Event ID cannot be null or empty", nameof(eventId));
+
+            if (_cache.TryGetValue(eventId, out var cachedData))
+            {
+                return cachedData;
+            }
+
+            var data = await _storage.LoadAsync(eventId);
+            _cache[eventId] = data;
+            return data;
         }
 
-        public UniTask SaveAsync(EventCardsSaveData data)
+        public async UniTask SaveAsync(EventCardsSaveData data)
         {
-            return _storage.SaveAsync(data);
+            if (data == null)
+                throw new ArgumentNullException(nameof(data));
+
+            await _storage.SaveAsync(data);
+            
+            _cache[data.EventId] = data;
         }
 
-        public UniTask ClearCollectionAsync()
+        public async UniTask ClearCollectionAsync()
         {
-            return _storage.ClearCollectionAsync();
+            await _storage.ClearCollectionAsync();
+            
+            _cache.Clear();
         }
         
         public UniTask UnlockCardAsync(string eventId, string cardId)
@@ -41,31 +59,17 @@ namespace core
         public async UniTask UnlockCardsAsync(string eventId, IReadOnlyCollection<string> cardIds)
         {
             if (cardIds == null || cardIds.Count == 0) return;
-
-            var data = await _storage.LoadAsync(eventId);
-
-            foreach (var cardId in cardIds)
-            {
-                var card = data.Cards.Find(c => c.CardId == cardId);
-
-                if (card == null)
-                {
-                    data.Cards.Add(new CardProgressData { CardId = cardId, IsUnlocked = true });
-                }
-                else
-                {
-                    card.IsUnlocked = true;
-                }
-            }
-
-            await _storage.SaveAsync(data);
+            
+            await _storage.UnlockCardsAsync(eventId, cardIds);
+            
+            var updatedData = await _storage.LoadAsync(eventId);
+            _cache[eventId] = updatedData;
         }
         
-        public async UniTask<bool> IsCardUnlockedAsync(string eventId, string cardId)
+        public bool IsCardUnlocked(string eventId, string cardId)
         {
-            var data = await _storage.LoadAsync(eventId);
-            var card = data.Cards.Find(c => c.CardId == cardId);
-            return card != null && card.IsUnlocked;
+            var card = _cache[eventId].Cards.Find(c => c.CardId == cardId);
+            return card is { IsUnlocked: true };
         }
     }
 }

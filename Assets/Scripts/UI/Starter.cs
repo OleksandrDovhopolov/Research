@@ -11,6 +11,7 @@ namespace core
         [SerializeField] private ResearchCheatModule _researchCheatModule;
         [SerializeField] private Button _button;
         [SerializeField] private Button _cheatButton;
+        [SerializeField] private CardCollectionSaveController _cardCollectionSaveController;
         
         private ConfigManager _configManager;
         
@@ -29,7 +30,7 @@ namespace core
             
             _uiManager.Configurate(windowFactoryBase, eventHandler);
             
-            _button.onClick.AddListener(OpenSettings);
+            _button.onClick.AddListener(() => OpenSettings().Forget());
             _cheatButton.onClick.AddListener(OpenCheatsPanel);
         }
 
@@ -57,9 +58,11 @@ namespace core
             await _configManager.ApplyParsedConfigs(configStorages);
         }
         
-        private void OpenSettings()
+        private const string TestEventId = "test";
+        private async UniTask OpenSettings()
         {
-            var args = new CardCollectionArgs(_uiManager);
+            EventCardsSaveData collectionData = await _cardCollectionSaveController.GetCollectionData(TestEventId);
+            var args = new CardCollectionArgs(_uiManager, collectionData);
             _uiManager.Show<CardCollectionController>(args);
         }
 

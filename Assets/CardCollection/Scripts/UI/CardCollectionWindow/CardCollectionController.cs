@@ -8,10 +8,12 @@ namespace core
     public class CardCollectionArgs : WindowArgs
     {
         public readonly UIManager UiManager;
+        public readonly EventCardsSaveData EventCardsSaveData;
         
-        public CardCollectionArgs(UIManager uiManager)
+        public CardCollectionArgs(UIManager uiManager, EventCardsSaveData  eventCardsSaveData)
         {
             UiManager = uiManager;
+            EventCardsSaveData = eventCardsSaveData;
         }
     }
     
@@ -33,7 +35,6 @@ namespace core
         protected override void OnShowComplete()
         {
             View.CloseClick += CloseWindow;
-            View.OnButtonPressed += OpenGroupWindow;
             View.OnGroupButtonPressed += OnGroupButtonPressedHandler;
             
             if (_groupsCreated) return;
@@ -60,25 +61,19 @@ namespace core
         protected override void OnHideStart(bool isClosed)
         {
             View.CloseClick -= CloseWindow;
-            View.OnButtonPressed -= OpenGroupWindow;
             View.OnGroupButtonPressed -= OnGroupButtonPressedHandler;
         }
 
         private void OnGroupButtonPressedHandler(string groupType)
         {
-            var args = new CardGroupArgs(Args.UiManager, groupType);
+            var groupCards = Args.EventCardsSaveData.GetCardsByGroupType(groupType);
+            var args = new CardGroupArgs(Args.UiManager, groupType, groupCards);
             Args.UiManager.Show<CardGroupController>(args);
         }
         
         private void CloseWindow()
         {
             Args.UiManager.Hide<CardCollectionController>();
-        }
-        
-        private void OpenGroupWindow()
-        {
-            var args = new CardGroupArgs(Args.UiManager, "farming");
-            Args.UiManager.Show<CardGroupController>(args);
         }
     }
 }

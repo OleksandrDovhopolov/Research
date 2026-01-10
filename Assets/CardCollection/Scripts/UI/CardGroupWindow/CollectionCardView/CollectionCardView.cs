@@ -21,8 +21,10 @@ namespace core
         [SerializeField] protected GameObject _closedCardContainer;
         [SerializeField] protected GameObject _openCardContainer;
         [SerializeField] protected GameObject _cardRect;
+        
+        [SerializeField] private GameObject _newNotificationGameObject;
 
-        private bool _isOpen;
+        public bool IsOpen { get; private set; }
 
         protected RectTransform CardRect;
         
@@ -33,7 +35,7 @@ namespace core
             CardRect = (RectTransform)_cardRect.transform;
         }
 
-        public virtual RectTransform GetRectTransform(bool isOpen)
+        public virtual RectTransform GetRectTransform()
         {
             return CardRect;
         }
@@ -53,7 +55,7 @@ namespace core
         
         public void SetCardIsOpen(bool isOpen)
         {
-            _isOpen = isOpen;
+            IsOpen = isOpen;
             UpdateCardView();
         }
                 
@@ -93,7 +95,7 @@ namespace core
         
         public void UpdateCardView()
         {
-            SetOpenCardContainerActive(_isOpen);
+            SetOpenCardContainerActive(IsOpen);
         }
         
         public void SetOpenCardContainerActive(bool isActive)
@@ -105,7 +107,12 @@ namespace core
         {
             _closedCardContainer.SetActive(isActive);
         }
-
+        
+        public void SetNewNotificationActive(bool isActive)
+        {
+            _newNotificationGameObject.SetActive(isActive);
+        }
+        
         private void OnDestroy()
         {
             if (_cardButton != null)
@@ -121,7 +128,7 @@ namespace core
 
         public void OnCardAnimationCompleted()
         {
-            SetOpenCardContainerActive(_isOpen);
+            SetOpenCardContainerActive(IsOpen);
         }
     }
 }

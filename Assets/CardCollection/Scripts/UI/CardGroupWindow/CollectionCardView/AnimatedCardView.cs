@@ -22,7 +22,7 @@ namespace core
             _startScale = CardRect.localScale;
         }
         
-        public void PlayCardPreview(Vector2 targetPosition, bool isOpen)
+        public void PlayCardPreview(Vector2 targetPosition)
         {
             var rect = CardRect;
             if (_moveRoutine != null) StopCoroutine(_moveRoutine);
@@ -32,7 +32,7 @@ namespace core
             _scaleRoutine = StartCoroutine(AnimateScale(rect, rect.localScale, _startScale * _scaleFactor, _animationDuration));
         }
 
-        public void HideCard(Vector2 targetPosition, bool isOpen)
+        public void HideCard(Vector2 targetPosition)
         {
             var rect = CardRect;
             

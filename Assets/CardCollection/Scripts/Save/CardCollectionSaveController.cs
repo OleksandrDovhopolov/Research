@@ -53,6 +53,12 @@ namespace core
             }
         }
 
+        public async UniTask<EventCardsSaveData> GetCollectionData(string eventId)
+        {
+            var storage = await GetCardService();
+           return await storage.LoadAsync(eventId);
+        }
+        
         private async UniTask Clear()
         {
             var storage = await GetCardService();

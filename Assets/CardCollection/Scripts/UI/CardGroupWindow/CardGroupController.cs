@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UISystem;
-using UnityEngine;
 
 namespace core
 {
@@ -9,11 +8,13 @@ namespace core
     {
         public readonly string GroupType;
         public readonly UIManager UiManager;
+        public readonly List<CardProgressData> GroupData;
         
-        public CardGroupArgs(UIManager uiManager, string groupType)
+        public CardGroupArgs(UIManager uiManager, string groupType, List<CardProgressData> groupData)
         {
             GroupType = groupType;
             UiManager = uiManager;
+            GroupData = groupData;
         }
     }
     
@@ -27,7 +28,7 @@ namespace core
         protected override void OnShowStart()
         {
             var data = CardCollectionConfigStorage.Instance.Get(Args.GroupType);
-            View.CreateViews(data);
+            View.CreateDataViews(Args.GroupType, Args.GroupData);
 
             CreateGroupViews(data).Forget();
         }

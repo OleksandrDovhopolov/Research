@@ -386,7 +386,6 @@ MonoBehaviour:
   _closeButtons:
   - {fileID: 4875904500695864368}
   - {fileID: 661212151933234847}
-  _openGroupWindowButton: {fileID: 4019480060208139653}
   _cardGroupsPool:
     prefab: {fileID: 311882119123826984, guid: 577c884bdb2a6b24785464edb79d11c6, type: 3}
     parent: {fileID: 2875479666885025632}

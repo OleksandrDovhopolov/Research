@@ -1244,6 +1244,7 @@ MonoBehaviour:
   _researchCheatModule: {fileID: 343525368}
   _button: {fileID: 680737154}
   _cheatButton: {fileID: 1552899116}
+  _cardCollectionSaveController: {fileID: 1619734102}
 --- !u!4 &1037090431
 Transform:
   m_ObjectHideFlags: 0

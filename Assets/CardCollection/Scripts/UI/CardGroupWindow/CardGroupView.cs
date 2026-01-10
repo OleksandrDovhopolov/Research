@@ -14,9 +14,11 @@ namespace core
         [SerializeField] private SelectedCardView _selectedCardAnimation;
 
         private readonly Dictionary<CardCollectionConfig, CollectionCardView> _viewsDict = new();
-
-        public void CreateViews(List<CardCollectionConfig> cardsData, bool isOpen = true)
+        
+        public void CreateDataViews(string groupType, List<CardProgressData> cardsData)
         {
+            var configs = CardCollectionConfigStorage.Instance.Get(groupType);
+            
             _upperCardsPool.DisableNonActive();
             _bottomCardsPool.DisableNonActive();
             
@@ -28,11 +30,17 @@ namespace core
                     break;
                 }
                 
-                var config = cardsData[i];
+                var data = cardsData[i];
+                var config = configs.Find(config => config.Id == data.CardId);
+                if (config == null)
+                {
+                    Debug.LogError($"Debug. GroupId {groupType}. failed to Find config.ID ==  data.CardId {data.CardId}");
+                    continue;
+                }
                 var pool = i < 5 ? _upperCardsPool : _bottomCardsPool;
         
                 var cardView = pool.GetNext();
-                cardView.SetCardIsOpen(isOpen);
+                cardView.SetCardIsOpen(data.IsUnlocked);
                 cardView.SetCardName(config.CardName);
                 cardView.SetStars(config.Stars);
                 cardView.OnCardPressed += OnCardPressedHandler;
