@@ -11,13 +11,14 @@ namespace core
         [SerializeField] private Image _cardsGrouopImage;
         [SerializeField] private Button _cardsGrouopButton;
         [SerializeField] private TextMeshProUGUI _grouoCollectedAmountText;
+        [SerializeField] private Image _collectedSlider;
         
         [Space, Header("Rewards")]
         [SerializeField] private Image _grouoRewardImage;
         [SerializeField] private TextMeshProUGUI _groupRewardAmountText;
 
-        private string _groupType;
-        
+        public string GroupType { get; private set; }
+
         public event Action<string> OnButtonPressed;
 
         private void Start()
@@ -27,16 +28,22 @@ namespace core
 
         private void OnButtonPressedHandler()
         {
-            OnButtonPressed?.Invoke(_groupType);
+            OnButtonPressed?.Invoke(GroupType);
         }
         
-        public void SetData(string groupType, string groupName, string collectedAmount)
+        public void SetData(string groupType, string groupName, int collectedAmount, int totalAmount)
         {
-            _groupType = groupType;
+            GroupType = groupType;
             _cardsGroupName.text = groupName;
-            _grouoCollectedAmountText.text = collectedAmount;
+            UpdateCollectedAmount(collectedAmount, totalAmount);
         }
 
+        public void UpdateCollectedAmount(int collectedAmount, int totalAmount)
+        {
+            _collectedSlider.fillAmount = (float)collectedAmount / totalAmount;;
+            _grouoCollectedAmountText.text = collectedAmount.ToString();
+        }
+        
         private void OnDestroy()
         {
             _cardsGrouopButton.onClick.RemoveAllListeners();

@@ -26,10 +26,15 @@ namespace core
         
         protected override void OnShowStart()
         {
-            if (_groupsCreated) return;
-            
-            View.ShowLoader(true); 
-            View.CreateViews(CardGroupsConfigStorage.Instance.Data);
+            if (_groupsCreated)
+            {
+                View.UpdateViews(Args.EventCardsSaveData);
+            }
+            else
+            {
+                View.ShowLoader(true); 
+                View.CreateViews(Args.EventCardsSaveData);
+            }
         }
         
         protected override void OnShowComplete()

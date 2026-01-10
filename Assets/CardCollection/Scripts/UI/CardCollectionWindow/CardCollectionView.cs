@@ -14,41 +14,49 @@ namespace core
         private readonly Dictionary<string, CardsCollectionView> _viewsDict = new();
         
         public event Action<string> OnGroupButtonPressed;
-        
-        protected override void Awake()
-        {
-            base.Awake();
-        }
 
         private bool _groupsCreated;
 
-        public void CreateViews(List<CardGroupsConfig> groupsData)
+        public void CreateViews(EventCardsSaveData collectionData)
         {
             _cardGroupsPool.DisableNonActive();
 
             _viewsDict.Clear();
+
+            var configs = CardGroupsConfigStorage.Instance.Data;
             
-            foreach (var groupsConfig in groupsData)
+            foreach (var groupsConfig in configs)
             {
                 var groupView = _cardGroupsPool.GetNext();
                 
                 var groupType = groupsConfig.GroupType;
                 var groupName = groupsConfig.GroupName;
-                var collectedGroupAmount = 0;
+                var totalGroupAmount = collectionData.GetGroupAmount(groupsConfig.GroupType);
+                var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupsConfig.GroupType);
                 
-                groupView.SetData(groupType, groupName, collectedGroupAmount.ToString());
+                groupView.SetData(groupType, groupName, collectedGroupAmount, totalGroupAmount);
                 groupView.OnButtonPressed += OnButtonPressedHandler;
-                _viewsDict.Add(groupsConfig.Id, groupView);
+                _viewsDict.Add(groupsConfig.GroupType, groupView);
             }
         }
-        
+
+        public void UpdateViews(EventCardsSaveData collectionData)
+        {
+            foreach (var groupView in _viewsDict.Values)
+            {
+                var totalGroupAmount = collectionData.GetGroupAmount(groupView.GroupType);
+                var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupView.GroupType);
+                groupView.UpdateCollectedAmount(collectedGroupAmount, totalGroupAmount);
+            }
+        }
+
         public async UniTask CreateGroupViews(List<CardGroupsConfig> groupsData)
         {
             var loadTasks = groupsData.Select(async config => {
                     try 
                     {
                         var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(config.GroupIcon);
-                        if (_viewsDict.TryGetValue(config.Id, out var view))
+                        if (_viewsDict.TryGetValue(config.GroupType, out var view))
                             view.SetSprite(sprite);
                     }
                     catch (Exception e)
