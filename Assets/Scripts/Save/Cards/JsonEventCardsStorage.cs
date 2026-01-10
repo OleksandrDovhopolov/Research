@@ -147,7 +147,6 @@ namespace core
 
             var data = await LoadAsync(eventId);
 
-            // Use dictionary for O(1) lookups instead of O(n) Find operations
             var cardDict = data.Cards.ToDictionary(c => c.CardId, c => c);
 
             foreach (var cardId in cardIds)
@@ -161,16 +160,6 @@ namespace core
                 if (cardDict.TryGetValue(cardId, out var existingCard))
                 {
                     existingCard.IsUnlocked = true;
-                }
-                else
-                {
-                    var newCard = new CardProgressData
-                    {
-                        CardId = cardId,
-                        IsUnlocked = true
-                    };
-                    data.Cards.Add(newCard);
-                    cardDict[cardId] = newCard; // Update dictionary for consistency
                 }
             }
 

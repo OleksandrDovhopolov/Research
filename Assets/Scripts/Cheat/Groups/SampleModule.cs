@@ -6,7 +6,14 @@ namespace core
     public class SampleModule : ICheatsModule
     {
         private const string SampleGroup = "Sample";
+
+        private readonly ICollectionUpdater _collectionUpdater;
         
+        public SampleModule(ICollectionUpdater collectionUpdater)
+        {
+            _collectionUpdater = collectionUpdater;
+        }
+
         public void Initialize(ICheatsContainer cheatsContainer)
         {
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Sample Module", () =>
@@ -29,13 +36,6 @@ namespace core
             {
                 Debug.LogWarning($"Sample int {id}");
             }).WithGroup(SampleGroup));
-            
-            
-            cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<string>("Input string", str =>
-            {
-                Debug.LogWarning($"Sample str {str}");
-            }).WithGroup(SampleGroup));
-            
             
             cheatsContainer.AddItem<CheatInputItemWithLabel>(item => item.OnInputChange<float>("test", val =>
             {

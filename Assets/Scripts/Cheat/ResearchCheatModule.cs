@@ -54,8 +54,8 @@ namespace core
         {
             var cheatsModules = new List<ICheatsModule>
             {
-                new DefaultModule(),
-                new SampleModule(),
+                new DefaultModule(_saveController),
+                new SampleModule(_saveController),
             };
             
             return cheatsModules;

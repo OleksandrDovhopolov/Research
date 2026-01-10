@@ -1,15 +1,37 @@
 using cheatModule;
-using UnityEngine;
+using Cysharp.Threading.Tasks;
 
 namespace core
 {
     public class DefaultModule : ICheatsModule
     {
+        private readonly ICollectionUpdater _collectionUpdater;
+        
+        public DefaultModule(ICollectionUpdater collectionUpdater)
+        {
+            _collectionUpdater = collectionUpdater;
+        }
+        
         public void Initialize(ICheatsContainer cheatsContainer)
         {
-            cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Default Module Sample", () =>
+            cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Save collection", () =>
             {
-                Debug.LogWarning($"Default module");
+                _collectionUpdater.Save().Forget();
+            }));
+            
+            cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Load collection", () =>
+            {
+                _collectionUpdater.Load().Forget();
+            }));
+            
+            cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Clear collection", () =>
+            {
+                _collectionUpdater.Clear().Forget();
+            }));
+            
+            cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<string>("Open card ID(str)", cardId =>
+            {
+                _collectionUpdater.OpenCard(cardId);
             }));
         }
     }

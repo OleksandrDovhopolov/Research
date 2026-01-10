@@ -1,32 +1,23 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace core
 {
     public interface ICollectionUpdater
     {
         public UniTask OpenCard(string cardId);
+        public UniTask Save();
+        public UniTask Load();
+        public UniTask Clear();
     }
     
     public class CardCollectionSaveController : MonoBehaviour, ICollectionUpdater
     {
-        [SerializeField] private Button _saveButton;
-        [SerializeField] private Button _loadButton;
-        [SerializeField] private Button _clearButton;
-        
         private const string TestEventId = "test";
         
         private EventCardsService _eventCardService;
-
-        private void Start()
-        {
-            _saveButton.onClick.AddListener(() => Save().Forget());
-            _loadButton.onClick.AddListener(() => Load().Forget());
-            _clearButton.onClick.AddListener(() => Clear().Forget());
-        }
         
-        private async UniTask Save()
+        public async UniTask Save()
         {
             var cardCollectionData = new EventCardsSaveData{ EventId = TestEventId };
             
@@ -38,19 +29,12 @@ namespace core
 
             var storage = await GetCardService();
             await storage.SaveAsync(cardCollectionData);
-            Debug.LogWarning($"Debug Save Completed");
         }
         
-        private async UniTask Load()
+        public async UniTask Load()
         {
             var storage = await GetCardService();
-            var saveData = await storage.LoadAsync(TestEventId);
-
-            Debug.LogWarning($"Debug saveData {saveData.EventId} / {saveData.Cards.Count}");
-            foreach (var card in saveData.Cards)
-            {
-                Debug.LogWarning($"Debug card {card.CardId} / {card.IsUnlocked}");
-            }
+            await storage.LoadAsync(TestEventId);
         }
 
         public async UniTask<EventCardsSaveData> GetCollectionData(string eventId)
@@ -59,11 +43,10 @@ namespace core
            return await storage.LoadAsync(eventId);
         }
         
-        private async UniTask Clear()
+        public async UniTask Clear()
         {
             var storage = await GetCardService();
             await storage.ClearCollectionAsync();
-            Debug.LogWarning($"Debug Clear Completed");
         }
 
         private async UniTask<EventCardsService> GetCardService()
@@ -76,19 +59,12 @@ namespace core
 
             return _eventCardService;
         }
-        
-        private void OnDestroy()
-        {
-            _saveButton.onClick.RemoveAllListeners();
-            _loadButton.onClick.RemoveAllListeners();
-            _clearButton.onClick.RemoveAllListeners();
-        }
 
         public async UniTask OpenCard(string cardId)
         {
+            Debug.LogWarning($"Debug OpenCard {cardId}");
             var storage = await GetCardService();
             await storage.UnlockCardAsync(TestEventId, cardId);
-
         }
     }
 }
