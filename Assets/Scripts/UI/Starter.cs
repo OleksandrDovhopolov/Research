@@ -11,6 +11,7 @@ namespace core
         [SerializeField] private ResearchCheatModule _researchCheatModule;
         [SerializeField] private Button _button;
         [SerializeField] private Button _cheatButton;
+        [SerializeField] private Button _newCardButton;
         [SerializeField] private CardCollectionSaveController _cardCollectionSaveController;
         
         private ConfigManager _configManager;
@@ -32,6 +33,7 @@ namespace core
             
             _button.onClick.AddListener(() => OpenSettings().Forget());
             _cheatButton.onClick.AddListener(OpenCheatsPanel);
+            _newCardButton.onClick.AddListener(OpenNewCardWindow);
         }
 
          private async UniTask LoadAddressables()
@@ -69,11 +71,18 @@ namespace core
         {
             _researchCheatModule.OpenCheatPanel();
         }
+
+        public void OpenNewCardWindow()
+        {
+            var args = new NewCardArgs(_uiManager);
+            _uiManager.Show<NewCardController>(args);
+        }
         
         private void OnDestroy()
         {
             _button.onClick.RemoveAllListeners();
             _cheatButton.onClick.RemoveAllListeners();
+            _newCardButton.onClick.RemoveAllListeners();
         }
     } 
 }
