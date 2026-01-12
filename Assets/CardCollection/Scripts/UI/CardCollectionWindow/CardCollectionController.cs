@@ -8,11 +8,13 @@ namespace core
     public class CardCollectionArgs : WindowArgs
     {
         public readonly UIManager UiManager;
+        public readonly ICardUpdater CardUpdater;
         public readonly EventCardsSaveData EventCardsSaveData;
         
-        public CardCollectionArgs(UIManager uiManager, EventCardsSaveData  eventCardsSaveData)
+        public CardCollectionArgs(UIManager uiManager, ICardUpdater iCardUpdater, EventCardsSaveData  eventCardsSaveData)
         {
             UiManager = uiManager;
+            CardUpdater = iCardUpdater;
             EventCardsSaveData = eventCardsSaveData;
         }
     }
@@ -71,8 +73,10 @@ namespace core
 
         private void OnGroupButtonPressedHandler(string groupType)
         {
+            View.UpdateGroupNewCards(groupType, 0);
+            
             var groupCards = Args.EventCardsSaveData.GetCardsByGroupType(groupType);
-            var args = new CardGroupArgs(Args.UiManager, groupType, groupCards);
+            var args = new CardGroupArgs(Args.UiManager, Args.CardUpdater, groupType, groupCards);
             Args.UiManager.Show<CardGroupController>(args);
         }
         

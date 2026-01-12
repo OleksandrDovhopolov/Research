@@ -160,6 +160,7 @@ namespace core
                 if (cardDict.TryGetValue(cardId, out var existingCard))
                 {
                     existingCard.IsUnlocked = true;
+                    existingCard.IsNew = true;
                 }
             }
 

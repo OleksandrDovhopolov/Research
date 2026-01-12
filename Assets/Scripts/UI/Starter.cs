@@ -58,11 +58,10 @@ namespace core
             await _configManager.ApplyParsedConfigs(configStorages);
         }
         
-        private const string TestEventId = "test";
         private async UniTask OpenSettings()
         {
-            EventCardsSaveData collectionData = await _cardCollectionSaveController.GetCollectionData(TestEventId);
-            var args = new CardCollectionArgs(_uiManager, collectionData);
+            EventCardsSaveData collectionData = await _cardCollectionSaveController.Load();
+            var args = new CardCollectionArgs(_uiManager, _cardCollectionSaveController, collectionData);
             _uiManager.Show<CardCollectionController>(args);
         }
 

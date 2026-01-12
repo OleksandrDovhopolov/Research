@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace core
 {
@@ -70,6 +71,34 @@ namespace core
         {
             var card = _cache[eventId].Cards.Find(c => c.CardId == cardId);
             return card is { IsUnlocked: true };
+        }
+        
+        /// <summary>
+        /// Resets the IsNew flag for the specified card.
+        /// </summary>
+        /// <param name="eventId">The event identifier</param>
+        /// <param name="cardId">The card identifier to reset</param>
+        public async UniTask ResetNewFlagAsync(string eventId, string cardId)
+        {
+            if (string.IsNullOrEmpty(eventId))
+                throw new ArgumentException("Event ID cannot be null or empty", nameof(eventId));
+            
+            if (string.IsNullOrEmpty(cardId))
+                throw new ArgumentException("Card ID cannot be null or empty", nameof(cardId));
+
+            var data = await LoadAsync(eventId);
+            
+            if (data?.Cards == null)
+                return;
+
+            var card = data.Cards.Find(c => c.CardId == cardId);
+            if (card != null && card.IsNew)
+            {
+                card.IsNew = false;
+                
+                Debug.LogWarning($"Debug EventCardsService cardData.CardId {card.CardId} / {card.IsNew}");
+                await SaveAsync(data);
+            }
         }
     }
 }

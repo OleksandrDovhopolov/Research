@@ -31,7 +31,7 @@ namespace core
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<string>("Open card ID(str)", cardId =>
             {
-                _collectionUpdater.OpenCard(cardId);
+                _collectionUpdater.UnlockCard(cardId);
             }));
         }
     }

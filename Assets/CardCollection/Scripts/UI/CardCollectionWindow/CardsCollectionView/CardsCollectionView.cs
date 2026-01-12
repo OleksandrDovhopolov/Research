@@ -16,6 +16,10 @@ namespace core
         [Space, Header("Rewards")]
         [SerializeField] private Image _grouoRewardImage;
         [SerializeField] private TextMeshProUGUI _groupRewardAmountText;
+        
+        [Space, Header("NewCards")]
+        [SerializeField] private GameObject _newCardsContainer;
+        [SerializeField] private TextMeshProUGUI _nexCardsAmountText;
 
         public string GroupType { get; private set; }
 
@@ -38,6 +42,12 @@ namespace core
             UpdateCollectedAmount(collectedAmount, totalAmount);
         }
 
+        public void UpdateNewCards(int newCardsAmount)
+        {
+            _newCardsContainer.SetActive(newCardsAmount > 0);
+            _nexCardsAmountText.text = newCardsAmount.ToString();
+        }
+        
         public void UpdateCollectedAmount(int collectedAmount, int totalAmount)
         {
             _collectedSlider.fillAmount = (float)collectedAmount / totalAmount;;

@@ -95,5 +95,20 @@ namespace core
             var groupCards = eventCardsSaveData.GetCardsByGroupType(groupType);
             return groupCards.Count;
         }
+        
+        /// <summary>
+        /// Calculates the number of new cards for the specified group type.
+        /// </summary>
+        /// <param name="data">The event cards save data</param>
+        /// <param name="groupType">The group type to calculate new cards for</param>
+        /// <returns>The count of unlocked cards in the group</returns>
+        public static int GetNewGroupAmount(this EventCardsSaveData data, string groupType)
+        {
+            if (data?.Cards == null)
+                return 0;
+
+            var groupCards = data.GetCardsByGroupType(groupType);
+            return groupCards.Count(card => card.IsUnlocked && card.IsNew);
+        }
     }
 }

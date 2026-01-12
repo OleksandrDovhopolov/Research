@@ -25,6 +25,7 @@ namespace core
         [SerializeField] private GameObject _newNotificationGameObject;
 
         public bool IsOpen { get; private set; }
+        public bool IsNew { get; private set; }
 
         protected RectTransform CardRect;
         
@@ -53,7 +54,7 @@ namespace core
             OnCardPressed?.Invoke(this);
         }
         
-        public void SetCardIsOpen(bool isOpen)
+        public void SetCardOpen(bool isOpen)
         {
             IsOpen = isOpen;
             UpdateCardView();
@@ -107,10 +108,11 @@ namespace core
         {
             _closedCardContainer.SetActive(isActive);
         }
-        
-        public void SetNewNotificationActive(bool isActive)
+
+        public void SetCardNew(bool isNew)
         {
-            _newNotificationGameObject.SetActive(isActive);
+            IsNew = isNew;
+            _newNotificationGameObject.SetActive(isNew);
         }
         
         private void OnDestroy()

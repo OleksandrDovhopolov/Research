@@ -31,10 +31,13 @@ namespace core
                 
                 var groupType = groupsConfig.GroupType;
                 var groupName = groupsConfig.GroupName;
-                var totalGroupAmount = collectionData.GetGroupAmount(groupsConfig.GroupType);
-                var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupsConfig.GroupType);
-                
+                var totalGroupAmount = collectionData.GetGroupAmount(groupType);
+                var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
                 groupView.SetData(groupType, groupName, collectedGroupAmount, totalGroupAmount);
+
+                var newCardsAmount = collectionData.GetNewGroupAmount(groupType);
+                UpdateGroupNewCards(groupType, newCardsAmount);
+                
                 groupView.OnButtonPressed += OnButtonPressedHandler;
                 _viewsDict.Add(groupsConfig.GroupType, groupView);
             }
@@ -44,12 +47,24 @@ namespace core
         {
             foreach (var groupView in _viewsDict.Values)
             {
-                var totalGroupAmount = collectionData.GetGroupAmount(groupView.GroupType);
-                var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupView.GroupType);
+                var groupType = groupView.GroupType;
+                var totalGroupAmount = collectionData.GetGroupAmount(groupType);
+                var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
                 groupView.UpdateCollectedAmount(collectedGroupAmount, totalGroupAmount);
+                
+                var newCardsAmount = collectionData.GetNewGroupAmount(groupType);
+                UpdateGroupNewCards(groupType, newCardsAmount);
             }
         }
 
+        public void UpdateGroupNewCards(string groupType, int groupAmount)
+        {
+            if (_viewsDict.TryGetValue(groupType, out var view))
+            {
+                view.UpdateNewCards(groupAmount);
+            }
+        }
+        
         public async UniTask CreateGroupViews(List<CardGroupsConfig> groupsData)
         {
             var loadTasks = groupsData.Select(async config => {

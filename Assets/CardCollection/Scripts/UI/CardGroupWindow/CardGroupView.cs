@@ -40,7 +40,8 @@ namespace core
                 var pool = i < 5 ? _upperCardsPool : _bottomCardsPool;
         
                 var cardView = pool.GetNext();
-                cardView.SetCardIsOpen(data.IsUnlocked);
+                cardView.SetCardOpen(data.IsUnlocked);
+                cardView.SetCardNew(data.IsNew);
                 cardView.SetCardName(config.CardName);
                 cardView.SetStars(config.Stars);
                 cardView.OnCardPressed += OnCardPressedHandler;

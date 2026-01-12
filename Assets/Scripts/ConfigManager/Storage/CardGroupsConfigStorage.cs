@@ -10,9 +10,14 @@ namespace core
         
         public List<CardGroupsConfig> Data { get; } = new();
 
-        public CardGroupsConfig Get(string id)
+        public CardGroupsConfig GetByGroupId(string groupId)
         {
-            return Data.Find(config => id == config.Id);
+            return Data.Find(config => groupId == config.Id);
+        }
+        
+        public CardGroupsConfig GetByGroupType(string groupType)
+        {
+            return Data.Find(config => groupType == config.GroupType);
         }
         
         public override void Configurate(ConfigManager configManager)
