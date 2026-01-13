@@ -67,21 +67,12 @@ namespace core
         
         public async UniTask CreateGroupViews(List<CardGroupsConfig> groupsData)
         {
-            var loadTasks = groupsData.Select(async config => {
-                    try 
-                    {
-                        var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(config.GroupIcon);
-                        if (_viewsDict.TryGetValue(config.GroupType, out var view))
-                            view.SetSprite(sprite);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"Failed sprite {config.GroupIcon}: {e}");
-                    }
-            });
-                
-            await UniTask.WhenAll(loadTasks);
-            await UniTask.WaitForSeconds(0.5f);
+            await UIUtils.LoadAndSetSpritesAsync(
+                groupsData,
+                config => config.GroupIcon,
+                config => _viewsDict.TryGetValue(config.GroupType, out var view) ? view : null,
+                (view, sprite) => view.SetSprite(sprite),
+                config => config.GroupIcon);
         }
         
         private void OnButtonPressedHandler(string groupType)

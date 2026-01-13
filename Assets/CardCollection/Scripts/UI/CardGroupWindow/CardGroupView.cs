@@ -52,21 +52,12 @@ namespace core
         
         public async UniTask SetSprites(List<CardCollectionConfig> cardsData)
         {
-            var loadTasks = cardsData.Select(async config => {
-                try 
-                {
-                    var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(config.Icon);
-                    if (_viewsDict.TryGetValue(config, out var view))
-                        view.SetCardImage(sprite);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"Failed sprite {config.CardName}: {e}");
-                }
-            });
-                
-            await UniTask.WhenAll(loadTasks);
-            await UniTask.WaitForSeconds(2f);
+            await UIUtils.LoadAndSetSpritesAsync(
+                cardsData,
+                config => config.Icon,
+                config => _viewsDict.TryGetValue(config, out var view) ? view : null,
+                (view, sprite) => view.SetCardImage(sprite),
+                config => config.CardName);
         }
 
         private void OnCardPressedHandler(CollectionCardView cardView)
