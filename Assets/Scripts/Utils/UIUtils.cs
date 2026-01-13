@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -49,6 +49,12 @@ namespace core
 
             await UniTask.WhenAll(loadTasks);
             await UniTask.WaitForSeconds(0.5f);
+        }
+        
+        public static async UniTask SetSprite(CardCollectionConfig config, CollectionCardView view, CancellationToken cancellationToken = default)
+        {
+            var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(config.Icon);
+            view.SetCardImage(sprite);
         }
     }
 }

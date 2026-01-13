@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -7,9 +8,11 @@ namespace core
     public interface ICollectionUpdater
     {
         public UniTask UnlockCard(string cardId);
+        public UniTask UnlockCard(List<string> cardId);
         public UniTask Save();
         public UniTask<EventCardsSaveData> Load();
         public UniTask Clear();
+        public UniTask<List<CardProgressData>> GetCardsByIds(List<string> cardIds);
     }
     
     public interface ICardUpdater
@@ -53,6 +56,27 @@ namespace core
             _isInitialized = true;
         }
 
+        public async UniTask UnlockCard(List<string> cardId)
+        {
+            if (cardId == null || cardId.Count == 0)
+                throw new ArgumentException("Card IDs collection cannot be null or empty", nameof(cardId));
+
+            if (string.IsNullOrEmpty(_defaultEventId))
+                throw new InvalidOperationException("Event ID is not set. Set CurrentEventId before unlocking cards.");
+
+            await EnsureInitializedAsync();
+
+            try
+            {
+                await _eventCardService.UnlockCardsAsync(_defaultEventId, cardId);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[CardCollectionSaveController] Failed to unlock cards [{string.Join(", ", cardId)}] for event {_defaultEventId}: {ex}");
+                throw;
+            }
+        }
+
         public async UniTask Save()
         {
             if (string.IsNullOrEmpty(_defaultEventId))
@@ -62,14 +86,15 @@ namespace core
 
             try
             {
-                var existingData = await _eventCardService.LoadAsync(_defaultEventId);
-                
-                if (existingData?.Cards == null || existingData.Cards.Count == 0)
+                var cardCollectionData = new EventCardsSaveData { EventId = _defaultEventId };
+
+                foreach (var cardCollectionConfig in CardCollectionConfigStorage.Instance.Data)
                 {
-                    throw new InvalidOperationException($"No card collection data found for event {_defaultEventId}. Data must be initialized before saving.");
+                    var cardData = new CardProgressData { CardId = cardCollectionConfig.Id, IsUnlocked = false };
+                    cardCollectionData.Cards.Add(cardData);
                 }
 
-                await _eventCardService.SaveAsync(existingData);
+                await _eventCardService.SaveAsync(cardCollectionData);
             }
             catch (Exception ex)
             {
@@ -154,6 +179,27 @@ namespace core
             catch (Exception ex)
             {
                 Debug.LogError($"[CardCollectionSaveController] Failed to reset new flag for card {cardId} in event {_defaultEventId}: {ex}");
+                throw;
+            }
+        }
+
+        public async UniTask<List<CardProgressData>> GetCardsByIds(List<string> cardIds)
+        {
+            if (cardIds == null || cardIds.Count == 0)
+                throw new ArgumentException("Card IDs collection cannot be null or empty", nameof(cardIds));
+
+            if (string.IsNullOrEmpty(_defaultEventId))
+                throw new InvalidOperationException("Event ID is not set. Set CurrentEventId before getting cards.");
+
+            await EnsureInitializedAsync();
+
+            try
+            {
+                return await _eventCardService.GetCardsByIdsAsync(_defaultEventId, cardIds);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[CardCollectionSaveController] Failed to get cards by IDs [{string.Join(", ", cardIds)}] for event {_defaultEventId}: {ex}");
                 throw;
             }
         }

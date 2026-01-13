@@ -110,5 +110,51 @@ namespace core
             var groupCards = data.GetCardsByGroupType(groupType);
             return groupCards.Count(card => card.IsUnlocked && card.IsNew);
         }
+        
+        /// <summary>
+        /// Filters out card IDs that are already unlocked.
+        /// Returns only card IDs that are not yet unlocked or don't exist in the data.
+        /// </summary>
+        /// <param name="data">The event cards save data to check against</param>
+        /// <param name="cardIds">Collection of card IDs to filter</param>
+        /// <returns>List of card IDs that are not already unlocked</returns>
+        public static List<string> FilterUnlockedCards(this EventCardsSaveData data, IReadOnlyCollection<string> cardIds)
+        {
+            if (cardIds == null || cardIds.Count == 0)
+                return new List<string>();
+
+            if (data?.Cards == null)
+                return cardIds.ToList();
+
+            return cardIds
+                .Where(cardId =>
+                {
+                    var card = data.Cards.Find(c => c.CardId == cardId);
+                    return card is not { IsUnlocked: true };
+                })
+                .ToList();
+        }
+        
+        /// <summary>
+        /// Converts a list of CardProgressData to NewCardDisplayData.
+        /// This hides CardProgressData internals from the view layer.
+        /// </summary>
+        /// <param name="cardsData">List of CardProgressData to convert</param>
+        /// <returns>List of NewCardDisplayData</returns>
+        public static List<NewCardDisplayData> ToNewCardDisplayData(this List<CardProgressData> cardsData)
+        {
+            if (cardsData == null || cardsData.Count == 0)
+                return new List<NewCardDisplayData>();
+
+            var result = new List<NewCardDisplayData>(cardsData.Count);
+            
+            foreach (var cardData in cardsData)
+            {
+                var config = CardCollectionConfigStorage.Instance.GetById(cardData.CardId);
+                result.Add(new NewCardDisplayData(config, cardData.IsUnlocked, cardData.IsNew));
+            }
+            
+            return result;
+        }
     }
 }

@@ -74,7 +74,8 @@ namespace core
 
         public void OpenNewCardWindow()
         {
-            var args = new NewCardArgs(_uiManager);
+            var cardRandomizer = new SimpleNewCardsRandomizer();
+            var args = new NewCardArgs(_uiManager, cardRandomizer, _cardCollectionSaveController);
             _uiManager.Show<NewCardController>(args);
         }
         

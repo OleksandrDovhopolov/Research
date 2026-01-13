@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
@@ -11,12 +12,6 @@ namespace core
         private string OverrideName => "cardCollection_override";
 
         public List<CardCollectionConfig> Data { get; } = new();
-
-        public List<CardCollectionConfig> Get(string groupType)
-        {
-            var configs = Data.Where(config => groupType == config.GroupType).ToList();
-            return configs;
-        }
         
         public override void Configurate(ConfigManager configManager)
         {
@@ -33,6 +28,34 @@ namespace core
             }
 
             return UniTask.CompletedTask;
+        }
+        
+        public List<CardCollectionConfig> Get(string groupType)
+        {
+            var configs = Data.Where(config => groupType == config.GroupType).ToList();
+            return configs;
+        }
+        
+        public CardCollectionConfig GetById(string cardId)
+        {
+            var configs = Data.FirstOrDefault(config => cardId == config.Id);
+            if (configs == null)
+            {
+                throw new InvalidOperationException("Failed to find config with id " + cardId);
+            }
+            
+            return configs;
+        }
+        
+        public List<CardCollectionConfig> GetByIds(List<string> cardIds)
+        {
+            if (cardIds == null || cardIds.Count == 0)
+            {
+                return new List<CardCollectionConfig>();
+            }
+
+            var result = Data.Where(config => cardIds.Contains(config.Id)).ToList();
+            return result;
         }
     }
 }

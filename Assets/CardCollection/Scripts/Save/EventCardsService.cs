@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -61,16 +62,46 @@ namespace core
         {
             if (cardIds == null || cardIds.Count == 0) return;
             
-            await _storage.UnlockCardsAsync(eventId, cardIds);
+            var currentData = await LoadAsync(eventId);
+            var cardsToUnlock = currentData.FilterUnlockedCards(cardIds);
             
-            var updatedData = await _storage.LoadAsync(eventId);
-            _cache[eventId] = updatedData;
+            if (cardsToUnlock.Count > 0)
+            {
+                await _storage.UnlockCardsAsync(eventId, cardsToUnlock);
+                
+                var updatedData = await _storage.LoadAsync(eventId);
+                _cache[eventId] = updatedData;
+            }
         }
         
         public bool IsCardUnlocked(string eventId, string cardId)
         {
             var card = _cache[eventId].Cards.Find(c => c.CardId == cardId);
             return card is { IsUnlocked: true };
+        }
+        
+        /// <summary>
+        /// Gets cards by their IDs from the specified event.
+        /// </summary>
+        /// <param name="eventId">The event identifier</param>
+        /// <param name="cardIds">List of card IDs to retrieve</param>
+        /// <returns>List of CardProgressData matching the card IDs</returns>
+        public async UniTask<List<CardProgressData>> GetCardsByIdsAsync(string eventId, List<string> cardIds)
+        {
+            if (string.IsNullOrEmpty(eventId))
+                throw new ArgumentException("Event ID cannot be null or empty", nameof(eventId));
+            
+            if (cardIds == null || cardIds.Count == 0)
+                return new List<CardProgressData>();
+
+            var data = await LoadAsync(eventId);
+            
+            if (data?.Cards == null)
+                return new List<CardProgressData>();
+
+            return data.Cards
+                .Where(card => cardIds.Contains(card.CardId))
+                .ToList();
         }
         
         /// <summary>
