@@ -53,7 +53,8 @@ namespace core
         
         public static async UniTask SetSprite(CardCollectionConfig config, CollectionCardView view, CancellationToken cancellationToken = default)
         {
-            var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(config.Icon);
+            var task = ProdAddressablesWrapper.LoadAsync<Sprite>(config.Icon);
+            var sprite = await task.AsUniTask().AttachExternalCancellation(cancellationToken);
             view.SetCardImage(sprite);
         }
     }

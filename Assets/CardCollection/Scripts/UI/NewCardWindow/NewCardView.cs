@@ -35,7 +35,7 @@ namespace core
                 cardView.SetCardNew(data.IsNew);
                 cardView.SetCardName(config.CardName);
                 cardView.SetStars(config.Stars);
-                UIUtils.SetSprite(config, cardView).Forget();
+                UIUtils.SetSprite(config, cardView, this.GetCancellationTokenOnDestroy()).Forget();
                 
                 _viewsDict[config] = cardView;
             }
