@@ -12,8 +12,10 @@ namespace core
         [SerializeField] private Button _cardOpenButton;
         [SerializeField] private CanvasGroup _canvasGroup;
         [SerializeField] private UIListPool<CollectionCardView> _newCardsPool;
+        [SerializeField] private UIListPool<EmptyCardView> _mockCardsPool;
 
         private readonly Dictionary<CardCollectionConfig, CollectionCardView> _viewsDict = new();
+        private readonly Dictionary<CardCollectionConfig, EmptyCardView> _mockDict = new();
         
         private void OnEnable()
         {
@@ -22,6 +24,7 @@ namespace core
         
         public void CreateNewCards(List<NewCardDisplayData> cardsData)
         {
+            _newCardsPool.DisableNonActive();
             _newCardsPool.DisableNonActive();
 
             for (var i = 0; i < cardsData.Count; i++)
@@ -39,11 +42,25 @@ namespace core
                 
                 _viewsDict[config] = cardView;
             }
+
+            for (var i = 0; i < cardsData.Count; i++)
+            {
+                var cardView = _mockCardsPool.GetNext();
+                var data = cardsData[i];
+                var config = data.Config;
+                
+                _mockDict[config] = cardView;
+            }
         }
         
         public void DisableAll()
         {
             _newCardsPool.DisableAll();
+        }
+
+        public void CreateMocks()
+        {
+            Debug.LogWarning($"Test AnimateCards");
         }
     }
 }

@@ -1,16 +1,27 @@
 ﻿using UnityEngine;
 
-public class AnimationCardOpener : MonoBehaviour
+namespace core
 {
-    [SerializeField] private Animator _animator;
-
-    public void PlayCardOpen()
+    public class AnimationCardOpener : MonoBehaviour
     {
-        _animator.SetBool("isOpen", true);
-    }
+        [SerializeField] private Animator _animator;
+        [SerializeField] private NewCardView _newCardView;
 
-    public void PlayCardClosed()
-    {
-        _animator.SetBool("isOpen", false);
+        public void PlayCardOpen()
+        {
+            Debug.LogWarning($"Debug Test PlayCardOpen");
+            _animator.SetBool("isOpen", true);
+        }
+
+        public void PlayCardClosed()
+        {
+            Debug.LogWarning($"Debug Test PlayCardClosed");
+            _animator.SetBool("isOpen", false);
+        }
+
+        public void AnimateCards()
+        {
+            _newCardView.CreateMocks();
+        }
     }
 }
