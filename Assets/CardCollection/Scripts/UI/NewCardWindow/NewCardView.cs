@@ -56,6 +56,7 @@ namespace core
         public void DisableAll()
         {
             _newCardsPool.DisableAll();
+            _mockCardsPool.DisableAll();
         }
 
         public void CreateMocks()

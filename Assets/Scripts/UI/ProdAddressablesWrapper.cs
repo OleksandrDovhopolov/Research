@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Object = UnityEngine.Object;
+using System.Threading;
 
 namespace core
 {
@@ -10,18 +11,29 @@ namespace core
     {
         // key = address
         private static readonly Dictionary<string, AsyncOperationHandle> Cache = new();
+        private static readonly object _lock = new();
 
         // ---------------- LOAD ASYNC ----------------
 
         public static async Task<T> LoadAsync<T>(string address) where T : Object
         {
-            if (Cache.TryGetValue(address, out var cachedHandle)) return cachedHandle.Convert<T>().Result;
-
-            var handle = Addressables.LoadAssetAsync<T>(address);
-            Cache[address] = handle;
+            AsyncOperationHandle handle;
+            
+            lock (_lock)
+            {
+                if (Cache.TryGetValue(address, out var cachedHandle))
+                {
+                    handle = cachedHandle;
+                }
+                else
+                {
+                    handle = Addressables.LoadAssetAsync<T>(address);
+                    Cache[address] = handle;
+                }
+            }
 
             await handle.Task;
-            return handle.Result;
+            return handle.Convert<T>().Result;
         }
 
         // ---------------- RELEASE ----------------

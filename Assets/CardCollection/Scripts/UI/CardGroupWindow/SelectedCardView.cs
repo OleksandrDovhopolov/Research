@@ -23,7 +23,6 @@ namespace core
             
             _selectedCardView.SetOpenCardContainerActive(cardView.IsOpen);
             _selectedCardView.SetClosedCardContainerActive(!cardView.IsOpen);
-            Debug.LogWarning($"Debug cardView.IsOpen {cardView.IsNew}");
             _selectedCardView.SetCardNew(cardView.IsNew);
             
             UniTaskUtils.DelayCallbackAsync(SelectedCardCallback, _selectedCardView.AnimationDuration).Forget();
