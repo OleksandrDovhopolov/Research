@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
@@ -40,6 +40,7 @@ namespace core
                 cardView.SetStars(config.Stars);
                 UIUtils.SetSprite(config, cardView, this.GetCancellationTokenOnDestroy()).Forget();
                 
+                cardView.SetAlpha(false);
                 _viewsDict[config] = cardView;
             }
 
@@ -55,13 +56,44 @@ namespace core
         
         public void DisableAll()
         {
+            foreach (var emptyCardView in _mockDict.Values)
+            {
+                emptyCardView.transform.localPosition = Vector3.zero;
+            }
+            
             _newCardsPool.DisableAll();
             _mockCardsPool.DisableAll();
         }
 
-        public void CreateMocks()
+        public async UniTaskVoid CreateMocks()
         {
-            Debug.LogWarning($"Test AnimateCards");
+            Debug.LogWarning("Animate mock cards to new card positions");
+
+            var sequence = DOTween.Sequence();
+
+            foreach (var kvp in _mockDict)
+            {
+                var config = kvp.Key;
+                var mockView = kvp.Value;
+
+                if (!_viewsDict.TryGetValue(config, out var targetView) || mockView == null || targetView == null)
+                    continue;
+
+                var tween = mockView.transform.DOMove(targetView.transform.position, 0.5f)
+                    .SetEase(Ease.InOutQuad);
+                
+                sequence.Join(tween);
+            }
+
+            if (sequence.Duration() > 0)
+            {
+                await sequence.AsyncWaitForCompletion().AsUniTask();
+            }
+
+            foreach (var cardView in _viewsDict.Values)
+            {
+                cardView.SetAlpha(true);
+            }
         }
     }
 }

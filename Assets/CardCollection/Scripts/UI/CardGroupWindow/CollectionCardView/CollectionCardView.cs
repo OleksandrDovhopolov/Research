@@ -23,6 +23,7 @@ namespace core
         [SerializeField] protected GameObject _cardRect;
         
         [SerializeField] private GameObject _newNotificationGameObject;
+        [SerializeField] private CanvasGroup _canvasGroup;
 
         public bool IsOpen { get; private set; }
         public bool IsNew { get; private set; }
@@ -102,6 +103,11 @@ namespace core
         public void SetOpenCardContainerActive(bool isActive)
         {
             _openCardContainer.SetActive(isActive);
+        }
+        
+        public void SetAlpha(bool isActive)
+        {
+            _canvasGroup.alpha = isActive ? 1 : 0;
         }
         
         public void SetClosedCardContainerActive(bool isActive)

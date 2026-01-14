@@ -11,7 +11,7 @@ namespace core
     {
         // key = address
         private static readonly Dictionary<string, AsyncOperationHandle> Cache = new();
-        private static readonly object _lock = new();
+        private static readonly object Lock = new();
 
         // ---------------- LOAD ASYNC ----------------
 
@@ -19,7 +19,7 @@ namespace core
         {
             AsyncOperationHandle handle;
             
-            lock (_lock)
+            lock (Lock)
             {
                 if (Cache.TryGetValue(address, out var cachedHandle))
                 {

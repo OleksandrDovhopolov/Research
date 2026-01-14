@@ -2014,6 +2014,7 @@ GameObject:
   - component: {fileID: 6025566192142743113}
   - component: {fileID: 727817166615935813}
   - component: {fileID: 278193600762186652}
+  - component: {fileID: 4878606546001584332}
   m_Layer: 5
   m_Name: CardItem
   m_TagString: Untagged
@@ -2069,6 +2070,7 @@ MonoBehaviour:
   _openCardContainer: {fileID: 6561782061729080028}
   _cardRect: {fileID: 8595155245159316454}
   _newNotificationGameObject: {fileID: 3260110625597514350}
+  _canvasGroup: {fileID: 4878606546001584332}
 --- !u!114 &6025566192142743113
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2151,6 +2153,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!225 &4878606546001584332
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8595155245159316454}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &8620197989812138364
 GameObject:
   m_ObjectHideFlags: 0
