@@ -33,13 +33,14 @@ namespace core
                 var groupName = groupsConfig.GroupName;
                 var totalGroupAmount = collectionData.GetGroupAmount(groupType);
                 var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
+                
                 groupView.SetData(groupType, groupName, collectedGroupAmount, totalGroupAmount);
-
+                groupView.OnButtonPressed += OnButtonPressedHandler;
+                
+                _viewsDict.Add(groupsConfig.GroupType, groupView);
+                
                 var newCardsAmount = collectionData.GetNewGroupAmount(groupType);
                 UpdateGroupNewCards(groupType, newCardsAmount);
-                
-                groupView.OnButtonPressed += OnButtonPressedHandler;
-                _viewsDict.Add(groupsConfig.GroupType, groupView);
             }
         }
 
@@ -61,6 +62,7 @@ namespace core
         {
             if (_viewsDict.TryGetValue(groupType, out var view))
             {
+                Debug.LogWarning($"Debug groupType {groupType}, groupAmount {groupAmount}");
                 view.UpdateNewCards(groupAmount);
             }
         }
