@@ -1,0 +1,52 @@
+{
+  "packs": [
+    {
+      "packId": "starter_pack_2",
+      "packName": "Стартовый пак",
+      "cardCount": 2,
+      "softCurrencyCost": 100,
+      "hardCurrencyCost": 0,
+      "availableCardRarities": ["common", "rare"]
+    },
+    {
+      "packId": "basic_pack_3",
+      "packName": "Базовый пак",
+      "cardCount": 3,
+      "softCurrencyCost": 200,
+      "hardCurrencyCost": 0,
+      "availableCardRarities": ["common", "rare"]
+    },
+    {
+      "packId": "standard_pack_4",
+      "packName": "Стандартный пак",
+      "cardCount": 4,
+      "softCurrencyCost": 350,
+      "hardCurrencyCost": 0,
+      "availableCardRarities": ["common", "rare", "epic"]
+    },
+    {
+      "packId": "premium_pack_5",
+      "packName": "Премиум пак",
+      "cardCount": 5,
+      "softCurrencyCost": 0,
+      "hardCurrencyCost": 99,
+      "availableCardRarities": ["rare", "epic", "legendary"]
+    },
+    {
+      "packId": "mega_pack_6",
+      "packName": "Мега пак",
+      "cardCount": 6,
+      "softCurrencyCost": 0,
+      "hardCurrencyCost": 199,
+      "availableCardRarities": ["epic", "legendary"]
+    },
+    {
+      "packId": "limited_event_pack_5",
+      "packName": "Событийный пак (ограниченный)",
+      "cardCount": 5,
+      "softCurrencyCost": 500,
+      "hardCurrencyCost": 49,
+      "availableCardRarities": ["rare", "epic", "legendary"]
+    }
+  ]
+}
