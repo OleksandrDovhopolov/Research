@@ -4,22 +4,26 @@ namespace CardCollection.Core
 {
     public class CardPack
     {
-        public CardPackConfig config;
-        public int purchaseCount { get; private set; } 
+        private readonly CardPackConfig _config;
+        public int PurchaseCount { get; private set; }
 
+        public string PackId => _config.packId;
+        public int CardCount => _config.cardCount;
+        public string PackName => _config.packName;
+        
         public CardPack(CardPackConfig config)
         {
-            this.config = config ?? throw new ArgumentNullException(nameof(config));
+            _config = config ?? throw new ArgumentNullException(nameof(config));
         }
 
         public void OnPurchased()
         {
-            purchaseCount++;
+            PurchaseCount++;
         }
 
         public override string ToString()
         {
-            return $"Pack: {config.packName} ({config.cardCount} cards)";
+            return $"Pack: {_config.packName} ({_config.cardCount} cards)";
         }
     }
 }

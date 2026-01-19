@@ -7,39 +7,39 @@ namespace CardCollection.Core
 {
     public class JsonCardPackProvider : ICardPackProvider
     {
-        private const string CONFIG_PATH = "CardCollection/card_packs_config";
-        private List<CardPackConfig> cachedPacks;
-        private bool isInitialized;
+        private const string CONFIG_FILE_NAME = "card_packs_config";
+        private List<CardPackConfig> _cachedPacks;
+        private bool _isInitialized;
 
         public async UniTask<List<CardPackConfig>> GetCardPacksAsync()
         {
-            if (isInitialized && cachedPacks != null) return cachedPacks;
+            if (_isInitialized && _cachedPacks != null) return _cachedPacks;
 
-            var configJson = Resources.Load<TextAsset>(CONFIG_PATH);
+            var configJson = Resources.Load<TextAsset>(CONFIG_FILE_NAME);
 
             if (configJson == null)
             {
-                Debug.LogError($"Card pack config not found at path: {CONFIG_PATH}");
-                cachedPacks = new List<CardPackConfig>();
-                isInitialized = true;
-                return cachedPacks;
+                Debug.LogError($"Card pack config not found at path: {CONFIG_FILE_NAME}");
+                _cachedPacks = new List<CardPackConfig>();
+                _isInitialized = true;
+                return _cachedPacks;
             }
 
             try
             {
                 var config = JsonUtility.FromJson<CardPackConfigList>(configJson.text);
-                cachedPacks = config?.packs ?? new List<CardPackConfig>();
-                isInitialized = true;
+                _cachedPacks = config?.packs ?? new List<CardPackConfig>();
+                _isInitialized = true;
 
-                Debug.Log($"[JsonCardPackProvider] Loaded {cachedPacks.Count} card packs from JSON");
-                return cachedPacks;
+                Debug.Log($"[JsonCardPackProvider] Loaded {_cachedPacks.Count} card packs from JSON");
+                return _cachedPacks;
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[JsonCardPackProvider] Error parsing JSON: {ex.Message}");
-                cachedPacks = new List<CardPackConfig>();
-                isInitialized = true;
-                return cachedPacks;
+                _cachedPacks = new List<CardPackConfig>();
+                _isInitialized = true;
+                return _cachedPacks;
             }
         }
 
@@ -51,8 +51,8 @@ namespace CardCollection.Core
 
         public void ClearCache()
         {
-            cachedPacks = null;
-            isInitialized = false;
+            _cachedPacks = null;
+            _isInitialized = false;
         }
 
         [Serializable]

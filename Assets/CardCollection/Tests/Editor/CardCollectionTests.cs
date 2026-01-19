@@ -57,7 +57,7 @@ namespace CardCollection.Tests
             var pack = service.GetPackById(testPackId);
 
             Assert.IsNotNull(pack);
-            Assert.AreEqual(testPackId, pack.config.packId);
+            Assert.AreEqual(testPackId, pack.PackId);
         }
 
         [UnityTest]
@@ -70,7 +70,7 @@ namespace CardCollection.Tests
             Assert.IsTrue(packs.Count > 0);
             foreach (var pack in packs)
             {
-                Assert.AreEqual(3, pack.config.cardCount);
+                Assert.AreEqual(3, pack.CardCount);
             }
         }
 
@@ -80,11 +80,11 @@ namespace CardCollection.Tests
             yield return service.InitializeAsync().ToCoroutine();
             var packId = "pack_2";
             var pack = service.GetPackById(packId);
-            var initialCount = pack.purchaseCount;
+            var initialCount = pack.PurchaseCount;
 
             service.OnPackPurchased(packId);
 
-            Assert.AreEqual(initialCount + 1, pack.purchaseCount);
+            Assert.AreEqual(initialCount + 1, pack.PurchaseCount);
         }
 
         [UnityTest]

@@ -7,18 +7,18 @@ namespace CardCollection.Core
 {
     public class ServerCardPackProvider : ICardPackProvider
     {
-        private readonly string serverUrl;
-        private List<CardPackConfig> cachedPacks;
-        private bool isInitialized;
+        private readonly string _serverUrl;
+        private List<CardPackConfig> _cachedPacks;
+        private bool _isInitialized;
 
         public ServerCardPackProvider(string baseServerUrl)
         {
-            serverUrl = baseServerUrl ?? throw new ArgumentNullException(nameof(baseServerUrl));
+            _serverUrl = baseServerUrl ?? throw new ArgumentNullException(nameof(baseServerUrl));
         }
 
         public async UniTask<List<CardPackConfig>> GetCardPacksAsync()
         {
-            if (isInitialized && cachedPacks != null) return cachedPacks;
+            if (_isInitialized && _cachedPacks != null) return _cachedPacks;
 
             try
             {
@@ -36,17 +36,17 @@ namespace CardCollection.Core
                 // }
 
                 await UniTask.Delay(500);
-                cachedPacks = new List<CardPackConfig>();
-                isInitialized = true;
+                _cachedPacks = new List<CardPackConfig>();
+                _isInitialized = true;
 
-                return cachedPacks;
+                return _cachedPacks;
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[ServerCardPackProvider] Error fetching packs: {ex.Message}");
-                cachedPacks = new List<CardPackConfig>();
-                isInitialized = true;
-                return cachedPacks;
+                _cachedPacks = new List<CardPackConfig>();
+                _isInitialized = true;
+                return _cachedPacks;
             }
         }
 
@@ -58,8 +58,8 @@ namespace CardCollection.Core
 
         public void ClearCache()
         {
-            cachedPacks = null;
-            isInitialized = false;
+            _cachedPacks = null;
+            _isInitialized = false;
         }
 
         [Serializable]

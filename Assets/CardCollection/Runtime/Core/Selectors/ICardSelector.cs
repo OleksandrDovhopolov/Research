@@ -1,0 +1,25 @@
+using System.Collections.Generic;
+using CardCollection.Core;
+using Cysharp.Threading.Tasks;
+
+namespace CardCollection.Core.Selectors
+{
+    /// <summary>
+    /// Interface for selecting cards from a pack.
+    /// Different implementations can provide different selection strategies:
+    /// - Random selection (local)
+    /// - Server-based selection
+    /// - Rarity-based selection
+    /// - etc.
+    /// </summary>
+    public interface ICardSelector
+    {
+        /// <summary>
+        /// Selects card IDs for the given pack.
+        /// </summary>
+        /// <param name="pack">The pack to select cards for</param>
+        /// <param name="availableCards">List of all available cards to select from</param>
+        /// <returns>List of selected card IDs</returns>
+        UniTask<List<string>> SelectCardsAsync(CardPack pack, List<core.CardCollectionConfig> availableCards);
+    }
+}

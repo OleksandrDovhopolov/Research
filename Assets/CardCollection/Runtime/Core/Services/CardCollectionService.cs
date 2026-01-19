@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace CardCollection.Core.Services
@@ -25,7 +26,7 @@ namespace CardCollection.Core.Services
             allPacks = new List<CardPack>();
         }
 
-        public async Task InitializeAsync()
+        public async UniTask InitializeAsync()
         {
             if (isInitialized)
             {
@@ -44,7 +45,7 @@ namespace CardCollection.Core.Services
                 packsByIdCache.Clear();
                 foreach (var pack in allPacks)
                 {
-                    packsByIdCache[pack.config.packId] = pack;
+                    packsByIdCache[pack.PackId] = pack;
                 }
 
                 isInitialized = true;
@@ -86,7 +87,7 @@ namespace CardCollection.Core.Services
         public List<CardPack> GetPacksByCardCount(int cardCount)
         {
             ValidateInitialized();
-            return allPacks.Where(p => p.config.cardCount == cardCount).ToList();
+            return allPacks.Where(p => p.CardCount == cardCount).ToList();
         }
         
         public void OnPackPurchased(string packId)
@@ -96,14 +97,14 @@ namespace CardCollection.Core.Services
             {
                 pack.OnPurchased();
                 OnPackPurchasedEvent?.Invoke(pack);
-                Debug.Log($"[CardCollectionService] Pack purchased: {pack.config.packName}");
+                Debug.Log($"[CardCollectionService] Pack purchased: {pack.PackName}");
             }
         }
 
         public (int totalPacks, int availablePacks, int totalPurchases) GetStatistics()
         {
             ValidateInitialized();
-            var totalPurchases = allPacks.Sum(p => p.purchaseCount);
+            var totalPurchases = allPacks.Sum(p => p.PurchaseCount);
             var availablePacks = totalPurchases;
             return (allPacks.Count, availablePacks, totalPurchases);
         }
