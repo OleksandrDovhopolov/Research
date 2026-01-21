@@ -6,10 +6,10 @@ namespace core
      public class NewCardArgs : WindowArgs
         {
             public readonly UIManager UiManager;
-            public readonly INewCardsRandomizer CardRandomizer;
+            public readonly PackBasedCardsRandomizer CardRandomizer;
             public readonly ICollectionUpdater CollectionUpdater;
             
-            public NewCardArgs(UIManager uiManager, INewCardsRandomizer cardRandomizer, ICollectionUpdater collectionUpdater)
+            public NewCardArgs(UIManager uiManager, PackBasedCardsRandomizer cardRandomizer, ICollectionUpdater collectionUpdater)
             {
                 UiManager = uiManager;
                 CardRandomizer = cardRandomizer;

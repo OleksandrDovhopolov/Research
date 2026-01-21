@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace core
 {
-    public class PackBasedCardsRandomizer : INewCardsRandomizer
+    public class PackBasedCardsRandomizer
     {
         private readonly CardPack _pack;
         private readonly ICardSelector _cardSelector;
