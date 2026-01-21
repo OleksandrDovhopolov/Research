@@ -1075,6 +1075,7 @@ MonoBehaviour:
   _openCardContainer: {fileID: 2284514703160482763}
   _cardRect: {fileID: 3741427135926207217}
   _newNotificationGameObject: {fileID: 7609435577663527801}
+  _canvasGroup: {fileID: 0}
   _animationDuration: 0.3
   _scaleFactor: 1.75
 --- !u!114 &3805196662644083536 stripped

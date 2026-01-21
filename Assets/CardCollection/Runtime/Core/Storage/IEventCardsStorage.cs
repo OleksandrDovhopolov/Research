@@ -1,8 +1,7 @@
 using System.Collections.Generic;
-using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 
-namespace core
+namespace CardCollection.Core
 {
     public interface IEventCardsStorage
     {
