@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;

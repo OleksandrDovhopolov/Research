@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using core;
 
-namespace core
+namespace CardCollection.Core
 {
     public static class EventCardsSaveDataExtensions
     {

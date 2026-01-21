@@ -1,11 +1,11 @@
 using CardCollection.Core;
-using CardCollection.Core.Services;
+using core;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace core
+namespace CardCollection.Runtime
 {
     public class OpenCardPackDemo : MonoBehaviour
     {

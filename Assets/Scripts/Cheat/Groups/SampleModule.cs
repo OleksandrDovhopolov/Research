@@ -7,13 +7,6 @@ namespace core
     {
         private const string SampleGroup = "Sample";
 
-        private readonly ICollectionUpdater _collectionUpdater;
-        
-        public SampleModule(ICollectionUpdater collectionUpdater)
-        {
-            _collectionUpdater = collectionUpdater;
-        }
-
         public void Initialize(ICheatsContainer cheatsContainer)
         {
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Sample Module", () =>
@@ -30,7 +23,6 @@ namespace core
                     var name = sampleList[item.CurIndex];
                     Debug.LogWarning($"Sample dropdown {name}");
                 }).WithGroup(SampleGroup));
-            
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Input int", id =>
             {

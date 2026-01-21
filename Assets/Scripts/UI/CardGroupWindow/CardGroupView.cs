@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;

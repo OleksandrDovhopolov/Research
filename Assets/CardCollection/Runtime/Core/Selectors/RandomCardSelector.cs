@@ -4,7 +4,7 @@ using core;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace CardCollection.Core.Selectors
+namespace CardCollection.Core
 {
     /// <summary>
     /// Simple random card selection strategy.

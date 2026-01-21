@@ -1,23 +1,28 @@
 using System;
 using System.Collections.Generic;
+using core;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace core
+namespace CardCollection.Core
 {
+    /// <summary>
+    /// High-level interface for updating the card collection for a single event.
+    /// Unity projects can still use this MonoBehaviour adapter, but core logic lives in EventCardsService.
+    /// </summary>
     public interface ICollectionUpdater
     {
-        public UniTask UnlockCard(string cardId);
-        public UniTask UnlockCard(List<string> cardId);
-        public UniTask Save();
-        public UniTask<EventCardsSaveData> Load();
-        public UniTask Clear();
-        public UniTask<List<CardProgressData>> GetCardsByIds(List<string> cardIds);
+        UniTask UnlockCard(string cardId);
+        UniTask UnlockCard(List<string> cardId);
+        UniTask Save();
+        UniTask<EventCardsSaveData> Load();
+        UniTask Clear();
+        UniTask<List<CardProgressData>> GetCardsByIds(List<string> cardIds);
     }
     
     public interface ICardUpdater
     {
-        public UniTask ResetNewFlagAsync(string cardId);
+        UniTask ResetNewFlagAsync(string cardId);
     }
     
     public class CardCollectionSaveController : MonoBehaviour, ICollectionUpdater, ICardUpdater
@@ -203,6 +208,5 @@ namespace core
                 throw;
             }
         }
-
     }
 }

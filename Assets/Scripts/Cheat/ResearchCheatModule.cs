@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CardCollection.Core;
 using cheatModule;
 using UnityEngine;
 
@@ -55,7 +56,7 @@ namespace core
             var cheatsModules = new List<ICheatsModule>
             {
                 new DefaultModule(_saveController),
-                new SampleModule(_saveController),
+                new SampleModule(),
             };
             
             return cheatsModules;

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using core;
 using Cysharp.Threading.Tasks;
 
-namespace CardCollection.Core.Selectors
+namespace CardCollection.Core
 {
     /// <summary>
     /// Interface for selecting cards from a pack.

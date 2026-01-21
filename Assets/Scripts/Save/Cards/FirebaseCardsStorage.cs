@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Firebase;
 using Firebase.Auth;
@@ -8,7 +9,7 @@ using UnityEngine;
 
 namespace core
 {
-    public class ServerEventCardsStorage : IEventCardsStorage
+    public class FirebaseCardsStorage : IEventCardsStorage
     {
         private FirebaseAuth _auth;
         private FirebaseFirestore _db;

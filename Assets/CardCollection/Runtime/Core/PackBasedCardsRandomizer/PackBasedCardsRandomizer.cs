@@ -1,10 +1,10 @@
+using System;
 using System.Collections.Generic;
-using CardCollection.Core;
-using CardCollection.Core.Selectors;
+using core;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace core
+namespace CardCollection.Core
 {
     public class PackBasedCardsRandomizer
     {
@@ -23,7 +23,7 @@ namespace core
         /// </summary>
         public PackBasedCardsRandomizer(ICardSelector cardSelector)
         {
-            _cardSelector = cardSelector ?? throw new System.ArgumentNullException(nameof(cardSelector));
+            _cardSelector = cardSelector ?? throw new ArgumentNullException(nameof(cardSelector));
         }
 
         public async UniTask<List<string>> GetRandomNewCardsAsync(CardPack pack)

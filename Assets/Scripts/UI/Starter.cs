@@ -1,3 +1,4 @@
+using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
