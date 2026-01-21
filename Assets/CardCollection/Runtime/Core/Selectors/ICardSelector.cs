@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using CardCollection.Core;
+using core;
 using Cysharp.Threading.Tasks;
 
 namespace CardCollection.Core.Selectors
@@ -20,6 +20,6 @@ namespace CardCollection.Core.Selectors
         /// <param name="pack">The pack to select cards for</param>
         /// <param name="availableCards">List of all available cards to select from</param>
         /// <returns>List of selected card IDs</returns>
-        UniTask<List<string>> SelectCardsAsync(CardPack pack, List<core.CardCollectionConfig> availableCards);
+        UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardCollectionConfig> availableCards);
     }
 }

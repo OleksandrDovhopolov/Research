@@ -1,3 +1,4 @@
+using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
 
@@ -5,12 +6,14 @@ namespace core
 {
      public class NewCardArgs : WindowArgs
         {
+            public readonly CardPack CardPack;
             public readonly UIManager UiManager;
             public readonly PackBasedCardsRandomizer CardRandomizer;
             public readonly ICollectionUpdater CollectionUpdater;
             
-            public NewCardArgs(UIManager uiManager, PackBasedCardsRandomizer cardRandomizer, ICollectionUpdater collectionUpdater)
+            public NewCardArgs(CardPack cardPack, UIManager uiManager, PackBasedCardsRandomizer cardRandomizer, ICollectionUpdater collectionUpdater)
             {
+                CardPack = cardPack;
                 UiManager = uiManager;
                 CardRandomizer = cardRandomizer;
                 CollectionUpdater = collectionUpdater;
@@ -29,7 +32,7 @@ namespace core
         
         private async UniTask GetNewCardsAsync()
         { 
-            var newCardsId = await Args.CardRandomizer.GetRandomNewCardsAsync();
+            var newCardsId = await Args.CardRandomizer.GetRandomNewCardsAsync(Args.CardPack);
             await Args.CollectionUpdater.UnlockCard(newCardsId);
             
             var newCardsData = await Args.CollectionUpdater.GetCardsByIds(newCardsId);

@@ -18,21 +18,21 @@ namespace core
         [SerializeField] private Button _fiveCardButton;
         [SerializeField] private Button _sixCardButton;
         
-        private const string BASE_TWO_CARD_PACK_ID = "starter_pack_2";
-        private const string BASE_THREE_CARD_PACK_ID = "basic_pack_3";
-        private const string BASE_FOUR_CARD_PACK_ID = "standard_pack_4";
-        private const string BASE_FIVE_CARD_PACK_ID = "premium_pack_5";
-        private const string BASE_SIX_CARD_PACK_ID = "mega_pack_6";
+        private const string BaseTwoCardPackID = "starter_pack_2";
+        private const string BaseThreeCardPackID = "basic_pack_3";
+        private const string BaseFourCardPackID = "standard_pack_4";
+        private const string BaseFiveCardPackID = "premium_pack_5";
+        private const string BaseSixCardPackID = "mega_pack_6";
         
         private CardCollectionService _service;
         
         private void Start()
         {
-            _twoCardButton.onClick.AddListener(() => OpenNewCardWindow(BASE_TWO_CARD_PACK_ID));
-            _threeCardButton.onClick.AddListener(() => OpenNewCardWindow(BASE_THREE_CARD_PACK_ID));
-            _fourCardButton.onClick.AddListener(() => OpenNewCardWindow(BASE_FOUR_CARD_PACK_ID));
-            _fiveCardButton.onClick.AddListener(() => OpenNewCardWindow(BASE_FIVE_CARD_PACK_ID));
-            _sixCardButton.onClick.AddListener(() => OpenNewCardWindow(BASE_SIX_CARD_PACK_ID));
+            _twoCardButton.onClick.AddListener(() => OpenNewCardWindow(BaseTwoCardPackID));
+            _threeCardButton.onClick.AddListener(() => OpenNewCardWindow(BaseThreeCardPackID));
+            _fourCardButton.onClick.AddListener(() => OpenNewCardWindow(BaseFourCardPackID));
+            _fiveCardButton.onClick.AddListener(() => OpenNewCardWindow(BaseFiveCardPackID));
+            _sixCardButton.onClick.AddListener(() => OpenNewCardWindow(BaseSixCardPackID));
             
             InitializeService().Forget();
         }
@@ -56,8 +56,8 @@ namespace core
             
             Debug.LogWarning($"Debug {pack.PackId}, {pack.CardCount}, {pack.PackName}");
             
-            var cardRandomizer = new PackBasedCardsRandomizer(pack);
-            var args = new NewCardArgs(_uiManager, cardRandomizer, _cardCollectionSaveController);
+            var cardRandomizer = new PackBasedCardsRandomizer();
+            var args = new NewCardArgs(pack, _uiManager, cardRandomizer, _cardCollectionSaveController);
             _uiManager.Show<NewCardController>(args);
         }
         

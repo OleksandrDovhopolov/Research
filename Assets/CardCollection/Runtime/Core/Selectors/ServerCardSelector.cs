@@ -1,5 +1,6 @@
+using System;
 using System.Collections.Generic;
-using CardCollection.Core;
+using core;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -15,10 +16,10 @@ namespace CardCollection.Core.Selectors
 
         public ServerCardSelector(string serverUrl)
         {
-            _serverUrl = serverUrl ?? throw new System.ArgumentNullException(nameof(serverUrl));
+            _serverUrl = serverUrl ?? throw new ArgumentNullException(nameof(serverUrl));
         }
 
-        public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<core.CardCollectionConfig> availableCards)
+        public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardCollectionConfig> availableCards)
         {
             // TODO: Implement server-based card selection
             // Example implementation:
