@@ -6,9 +6,9 @@ namespace core
 {
     public class DefaultModule : ICheatsModule
     {
-        private readonly ICollectionUpdater _collectionUpdater;
+        private readonly ICardCollectionUpdater _collectionUpdater;
         
-        public DefaultModule(ICollectionUpdater collectionUpdater)
+        public DefaultModule(ICardCollectionUpdater collectionUpdater)
         {
             _collectionUpdater = collectionUpdater;
         }

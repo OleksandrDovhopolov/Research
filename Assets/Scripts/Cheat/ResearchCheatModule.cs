@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using CardCollection.Core;
 using cheatModule;
 using UnityEngine;
 
@@ -9,7 +8,7 @@ namespace core
     public class ResearchCheatModule : MonoBehaviour, ICheatsContainer
     {
         [SerializeField] private CheatsManager _cheatsManagerPrefab;
-        [SerializeField] private CardCollectionSaveController _saveController;
+        [SerializeField] private CardCollectionEntryPoint _cardCollectionEntryPoint;
         private CheatsManager _cheatsManager;
         
         private CheatPanelItem _rootPanel;
@@ -55,7 +54,7 @@ namespace core
         {
             var cheatsModules = new List<ICheatsModule>
             {
-                new DefaultModule(_saveController),
+                new DefaultModule(_cardCollectionEntryPoint.CardCollectionUpdater),
                 new SampleModule(),
             };
             
