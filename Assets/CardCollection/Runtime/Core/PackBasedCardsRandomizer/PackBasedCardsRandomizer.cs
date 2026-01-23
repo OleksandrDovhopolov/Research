@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using core;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -9,27 +8,17 @@ namespace CardCollection.Core
     public class PackBasedCardsRandomizer
     {
         private readonly ICardSelector _cardSelector;
-
-        /// <summary>
-        /// Creates a pack-based card randomizer with default random selector.
-        /// </summary>
-        public PackBasedCardsRandomizer() : this(new RandomCardSelector())
-        {
-        }
-
-        /// <summary>
-        /// Creates a pack-based card randomizer with custom selector.
-        /// Allows different selection strategies (random, server-based, etc.)
-        /// </summary>
-        public PackBasedCardsRandomizer(ICardSelector cardSelector)
+        private readonly ICardDefinitionProvider _cardDefinitionProvider;
+        
+        public PackBasedCardsRandomizer(ICardSelector cardSelector, ICardDefinitionProvider cardDefinitionProvider)
         {
             _cardSelector = cardSelector ?? throw new ArgumentNullException(nameof(cardSelector));
+            _cardDefinitionProvider = cardDefinitionProvider ?? throw new ArgumentNullException(nameof(cardDefinitionProvider));
         }
 
         public async UniTask<List<string>> GetRandomNewCardsAsync(CardPack pack)
         {
-            var configStorage = CardCollectionConfigStorage.Instance;
-            var allCards = configStorage.Data;
+            var allCards = _cardDefinitionProvider.GetCardDefinitions();
 
             if (allCards == null || allCards.Count == 0)
             {
@@ -37,8 +26,6 @@ namespace CardCollection.Core
                 return new List<string>();
             }
 
-            // Use the card selector to get cards based on the pack
-            // The selector handles the selection logic (random, server-based, etc.)
             var result = await _cardSelector.SelectCardsAsync(pack, allCards);
 
             foreach (var cardId in result)

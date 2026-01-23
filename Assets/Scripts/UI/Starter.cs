@@ -1,4 +1,3 @@
-using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
@@ -12,7 +11,7 @@ namespace core
         [SerializeField] private ResearchCheatModule _researchCheatModule;
         [SerializeField] private Button _button;
         [SerializeField] private Button _cheatButton;
-        [SerializeField] private CardCollectionSaveController _cardCollectionSaveController;
+        [SerializeField] private CardCollectionEntryPoint _cardCollectionEntryPoint;
 
         private ConfigManager _configManager;
 
@@ -31,7 +30,7 @@ namespace core
 
             _uiManager.Configurate(windowFactoryBase, eventHandler);
 
-            _button.onClick.AddListener(() => OpenSettings().Forget());
+            _button.onClick.AddListener(() => OpenCardCollectionWindow().Forget());
             _cheatButton.onClick.AddListener(OpenCheatsPanel);
         }
 
@@ -58,10 +57,10 @@ namespace core
             await _configManager.ApplyParsedConfigs(configStorages);
         }
 
-        private async UniTask OpenSettings()
+        private async UniTask OpenCardCollectionWindow()
         {
-            EventCardsSaveData collectionData = await _cardCollectionSaveController.Load();
-            var args = new CardCollectionArgs(_uiManager, _cardCollectionSaveController, collectionData);
+            var collectionData = await _cardCollectionEntryPoint.CardCollectionUpdater.Load();
+            var args = new CardCollectionArgs(_uiManager, _cardCollectionEntryPoint.CardCollectionModule, collectionData);
             _uiManager.Show<CardCollectionController>(args);
         }
 

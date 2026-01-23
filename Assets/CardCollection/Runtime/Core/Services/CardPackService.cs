@@ -6,28 +6,28 @@ using UnityEngine;
 
 namespace CardCollection.Core
 {
-    public class CardCollectionService
+    public class CardPackService
     {
-        private readonly ICardPackProvider provider;
-        private Dictionary<string, CardPack> packsByIdCache;
-        private List<CardPack> allPacks;
-        private bool isInitialized;
+        private readonly ICardPackProvider _cardPackProvider;
+        private readonly Dictionary<string, CardPack> _packsByIdCache;
+        private List<CardPack> _allPacks;
+        private bool _isInitialized;
 
         public event Action<CardPack> OnPackPurchasedEvent;
         public event Action OnInitialized;
 
-        public bool IsInitialized => isInitialized;
+        public bool IsInitialized => _isInitialized;
 
-        public CardCollectionService(ICardPackProvider cardPackProvider)
+        public CardPackService(ICardPackProvider cardPackProvider)
         {
-            provider = cardPackProvider ?? throw new ArgumentNullException(nameof(cardPackProvider));
-            packsByIdCache = new Dictionary<string, CardPack>();
-            allPacks = new List<CardPack>();
+            _cardPackProvider = cardPackProvider ?? throw new ArgumentNullException(nameof(cardPackProvider));
+            _packsByIdCache = new Dictionary<string, CardPack>();
+            _allPacks = new List<CardPack>();
         }
 
         public async UniTask InitializeAsync()
         {
-            if (isInitialized)
+            if (_isInitialized)
             {
                 Debug.LogWarning("[CardCollectionService] Already initialized");
                 return;
@@ -37,18 +37,18 @@ namespace CardCollection.Core
             {
                 Debug.Log("[CardCollectionService] Initializing...");
 
-                var packConfigs = await provider.GetCardPacksAsync();
+                var packConfigs = await _cardPackProvider.GetCardPacksAsync();
 
-                allPacks = packConfigs.Select(config => new CardPack(config)).ToList();
+                _allPacks = packConfigs.Select(config => new CardPack(config)).ToList();
 
-                packsByIdCache.Clear();
-                foreach (var pack in allPacks)
+                _packsByIdCache.Clear();
+                foreach (var pack in _allPacks)
                 {
-                    packsByIdCache[pack.PackId] = pack;
+                    _packsByIdCache[pack.PackId] = pack;
                 }
 
-                isInitialized = true;
-                Debug.Log($"[CardCollectionService] Initialized with {allPacks.Count} packs");
+                _isInitialized = true;
+                Debug.Log($"[CardCollectionService] Initialized with {_allPacks.Count} packs");
                 OnInitialized?.Invoke();
             }
             catch (Exception ex)
@@ -61,20 +61,20 @@ namespace CardCollection.Core
         public List<CardPack> GetAllPacks()
         {
             ValidateInitialized();
-            return new List<CardPack>(allPacks);
+            return new List<CardPack>(_allPacks);
         }
         
         public List<CardPack> GetAvailablePacks()
         {
             ValidateInitialized();
-            return allPacks.ToList();
+            return _allPacks.ToList();
         }
         
         public CardPack GetPackById(string packId)
         {
             ValidateInitialized();
 
-            if (!packsByIdCache.TryGetValue(packId, out var pack))
+            if (!_packsByIdCache.TryGetValue(packId, out var pack))
             {
                 Debug.LogWarning($"[CardCollectionService] Pack not found: {packId}");
                 return null;
@@ -86,7 +86,7 @@ namespace CardCollection.Core
         public List<CardPack> GetPacksByCardCount(int cardCount)
         {
             ValidateInitialized();
-            return allPacks.Where(p => p.CardCount == cardCount).ToList();
+            return _allPacks.Where(p => p.CardCount == cardCount).ToList();
         }
         
         public void OnPackPurchased(string packId)
@@ -103,14 +103,14 @@ namespace CardCollection.Core
         public (int totalPacks, int availablePacks, int totalPurchases) GetStatistics()
         {
             ValidateInitialized();
-            var totalPurchases = allPacks.Sum(p => p.PurchaseCount);
+            var totalPurchases = _allPacks.Sum(p => p.PurchaseCount);
             var availablePacks = totalPurchases;
-            return (allPacks.Count, availablePacks, totalPurchases);
+            return (_allPacks.Count, availablePacks, totalPurchases);
         }
         
         private void ValidateInitialized()
         {
-            if (!isInitialized)
+            if (!_isInitialized)
             {
                 throw new InvalidOperationException(
                     "[CardCollectionService] Service not initialized. Call InitializeAsync() first.");
@@ -121,9 +121,9 @@ namespace CardCollection.Core
         {
             OnPackPurchasedEvent = null;
             OnInitialized = null;
-            packsByIdCache?.Clear();
-            allPacks?.Clear();
-            isInitialized = false;
+            _packsByIdCache?.Clear();
+            _allPacks?.Clear();
+            _isInitialized = false;
         }
     }
 }

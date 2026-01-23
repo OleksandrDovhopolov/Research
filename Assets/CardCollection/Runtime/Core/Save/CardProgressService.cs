@@ -6,12 +6,13 @@ using UnityEngine;
 
 namespace CardCollection.Core
 {
-    public class EventCardsService
+    public class CardProgressService
     {
         private readonly IEventCardsStorage _storage;
         private readonly Dictionary<string, EventCardsSaveData> _cache = new();
+        private bool _isInitialized;
 
-        public EventCardsService(IEventCardsStorage storage)
+        public CardProgressService(IEventCardsStorage storage)
         {
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
         }
@@ -19,12 +20,29 @@ namespace CardCollection.Core
         public async UniTask InitializeAsync()
         {
             await _storage.InitializeAsync();
+            _isInitialized = true;
+        }
+
+        /// <summary>
+        /// Ensures that the underlying storage is initialized.
+        /// Does NOT create storage or the service – it only runs initialization once.
+        /// </summary>
+        private async UniTask EnsureInitializedAsync()
+        {
+            if (_isInitialized)
+            {
+                return;
+            }
+
+            await InitializeAsync();
         }
 
         public async UniTask<EventCardsSaveData> LoadAsync(string eventId)
         {
             if (string.IsNullOrEmpty(eventId))
                 throw new ArgumentException("Event ID cannot be null or empty", nameof(eventId));
+
+            await EnsureInitializedAsync();
 
             if (_cache.TryGetValue(eventId, out var cachedData))
             {
@@ -41,6 +59,8 @@ namespace CardCollection.Core
             if (data == null)
                 throw new ArgumentNullException(nameof(data));
 
+            await EnsureInitializedAsync();
+
             await _storage.SaveAsync(data);
             
             _cache[data.EventId] = data;
@@ -48,6 +68,8 @@ namespace CardCollection.Core
 
         public async UniTask ClearCollectionAsync()
         {
+            await EnsureInitializedAsync();
+
             await _storage.ClearCollectionAsync();
             
             _cache.Clear();
@@ -61,7 +83,9 @@ namespace CardCollection.Core
         public async UniTask UnlockCardsAsync(string eventId, IReadOnlyCollection<string> cardIds)
         {
             if (cardIds == null || cardIds.Count == 0) return;
-            
+
+            await EnsureInitializedAsync();
+
             var currentData = await LoadAsync(eventId);
             var cardsToUnlock = currentData.FilterUnlockedCards(cardIds);
             
@@ -94,6 +118,8 @@ namespace CardCollection.Core
             if (cardIds == null || cardIds.Count == 0)
                 return new List<CardProgressData>();
 
+            await EnsureInitializedAsync();
+
             var data = await LoadAsync(eventId);
             
             if (data?.Cards == null)
@@ -116,6 +142,8 @@ namespace CardCollection.Core
             
             if (string.IsNullOrEmpty(cardId))
                 throw new ArgumentException("Card ID cannot be null or empty", nameof(cardId));
+
+            await EnsureInitializedAsync();
 
             var data = await LoadAsync(eventId);
             

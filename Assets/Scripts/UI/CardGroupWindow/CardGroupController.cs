@@ -11,14 +11,14 @@ namespace core
     {
         public readonly string GroupType;
         public readonly UIManager UiManager;
-        public readonly ICardUpdater CardUpdater;
+        public readonly ICardCollectionModule CardCollectionModule;
         public readonly List<CardProgressData> GroupData;
         
-        public CardGroupArgs(UIManager uiManager, ICardUpdater iCardUpdater, string groupType, List<CardProgressData> groupData)
+        public CardGroupArgs(UIManager uiManager, ICardCollectionModule cardCollectionModule, string groupType, List<CardProgressData> groupData)
         {
             GroupType = groupType;
             UiManager = uiManager;
-            CardUpdater = iCardUpdater;
+            CardCollectionModule = cardCollectionModule;
             GroupData = groupData;
         }
     }
@@ -45,7 +45,7 @@ namespace core
             foreach (var cardData in Args.GroupData.Where(cardData => cardData.IsNew))
             {
                 Debug.LogWarning($"Debug Reset cardData.CardId {cardData.CardId}");
-                Args.CardUpdater.ResetNewFlagAsync(cardData.CardId);
+                Args.CardCollectionModule.ResetNewFlagAsync(cardData.CardId);
             }
         }
         

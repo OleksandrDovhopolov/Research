@@ -9,13 +9,13 @@ namespace core
     public class CardCollectionArgs : WindowArgs
     {
         public readonly UIManager UiManager;
-        public readonly ICardUpdater CardUpdater;
+        public readonly ICardCollectionModule CardCollectionModule;
         public readonly EventCardsSaveData EventCardsSaveData;
         
-        public CardCollectionArgs(UIManager uiManager, ICardUpdater iCardUpdater, EventCardsSaveData  eventCardsSaveData)
+        public CardCollectionArgs(UIManager uiManager, ICardCollectionModule cardCollectionModule, EventCardsSaveData  eventCardsSaveData)
         {
             UiManager = uiManager;
-            CardUpdater = iCardUpdater;
+            CardCollectionModule = cardCollectionModule;
             EventCardsSaveData = eventCardsSaveData;
         }
     }
@@ -77,7 +77,7 @@ namespace core
             View.UpdateGroupNewCards(groupType, 0);
             
             var groupCards = Args.EventCardsSaveData.GetCardsByGroupType(groupType);
-            var args = new CardGroupArgs(Args.UiManager, Args.CardUpdater, groupType, groupCards);
+            var args = new CardGroupArgs(Args.UiManager, Args.CardCollectionModule, groupType, groupCards);
             Args.UiManager.Show<CardGroupController>(args);
         }
         

@@ -10,14 +10,14 @@ namespace CardCollection.Tests
 {
     public class CardCollectionTests
     {
-        private CardCollectionService service;
+        private CardPackService service;
         private MockCardPackProvider mockProvider;
 
         [SetUp]
         public void Setup()
         {
             mockProvider = new MockCardPackProvider();
-            service = new CardCollectionService(mockProvider);
+            service = new CardPackService(mockProvider);
         }
 
         [TearDown]
