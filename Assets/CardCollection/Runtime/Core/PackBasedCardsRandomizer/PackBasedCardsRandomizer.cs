@@ -28,11 +28,6 @@ namespace CardCollection.Core
 
             var result = await _cardSelector.SelectCardsAsync(pack, allCards);
 
-            foreach (var cardId in result)
-            {
-                Debug.LogWarning($"Debug New Card with ID {cardId}");
-            }
-
             return result;
         }
     }

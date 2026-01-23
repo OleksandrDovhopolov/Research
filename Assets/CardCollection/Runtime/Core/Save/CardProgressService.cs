@@ -10,6 +10,7 @@ namespace CardCollection.Core
     {
         private readonly IEventCardsStorage _storage;
         private readonly Dictionary<string, EventCardsSaveData> _cache = new();
+        private readonly Dictionary<string, HashSet<string>> _unlockedCardIdsCache = new();
         private bool _isInitialized;
 
         public CardProgressService(IEventCardsStorage storage)
@@ -64,6 +65,9 @@ namespace CardCollection.Core
             await _storage.SaveAsync(data);
             
             _cache[data.EventId] = data;
+            
+            // Invalidate unlocked card IDs cache for this event since save might change unlock status
+            _unlockedCardIdsCache.Remove(data.EventId);
         }
 
         public async UniTask ClearCollectionAsync()
@@ -73,6 +77,7 @@ namespace CardCollection.Core
             await _storage.ClearCollectionAsync();
             
             _cache.Clear();
+            _unlockedCardIdsCache.Clear();
         }
         
         public UniTask UnlockCardAsync(string eventId, string cardId)
@@ -95,6 +100,9 @@ namespace CardCollection.Core
                 
                 var updatedData = await _storage.LoadAsync(eventId);
                 _cache[eventId] = updatedData;
+                
+                // Invalidate unlocked card IDs cache for this event
+                _unlockedCardIdsCache.Remove(eventId);
             }
         }
         
@@ -124,7 +132,7 @@ namespace CardCollection.Core
             
             if (data?.Cards == null)
                 return new List<CardProgressData>();
-
+            
             return data.Cards
                 .Where(card => cardIds.Contains(card.CardId))
                 .ToList();
@@ -158,6 +166,37 @@ namespace CardCollection.Core
                 Debug.LogWarning($"Debug EventCardsService cardData.CardId {card.CardId} / {card.IsNew}");
                 await SaveAsync(data);
             }
+        }
+
+        /// <summary>
+        /// Gets the IDs of cards that are missing (not unlocked) from the available cards list.
+        /// Results are cached per eventId and invalidated when cards are unlocked.
+        /// </summary>
+        /// <param name="eventId">The event identifier</param>
+        /// <param name="allCards">List of all available card definitions</param>
+        /// <returns>HashSet of card IDs that are missing (not unlocked)</returns>
+        internal async UniTask<HashSet<string>> GetMissingCardIdsAsync(string eventId, List<CardDefinition> allCards)
+        {
+            if (string.IsNullOrEmpty(eventId))
+                throw new ArgumentException("Event ID cannot be null or empty", nameof(eventId));
+
+            if (allCards == null || allCards.Count == 0)
+                return new HashSet<string>();
+
+            await EnsureInitializedAsync();
+
+            // Get or compute unlocked card IDs cache
+            if (!_unlockedCardIdsCache.TryGetValue(eventId, out var unlockedCardIds))
+            {
+                var progressData = await LoadAsync(eventId);
+                unlockedCardIds = new HashSet<string>(
+                    progressData.Cards.Where(c => c.IsUnlocked).Select(c => c.CardId));
+                _unlockedCardIdsCache[eventId] = unlockedCardIds;
+            }
+
+            // Return missing card IDs (cards not in unlocked set)
+            return new HashSet<string>(
+                allCards.Where(c => !unlockedCardIds.Contains(c.Id)).Select(c => c.Id));
         }
     }
 }

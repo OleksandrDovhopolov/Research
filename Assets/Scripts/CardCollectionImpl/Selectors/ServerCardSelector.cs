@@ -19,11 +19,11 @@ namespace core
             _serverUrl = serverUrl ?? throw new ArgumentNullException(nameof(serverUrl));
         }
 
-        public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> availableCards)
+        public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards)
         {
             // TODO: Implement server-based card selection
             // Example implementation:
-            // 1. Send pack ID and available cards to server
+            // 1. Send pack ID and all cards to server
             // 2. Server returns selected card IDs based on:
             //    - Pack rarity rules
             //    - User's collection state
@@ -35,7 +35,7 @@ namespace core
             
             // Fallback to random selection for now
             var randomSelector = new RandomCardSelector();
-            return await randomSelector.SelectCardsAsync(pack, availableCards);
+            return await randomSelector.SelectCardsAsync(pack, allCards);
         }
     }
 }

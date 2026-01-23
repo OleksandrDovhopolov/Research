@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 
 namespace CardCollection.Core
 {
-    public sealed class CardCollectionModule : ICardCollectionModule, ICardCollectionUpdater, IDisposable
+    public sealed class CardCollectionModule : ICardCollectionModule, ICardCollectionReader, ICardCollectionUpdater, IDisposable
     {
         private readonly CardCollectionContext _context;
 
@@ -51,6 +52,16 @@ namespace CardCollection.Core
         {
             return _context.CardProgressService.ResetNewFlagAsync(_context.DefaultEventId, cardId);
         }
+
+        /// <summary>
+        /// Gets the CardProgressService instance. Used for setting up pack selection strategies.
+        /// </summary>
+        public CardProgressService GetCardProgressService() => _context.CardProgressService;
+
+        /// <summary>
+        /// Gets the default event ID.
+        /// </summary>
+        public string GetDefaultEventId() => _context.DefaultEventId;
 
         public void Dispose()
         {
@@ -100,6 +111,18 @@ namespace CardCollection.Core
             catch (Exception ex)
             {
                 throw new InvalidOperationException($"[CardCollectionSaveController] Failed to load event {_context.DefaultEventId}: {ex}");
+            }
+        }
+
+        public async UniTask<HashSet<string>> GetMissingCardIdsAsync(List<CardDefinition> allCards)
+        {
+            try
+            {
+                return await _context.CardProgressService.GetMissingCardIdsAsync(_context.DefaultEventId, allCards);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"[CardCollectionModule] Failed to get missing card IDs: {ex}");
             }
         }
 

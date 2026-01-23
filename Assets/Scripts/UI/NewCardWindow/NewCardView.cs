@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UISystem;
@@ -26,8 +27,10 @@ namespace core
         {
             _newCardsPool.DisableNonActive();
             _newCardsPool.DisableNonActive();
-
-            foreach (var cardDisplayData in cardsData)
+            
+            var sortedCards = cardsData.OrderBy(c => c.Config.PremiumCard ? 6 : c.Config.Stars).ToList();
+            
+            foreach (var cardDisplayData in sortedCards)
             {
                 var cardView = _newCardsPool.GetNext();
                 

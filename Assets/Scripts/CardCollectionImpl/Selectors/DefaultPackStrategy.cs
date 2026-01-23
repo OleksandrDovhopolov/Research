@@ -1,0 +1,129 @@
+using System.Collections.Generic;
+using System.Linq;
+using CardCollection.Core;
+using Cysharp.Threading.Tasks;
+using UnityEngine;
+using Random = UnityEngine.Random;
+
+namespace core
+{
+    /// <summary>
+    /// Default pack selection strategy using base probability distribution:
+    /// - 1-Star Silver: 33.67%
+    /// - 2-Star Silver: 26.93%
+    /// - 3-Star Silver: 17.83%
+    /// - 4-Star Silver: 10.60%
+    /// - 5-Star Silver: 5.99%
+    /// - Gold (PremiumCard): 4.99%
+    /// </summary>
+    public class DefaultPackStrategy : IPackSelectionStrategy
+    {
+        // Probability thresholds (cumulative)
+        private const float Probability1StarSilver = 33.67f;
+        private const float Probability2StarSilver = 33.67f + 26.93f; // 60.60%
+        private const float Probability3StarSilver = 60.60f + 17.83f; // 78.43%
+        private const float Probability4StarSilver = 78.43f + 10.60f; // 89.03%
+        private const float Probability5StarSilver = 89.03f + 5.99f; // 95.02%
+
+        public virtual async UniTask<List<string>> SelectCardsAsync(
+            CardPack pack, 
+            List<CardDefinition> allCards, 
+            PackSelectionContext context)
+        {
+            await UniTask.Yield();
+
+            if (allCards == null || allCards.Count == 0)
+            {
+                Debug.LogWarning("[DefaultPackStrategy] No cards available");
+                return new List<string>();
+            }
+
+            var cardCount = pack.CardCount;
+            var selectedCards = new List<CardDefinition>(cardCount);
+            var remainingCards = new List<CardDefinition>(allCards);
+
+            for (int i = 0; i < cardCount; i++)
+            {
+                // Update available cards (remove already selected ones)
+                var selectedCardIdsSet = new HashSet<string>(selectedCards.Select(c => c.Id));
+                var availableCardsForSelection = remainingCards.Where(c => !selectedCardIdsSet.Contains(c.Id)).ToList();
+                
+                if (availableCardsForSelection.Count == 0)
+                {
+                    Debug.LogWarning("[DefaultPackStrategy] No more cards available to select");
+                    break;
+                }
+
+                // Group cards by category from remaining cards
+                var cardsByCategory = context.GroupCardsByCategory(availableCardsForSelection);
+
+                var selectedCard = SelectCardByProbability(cardsByCategory);
+
+                if (selectedCard != null)
+                {
+                    selectedCards.Add(selectedCard);
+                }
+                else
+                {
+                    // Fallback: if no card found in selected category, pick any random card from remaining
+                    Debug.LogWarning($"[DefaultPackStrategy] No card found in selected category, falling back to random selection");
+                    if (availableCardsForSelection.Count > 0)
+                    {
+                        var fallbackCard = availableCardsForSelection[Random.Range(0, availableCardsForSelection.Count)];
+                        selectedCards.Add(fallbackCard);
+                    }
+                }
+            }
+            
+            return selectedCards.Select(c => c.Id).ToList();
+        }
+
+        protected CardDefinition SelectCardByProbability(Dictionary<CardCategory, List<CardDefinition>> cardsByCategory)
+        {
+            var randomValue = Random.Range(0f, 100f);
+            CardCategory selectedCategory;
+
+            if (randomValue < Probability1StarSilver)
+            {
+                selectedCategory = CardCategory.Silver1Star;
+            }
+            else if (randomValue < Probability2StarSilver)
+            {
+                selectedCategory = CardCategory.Silver2Star;
+            }
+            else if (randomValue < Probability3StarSilver)
+            {
+                selectedCategory = CardCategory.Silver3Star;
+            }
+            else if (randomValue < Probability4StarSilver)
+            {
+                selectedCategory = CardCategory.Silver4Star;
+            }
+            else if (randomValue < Probability5StarSilver)
+            {
+                selectedCategory = CardCategory.Silver5Star;
+            }
+            else
+            {
+                selectedCategory = CardCategory.Gold;
+            }
+
+            // Get a random card from the selected category
+            if (cardsByCategory.TryGetValue(selectedCategory, out var categoryCards) && categoryCards.Count > 0)
+            {
+                return categoryCards[Random.Range(0, categoryCards.Count)];
+            }
+
+            // If category is empty, try to find any available category
+            foreach (var kvp in cardsByCategory)
+            {
+                if (kvp.Value.Count > 0)
+                {
+                    return kvp.Value[Random.Range(0, kvp.Value.Count)];
+                }
+            }
+
+            return null;
+        }
+    }
+}

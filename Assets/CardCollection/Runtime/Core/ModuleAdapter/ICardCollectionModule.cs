@@ -23,12 +23,18 @@ namespace CardCollection.Core
         UniTask<List<CardProgressData>> GetCardsByIdsAsync(List<string> cardIds);
         UniTask ResetNewFlagAsync(string cardId);
     }
-    
+
+    public interface ICardCollectionReader
+    {
+        UniTask<EventCardsSaveData> Load();
+        UniTask<HashSet<string>> GetMissingCardIdsAsync(List<CardDefinition> allCards);
+    }
+
     public interface ICardCollectionUpdater
     {
         UniTask UnlockCard(string cardId);
         UniTask Save();
-        UniTask<EventCardsSaveData> Load();
+        //UniTask<EventCardsSaveData> Load();
         UniTask Clear();
     }
 }
