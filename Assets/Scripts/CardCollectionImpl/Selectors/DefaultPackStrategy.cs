@@ -74,7 +74,7 @@ namespace core
                     }
                 }
             }
-            
+
             return selectedCards.Select(c => c.Id).ToList();
         }
 

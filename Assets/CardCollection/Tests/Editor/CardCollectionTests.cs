@@ -162,5 +162,21 @@ namespace CardCollection.Tests
                 throw task.Exception;
             }
         }
+
+        public static IEnumerator ToCoroutine<T>(this UniTask<T> task, System.Action<T> onResult)
+        {
+            var t = task.AsTask();
+            while (!t.IsCompleted)
+            {
+                yield return null;
+            }
+
+            if (t.IsFaulted)
+            {
+                throw t.Exception;
+            }
+
+            onResult?.Invoke(t.Result);
+        }
     }
 }
