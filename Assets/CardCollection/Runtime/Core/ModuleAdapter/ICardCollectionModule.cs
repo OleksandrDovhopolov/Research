@@ -34,7 +34,6 @@ namespace CardCollection.Core
     {
         UniTask UnlockCard(string cardId);
         UniTask Save();
-        //UniTask<EventCardsSaveData> Load();
         UniTask Clear();
     }
 }

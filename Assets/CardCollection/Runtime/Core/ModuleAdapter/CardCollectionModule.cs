@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Cysharp.Threading.Tasks;
 
 namespace CardCollection.Core
@@ -52,17 +51,7 @@ namespace CardCollection.Core
         {
             return _context.CardProgressService.ResetNewFlagAsync(_context.DefaultEventId, cardId);
         }
-
-        /// <summary>
-        /// Gets the CardProgressService instance. Used for setting up pack selection strategies.
-        /// </summary>
-        public CardProgressService GetCardProgressService() => _context.CardProgressService;
-
-        /// <summary>
-        /// Gets the default event ID.
-        /// </summary>
-        public string GetDefaultEventId() => _context.DefaultEventId;
-
+        
         public void Dispose()
         {
             _context.Dispose();
