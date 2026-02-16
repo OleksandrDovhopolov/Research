@@ -58,16 +58,8 @@ namespace core
         {
             View.CreateDataViews(_currentGroupType, groupData);
             
-            var collectionNumberText = "Set " + (_currentGroupIndex + 1) + "/" + _allGroups.Count;
-            View.SetCollectionNumber(collectionNumberText);
-            
-            var collectedAmount = Args.EventCardsSaveData.GetCollectedGroupAmount(_currentGroupType);
-            var totalAmount = Args.EventCardsSaveData.GetGroupAmount(_currentGroupType);
-            View.UpdateCollectedAmount(collectedAmount, totalAmount);
-
-            var configs = CardCollectionConfigStorage.Instance.Get(_currentGroupType);
-            SetCardSprites(configs).Forget();
-            
+            UpdateGroupViewData();
+            UpdateCardSprites();
             ResetNewFlag(groupData);
         }
 
@@ -120,13 +112,17 @@ namespace core
             
             // Animate slide + rebuild cards; update texts while container is off-screen
             await View.AnimateSwitchGroup(direction, _currentGroupType, groupCards, UpdateGroupViewData);
-            
-            var configs = CardCollectionConfigStorage.Instance.Get(_currentGroupType);
-            SetCardSprites(configs).Forget();
-            
+
+            UpdateCardSprites();
             ResetNewFlag(groupCards);
         }
 
+        private void UpdateCardSprites()
+        {
+            var configs = CardCollectionConfigStorage.Instance.Get(_currentGroupType);
+            SetCardSprites(configs).Forget();
+        }
+        
         private void UpdateGroupViewData()
         {
             var collectionNumberText = "Set " + (_currentGroupIndex + 1) + "/" + _allGroups.Count;
