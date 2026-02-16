@@ -12,50 +12,68 @@ namespace core
         public readonly string GroupType;
         public readonly UIManager UiManager;
         public readonly ICardCollectionModule CardCollectionModule;
+        public readonly EventCardsSaveData EventCardsSaveData;
         public readonly List<CardProgressData> GroupData;
-        public readonly int GroupNumber;
-        public readonly int GroupsAmount;
+        public readonly int CollectedAmount;
+        public readonly int TotalAmount;
         
         public CardGroupArgs(
             UIManager uiManager, 
             ICardCollectionModule cardCollectionModule, 
+            EventCardsSaveData eventCardsSaveData,
             string groupType, 
             List<CardProgressData> groupData,
-            int groupNumber,
-            int groupsAmount)
+            int collectedAmount,
+            int totalAmount)
         {
             GroupType = groupType;
             UiManager = uiManager;
             CardCollectionModule = cardCollectionModule;
+            EventCardsSaveData = eventCardsSaveData;
             GroupData = groupData;
-            GroupNumber = groupNumber;
-            GroupsAmount = groupsAmount;
+            CollectedAmount = collectedAmount;
+            TotalAmount = totalAmount;
         }
     }
     
     [Window("CardGroupWindow", WindowType.Popup)]
     public class CardGroupController :  WindowController<CardGroupView>
     {
-        private UIManager _uiManager;
-        
         private CardGroupArgs Args => (CardGroupArgs) Arguments;
+        
+        private List<CardGroupsConfig> _allGroups;
+        private int _currentGroupIndex;
+        private string _currentGroupType;
         
         protected override void OnShowStart()
         {
-            var data = CardCollectionConfigStorage.Instance.Get(Args.GroupType);
-            View.CreateDataViews(Args.GroupType, Args.GroupData);
-
-            var collectionNumberText = "Set " + Args.GroupNumber + "/" + Args.GroupsAmount;
-            View.SetCollectionNumber(collectionNumberText);
-
-            SetCardSprites(data).Forget();
+            _allGroups = CardGroupsConfigStorage.Instance.Data;
+            _currentGroupType = Args.GroupType;
+            _currentGroupIndex = _allGroups.FindIndex(g => g.GroupType == _currentGroupType);
             
-            ResetNewFlag();
+            ShowCurrentGroup(Args.GroupData);
+        }
+        
+        private void ShowCurrentGroup(List<CardProgressData> groupData)
+        {
+            View.CreateDataViews(_currentGroupType, groupData);
+            
+            var collectionNumberText = "Set " + (_currentGroupIndex + 1) + "/" + _allGroups.Count;
+            View.SetCollectionNumber(collectionNumberText);
+            
+            var collectedAmount = Args.EventCardsSaveData.GetCollectedGroupAmount(_currentGroupType);
+            var totalAmount = Args.EventCardsSaveData.GetGroupAmount(_currentGroupType);
+            View.UpdateCollectedAmount(collectedAmount, totalAmount);
+
+            var configs = CardCollectionConfigStorage.Instance.Get(_currentGroupType);
+            SetCardSprites(configs).Forget();
+            
+            ResetNewFlag(groupData);
         }
 
-        private void ResetNewFlag()
+        private void ResetNewFlag(List<CardProgressData> groupData)
         {
-            foreach (var cardData in Args.GroupData.Where(cardData => cardData.IsNew))
+            foreach (var cardData in groupData.Where(cardData => cardData.IsNew))
             {
                 Args.CardCollectionModule.ResetNewFlagAsync(cardData.CardId);
             }
@@ -81,15 +99,42 @@ namespace core
             View.DisableAll();
         }
 
-
         private void OnLeftClickHandler()
         {
-            Debug.LogWarning($"Debug Left clicked");
+            SwitchGroup(-1).Forget();
         }
 
         private void OnRightClickHandler()
         {
-            Debug.LogWarning($"Debug Right clicked");
+            SwitchGroup(1).Forget();
+        }
+        
+        private async UniTask SwitchGroup(int direction)
+        {
+            if (View.IsAnimating) return;
+            
+            _currentGroupIndex = (_currentGroupIndex + direction + _allGroups.Count) % _allGroups.Count;
+            _currentGroupType = _allGroups[_currentGroupIndex].GroupType;
+            
+            var groupCards = Args.EventCardsSaveData.GetCardsByGroupType(_currentGroupType);
+            
+            // Animate slide + rebuild cards; update texts while container is off-screen
+            await View.AnimateSwitchGroup(direction, _currentGroupType, groupCards, UpdateGroupViewData);
+            
+            var configs = CardCollectionConfigStorage.Instance.Get(_currentGroupType);
+            SetCardSprites(configs).Forget();
+            
+            ResetNewFlag(groupCards);
+        }
+
+        private void UpdateGroupViewData()
+        {
+            var collectionNumberText = "Set " + (_currentGroupIndex + 1) + "/" + _allGroups.Count;
+            View.SetCollectionNumber(collectionNumberText);
+            
+            var collectedAmount = Args.EventCardsSaveData.GetCollectedGroupAmount(_currentGroupType);
+            var totalAmount = Args.EventCardsSaveData.GetGroupAmount(_currentGroupType);
+            View.UpdateCollectedAmount(collectedAmount, totalAmount);
         }
         
         protected override void OnHideComplete(bool isClosed) 

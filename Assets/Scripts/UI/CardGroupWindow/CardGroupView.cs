@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using TMPro;
 using UISystem;
 using UnityEngine;
@@ -20,9 +21,21 @@ namespace core
         [SerializeField] private Button _leftSwitchButton;
         [SerializeField] private Button _rightSwitchButton;
         [SerializeField] private TextMeshProUGUI _collectionNumberText;
+        
+        [Space, Space, Header("SlideAnimation")]
+        [SerializeField] private RectTransform _cardsContainer;
+        [SerializeField] private float _slideDuration = 0.25f;
+        [SerializeField] private float _slideOffset = 1200f;
+        
+        [Space, Space, Header("GroupReward")]
+        [SerializeField] private Image _collectedSlider;
+        [SerializeField] private TextMeshProUGUI _groupCollectedAmountText;
 
         private readonly Dictionary<CardCollectionConfig, CollectionCardView> _viewsDict = new();
         
+        private bool _isAnimating;
+        
+        public bool IsAnimating => _isAnimating;
         public event Action OnLeftClick;
         public event Action OnRightClick;
 
@@ -71,6 +84,12 @@ namespace core
         {
             _collectionNumberText.text = collectionNumber;
         }
+
+        public void UpdateCollectedAmount(int collectedAmount, int totalAmount)
+        {
+            _collectedSlider.fillAmount = (float)collectedAmount / totalAmount;;
+            _groupCollectedAmountText.text = collectedAmount.ToString();
+        }
         
         public async UniTask SetSprites(List<CardCollectionConfig> cardsData)
         {
@@ -80,6 +99,44 @@ namespace core
                 config => _viewsDict.TryGetValue(config, out var view) ? view : null,
                 (view, sprite) => view.SetCardImage(sprite),
                 config => config.CardName);
+        }
+
+        /// <summary>
+        /// Slides current group out, rebuilds cards for new group, slides new group in.
+        /// direction: -1 = left (show previous group), +1 = right (show next group)
+        /// </summary>
+        public async UniTask AnimateSwitchGroup(int direction, string groupType, List<CardProgressData> cardsData, Action onRebuild = null)
+        {
+            if (_isAnimating) return;
+            _isAnimating = true;
+
+            try
+            {
+                // Phase 1: Slide current cards container off-screen
+                var slideOutX = -direction * _slideOffset;
+                await _cardsContainer.DOAnchorPosX(slideOutX, _slideDuration)
+                    .SetEase(Ease.InQuad)
+                    .AsyncWaitForCompletion()
+                    .AsUniTask();
+
+                // Phase 2: Rebuild cards and update UI while container is off-screen
+                DisableAll();
+                CreateDataViews(groupType, cardsData);
+                onRebuild?.Invoke();
+
+                // Phase 3: Snap container to opposite side (off-screen)
+                _cardsContainer.anchoredPosition = new Vector2(direction * _slideOffset, 0);
+
+                // Phase 4: Slide new cards into center
+                await _cardsContainer.DOAnchorPosX(0, _slideDuration)
+                    .SetEase(Ease.OutQuad)
+                    .AsyncWaitForCompletion()
+                    .AsUniTask();
+            }
+            finally
+            {
+                _isAnimating = false;
+            }
         }
 
         private void OnCardPressedHandler(CollectionCardView cardView)

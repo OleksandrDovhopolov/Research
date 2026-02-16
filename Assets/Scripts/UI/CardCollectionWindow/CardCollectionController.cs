@@ -77,9 +77,10 @@ namespace core
             View.UpdateGroupNewCards(groupType, 0);
             
             var groupCards = Args.EventCardsSaveData.GetCardsByGroupType(groupType);
-            var groupsAmount = EventCardsSaveDataExtensions.GetGroupCount();
-            var groupNumber = EventCardsSaveDataExtensions.GetGroupTypeIndex(groupType);
-            var args = new CardGroupArgs(Args.UiManager, Args.CardCollectionModule, groupType, groupCards, groupNumber, groupsAmount);
+            var collectedGroupAmount = Args.EventCardsSaveData.GetCollectedGroupAmount(groupType);
+            var totalGroupAmount = Args.EventCardsSaveData.GetGroupAmount(groupType);
+            
+            var args = new CardGroupArgs(Args.UiManager, Args.CardCollectionModule, Args.EventCardsSaveData, groupType, groupCards, collectedGroupAmount, totalGroupAmount);
             Args.UiManager.Show<CardGroupController>(args);
         }
         
