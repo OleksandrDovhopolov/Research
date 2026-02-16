@@ -11,7 +11,6 @@ namespace core
     public class ProbabilityBasedCardSelector : ICardSelector
     {
         private readonly PackStrategyRegistry _strategyRegistry;
-        private readonly PackSelectionContext _context;
         
         public ProbabilityBasedCardSelector()
         {
@@ -20,23 +19,19 @@ namespace core
 
             // Register pack-specific strategies
             _strategyRegistry.RegisterStrategy("Sapphire_Pack", new SapphirePackStrategy(packOpeningHistory));
-
-            // Create context for strategies
-            _context = new PackSelectionContext();
         }
 
-        public void SetCardProgressService(ICardCollectionReader cardCollectionReader)
+        public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards, CardSelectionContext context)
         {
-            _context.CardCollectionReader = cardCollectionReader;
-        }
-        
-        public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards)
-        {
+            // Wrap the core context into a PackSelectionContext for strategies
+            var packContext = context as PackSelectionContext
+                              ?? new PackSelectionContext(context?.CardCollectionReader);
+
             // Get the appropriate strategy for this pack
             var strategy = _strategyRegistry.GetStrategy(pack.PackId);
             
             // Delegate to the strategy
-            return await strategy.SelectCardsAsync(pack, allCards, _context);
+            return await strategy.SelectCardsAsync(pack, allCards, packContext);
         }
     }
 }

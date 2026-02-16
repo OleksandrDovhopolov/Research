@@ -11,7 +11,7 @@ namespace CardCollection.Core
     /// </summary>
     public class RandomCardSelector : ICardSelector
     {
-        public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards)
+        public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards, CardSelectionContext context)
         {
             await UniTask.Yield();
 

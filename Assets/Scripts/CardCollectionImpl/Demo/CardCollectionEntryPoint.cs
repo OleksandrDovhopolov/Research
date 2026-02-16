@@ -36,11 +36,6 @@ namespace core
             _cardCollectionModule = new CardCollectionModule(config);
             await _cardCollectionModule.InitializeAsync();
             
-            if (cardSelector is ProbabilityBasedCardSelector probSelector)
-            {
-                probSelector.SetCardProgressService(_cardCollectionModule);
-            }
-            
             _isInitialized = true;
         }
     }

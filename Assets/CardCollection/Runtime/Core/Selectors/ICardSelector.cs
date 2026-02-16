@@ -18,7 +18,8 @@ namespace CardCollection.Core
         /// </summary>
         /// <param name="pack">The pack to select cards for</param>
         /// <param name="allCards">List of all available cards to select from</param>
+        /// <param name="context">Context providing collection state for strategies that need it</param>
         /// <returns>List of selected card IDs</returns>
-        UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards);
+        UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards, CardSelectionContext context);
     }
 }

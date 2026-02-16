@@ -18,13 +18,13 @@ namespace CardCollection.Core
             ICardPackProvider packProvider,
             IEventCardsStorage eventCardsStorage,
             ICardDefinitionProvider cardDefinitionProvider,
-            ICardSelector cardSelector = null,
+            ICardSelector cardSelector,
             string defaultEventId = "default")
         {
             PackProvider = packProvider ?? throw new ArgumentNullException(nameof(packProvider));
             EventCardsStorage = eventCardsStorage ?? throw new ArgumentNullException(nameof(eventCardsStorage));
             CardDefinitionProvider = cardDefinitionProvider ?? throw new ArgumentNullException(nameof(cardDefinitionProvider));
-            CardSelector = cardSelector ?? new RandomCardSelector();
+            CardSelector = cardSelector ?? throw new ArgumentNullException(nameof(cardSelector));
             DefaultEventId = defaultEventId;
         }
     }

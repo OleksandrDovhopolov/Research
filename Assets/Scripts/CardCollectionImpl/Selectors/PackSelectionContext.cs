@@ -5,12 +5,16 @@ namespace core
 {
     /// <summary>
     /// Context object passed to pack selection strategies.
-    /// Contains services and helpers needed for card selection.
+    /// Extends Core <see cref="CardSelectionContext"/> with implementation-specific helpers
+    /// such as card category grouping.
     /// </summary>
-    public class PackSelectionContext
+    public class PackSelectionContext : CardSelectionContext
     {
-        public ICardCollectionReader CardCollectionReader { get; set; }
-        
+        public PackSelectionContext(ICardCollectionReader cardCollectionReader = null)
+            : base(cardCollectionReader)
+        {
+        }
+
         /// <summary>
         /// Helper to group cards by category (1-5 star silver, gold).
         /// </summary>

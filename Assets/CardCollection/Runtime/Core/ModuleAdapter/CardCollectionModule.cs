@@ -7,10 +7,12 @@ namespace CardCollection.Core
     public sealed class CardCollectionModule : ICardCollectionModule, ICardCollectionReader, ICardCollectionUpdater, IDisposable
     {
         private readonly CardCollectionContext _context;
+        private readonly CardSelectionContext _selectionContext;
 
         public CardCollectionModule(CardCollectionModuleConfig  config)
         {
             _context = new CardCollectionContext(config);
+            _selectionContext = new CardSelectionContext(this);
         }
 
         public UniTask InitializeAsync() => _context.InitializeAsync();
@@ -33,7 +35,7 @@ namespace CardCollection.Core
                 return new List<string>();
             }
             
-            var cardIds = await _context.CardRandomizer.GetRandomNewCardsAsync(cardPack);
+            var cardIds = await _context.CardRandomizer.GetRandomNewCardsAsync(cardPack, _selectionContext);
             if (cardIds.Count > 0)
             {
                 await _context.CardProgressService.UnlockCardsAsync(_context.DefaultEventId, cardIds);
