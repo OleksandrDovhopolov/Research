@@ -13,13 +13,23 @@ namespace core
         public readonly UIManager UiManager;
         public readonly ICardCollectionModule CardCollectionModule;
         public readonly List<CardProgressData> GroupData;
+        public readonly int GroupNumber;
+        public readonly int GroupsAmount;
         
-        public CardGroupArgs(UIManager uiManager, ICardCollectionModule cardCollectionModule, string groupType, List<CardProgressData> groupData)
+        public CardGroupArgs(
+            UIManager uiManager, 
+            ICardCollectionModule cardCollectionModule, 
+            string groupType, 
+            List<CardProgressData> groupData,
+            int groupNumber,
+            int groupsAmount)
         {
             GroupType = groupType;
             UiManager = uiManager;
             CardCollectionModule = cardCollectionModule;
             GroupData = groupData;
+            GroupNumber = groupNumber;
+            GroupsAmount = groupsAmount;
         }
     }
     
@@ -35,6 +45,9 @@ namespace core
             var data = CardCollectionConfigStorage.Instance.Get(Args.GroupType);
             View.CreateDataViews(Args.GroupType, Args.GroupData);
 
+            var collectionNumberText = "Set " + Args.GroupNumber + "/" + Args.GroupsAmount;
+            View.SetCollectionNumber(collectionNumberText);
+
             SetCardSprites(data).Forget();
             
             ResetNewFlag();
@@ -44,7 +57,6 @@ namespace core
         {
             foreach (var cardData in Args.GroupData.Where(cardData => cardData.IsNew))
             {
-                Debug.LogWarning($"Debug Reset cardData.CardId {cardData.CardId}");
                 Args.CardCollectionModule.ResetNewFlagAsync(cardData.CardId);
             }
         }
@@ -57,12 +69,27 @@ namespace core
         protected override void OnShowComplete()
         {
             View.CloseClick += CloseWindow;
+            View.OnLeftClick += OnLeftClickHandler;
+            View.OnRightClick += OnRightClickHandler;
         }
         
         protected override void OnHideStart(bool isClosed)
         {
             View.CloseClick -= CloseWindow;
+            View.OnLeftClick -= OnLeftClickHandler;
+            View.OnRightClick -= OnRightClickHandler;
             View.DisableAll();
+        }
+
+
+        private void OnLeftClickHandler()
+        {
+            Debug.LogWarning($"Debug Left clicked");
+        }
+
+        private void OnRightClickHandler()
+        {
+            Debug.LogWarning($"Debug Right clicked");
         }
         
         protected override void OnHideComplete(bool isClosed) 

@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
+using TMPro;
 using UISystem;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace core
 {
@@ -11,10 +14,24 @@ namespace core
         [Space, Space, Header("CardsPool")]
         [SerializeField] private UIListPool<CollectionCardView> _upperCardsPool;
         [SerializeField] private UIListPool<CollectionCardView> _bottomCardsPool;
+        
+        [Space, Space, Header("BaseParts")]
         [SerializeField] private SelectedCardView _selectedCardAnimation;
+        [SerializeField] private Button _leftSwitchButton;
+        [SerializeField] private Button _rightSwitchButton;
+        [SerializeField] private TextMeshProUGUI _collectionNumberText;
 
         private readonly Dictionary<CardCollectionConfig, CollectionCardView> _viewsDict = new();
         
+        public event Action OnLeftClick;
+        public event Action OnRightClick;
+
+        private void Start()
+        {
+            _leftSwitchButton.onClick.AddListener(() => OnLeftClick?.Invoke());
+            _rightSwitchButton.onClick.AddListener(() => OnRightClick?.Invoke());
+        }
+
         public void CreateDataViews(string groupType, List<CardProgressData> cardsData)
         {
             var configs = CardCollectionConfigStorage.Instance.Get(groupType);
@@ -48,6 +65,11 @@ namespace core
         
                 _viewsDict[config] = cardView;
             }
+        }
+
+        public void SetCollectionNumber(string collectionNumber)
+        {
+            _collectionNumberText.text = collectionNumber;
         }
         
         public async UniTask SetSprites(List<CardCollectionConfig> cardsData)
@@ -86,6 +108,13 @@ namespace core
             
             _upperCardsPool.DisableAll();
             _bottomCardsPool.DisableAll();
+        }
+        
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            _leftSwitchButton.onClick.RemoveAllListeners();
+            _rightSwitchButton.onClick.RemoveAllListeners();
         }
     }
 }

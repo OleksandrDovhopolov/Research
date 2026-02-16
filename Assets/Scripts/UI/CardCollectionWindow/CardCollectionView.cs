@@ -63,7 +63,6 @@ namespace core
         {
             if (_viewsDict.TryGetValue(groupType, out var view))
             {
-                Debug.LogWarning($"Debug groupType {groupType}, groupAmount {groupAmount}");
                 view.UpdateNewCards(groupAmount);
             }
         }

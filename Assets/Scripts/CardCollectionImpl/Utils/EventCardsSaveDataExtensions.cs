@@ -29,6 +29,29 @@ namespace core
         }
         
         /// <summary>
+        /// Returns the index of the specified group type in the group card IDs cache.
+        /// Returns -1 if the group type is not found.
+        /// </summary>
+        /// <param name="groupType">The group type to find the index of</param>
+        /// <returns>Zero-based index of the group type, or -1 if not found</returns>
+        public static int GetGroupTypeIndex(string groupType)
+        {
+            var index = 1;
+            foreach (var key in _groupCardIdsCache.Keys)
+            {
+                if (key == groupType)
+                    return index;
+                index++;
+            }
+            return -1;
+        }
+        
+        public static int GetGroupCount()
+        {
+            return _groupCardIdsCache.Count;
+        }
+
+        /// <summary>
         /// Filters cards from EventCardsSaveData by the specified group type.
         /// </summary>
         /// <param name="eventCardsSaveData">The event cards save data to filter</param>
