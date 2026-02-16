@@ -52,9 +52,12 @@ namespace core
         
         protected virtual List<ICheatsModule> GetCheatModules()
         {
+            var updated = _cardCollectionEntryPoint.CardCollectionUpdater;
+            var reader = _cardCollectionEntryPoint.CardCollectionReader;
+            
             var cheatsModules = new List<ICheatsModule>
             {
-                new DefaultModule(_cardCollectionEntryPoint.CardCollectionUpdater),
+                new DefaultModule(updated, reader),
                 new SampleModule(),
             };
             

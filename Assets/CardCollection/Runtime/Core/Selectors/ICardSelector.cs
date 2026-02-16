@@ -17,8 +17,8 @@ namespace CardCollection.Core
         /// Selects card IDs for the given pack.
         /// </summary>
         /// <param name="pack">The pack to select cards for</param>
-        /// <param name="availableCards">List of all available cards to select from</param>
+        /// <param name="allCards">List of all available cards to select from</param>
         /// <returns>List of selected card IDs</returns>
-        UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> availableCards);
+        UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards);
     }
 }

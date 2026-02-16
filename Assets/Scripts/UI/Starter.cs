@@ -59,7 +59,7 @@ namespace core
 
         private async UniTask OpenCardCollectionWindow()
         {
-            var collectionData = await _cardCollectionEntryPoint.CardCollectionUpdater.Load();
+            var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load();
             var args = new CardCollectionArgs(_uiManager, _cardCollectionEntryPoint.CardCollectionModule, collectionData);
             _uiManager.Show<CardCollectionController>(args);
         }

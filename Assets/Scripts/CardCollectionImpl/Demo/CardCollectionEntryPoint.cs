@@ -15,6 +15,8 @@ namespace core
             !_isInitialized ? throw new InvalidOperationException("Module not initialized.") : _cardCollectionModule;
         public ICardCollectionUpdater CardCollectionUpdater =>
             !_isInitialized ? throw new InvalidOperationException("Module not initialized.") : _cardCollectionModule;
+        public ICardCollectionReader CardCollectionReader =>
+            !_isInitialized ? throw new InvalidOperationException("Module not initialized.") : _cardCollectionModule;
 
         private void Awake()
         {
@@ -26,15 +28,19 @@ namespace core
             ICardPackProvider packProvider = new JsonCardPackProvider();
             IEventCardsStorage cardsStorage = new JsonEventCardsStorage();
             ICardDefinitionProvider cardDefinitionProvider = new DefaultCardDefinitionProvider();
-            ICardSelector cardSelector = new RandomCardSelector();
+            ICardSelector cardSelector = new ProbabilityBasedCardSelector();
 
             const string testEventId = "test";
-
-            var config = new CardCollectionModuleConfig(packProvider, cardsStorage, cardDefinitionProvider,
-                cardSelector, testEventId);
+            var config = new CardCollectionModuleConfig(packProvider, cardsStorage, cardDefinitionProvider, cardSelector, testEventId);
 
             _cardCollectionModule = new CardCollectionModule(config);
             await _cardCollectionModule.InitializeAsync();
+            
+            if (cardSelector is ProbabilityBasedCardSelector probSelector)
+            {
+                probSelector.SetCardProgressService(_cardCollectionModule);
+            }
+            
             _isInitialized = true;
         }
     }

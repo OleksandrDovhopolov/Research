@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
+using UnityEngine;
 
 namespace core
 {
@@ -33,6 +35,7 @@ namespace core
             var cardsIdList = await Args.CollectionModule.OpenPackAndUnlockAsync(Args.CardPack);
             var cardsData = await Args.CollectionModule.GetCardsByIdsAsync(cardsIdList);
             var displayData = cardsData.ToNewCardDisplayData();
+            
             View.CreateNewCards(displayData);
         }
 

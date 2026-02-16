@@ -15,11 +15,11 @@ namespace core
         [SerializeField] private Button _fiveCardButton;
         [SerializeField] private Button _sixCardButton;
         
-        private const string BaseTwoCardPackID = "starter_pack_2";
-        private const string BaseThreeCardPackID = "basic_pack_3";
-        private const string BaseFourCardPackID = "standard_pack_4";
-        private const string BaseFiveCardPackID = "premium_pack_5";
-        private const string BaseSixCardPackID = "mega_pack_6";
+        private const string BaseTwoCardPackID = "Bronze_Pack";
+        private const string BaseThreeCardPackID = "Emerald_Pack";
+        private const string BaseFourCardPackID = "Lazurite_Pack";
+        private const string BaseFiveCardPackID = "Sapphire_Pack";
+        private const string BaseSixCardPackID = "Ruby_Pack";
         
         private void Start()
         {

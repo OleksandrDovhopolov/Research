@@ -11,20 +11,20 @@ namespace CardCollection.Core
     /// </summary>
     public class RandomCardSelector : ICardSelector
     {
-        public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> availableCards)
+        public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards)
         {
             await UniTask.Yield();
 
-            if (availableCards == null || availableCards.Count == 0)
+            if (allCards == null || allCards.Count == 0)
             {
                 Debug.LogWarning("[RandomCardSelector] No cards available");
                 return new List<string>();
             }
 
             var cardCount = pack.CardCount;
-            cardCount = Mathf.Min(cardCount, availableCards.Count);
+            cardCount = Mathf.Min(cardCount, allCards.Count);
 
-            var shuffledCards = availableCards.OrderBy(x => Random.value).Take(cardCount);
+            var shuffledCards = allCards.OrderBy(x => Random.value).Take(cardCount);
             var result = shuffledCards.Select(card => card.Id).ToList();
 
             return result;
