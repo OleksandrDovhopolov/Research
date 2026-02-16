@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using core;
+using CardCollection.Core;
 
-namespace CardCollection.Core
+namespace core
 {
     public static class EventCardsSaveDataExtensions
     {
@@ -27,16 +27,7 @@ namespace CardCollection.Core
             _groupCardIdsCache[groupType] = groupCardIds;
             return groupCardIds;
         }
-
-        /// <summary>
-        /// Clears all caches. Useful when config data changes or for testing.
-        /// </summary>
-        public static void ClearCache()
-        {
-            _groupCardIdsCache.Clear();
-            _cardsCache.Clear();
-        }
-
+        
         /// <summary>
         /// Filters cards from EventCardsSaveData by the specified group type.
         /// </summary>
@@ -110,30 +101,6 @@ namespace CardCollection.Core
 
             var groupCards = data.GetCardsByGroupType(groupType);
             return groupCards.Count(card => card.IsUnlocked && card.IsNew);
-        }
-        
-        /// <summary>
-        /// Filters out card IDs that are already unlocked.
-        /// Returns only card IDs that are not yet unlocked or don't exist in the data.
-        /// </summary>
-        /// <param name="data">The event cards save data to check against</param>
-        /// <param name="cardIds">Collection of card IDs to filter</param>
-        /// <returns>List of card IDs that are not already unlocked</returns>
-        public static List<string> FilterUnlockedCards(this EventCardsSaveData data, IReadOnlyCollection<string> cardIds)
-        {
-            if (cardIds == null || cardIds.Count == 0)
-                return new List<string>();
-
-            if (data?.Cards == null)
-                return cardIds.ToList();
-
-            return cardIds
-                .Where(cardId =>
-                {
-                    var card = data.Cards.Find(c => c.CardId == cardId);
-                    return card is not { IsUnlocked: true };
-                })
-                .ToList();
         }
         
         /// <summary>

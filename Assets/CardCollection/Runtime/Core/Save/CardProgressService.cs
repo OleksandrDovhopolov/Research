@@ -92,7 +92,7 @@ namespace CardCollection.Core
             await EnsureInitializedAsync();
 
             var currentData = await LoadAsync(eventId);
-            var cardsToUnlock = currentData.FilterUnlockedCards(cardIds);
+            var cardsToUnlock = FilterUnlockedCards(currentData, cardIds);
             
             if (cardsToUnlock.Count > 0)
             {
@@ -106,10 +106,21 @@ namespace CardCollection.Core
             }
         }
         
-        public bool IsCardUnlocked(string eventId, string cardId)
+        private List<string> FilterUnlockedCards(EventCardsSaveData data, IReadOnlyCollection<string> cardIds)
         {
-            var card = _cache[eventId].Cards.Find(c => c.CardId == cardId);
-            return card is { IsUnlocked: true };
+            if (cardIds == null || cardIds.Count == 0)
+                return new List<string>();
+
+            if (data?.Cards == null)
+                return cardIds.ToList();
+
+            return cardIds
+                .Where(cardId =>
+                {
+                    var card = data.Cards.Find(c => c.CardId == cardId);
+                    return card is not { IsUnlocked: true };
+                })
+                .ToList();
         }
         
         /// <summary>
