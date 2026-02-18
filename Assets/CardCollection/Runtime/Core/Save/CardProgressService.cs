@@ -98,11 +98,29 @@ namespace CardCollection.Core
             {
                 await _storage.UnlockCardsAsync(eventId, cardsToUnlock);
                 
-                var updatedData = await _storage.LoadAsync(eventId);
-                _cache[eventId] = updatedData;
+                ApplyUnlockToCache(currentData, cardsToUnlock);
                 
-                // Invalidate unlocked card IDs cache for this event
-                _unlockedCardIdsCache.Remove(eventId);
+                // Update derived unlocked-IDs cache in place (if it exists) instead of invalidating.
+                // If nobody has called GetMissingCardIdsAsync yet, there's nothing to patch.
+                if (_unlockedCardIdsCache.TryGetValue(eventId, out var unlockedIds))
+                {
+                    unlockedIds.UnionWith(cardsToUnlock);
+                }
+            }
+        }
+        
+        private static void ApplyUnlockToCache(EventCardsSaveData data, IReadOnlyCollection<string> cardIds)
+        {
+            if (data?.Cards == null) return;
+
+            foreach (var cardId in cardIds)
+            {
+                var card = data.Cards.Find(c => c.CardId == cardId);
+                if (card != null)
+                {
+                    card.IsUnlocked = true;
+                    card.IsNew = true;
+                }
             }
         }
         
