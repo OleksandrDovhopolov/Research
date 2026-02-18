@@ -8,25 +8,40 @@ namespace core
     public class CardCollectionEntryPoint : MonoBehaviour
     {
         private CardCollectionModule _cardCollectionModule;
+        private Exception _initializationException;
 
         private readonly UniTaskCompletionSource _initializationSource = new();
 
-        public bool IsInitialized => _initializationSource.Task.Status.IsCompleted();
+        public bool IsInitialized => _initializationSource.Task.Status == UniTaskStatus.Succeeded;
         public UniTask WaitForInitializationAsync() => _initializationSource.Task;
 
-        public ICardCollectionModule CardCollectionModule =>
-            !IsInitialized ? throw new InvalidOperationException("Module not initialized.") : _cardCollectionModule;
-        public ICardCollectionUpdater CardCollectionUpdater =>
-            !IsInitialized ? throw new InvalidOperationException("Module not initialized.") : _cardCollectionModule;
-        public ICardCollectionReader CardCollectionReader =>
-            !IsInitialized ? throw new InvalidOperationException("Module not initialized.") : _cardCollectionModule;
-        
+        public ICardCollectionModule CardCollectionModule => GetInitializedModule();
+        public ICardCollectionUpdater CardCollectionUpdater => GetInitializedModule();
+        public ICardCollectionReader CardCollectionReader => GetInitializedModule();
+
+        public event Action<Exception> OnInitializationFailed;
+
         private void Awake()
         {
-            IniCardCollection().Forget();
+            InitCardCollection().Forget();
         }
 
-        private async UniTask IniCardCollection()
+        private CardCollectionModule GetInitializedModule()
+        {
+            if (_initializationException != null)
+                throw new InvalidOperationException(
+                    "CardCollection module initialization failed. See inner exception for details.",
+                    _initializationException);
+
+            if (!IsInitialized)
+                throw new InvalidOperationException(
+                    "CardCollection module is not yet initialized. " +
+                    "Await WaitForInitializationAsync() before accessing the module.");
+
+            return _cardCollectionModule;
+        }
+
+        private async UniTask InitCardCollection()
         {
             try
             {
@@ -45,7 +60,9 @@ namespace core
             }
             catch (Exception ex)
             {
+                _initializationException = ex;
                 _initializationSource.TrySetException(ex);
+                OnInitializationFailed?.Invoke(ex);
             }
         }
     }
