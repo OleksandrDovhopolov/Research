@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -23,7 +24,8 @@ namespace core
 
         private void Awake()
         {
-            InitCardCollection().Forget();
+            var ct = this.GetCancellationTokenOnDestroy();
+            InitCardCollection(ct).Forget();
         }
 
         private CardCollectionModule GetInitializedModule()
@@ -41,7 +43,7 @@ namespace core
             return _cardCollectionModule;
         }
 
-        private async UniTask InitCardCollection()
+        private async UniTask InitCardCollection(CancellationToken ct)
         {
             try
             {
@@ -54,9 +56,13 @@ namespace core
                 var config = new CardCollectionModuleConfig(packProvider, cardsStorage, cardDefinitionProvider, cardSelector, testEventId);
 
                 _cardCollectionModule = new CardCollectionModule(config);
-                await _cardCollectionModule.InitializeAsync();
+                await _cardCollectionModule.InitializeAsync(ct);
 
                 _initializationSource.TrySetResult();
+            }
+            catch (OperationCanceledException)
+            {
+                // MonoBehaviour was destroyed — silently stop
             }
             catch (Exception ex)
             {

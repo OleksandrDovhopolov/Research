@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -11,9 +12,11 @@ namespace CardCollection.Core
         private List<CardPackConfig> _cachedPacks;
         private bool _isInitialized;
 
-        public async UniTask<List<CardPackConfig>> GetCardPacksAsync()
+        public async UniTask<List<CardPackConfig>> GetCardPacksAsync(CancellationToken ct = default)
         {
             if (_isInitialized && _cachedPacks != null) return _cachedPacks;
+
+            ct.ThrowIfCancellationRequested();
 
             var configJson = Resources.Load<TextAsset>(CONFIG_FILE_NAME);
 
@@ -43,9 +46,9 @@ namespace CardCollection.Core
             }
         }
 
-        public async UniTask<CardPackConfig> GetCardPackByIdAsync(string packId)
+        public async UniTask<CardPackConfig> GetCardPackByIdAsync(string packId, CancellationToken ct = default)
         {
-            var allPacks = await GetCardPacksAsync();
+            var allPacks = await GetCardPacksAsync(ct);
             return allPacks.Find(p => p.packId == packId);
         }
 

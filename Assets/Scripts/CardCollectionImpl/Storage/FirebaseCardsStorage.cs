@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Firebase;
@@ -16,9 +17,11 @@ namespace core
         
         private string _userId;
         
-        public async UniTask InitializeAsync()
+        public async UniTask InitializeAsync(CancellationToken ct = default)
         {
             var status = await FirebaseApp.CheckAndFixDependenciesAsync();
+            ct.ThrowIfCancellationRequested();
+
             if (status != DependencyStatus.Available)
             {
                 Debug.LogError($"[Firebase] Dependencies error: {status}");
@@ -32,7 +35,12 @@ namespace core
                 try
                 {
                     var result = await _auth.SignInAnonymouslyAsync();
+                    ct.ThrowIfCancellationRequested();
                     _userId = result.User.UserId;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
                 }
                 catch (Exception e)
                 {
@@ -57,10 +65,11 @@ namespace core
                 .Document(eventId);
         }
         
-        public async UniTask<EventCardsSaveData> LoadAsync(string eventId)
+        public async UniTask<EventCardsSaveData> LoadAsync(string eventId, CancellationToken ct = default)
         {
             var docRef = GetEventDoc(eventId);
             var snapshot = await docRef.GetSnapshotAsync();
+            ct.ThrowIfCancellationRequested();
 
             if (!snapshot.Exists)
             {
@@ -71,21 +80,22 @@ namespace core
             return snapshot.ConvertTo<EventCardsSaveData>();
         }
 
-        public async UniTask SaveAsync(EventCardsSaveData data)
+        public async UniTask SaveAsync(EventCardsSaveData data, CancellationToken ct = default)
         {
             var docRef = GetEventDoc(data.EventId);
 
             await docRef.SetAsync(data);
+            ct.ThrowIfCancellationRequested();
 
             Debug.LogWarning($"[Firebase] Saved event {data.EventId}");
         }
 
-        public UniTask UnlockCardsAsync(string eventId, IReadOnlyCollection<string> cardIds)
+        public UniTask UnlockCardsAsync(string eventId, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
         {
             throw new NotImplementedException("not implemented");
         }
 
-        public UniTask ClearCollectionAsync()
+        public UniTask ClearCollectionAsync(CancellationToken ct = default)
         {
             throw new NotImplementedException("not implemented");
         }

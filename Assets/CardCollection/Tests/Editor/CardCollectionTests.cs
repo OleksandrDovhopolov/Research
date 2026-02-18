@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
@@ -101,12 +102,12 @@ namespace CardCollection.Tests
 
         private class MockCardPackProvider : ICardPackProvider
         {
-            public async UniTask<List<CardPackConfig>> GetCardPacksAsync()
+            public async UniTask<List<CardPackConfig>> GetCardPacksAsync(CancellationToken ct = default)
             {
                 return GetTestPacks();
             }
 
-            public async UniTask<CardPackConfig> GetCardPackByIdAsync(string packId)
+            public async UniTask<CardPackConfig> GetCardPackByIdAsync(string packId, CancellationToken ct = default)
             {
                 var packs = GetTestPacks();
                 return packs.Find(p => p.packId == packId);

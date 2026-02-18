@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 
 namespace CardCollection.Core
@@ -31,10 +32,10 @@ namespace CardCollection.Core
             CardRandomizer = new PackBasedCardsRandomizer(_config.CardSelector, _config.CardDefinitionProvider);
         }
 
-        public async UniTask InitializeAsync()
+        public async UniTask InitializeAsync(CancellationToken ct = default)
         {
-            await CardPackService.InitializeAsync();
-            await CardProgressService.InitializeAsync();
+            await CardPackService.InitializeAsync(ct);
+            await CardProgressService.InitializeAsync(ct);
         }
 
         public void Dispose()

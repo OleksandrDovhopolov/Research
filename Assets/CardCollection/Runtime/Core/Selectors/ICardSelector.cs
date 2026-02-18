@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 
 namespace CardCollection.Core
@@ -19,7 +20,8 @@ namespace CardCollection.Core
         /// <param name="pack">The pack to select cards for</param>
         /// <param name="allCards">List of all available cards to select from</param>
         /// <param name="context">Context providing collection state for strategies that need it</param>
+        /// <param name="ct">Cancellation token for cooperative cancellation</param>
         /// <returns>List of selected card IDs</returns>
-        UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards, CardSelectionContext context);
+        UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards, CardSelectionContext context, CancellationToken ct = default);
     }
 }

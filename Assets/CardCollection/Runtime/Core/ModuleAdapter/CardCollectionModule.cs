@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 
 namespace CardCollection.Core
@@ -15,43 +16,43 @@ namespace CardCollection.Core
             _selectionContext = new CardSelectionContext(this);
         }
 
-        public UniTask InitializeAsync() => _context.InitializeAsync();
+        public UniTask InitializeAsync(CancellationToken ct = default) => _context.InitializeAsync(ct);
 
         public List<CardPack> GetAllPacks() => _context.CardPackService.GetAllPacks();
 
         public CardPack GetPackById(string packId) => _context.CardPackService.GetPackById(packId);
 
-        public async UniTask<List<string>> OpenPackAndUnlockAsync(string packId)
+        public async UniTask<List<string>> OpenPackAndUnlockAsync(string packId, CancellationToken ct = default)
         {
             var pack = _context.CardPackService.GetPackById(packId);
 
-            return await OpenPackAndUnlockAsync(pack);
+            return await OpenPackAndUnlockAsync(pack, ct);
         }
 
-        public async UniTask<List<string>> OpenPackAndUnlockAsync(CardPack cardPack)
+        public async UniTask<List<string>> OpenPackAndUnlockAsync(CardPack cardPack, CancellationToken ct = default)
         {
             if (cardPack == null)
             {
                 return new List<string>();
             }
             
-            var cardIds = await _context.CardRandomizer.GetRandomNewCardsAsync(cardPack, _selectionContext);
+            var cardIds = await _context.CardRandomizer.GetRandomNewCardsAsync(cardPack, _selectionContext, ct);
             if (cardIds.Count > 0)
             {
-                await _context.CardProgressService.UnlockCardsAsync(_context.DefaultEventId, cardIds);
+                await _context.CardProgressService.UnlockCardsAsync(_context.DefaultEventId, cardIds, ct);
             }
 
             return cardIds;
         }
 
-        public UniTask<List<CardProgressData>> GetCardsByIdsAsync(List<string> cardIds)
+        public UniTask<List<CardProgressData>> GetCardsByIdsAsync(List<string> cardIds, CancellationToken ct = default)
         {
-            return _context.CardProgressService.GetCardsByIdsAsync(_context.DefaultEventId, cardIds);
+            return _context.CardProgressService.GetCardsByIdsAsync(_context.DefaultEventId, cardIds, ct);
         }
 
-        public UniTask ResetNewFlagAsync(string cardId)
+        public UniTask ResetNewFlagAsync(string cardId, CancellationToken ct = default)
         {
-            return _context.CardProgressService.ResetNewFlagAsync(_context.DefaultEventId, cardId);
+            return _context.CardProgressService.ResetNewFlagAsync(_context.DefaultEventId, cardId, ct);
         }
         
         public void Dispose()
@@ -61,11 +62,15 @@ namespace CardCollection.Core
         
         #region ICardCollectionUpdater implementation
         
-        public async UniTask UnlockCard(string cardId)
+        public async UniTask UnlockCard(string cardId, CancellationToken ct = default)
         {
             try
             {
-                await _context.CardProgressService.UnlockCardAsync(_context.DefaultEventId, cardId);
+                await _context.CardProgressService.UnlockCardAsync(_context.DefaultEventId, cardId, ct);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -73,7 +78,7 @@ namespace CardCollection.Core
             }
         }
 
-        public async UniTask Save()
+        public async UniTask Save(CancellationToken ct = default)
         {
             try
             {
@@ -85,7 +90,11 @@ namespace CardCollection.Core
                     cardCollectionData.Cards.Add(cardData);
                 }
 
-                await _context.CardProgressService.SaveAsync(cardCollectionData);
+                await _context.CardProgressService.SaveAsync(cardCollectionData, ct);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -93,11 +102,15 @@ namespace CardCollection.Core
             }
         }
 
-        public async UniTask<EventCardsSaveData> Load()
+        public async UniTask<EventCardsSaveData> Load(CancellationToken ct = default)
         {
             try
             {
-                return await _context.CardProgressService.LoadAsync(_context.DefaultEventId);
+                return await _context.CardProgressService.LoadAsync(_context.DefaultEventId, ct);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -105,11 +118,15 @@ namespace CardCollection.Core
             }
         }
 
-        public async UniTask<HashSet<string>> GetMissingCardIdsAsync(List<CardDefinition> allCards)
+        public async UniTask<HashSet<string>> GetMissingCardIdsAsync(List<CardDefinition> allCards, CancellationToken ct = default)
         {
             try
             {
-                return await _context.CardProgressService.GetMissingCardIdsAsync(_context.DefaultEventId, allCards);
+                return await _context.CardProgressService.GetMissingCardIdsAsync(_context.DefaultEventId, allCards, ct);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -117,11 +134,15 @@ namespace CardCollection.Core
             }
         }
 
-        public async UniTask Clear()
+        public async UniTask Clear(CancellationToken ct = default)
         {
             try
             {
-                await _context.CardProgressService.ClearCollectionAsync();
+                await _context.CardProgressService.ClearCollectionAsync(ct);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -132,4 +153,3 @@ namespace CardCollection.Core
         #endregion
     }
 }
-

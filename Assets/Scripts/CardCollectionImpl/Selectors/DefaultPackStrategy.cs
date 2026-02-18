@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -28,9 +29,10 @@ namespace core
         public virtual async UniTask<List<string>> SelectCardsAsync(
             CardPack pack, 
             List<CardDefinition> allCards, 
-            PackSelectionContext context)
+            PackSelectionContext context,
+            CancellationToken ct = default)
         {
-            await UniTask.Yield();
+            await UniTask.Yield(ct);
 
             if (allCards == null || allCards.Count == 0)
             {
@@ -44,6 +46,8 @@ namespace core
 
             for (int i = 0; i < cardCount; i++)
             {
+                ct.ThrowIfCancellationRequested();
+
                 // Update available cards (remove already selected ones)
                 var selectedCardIdsSet = new HashSet<string>(selectedCards.Select(c => c.Id));
                 var availableCardsForSelection = remainingCards.Where(c => !selectedCardIdsSet.Contains(c.Id)).ToList();

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 
 namespace CardCollection.Core
@@ -9,31 +10,31 @@ namespace CardCollection.Core
     /// </summary>
     public interface ICardCollectionModule
     {
-        UniTask InitializeAsync();
+        UniTask InitializeAsync(CancellationToken ct = default);
 
         // Packs
         List<CardPack> GetAllPacks();
         CardPack GetPackById(string packId);
 
         // Gameplay flow
-        UniTask<List<string>> OpenPackAndUnlockAsync(string packId);
-        UniTask<List<string>> OpenPackAndUnlockAsync(CardPack cardPack);
+        UniTask<List<string>> OpenPackAndUnlockAsync(string packId, CancellationToken ct = default);
+        UniTask<List<string>> OpenPackAndUnlockAsync(CardPack cardPack, CancellationToken ct = default);
 
         // Progress helpers
-        UniTask<List<CardProgressData>> GetCardsByIdsAsync(List<string> cardIds);
-        UniTask ResetNewFlagAsync(string cardId);
+        UniTask<List<CardProgressData>> GetCardsByIdsAsync(List<string> cardIds, CancellationToken ct = default);
+        UniTask ResetNewFlagAsync(string cardId, CancellationToken ct = default);
     }
 
     public interface ICardCollectionReader
     {
-        UniTask<EventCardsSaveData> Load();
-        UniTask<HashSet<string>> GetMissingCardIdsAsync(List<CardDefinition> allCards);
+        UniTask<EventCardsSaveData> Load(CancellationToken ct = default);
+        UniTask<HashSet<string>> GetMissingCardIdsAsync(List<CardDefinition> allCards, CancellationToken ct = default);
     }
 
     public interface ICardCollectionUpdater
     {
-        UniTask UnlockCard(string cardId);
-        UniTask Save();
-        UniTask Clear();
+        UniTask UnlockCard(string cardId, CancellationToken ct = default);
+        UniTask Save(CancellationToken ct = default);
+        UniTask Clear(CancellationToken ct = default);
     }
 }

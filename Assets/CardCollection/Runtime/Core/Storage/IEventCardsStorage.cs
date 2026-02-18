@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 
 namespace CardCollection.Core
 {
     public interface IEventCardsStorage : IDisposable
     {
-        UniTask InitializeAsync();
-        UniTask<EventCardsSaveData> LoadAsync(string eventId);
-        UniTask SaveAsync(EventCardsSaveData data);
-        UniTask UnlockCardsAsync(string eventId, IReadOnlyCollection<string> cardIds);
-        UniTask ClearCollectionAsync();
+        UniTask InitializeAsync(CancellationToken ct = default);
+        UniTask<EventCardsSaveData> LoadAsync(string eventId, CancellationToken ct = default);
+        UniTask SaveAsync(EventCardsSaveData data, CancellationToken ct = default);
+        UniTask UnlockCardsAsync(string eventId, IReadOnlyCollection<string> cardIds, CancellationToken ct = default);
+        UniTask ClearCollectionAsync(CancellationToken ct = default);
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -25,7 +26,7 @@ namespace CardCollection.Core
             _allPacks = new List<CardPack>();
         }
 
-        public async UniTask InitializeAsync()
+        public async UniTask InitializeAsync(CancellationToken ct = default)
         {
             if (_isInitialized)
             {
@@ -37,7 +38,7 @@ namespace CardCollection.Core
             {
                 Debug.Log("[CardCollectionService] Initializing...");
 
-                var packConfigs = await _cardPackProvider.GetCardPacksAsync();
+                var packConfigs = await _cardPackProvider.GetCardPacksAsync(ct);
 
                 _allPacks = packConfigs.Select(config => new CardPack(config)).ToList();
 
@@ -50,6 +51,10 @@ namespace CardCollection.Core
                 _isInitialized = true;
                 Debug.Log($"[CardCollectionService] Initialized with {_allPacks.Count} packs");
                 OnInitialized?.Invoke();
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {

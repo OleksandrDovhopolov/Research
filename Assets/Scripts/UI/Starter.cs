@@ -1,3 +1,4 @@
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
@@ -14,10 +15,12 @@ namespace core
         [SerializeField] private CardCollectionEntryPoint _cardCollectionEntryPoint;
 
         private ConfigManager _configManager;
+        private CancellationToken _destroyCt;
 
         private void Awake()
         {
             Application.targetFrameRate = 60;
+            _destroyCt = this.GetCancellationTokenOnDestroy();
         }
 
         private void Start()
@@ -59,7 +62,7 @@ namespace core
 
         private async UniTask OpenCardCollectionWindow()
         {
-            var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load();
+            var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
             var args = new CardCollectionArgs(_uiManager, _cardCollectionEntryPoint.CardCollectionModule, collectionData);
             _uiManager.Show<CardCollectionController>(args);
         }

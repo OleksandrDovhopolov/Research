@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -19,9 +20,9 @@ namespace CardCollection.Core
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
         }
 
-        public async UniTask InitializeAsync()
+        public async UniTask InitializeAsync(CancellationToken ct = default)
         {
-            await _storage.InitializeAsync();
+            await _storage.InitializeAsync(ct);
             _isInitialized = true;
         }
 
@@ -29,41 +30,41 @@ namespace CardCollection.Core
         /// Ensures that the underlying storage is initialized.
         /// Does NOT create storage or the service – it only runs initialization once.
         /// </summary>
-        private async UniTask EnsureInitializedAsync()
+        private async UniTask EnsureInitializedAsync(CancellationToken ct = default)
         {
             if (_isInitialized)
             {
                 return;
             }
 
-            await InitializeAsync();
+            await InitializeAsync(ct);
         }
 
-        public async UniTask<EventCardsSaveData> LoadAsync(string eventId)
+        public async UniTask<EventCardsSaveData> LoadAsync(string eventId, CancellationToken ct = default)
         {
             if (string.IsNullOrEmpty(eventId))
                 throw new ArgumentException("Event ID cannot be null or empty", nameof(eventId));
 
-            await EnsureInitializedAsync();
+            await EnsureInitializedAsync(ct);
 
             if (_cache.TryGetValue(eventId, out var cachedData))
             {
                 return cachedData;
             }
 
-            var data = await _storage.LoadAsync(eventId);
+            var data = await _storage.LoadAsync(eventId, ct);
             _cache[eventId] = data;
             return data;
         }
 
-        public async UniTask SaveAsync(EventCardsSaveData data)
+        public async UniTask SaveAsync(EventCardsSaveData data, CancellationToken ct = default)
         {
             if (data == null)
                 throw new ArgumentNullException(nameof(data));
 
-            await EnsureInitializedAsync();
+            await EnsureInitializedAsync(ct);
 
-            await _storage.SaveAsync(data);
+            await _storage.SaveAsync(data, ct);
             
             _cache[data.EventId] = data;
             
@@ -71,33 +72,33 @@ namespace CardCollection.Core
             _unlockedCardIdsCache.Remove(data.EventId);
         }
 
-        public async UniTask ClearCollectionAsync()
+        public async UniTask ClearCollectionAsync(CancellationToken ct = default)
         {
-            await EnsureInitializedAsync();
+            await EnsureInitializedAsync(ct);
 
-            await _storage.ClearCollectionAsync();
+            await _storage.ClearCollectionAsync(ct);
             
             _cache.Clear();
             _unlockedCardIdsCache.Clear();
         }
         
-        public UniTask UnlockCardAsync(string eventId, string cardId)
+        public UniTask UnlockCardAsync(string eventId, string cardId, CancellationToken ct = default)
         {
-            return UnlockCardsAsync(eventId, new[] { cardId });
+            return UnlockCardsAsync(eventId, new[] { cardId }, ct);
         }
 
-        public async UniTask UnlockCardsAsync(string eventId, IReadOnlyCollection<string> cardIds)
+        public async UniTask UnlockCardsAsync(string eventId, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
         {
             if (cardIds == null || cardIds.Count == 0) return;
 
-            await EnsureInitializedAsync();
+            await EnsureInitializedAsync(ct);
 
-            var currentData = await LoadAsync(eventId);
+            var currentData = await LoadAsync(eventId, ct);
             var cardsToUnlock = FilterUnlockedCards(currentData, cardIds);
             
             if (cardsToUnlock.Count > 0)
             {
-                await _storage.UnlockCardsAsync(eventId, cardsToUnlock);
+                await _storage.UnlockCardsAsync(eventId, cardsToUnlock, ct);
                 
                 ApplyUnlockToCache(currentData, cardsToUnlock);
                 
@@ -145,8 +146,9 @@ namespace CardCollection.Core
         /// </summary>
         /// <param name="eventId">The event identifier</param>
         /// <param name="cardIds">List of card IDs to retrieve</param>
+        /// <param name="ct">Cancellation token for cooperative cancellation</param>
         /// <returns>List of CardProgressData matching the card IDs</returns>
-        public async UniTask<List<CardProgressData>> GetCardsByIdsAsync(string eventId, List<string> cardIds)
+        public async UniTask<List<CardProgressData>> GetCardsByIdsAsync(string eventId, List<string> cardIds, CancellationToken ct = default)
         {
             if (string.IsNullOrEmpty(eventId))
                 throw new ArgumentException("Event ID cannot be null or empty", nameof(eventId));
@@ -154,9 +156,9 @@ namespace CardCollection.Core
             if (cardIds == null || cardIds.Count == 0)
                 return new List<CardProgressData>();
 
-            await EnsureInitializedAsync();
+            await EnsureInitializedAsync(ct);
 
-            var data = await LoadAsync(eventId);
+            var data = await LoadAsync(eventId, ct);
             
             if (data?.Cards == null)
                 return new List<CardProgressData>();
@@ -171,7 +173,8 @@ namespace CardCollection.Core
         /// </summary>
         /// <param name="eventId">The event identifier</param>
         /// <param name="cardId">The card identifier to reset</param>
-        public async UniTask ResetNewFlagAsync(string eventId, string cardId)
+        /// <param name="ct">Cancellation token for cooperative cancellation</param>
+        public async UniTask ResetNewFlagAsync(string eventId, string cardId, CancellationToken ct = default)
         {
             if (string.IsNullOrEmpty(eventId))
                 throw new ArgumentException("Event ID cannot be null or empty", nameof(eventId));
@@ -179,9 +182,9 @@ namespace CardCollection.Core
             if (string.IsNullOrEmpty(cardId))
                 throw new ArgumentException("Card ID cannot be null or empty", nameof(cardId));
 
-            await EnsureInitializedAsync();
+            await EnsureInitializedAsync(ct);
 
-            var data = await LoadAsync(eventId);
+            var data = await LoadAsync(eventId, ct);
             
             if (data?.Cards == null)
                 return;
@@ -192,7 +195,7 @@ namespace CardCollection.Core
                 card.IsNew = false;
                 
                 Debug.LogWarning($"Debug EventCardsService cardData.CardId {card.CardId} / {card.IsNew}");
-                await SaveAsync(data);
+                await SaveAsync(data, ct);
             }
         }
 
@@ -202,8 +205,9 @@ namespace CardCollection.Core
         /// </summary>
         /// <param name="eventId">The event identifier</param>
         /// <param name="allCards">List of all available card definitions</param>
+        /// <param name="ct">Cancellation token for cooperative cancellation</param>
         /// <returns>HashSet of card IDs that are missing (not unlocked)</returns>
-        internal async UniTask<HashSet<string>> GetMissingCardIdsAsync(string eventId, List<CardDefinition> allCards)
+        internal async UniTask<HashSet<string>> GetMissingCardIdsAsync(string eventId, List<CardDefinition> allCards, CancellationToken ct = default)
         {
             if (string.IsNullOrEmpty(eventId))
                 throw new ArgumentException("Event ID cannot be null or empty", nameof(eventId));
@@ -211,12 +215,12 @@ namespace CardCollection.Core
             if (allCards == null || allCards.Count == 0)
                 return new HashSet<string>();
 
-            await EnsureInitializedAsync();
+            await EnsureInitializedAsync(ct);
 
             // Get or compute unlocked card IDs cache
             if (!_unlockedCardIdsCache.TryGetValue(eventId, out var unlockedCardIds))
             {
-                var progressData = await LoadAsync(eventId);
+                var progressData = await LoadAsync(eventId, ct);
                 unlockedCardIds = new HashSet<string>(
                     progressData.Cards.Where(c => c.IsUnlocked).Select(c => c.CardId));
                 _unlockedCardIdsCache[eventId] = unlockedCardIds;

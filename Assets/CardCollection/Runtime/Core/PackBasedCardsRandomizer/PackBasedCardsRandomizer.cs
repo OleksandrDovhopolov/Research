@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -16,7 +17,7 @@ namespace CardCollection.Core
             _cardDefinitionProvider = cardDefinitionProvider ?? throw new ArgumentNullException(nameof(cardDefinitionProvider));
         }
 
-        public async UniTask<List<string>> GetRandomNewCardsAsync(CardPack pack, CardSelectionContext context)
+        public async UniTask<List<string>> GetRandomNewCardsAsync(CardPack pack, CardSelectionContext context, CancellationToken ct = default)
         {
             var allCards = _cardDefinitionProvider.GetCardDefinitions();
 
@@ -26,7 +27,7 @@ namespace CardCollection.Core
                 return new List<string>();
             }
 
-            var result = await _cardSelector.SelectCardsAsync(pack, allCards, context);
+            var result = await _cardSelector.SelectCardsAsync(pack, allCards, context, ct);
 
             return result;
         }

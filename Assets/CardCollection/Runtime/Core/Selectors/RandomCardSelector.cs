@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -11,9 +12,9 @@ namespace CardCollection.Core
     /// </summary>
     public class RandomCardSelector : ICardSelector
     {
-        public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards, CardSelectionContext context)
+        public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards, CardSelectionContext context, CancellationToken ct = default)
         {
-            await UniTask.Yield();
+            await UniTask.Yield(ct);
 
             if (allCards == null || allCards.Count == 0)
             {

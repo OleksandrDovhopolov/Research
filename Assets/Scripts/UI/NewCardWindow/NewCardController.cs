@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
@@ -24,16 +25,18 @@ namespace core
     public class NewCardController : WindowController<NewCardView>
     {
         private NewCardArgs Args => (NewCardArgs)Arguments;
+        private CancellationTokenSource _cts;
 
         protected override void OnShowStart()
         {
-            GetNewCardsAsync().Forget();
+            _cts = new CancellationTokenSource();
+            GetNewCardsAsync(_cts.Token).Forget();
         }
 
-        private async UniTask GetNewCardsAsync()
+        private async UniTask GetNewCardsAsync(CancellationToken ct)
         {
-            var cardsIdList = await Args.CollectionModule.OpenPackAndUnlockAsync(Args.CardPack);
-            var cardsData = await Args.CollectionModule.GetCardsByIdsAsync(cardsIdList);
+            var cardsIdList = await Args.CollectionModule.OpenPackAndUnlockAsync(Args.CardPack, ct);
+            var cardsData = await Args.CollectionModule.GetCardsByIdsAsync(cardsIdList, ct);
             var displayData = cardsData.ToNewCardDisplayData();
             
             View.CreateNewCards(displayData);
@@ -47,6 +50,9 @@ namespace core
         protected override void OnHideStart(bool isClosed)
         {
             View.CloseClick -= CloseWindow;
+            _cts?.Cancel();
+            _cts?.Dispose();
+            _cts = null;
         }
 
         protected override void OnHideComplete(bool isClosed)

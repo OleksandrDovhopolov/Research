@@ -25,8 +25,10 @@ namespace core
         /// <summary>
         /// Initializes the storage by creating the root directory if it doesn't exist.
         /// </summary>
-        public UniTask InitializeAsync()
+        public UniTask InitializeAsync(CancellationToken ct = default)
         {
+            ct.ThrowIfCancellationRequested();
+
             _rootPath = Path.Combine(Application.persistentDataPath, "event_cards");
 
             try
@@ -50,8 +52,9 @@ namespace core
         /// Returns a new instance with default values if the file doesn't exist or deserialization fails.
         /// </summary>
         /// <param name="eventId">The event identifier. Must not be null or empty.</param>
+        /// <param name="ct">Cancellation token for cooperative cancellation.</param>
         /// <returns>The loaded event cards data, or a new instance if loading fails.</returns>
-        public async UniTask<EventCardsSaveData> LoadAsync(string eventId)
+        public async UniTask<EventCardsSaveData> LoadAsync(string eventId, CancellationToken ct = default)
         {
             ValidateEventId(eventId);
 
@@ -62,10 +65,11 @@ namespace core
                 return new EventCardsSaveData { EventId = eventId, Version = 1 };
             }
 
-            await _fileSemaphore.WaitAsync();
+            await _fileSemaphore.WaitAsync(ct);
             try
             {
-                var json = await File.ReadAllTextAsync(path);
+                ct.ThrowIfCancellationRequested();
+                var json = await File.ReadAllTextAsync(path, ct);
                 var data = JsonConvert.DeserializeObject<EventCardsSaveData>(json);
 
                 if (data == null)
@@ -82,6 +86,10 @@ namespace core
 
                 return data;
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
                 Debug.LogError($"[JsonEventCardsStorage] Load failed for event {eventId}: {e}");
@@ -97,7 +105,8 @@ namespace core
         /// Saves event cards data to disk.
         /// </summary>
         /// <param name="data">The event cards data to save. Must not be null.</param>
-        public async UniTask SaveAsync(EventCardsSaveData data)
+        /// <param name="ct">Cancellation token for cooperative cancellation.</param>
+        public async UniTask SaveAsync(EventCardsSaveData data, CancellationToken ct = default)
         {
             if (data == null)
             {
@@ -109,13 +118,15 @@ namespace core
 
             var path = GetFilePath(data.EventId);
 
-            await _fileSemaphore.WaitAsync();
+            await _fileSemaphore.WaitAsync(ct);
             try
             {
+                ct.ThrowIfCancellationRequested();
+
                 // Write to temporary file first, then rename (atomic operation)
                 var tempPath = path + ".tmp";
                 var json = JsonConvert.SerializeObject(data, Formatting.Indented);
-                await File.WriteAllTextAsync(tempPath, json);
+                await File.WriteAllTextAsync(tempPath, json, ct);
                 
                 // Atomic replace
                 if (File.Exists(path))
@@ -123,6 +134,10 @@ namespace core
                     File.Delete(path);
                 }
                 File.Move(tempPath, path);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception e)
             {
@@ -140,14 +155,15 @@ namespace core
         /// </summary>
         /// <param name="eventId">The event identifier. Must not be null or empty.</param>
         /// <param name="cardIds">Collection of card IDs to unlock. Can be null or empty.</param>
-        public async UniTask UnlockCardsAsync(string eventId, IReadOnlyCollection<string> cardIds)
+        /// <param name="ct">Cancellation token for cooperative cancellation.</param>
+        public async UniTask UnlockCardsAsync(string eventId, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
         {
             if (cardIds == null || cardIds.Count == 0)
                 return;
 
             ValidateEventId(eventId);
 
-            var data = await LoadAsync(eventId);
+            var data = await LoadAsync(eventId, ct);
 
             var cardDict = data.Cards.ToDictionary(c => c.CardId, c => c);
 
@@ -166,13 +182,14 @@ namespace core
                 }
             }
 
-            await SaveAsync(data);
+            await SaveAsync(data, ct);
         }
 
         /// <summary>
         /// Clears all event card data files from the storage directory.
         /// </summary>
-        public async UniTask ClearCollectionAsync()
+        /// <param name="ct">Cancellation token for cooperative cancellation.</param>
+        public async UniTask ClearCollectionAsync(CancellationToken ct = default)
         {
             if (string.IsNullOrEmpty(_rootPath))
             {
@@ -185,7 +202,7 @@ namespace core
                 return;
             }
 
-            await _fileSemaphore.WaitAsync();
+            await _fileSemaphore.WaitAsync(ct);
             try
             {
                 var files = Directory.GetFiles(_rootPath, "*.json");
@@ -202,10 +219,14 @@ namespace core
                         {
                             Debug.LogWarning($"[JsonEventCardsStorage] Failed to delete file {file}: {e}");
                         }
-                    })
+                    }, cancellationToken: ct)
                 );
 
                 await UniTask.WhenAll(deleteTasks);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception e)
             {

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 
@@ -21,7 +22,7 @@ namespace core
             _strategyRegistry.RegisterStrategy("Sapphire_Pack", new SapphirePackStrategy(packOpeningHistory));
         }
 
-        public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards, CardSelectionContext context)
+        public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards, CardSelectionContext context, CancellationToken ct = default)
         {
             // Wrap the core context into a PackSelectionContext for strategies
             var packContext = context as PackSelectionContext
@@ -31,7 +32,7 @@ namespace core
             var strategy = _strategyRegistry.GetStrategy(pack.PackId);
             
             // Delegate to the strategy
-            return await strategy.SelectCardsAsync(pack, allCards, packContext);
+            return await strategy.SelectCardsAsync(pack, allCards, packContext, ct);
         }
     }
 }

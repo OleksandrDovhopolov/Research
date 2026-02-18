@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -16,7 +17,7 @@ namespace CardCollection.Core
             _serverUrl = baseServerUrl ?? throw new ArgumentNullException(nameof(baseServerUrl));
         }
 
-        public async UniTask<List<CardPackConfig>> GetCardPacksAsync()
+        public async UniTask<List<CardPackConfig>> GetCardPacksAsync(CancellationToken ct = default)
         {
             if (_isInitialized && _cachedPacks != null) return _cachedPacks;
 
@@ -26,7 +27,7 @@ namespace CardCollection.Core
 
                 // using (var request = UnityWebRequest.Get($"{serverUrl}/api/card-packs"))
                 // {
-                //     await request.SendWebRequest().ToUniTask();
+                //     await request.SendWebRequest().ToUniTask(cancellationToken: ct);
                 //     if (request.result == UnityWebRequest.Result.Success)
                 //     {
                 //         var json = request.downloadHandler.text;
@@ -35,11 +36,15 @@ namespace CardCollection.Core
                 //     }
                 // }
 
-                await UniTask.Delay(500);
+                await UniTask.Delay(500, cancellationToken: ct);
                 _cachedPacks = new List<CardPackConfig>();
                 _isInitialized = true;
 
                 return _cachedPacks;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -50,9 +55,9 @@ namespace CardCollection.Core
             }
         }
 
-        public async UniTask<CardPackConfig> GetCardPackByIdAsync(string packId)
+        public async UniTask<CardPackConfig> GetCardPackByIdAsync(string packId, CancellationToken ct = default)
         {
-            var allPacks = await GetCardPacksAsync();
+            var allPacks = await GetCardPacksAsync(ct);
             return allPacks.Find(p => p.packId == packId);
         }
 
