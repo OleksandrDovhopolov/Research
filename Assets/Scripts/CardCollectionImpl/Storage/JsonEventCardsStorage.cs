@@ -20,6 +20,7 @@ namespace core
         private string _rootPath;
         private readonly SemaphoreSlim _fileSemaphore = new SemaphoreSlim(1, 1);
         private static readonly Regex InvalidFileNameChars = new Regex($"[{Regex.Escape(new string(Path.GetInvalidFileNameChars()))}]", RegexOptions.Compiled);
+        private bool _disposed;
 
         /// <summary>
         /// Initializes the storage by creating the root directory if it doesn't exist.
@@ -239,6 +240,14 @@ namespace core
             {
                 throw new ArgumentException("Event ID cannot be null or empty", nameof(eventId));
             }
+        }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            
+            _fileSemaphore.Dispose();
         }
     }
 }

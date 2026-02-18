@@ -40,6 +40,7 @@ namespace CardCollection.Core
         public void Dispose()
         {
             CardPackService.Dispose();
+            CardProgressService.Dispose();
         }
     }
 }

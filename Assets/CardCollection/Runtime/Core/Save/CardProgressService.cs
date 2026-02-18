@@ -6,12 +6,13 @@ using UnityEngine;
 
 namespace CardCollection.Core
 {
-    public class CardProgressService
+    public class CardProgressService : IDisposable
     {
         private readonly IEventCardsStorage _storage;
         private readonly Dictionary<string, EventCardsSaveData> _cache = new();
         private readonly Dictionary<string, HashSet<string>> _unlockedCardIdsCache = new();
         private bool _isInitialized;
+        private bool _disposed;
 
         public CardProgressService(IEventCardsStorage storage)
         {
@@ -100,8 +101,6 @@ namespace CardCollection.Core
                 
                 ApplyUnlockToCache(currentData, cardsToUnlock);
                 
-                // Update derived unlocked-IDs cache in place (if it exists) instead of invalidating.
-                // If nobody has called GetMissingCardIdsAsync yet, there's nothing to patch.
                 if (_unlockedCardIdsCache.TryGetValue(eventId, out var unlockedIds))
                 {
                     unlockedIds.UnionWith(cardsToUnlock);
@@ -226,6 +225,16 @@ namespace CardCollection.Core
             // Return missing card IDs (cards not in unlocked set)
             return new HashSet<string>(
                 allCards.Where(c => !unlockedCardIds.Contains(c.Id)).Select(c => c.Id));
+        }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+
+            _cache.Clear();
+            _unlockedCardIdsCache.Clear();
+            _storage.Dispose();
         }
     }
 }

@@ -1,9 +1,10 @@
+using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 
 namespace CardCollection.Core
 {
-    public interface IEventCardsStorage
+    public interface IEventCardsStorage : IDisposable
     {
         UniTask InitializeAsync();
         UniTask<EventCardsSaveData> LoadAsync(string eventId);

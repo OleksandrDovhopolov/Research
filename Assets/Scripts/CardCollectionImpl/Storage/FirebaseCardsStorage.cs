@@ -89,5 +89,11 @@ namespace core
         {
             throw new NotImplementedException("not implemented");
         }
+
+        public void Dispose()
+        {
+            _auth = null;
+            _db = null;
+        }
     }
 }
