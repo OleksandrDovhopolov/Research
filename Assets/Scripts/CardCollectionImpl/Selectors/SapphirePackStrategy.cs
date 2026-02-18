@@ -9,22 +9,22 @@ using Random = UnityEngine.Random;
 namespace core
 {
     /// <summary>
-    /// Pack selection strategy for Sapphire_Pack.
-    /// Rules:
-    /// - Contains 6 cards
-    /// - At least one card must be 3+ stars
-    /// - Missing card boost: 33% on 3rd pack, 66% on 4th pack, 100% on 5th+ pack
-    ///   (if previous packs didn't include a missing card)
+    /// Data-driven pack selection strategy that reads its rules from a <see cref="PackRule"/>.
+    /// <para>
+    /// Supports:
+    /// - Guaranteed minimum number of 3+ star cards
+    /// - Missing-card boost (configurable percentages per consecutive pack without a missing card)
+    /// </para>
+    /// New pack types only need a <see cref="PackRule"/> entry — no additional strategy class required.
     /// </summary>
     public class SapphirePackStrategy : DefaultPackStrategy
     {
-        private const int MinCardsWith3PlusStars = 1;
-        private static readonly float[] MissingCardBoostPercentages = { 33f, 66f, 100f };
-
+        private readonly PackRule _rule;
         private readonly PackOpeningHistory _packOpeningHistory;
 
-        public SapphirePackStrategy(PackOpeningHistory packOpeningHistory)
+        public SapphirePackStrategy(PackRule rule, PackOpeningHistory packOpeningHistory)
         {
+            _rule = rule ?? throw new System.ArgumentNullException(nameof(rule));
             _packOpeningHistory = packOpeningHistory;
         }
 
@@ -81,11 +81,12 @@ namespace core
 
                 // Check if we need to ensure at least one 3+ star card
                 // Force it if we're on the last card and haven't met the requirement
-                bool need3PlusStar = cardsWith3PlusStars < MinCardsWith3PlusStars
-                    && (i == cardCount - 1 || (cardCount - i) <= (MinCardsWith3PlusStars - cardsWith3PlusStars));
+                bool need3PlusStar = cardsWith3PlusStars < _rule.MinCardsWith3PlusStars
+                    && (i == cardCount - 1 || (cardCount - i) <= (_rule.MinCardsWith3PlusStars - cardsWith3PlusStars));
 
                 // Check if we should apply missing card boost
-                bool shouldApplyMissingCardBoost = _packOpeningHistory != null
+                bool shouldApplyMissingCardBoost = _rule.HasMissingCardBoost
+                                                   && _packOpeningHistory != null
                                                    && missingCardIds != null 
                                                    && missingCardIds.Count > 0
                                                    && !hasMissingCard;
@@ -94,7 +95,7 @@ namespace core
                 {
                     var boostPercentage = _packOpeningHistory.GetMissingCardBoostPercentage(
                         pack.PackId, 
-                        MissingCardBoostPercentages);
+                        _rule.MissingCardBoostPercentages);
                     
                     if (boostPercentage > 0 && Random.Range(0f, 100f) < boostPercentage)
                     {

@@ -5,33 +5,33 @@ using Cysharp.Threading.Tasks;
 
 namespace core
 {
-    /// <summary>
-    /// Probability-based card selection strategy.
-    /// Uses the Strategy pattern to delegate pack-specific selection logic to specialized strategies.
-    /// </summary>
     public class ProbabilityBasedCardSelector : ICardSelector
     {
         private readonly PackStrategyRegistry _strategyRegistry;
-        
-        public ProbabilityBasedCardSelector()
+
+        public ProbabilityBasedCardSelector(Dictionary<string, PackRule> packRules = null)
         {
             _strategyRegistry = new PackStrategyRegistry();
+
+            if (packRules is not { Count: > 0 }) return;
+            
             var packOpeningHistory = new PackOpeningHistory();
 
-            // Register pack-specific strategies
-            _strategyRegistry.RegisterStrategy("Sapphire_Pack", new SapphirePackStrategy(packOpeningHistory));
+            foreach (var kvp in packRules)
+            {
+                _strategyRegistry.RegisterStrategy(
+                    kvp.Key,
+                    new SapphirePackStrategy(kvp.Value, packOpeningHistory));
+            }
         }
 
         public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards, CardSelectionContext context, CancellationToken ct = default)
         {
-            // Wrap the core context into a PackSelectionContext for strategies
             var packContext = context as PackSelectionContext
                               ?? new PackSelectionContext(context?.CardCollectionReader);
 
-            // Get the appropriate strategy for this pack
             var strategy = _strategyRegistry.GetStrategy(pack.PackId);
             
-            // Delegate to the strategy
             return await strategy.SelectCardsAsync(pack, allCards, packContext, ct);
         }
     }

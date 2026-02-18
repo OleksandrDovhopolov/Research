@@ -50,7 +50,7 @@ namespace core
                 ICardPackProvider packProvider = new JsonCardPackProvider();
                 IEventCardsStorage cardsStorage = new JsonEventCardsStorage();
                 ICardDefinitionProvider cardDefinitionProvider = new DefaultCardDefinitionProvider();
-                ICardSelector cardSelector = new ProbabilityBasedCardSelector();
+                ICardSelector cardSelector = new ProbabilityBasedCardSelector(PackRulesConfig.CreateDefaultRules());
 
                 const string testEventId = "test";
                 var config = new CardCollectionModuleConfig(packProvider, cardsStorage, cardDefinitionProvider, cardSelector, testEventId);
