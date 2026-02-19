@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -210,13 +211,18 @@ namespace CardCollection.Tests
         private sealed class StubCardDefinitionProvider : ICardDefinitionProvider
         {
             private readonly List<CardDefinition> _cardDefinitions;
+            private readonly Dictionary<string, CardDefinition> _cardDefinitionsById;
 
             public StubCardDefinitionProvider(List<CardDefinition> cardDefinitions)
             {
                 _cardDefinitions = cardDefinitions;
+                _cardDefinitionsById = cardDefinitions
+                    .Where(card => !string.IsNullOrEmpty(card.Id))
+                    .ToDictionary(card => card.Id, card => card);
             }
 
             public List<CardDefinition> GetCardDefinitions() => _cardDefinitions;
+            public IReadOnlyDictionary<string, CardDefinition> GetCardDefinitionsById() => _cardDefinitionsById;
         }
 
         private sealed class InMemoryEventCardsStorage : IEventCardsStorage

@@ -14,6 +14,7 @@ namespace CardCollection.Core
         public CardPackService CardPackService { get; }
         public PackBasedCardsRandomizer CardRandomizer { get; }
         public CardProgressService CardProgressService { get; }
+        public IDuplicateCardPointsCalculator DuplicateCardPointsCalculator { get; }
         public ICardDefinitionProvider CardDefinitionProvider => _config.CardDefinitionProvider;
         public string DefaultEventId { get; }
 
@@ -30,6 +31,7 @@ namespace CardCollection.Core
             CardPackService = new CardPackService(_config.PackProvider);
             CardProgressService = new CardProgressService(_config.EventCardsStorage);
             CardRandomizer = new PackBasedCardsRandomizer(_config.CardSelector, _config.CardDefinitionProvider);
+            DuplicateCardPointsCalculator = new DuplicateCardPointsCalculator(_config.CardDefinitionProvider);
         }
 
         public async UniTask InitializeAsync(CancellationToken ct = default)
