@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using cheatModule;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace core
@@ -17,7 +18,7 @@ namespace core
         public void Start()
         {
             InitializeRootPanel();
-            InitializeCheatsModules();
+            InitializeCheatsModules().Forget();
         }
         
         private void InitializeRootPanel()
@@ -36,8 +37,9 @@ namespace core
             _rootPanel.transform.SetParent(_cheatsManager.transform, false);
         }
         
-        private void InitializeCheatsModules()
+        private async UniTask InitializeCheatsModules()
         {
+            await _cardCollectionEntryPoint.WaitForInitializationAsync();
             _cheatsModules = new List<ICheatsModule>(GetCheatModules());
             _cheatsModules.ForEach(module =>
             {

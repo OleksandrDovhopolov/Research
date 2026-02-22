@@ -20,20 +20,27 @@ namespace core
         [Header("Points Container")]
         [SerializeField] private float _animationDelay = 1f;
         [SerializeField] private CardsCollectionPointsView _cardsCollectionPointsView;
+        [SerializeField] private RectTransform _hidedTransform;
+        [SerializeField] private RectTransform _showedTransform;
 
         private readonly Dictionary<CardCollectionConfig, CollectionCardView> _viewsDict = new();
         private readonly Dictionary<CardCollectionConfig, EmptyCardView> _mockDict = new();
         private readonly Dictionary<CardCollectionConfig, int> _duplicatePointsDict = new();
         
+        private bool _hasDuplicates;
+
         private void OnEnable()
         {
             _canvasGroup.alpha = 1;
+            _cardsCollectionPointsView.SetPosition(_hidedTransform.position);
         }
         
         public void CreateNewCards(List<NewCardDisplayData> cardsData)
         {
             _newCardsPool.DisableNonActive();
             _newCardsPool.DisableNonActive();
+            
+            _hasDuplicates = cardsData.Any(c => !c.IsNew);
             
             var sortedCards = cardsData.OrderBy(c => c.Config.PremiumCard ? 6 : c.Config.Stars).ToList();
             
@@ -62,6 +69,11 @@ namespace core
         
         public async UniTask HideAllCardsAsync(CancellationToken ct)
         {
+            if (_hasDuplicates)
+            {
+                await _cardsCollectionPointsView.ShowAsync(_hidedTransform.position, _showedTransform.position, ct);
+            }
+
             var targetPosition = _cardsCollectionPointsView.transform.position;
             var tasks = new List<UniTask>();
 
@@ -82,6 +94,13 @@ namespace core
             }
 
             await UniTask.WhenAll(tasks);
+
+            if (_hasDuplicates)
+            {
+                await _cardsCollectionPointsView.HideAsync(_showedTransform.position, _hidedTransform.position, ct);
+            }
+
+            await UniTask.Delay(500, cancellationToken: ct);
         }
 
         private async UniTask HideNewCardAsync(CollectionCardView cardView, CancellationToken ct)
@@ -129,7 +148,6 @@ namespace core
 
         public void UpdatePointsAmount(int pointsAmount)
         {
-            Debug.LogWarning($"Debug test pointsAmount {pointsAmount}");
             _cardsCollectionPointsView.SetPointsAmount(pointsAmount);
         }
         
