@@ -12,3 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a91e6647de03004bab105a702d14637, type: 3}
   m_Name: NewCardsAnimationConfig
   m_EditorClassIdentifier: 
+  CardMoveDuration: 1
+  CardMoveEase: 12
+  FlipDuration: 1
+  FlipMockEase: 5
+  FlipCardEase: 6
+  FlipCardDelayRatio: 0.4
+  PointViewAnimationDuration: 0.35
+  PointViewShowEase: 27
+  PointViewHideEase: 26
+  NewCardHideDelay: 1.5
+  PointViewScaleDuration: 0.5
+  PointViewScaleEase: 27
+  PointViewMoveDelay: 0.3
+  PointViewMoveDuration: 0.6
+  PointViewMoveEase: 5
+  PointViewMoveRotationSpeed: 540
+  PointViewFadeDurationRatio: 0.5
+  PointViewFadeEase: 6
+  WindowCloseDelayMilliseconds: 400

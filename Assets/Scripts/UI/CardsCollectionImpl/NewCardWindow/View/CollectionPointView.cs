@@ -27,14 +27,16 @@ namespace core
             _pointAmount.alpha = 1f;
             _container.localRotation = Quaternion.identity;
 
-            var rotationAngle = _animationConfig.PointViewMoveRotationSpeed * _animationConfig.PointViewMoveDuration;
+            var moveDuration = _animationConfig.PointViewMoveDuration;
+            var rotationAngle = _animationConfig.PointViewMoveRotationSpeed * moveDuration;
+            var fadeDuration = moveDuration * _animationConfig.PointViewFadeDurationRatio;
 
             var sequence = DOTween.Sequence()
-                .Append(transform.DOScale(Vector3.one, _animationConfig.PointViewScaleDuration).SetEase(Ease.OutBack))
+                .Append(transform.DOScale(Vector3.one, _animationConfig.PointViewScaleDuration).SetEase(_animationConfig.PointViewScaleEase))
                 .AppendInterval(_animationConfig.PointViewMoveDelay)
-                .Append(transform.DOMove(targetPosition, _animationConfig.PointViewMoveDuration).SetEase(Ease.InQuad))
-                .Join(_pointAmount.DOFade(0f, _animationConfig.PointViewMoveDuration / 2f).SetEase(Ease.OutQuad))
-                .Join(_container.DOLocalRotate(new Vector3(0f, rotationAngle, 0f), _animationConfig.PointViewMoveDuration, RotateMode.FastBeyond360).SetEase(Ease.Linear))
+                .Append(transform.DOMove(targetPosition, moveDuration).SetEase(_animationConfig.PointViewMoveEase))
+                .Join(_pointAmount.DOFade(0f, fadeDuration).SetEase(_animationConfig.PointViewFadeEase))
+                .Join(_container.DOLocalRotate(new Vector3(0f, rotationAngle, 0f), moveDuration, RotateMode.FastBeyond360).SetEase(Ease.Linear))
                 .SetLink(gameObject);
 
             await sequence.AsyncWaitForCompletion().AsUniTask()

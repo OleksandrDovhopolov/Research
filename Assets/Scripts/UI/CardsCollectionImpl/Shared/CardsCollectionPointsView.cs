@@ -35,7 +35,7 @@ namespace core
             transform.position = from;
 
             await transform.DOMove(to, _animationConfig.PointViewAnimationDuration)
-                .SetEase(Ease.OutBack)
+                .SetEase(_animationConfig.PointViewShowEase)
                 .SetLink(gameObject)
                 .AsyncWaitForCompletion().AsUniTask()
                 .AttachExternalCancellation(ct);
@@ -46,7 +46,7 @@ namespace core
             transform.position = from;
 
             await transform.DOMove(to, _animationConfig.PointViewAnimationDuration)
-                .SetEase(Ease.InBack)
+                .SetEase(_animationConfig.PointViewHideEase)
                 .SetLink(gameObject)
                 .AsyncWaitForCompletion().AsUniTask()
                 .AttachExternalCancellation(ct);

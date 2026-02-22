@@ -48,7 +48,7 @@ namespace core
                     continue;
 
                 var tween = mockView.transform.DOMove(targetView.transform.position, _animationConfig.CardMoveDuration)
-                    .SetEase(Ease.InOutQuad);
+                    .SetEase(_animationConfig.CardMoveEase);
                 
                 moveSequence.Join(tween);
             }
@@ -62,34 +62,70 @@ namespace core
         
         private async UniTask AnimateCardFlipsAsync(CancellationToken ct)
         {
-            foreach (var cardView in _viewsDict.Values)
-            {
-                cardView.transform.rotation = Quaternion.Euler(0, 90, 0);
-                cardView.SetAlpha(true);
-            }
-            
-            var animationDuration = _animationConfig.FlipDuration;
-            var tweens = new List<Tween>();
+            var tasks = new List<UniTask>();
 
             foreach (var (config, mockView) in _mockDict)
             {
                 if (!_viewsDict.TryGetValue(config, out var targetView) || mockView == null || targetView == null)
                     continue;
 
-                var mockRotateTween = mockView.transform.DORotate(new Vector3(0f, 90f, 0f), animationDuration)
-                    .SetEase(Ease.InOutQuad);
-                tweens.Add(mockRotateTween);
+                // Real card starts hidden, rotated to 90° Y (edge-on)
+                targetView.transform.rotation = Quaternion.Euler(0, 90, 0);
+                targetView.SetAlpha(false);
+                targetView.OnCardAnimationStarted();
 
-                var cardRotateTween = targetView.transform.DORotate(new Vector3(0f, 0f, 0f), animationDuration)
-                    .SetDelay(animationDuration / 2)
-                    .SetEase(Ease.InOutQuad);
-                tweens.Add(cardRotateTween);
+                tasks.Add(AnimateSingleCardFlipAsync(mockView, targetView, ct));
             }
-            
-            if (tweens.Count > 0)
+
+            if (tasks.Count > 0)
             {
-                await UniTask.WhenAll(tweens.Select(tween => tween.AsyncWaitForCompletion().AsUniTask()));
+                await UniTask.WhenAll(tasks);
             }
+        }
+
+        private async UniTask AnimateSingleCardFlipAsync(EmptyCardView mock, CollectionCardView card, CancellationToken ct)
+        {
+            var sequence = DOTween.Sequence();
+
+            // Phase 1: mock rotates 0° → 90° (disappears edge-on)
+            sequence.Append(
+                mock.transform.DORotate(new Vector3(0f, 90f, 0f), _animationConfig.FlipMockHalfDuration)
+                    .SetEase(_animationConfig.FlipMockEase)
+            );
+
+            // At the exact moment mock reaches 90°: disable mock, make real card visible
+            sequence.AppendCallback(() =>
+            {
+                mock.gameObject.SetActive(false);
+                card.SetAlpha(true);
+                card.OnCardAnimationCompleted();
+            });
+
+            // Phase 2: real card rotates 90° → 0° (appears)
+            sequence.Append(
+                card.transform.DORotate(Vector3.zero, _animationConfig.FlipCardHalfDuration)
+                    .SetEase(_animationConfig.FlipCardEase)
+            );
+
+            sequence.AppendCallback(() =>
+            {
+                //card.OnCardAnimationCompleted();
+            });
+
+            // Phase 3: scale punch for "pop" feel
+            if (_animationConfig.FlipScalePunchStrength > 0f)
+            {
+                sequence.Append(
+                    card.transform.DOPunchScale(
+                        Vector3.one * _animationConfig.FlipScalePunchStrength,
+                        _animationConfig.FlipScalePunchDuration,
+                        vibrato: 1, elasticity: 0.5f)
+                );
+            }
+
+            await sequence.SetLink(gameObject)
+                .AsyncWaitForCompletion().AsUniTask()
+                .AttachExternalCancellation(ct);
         }
         
         private UniTask AnimateShowPointsViewAsync(CancellationToken ct)
