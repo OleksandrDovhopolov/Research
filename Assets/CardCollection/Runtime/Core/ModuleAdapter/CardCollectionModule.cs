@@ -159,9 +159,9 @@ namespace CardCollection.Core
             }
         }
 
-        public int GetCollectionPoints()
+        public async UniTask<int> GetCollectionPoints()
         {
-            return _context.GetPoints(_context.DefaultEventId);
+            return await _context.GetPoints(_context.DefaultEventId);
         }
 
         public async UniTask Clear(CancellationToken ct = default)

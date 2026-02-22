@@ -42,6 +42,7 @@ namespace CardCollection.Core
         {
             await _cardPackService.InitializeAsync(ct);
             await _cardProgressService.InitializeAsync(ct);
+            await _cardProgressService.LoadAsync(DefaultEventId, ct);
         }
 
         // ── CardPackService delegation ──
@@ -75,8 +76,8 @@ namespace CardCollection.Core
         public UniTask ResetNewFlagAsync(string eventId, string cardId, CancellationToken ct = default)
             => _cardProgressService.ResetNewFlagAsync(eventId, cardId, ct);
 
-        public int GetPoints(string eventId)
-            => _cardProgressService.GetPoints(eventId);
+        public async UniTask<int> GetPoints(string eventId)
+            => await _cardProgressService.GetPoints(eventId);
 
         public UniTask AddPointsAsync(string eventId, int pointsToAdd, CancellationToken ct = default)
             => _cardProgressService.AddPointsAsync(eventId, pointsToAdd, ct);

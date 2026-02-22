@@ -100,6 +100,8 @@ namespace core
             var pointView = _pointStarsPool.GetNext();
             pointView.UpdatePointsAmount(pointsAmount);
             await pointView.AnimateToTarget(cardPosition, targetPosition, ct);
+            
+            _cardsCollectionPointsView.UpdatePointsAmount( pointView.PointsAmount);
         }
 
         public void DisableAll()
@@ -127,7 +129,8 @@ namespace core
 
         public void UpdatePointsAmount(int pointsAmount)
         {
-            _cardsCollectionPointsView.UpdatePointsAmount(pointsAmount);
+            Debug.LogWarning($"Debug test pointsAmount {pointsAmount}");
+            _cardsCollectionPointsView.SetPointsAmount(pointsAmount);
         }
         
         public async UniTaskVoid CreateMocks()

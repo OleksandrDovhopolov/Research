@@ -14,10 +14,13 @@ namespace core
         [SerializeField] private float _moveDelay = 0.5f;
         [SerializeField] private float _moveDuration = 1f;
         [SerializeField] private float _rotationSpeed = 360f;
-        
+
+        public int PointsAmount { get; private set; }
+
         public void UpdatePointsAmount(int pointsAmount)
         {
-            _pointAmount.text = pointsAmount.ToString();
+            PointsAmount = pointsAmount;
+            _pointAmount.text = PointsAmount.ToString();
         }
 
         public async UniTask AnimateToTarget(Vector3 fromPosition, Vector3 targetPosition, CancellationToken ct)

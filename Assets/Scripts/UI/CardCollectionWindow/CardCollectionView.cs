@@ -92,7 +92,7 @@ namespace core
         
         public void UpdatePointsAmount(int pointsAmount)
         {
-            _cardsCollectionPointsView.UpdatePointsAmount(pointsAmount);
+            _cardsCollectionPointsView.SetPointsAmount(pointsAmount);
         }
         
         protected override void OnDestroy()

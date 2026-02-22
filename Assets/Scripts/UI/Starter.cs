@@ -1,4 +1,5 @@
 using System.Threading;
+using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
@@ -62,6 +63,8 @@ namespace core
 
         private async UniTask OpenCardCollectionWindow()
         {
+            await _cardCollectionEntryPoint.WaitForInitializationAsync();
+            
             var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
             var args = new CardCollectionArgs(_uiManager, _cardCollectionEntryPoint.CardCollectionModule, collectionData);
             _uiManager.Show<CardCollectionController>(args);

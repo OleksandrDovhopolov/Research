@@ -35,7 +35,7 @@ namespace core
 
         private async UniTask GetNewCardsAsync(CancellationToken ct)
         {
-            var collectionPoints = Args.CollectionReader.GetCollectionPoints();
+            var collectionPoints = await Args.CollectionReader.GetCollectionPoints();
             View.UpdatePointsAmount(collectionPoints);
             
             var cardsIdList = await Args.CollectionModule.OpenPackAndUnlockAsync(Args.CardPack, ct);
