@@ -9,8 +9,7 @@ namespace core
     public class CardsCollectionPointsView : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI _pointAmount;
-        [SerializeField] private RectTransform _pointsContainer;
-        [SerializeField] private float _animationDuration = 0.4f;
+        [SerializeField] private NewCardAnimationConfig _animationConfig;
         
         private int _currentPoints;
         
@@ -35,7 +34,7 @@ namespace core
         {
             transform.position = from;
 
-            await transform.DOMove(to, _animationDuration)
+            await transform.DOMove(to, _animationConfig.PointViewAnimationDuration)
                 .SetEase(Ease.OutBack)
                 .SetLink(gameObject)
                 .AsyncWaitForCompletion().AsUniTask()
@@ -46,7 +45,7 @@ namespace core
         {
             transform.position = from;
 
-            await transform.DOMove(to, _animationDuration)
+            await transform.DOMove(to, _animationConfig.PointViewAnimationDuration)
                 .SetEase(Ease.InBack)
                 .SetLink(gameObject)
                 .AsyncWaitForCompletion().AsUniTask()

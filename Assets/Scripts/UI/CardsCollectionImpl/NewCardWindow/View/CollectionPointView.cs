@@ -8,12 +8,9 @@ namespace core
 {
     public class CollectionPointView : MonoBehaviour
     {
+        [SerializeField] private NewCardAnimationConfig _animationConfig;
         [SerializeField] private TextMeshProUGUI _pointAmount;
         [SerializeField] private RectTransform _container;
-        [SerializeField] private float _scaleDuration = 1f;
-        [SerializeField] private float _moveDelay = 0.5f;
-        [SerializeField] private float _moveDuration = 1f;
-        [SerializeField] private float _rotationSpeed = 360f;
 
         public int PointsAmount { get; private set; }
 
@@ -30,18 +27,20 @@ namespace core
             _pointAmount.alpha = 1f;
             _container.localRotation = Quaternion.identity;
 
-            var rotationAngle = _rotationSpeed * _moveDuration;
+            var rotationAngle = _animationConfig.PointViewMoveRotationSpeed * _animationConfig.PointViewMoveDuration;
 
             var sequence = DOTween.Sequence()
-                .Append(transform.DOScale(Vector3.one, _scaleDuration).SetEase(Ease.OutBack))
-                .AppendInterval(_moveDelay)
-                .Append(transform.DOMove(targetPosition, _moveDuration).SetEase(Ease.InQuad))
-                .Join(_pointAmount.DOFade(0f, _moveDuration / 2f).SetEase(Ease.OutQuad))
-                .Join(_container.DOLocalRotate(new Vector3(0f, rotationAngle, 0f), _moveDuration, RotateMode.FastBeyond360).SetEase(Ease.Linear))
+                .Append(transform.DOScale(Vector3.one, _animationConfig.PointViewScaleDuration).SetEase(Ease.OutBack))
+                .AppendInterval(_animationConfig.PointViewMoveDelay)
+                .Append(transform.DOMove(targetPosition, _animationConfig.PointViewMoveDuration).SetEase(Ease.InQuad))
+                .Join(_pointAmount.DOFade(0f, _animationConfig.PointViewMoveDuration / 2f).SetEase(Ease.OutQuad))
+                .Join(_container.DOLocalRotate(new Vector3(0f, rotationAngle, 0f), _animationConfig.PointViewMoveDuration, RotateMode.FastBeyond360).SetEase(Ease.Linear))
                 .SetLink(gameObject);
 
             await sequence.AsyncWaitForCompletion().AsUniTask()
                 .AttachExternalCancellation(ct);
+
+            gameObject.SetActive(false);
         }
 
         public void ResetView()

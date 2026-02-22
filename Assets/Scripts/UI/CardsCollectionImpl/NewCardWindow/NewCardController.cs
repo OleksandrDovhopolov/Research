@@ -73,7 +73,7 @@ namespace core
         private async UniTask CloseWindowAsync(CancellationToken ct)
         {
             View.CloseClick -= CloseWindow;
-            await View.HideAllCardsAsync(ct);
+            await View.PlayCloseSequenceAsync(ct);
             Args.UiManager.Hide<NewCardController>();
         }
     }

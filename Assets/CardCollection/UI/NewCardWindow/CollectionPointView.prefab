@@ -50,12 +50,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33cb8a65a9fe07d4da7a5c7ed7448fec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _animationConfig: {fileID: 11400000, guid: 2549f02b4d426044cb7bf02402bc1a08, type: 2}
   _pointAmount: {fileID: 5147933750818698794}
   _container: {fileID: 4550918483047620484}
-  _scaleDuration: 0.5
-  _moveDelay: 0.3
-  _moveDuration: 1.25
-  _rotationSpeed: 360
 --- !u!1 &1948082936938789471
 GameObject:
   m_ObjectHideFlags: 0

@@ -336,7 +336,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _pointAmount: {fileID: 9136768358790954019}
-  _pointsContainer: {fileID: 474404284001785229}
+  _animationConfig: {fileID: 11400000, guid: 2549f02b4d426044cb7bf02402bc1a08, type: 2}
 --- !u!1 &5002373906607876040
 GameObject:
   m_ObjectHideFlags: 0

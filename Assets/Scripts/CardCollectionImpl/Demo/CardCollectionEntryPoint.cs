@@ -63,7 +63,7 @@ namespace core
             }
             catch (OperationCanceledException)
             {
-                // MonoBehaviour was destroyed — silently stop
+                
             }
             catch (Exception ex)
             {
