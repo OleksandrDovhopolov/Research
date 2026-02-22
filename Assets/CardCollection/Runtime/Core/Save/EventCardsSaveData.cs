@@ -10,6 +10,7 @@ namespace CardCollection.Core
     {
         [FirestoreProperty] public string EventId { get; set; }
         [FirestoreProperty] public int Version { get; set; }
+        [FirestoreProperty] public int Points { get; set; }
         [FirestoreProperty] public List<CardProgressData> Cards { get; set; } = new List<CardProgressData>();
 
         public EventCardsSaveData() { }

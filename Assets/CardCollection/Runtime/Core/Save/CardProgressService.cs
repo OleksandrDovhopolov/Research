@@ -72,6 +72,22 @@ namespace CardCollection.Core
             _unlockedCardIdsCache.Remove(data.EventId);
         }
 
+        public async UniTask AddPointsAsync(string eventId, int pointsToAdd, CancellationToken ct = default)
+        {
+            if (string.IsNullOrEmpty(eventId))
+                throw new ArgumentException("Event ID cannot be null or empty", nameof(eventId));
+
+            if (pointsToAdd <= 0)
+                return;
+
+            await EnsureInitializedAsync(ct);
+
+            var currentData = await LoadAsync(eventId, ct);
+            currentData.Points += pointsToAdd;
+
+            await SaveAsync(currentData, ct);
+        }
+
         public async UniTask ClearCollectionAsync(CancellationToken ct = default)
         {
             await EnsureInitializedAsync(ct);

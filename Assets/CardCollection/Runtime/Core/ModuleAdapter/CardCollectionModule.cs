@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace CardCollection.Core
 {
@@ -39,10 +40,32 @@ namespace CardCollection.Core
             var cardIds = await _context.CardRandomizer.GetRandomNewCardsAsync(cardPack, _selectionContext, ct);
             if (cardIds.Count > 0)
             {
+                await AwardDuplicateCardPointsAsync(cardPack, cardIds, ct);
                 await _context.CardProgressService.UnlockCardsAsync(_context.DefaultEventId, cardIds, ct);
             }
 
             return cardIds;
+        }
+
+        private async UniTask AwardDuplicateCardPointsAsync(CardPack cardPack, List<string> openedCardIds, CancellationToken ct)
+        {
+            if (openedCardIds == null || openedCardIds.Count == 0)
+            {
+                return;
+            }
+
+            var openedCardsProgress = await _context.CardProgressService.GetCardsByIdsAsync(_context.DefaultEventId, openedCardIds, ct);
+            var duplicatePoints = _context.DuplicateCardPointsCalculator.Calculate(openedCardIds, openedCardsProgress);
+            if (!duplicatePoints.HasPoints)
+            {
+                return;
+            }
+
+            await _context.CardProgressService.AddPointsAsync(_context.DefaultEventId, duplicatePoints.TotalPoints, ct);
+
+            Debug.Log(
+                $"[CardCollectionModule] Added {duplicatePoints.TotalPoints} duplicate-card points after opening pack '{cardPack.PackId}'. " +
+                $"Cards: {string.Join(", ", duplicatePoints.AwardedCards)}");
         }
 
         public UniTask<List<CardProgressData>> GetCardsByIdsAsync(List<string> cardIds, CancellationToken ct = default)
