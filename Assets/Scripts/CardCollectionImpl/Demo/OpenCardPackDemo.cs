@@ -33,6 +33,8 @@ namespace core
         public void OpenNewCardWindow(string packId)
         {
             var cardCollectionModule = _cardCollectionEntryPoint.CardCollectionModule;
+            var cardCollectionReader = _cardCollectionEntryPoint.CardCollectionReader;
+            
             var pack = cardCollectionModule.GetPackById(packId);
             if (pack == null)
             {
@@ -42,7 +44,7 @@ namespace core
             
             Debug.LogWarning($"Debug {pack.PackId}, {pack.CardCount}, {pack.PackName}");
             
-            var args = new NewCardArgs(pack, _uiManager, cardCollectionModule);
+            var args = new NewCardArgs(pack, _uiManager, cardCollectionModule, cardCollectionReader);
             _uiManager.Show<NewCardController>(args);
         }
         

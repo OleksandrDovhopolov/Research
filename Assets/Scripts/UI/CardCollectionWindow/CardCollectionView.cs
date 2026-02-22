@@ -12,6 +12,9 @@ namespace core
         [SerializeField] private UIListPool<CardsCollectionView> _cardGroupsPool;
         [SerializeField] private GameObject _loadingAnimationObject;
         
+        [Header("Points Container")]
+        [SerializeField] private CardsCollectionPointsView _cardsCollectionPointsView;
+        
         private readonly Dictionary<string, CardsCollectionView> _viewsDict = new();
         
         public event Action<string> OnGroupButtonPressed;
@@ -85,6 +88,11 @@ namespace core
         public void ShowLoader(bool show)
         {
             _loadingAnimationObject.gameObject.SetActive(show);
+        }
+        
+        public void UpdatePointsAmount(int pointsAmount)
+        {
+            _cardsCollectionPointsView.UpdatePointsAmount(pointsAmount);
         }
         
         protected override void OnDestroy()

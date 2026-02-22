@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UISystem;
@@ -14,6 +15,10 @@ namespace core
         [SerializeField] private CanvasGroup _canvasGroup;
         [SerializeField] private UIListPool<CollectionCardView> _newCardsPool;
         [SerializeField] private UIListPool<EmptyCardView> _mockCardsPool;
+        [SerializeField] private UIListPool<CollectionPointView> _pointStarsPool;
+        
+        [Header("Points Container")]
+        [SerializeField] private CardsCollectionPointsView _cardsCollectionPointsView;
 
         private readonly Dictionary<CardCollectionConfig, CollectionCardView> _viewsDict = new();
         private readonly Dictionary<CardCollectionConfig, EmptyCardView> _mockDict = new();
@@ -51,6 +56,25 @@ namespace core
             }
         }
         
+        public async UniTask HideAllCardsAsync(CancellationToken ct)
+        {
+            var sequence = DOTween.Sequence();
+            var delay = 0f;
+            const float staggerInterval = 0.05f;
+
+            foreach (var cardView in _viewsDict.Values)
+            {
+                sequence.Insert(delay, cardView.Hide());
+                delay += staggerInterval;
+            }
+
+            if (sequence.Duration() > 0)
+            {
+                await sequence.SetLink(gameObject).AsyncWaitForCompletion().AsUniTask()
+                    .AttachExternalCancellation(ct);
+            }
+        }
+
         public void DisableAll()
         {
             foreach (var emptyCardView in _mockDict.Values)
@@ -62,12 +86,21 @@ namespace core
             foreach (var cardView in _viewsDict.Values)
             {
                 cardView.transform.rotation = Quaternion.Euler(0, 0, 0);
+                cardView.ResetView();
             }
             
             _newCardsPool.DisableAll();
             _mockCardsPool.DisableAll();
+            
+            _viewsDict.Clear();
+            _mockDict.Clear();
         }
 
+        public void UpdatePointsAmount(int pointsAmount)
+        {
+            _cardsCollectionPointsView.UpdatePointsAmount(pointsAmount);
+        }
+        
         public async UniTaskVoid CreateMocks()
         {
             Debug.LogWarning("Animate mock cards to new card positions");

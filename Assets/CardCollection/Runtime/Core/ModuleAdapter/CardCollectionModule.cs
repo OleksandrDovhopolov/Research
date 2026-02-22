@@ -19,13 +19,13 @@ namespace CardCollection.Core
 
         public UniTask InitializeAsync(CancellationToken ct = default) => _context.InitializeAsync(ct);
 
-        public List<CardPack> GetAllPacks() => _context.CardPackService.GetAllPacks();
+        public List<CardPack> GetAllPacks() => _context.GetAllPacks();
 
-        public CardPack GetPackById(string packId) => _context.CardPackService.GetPackById(packId);
+        public CardPack GetPackById(string packId) => _context.GetPackById(packId);
 
         public async UniTask<List<string>> OpenPackAndUnlockAsync(string packId, CancellationToken ct = default)
         {
-            var pack = _context.CardPackService.GetPackById(packId);
+            var pack = _context.GetPackById(packId);
 
             return await OpenPackAndUnlockAsync(pack, ct);
         }
@@ -37,11 +37,11 @@ namespace CardCollection.Core
                 return new List<string>();
             }
             
-            var cardIds = await _context.CardRandomizer.GetRandomNewCardsAsync(cardPack, _selectionContext, ct);
+            var cardIds = await _context.GetRandomNewCardsAsync(cardPack, _selectionContext, ct);
             if (cardIds.Count > 0)
             {
                 await AwardDuplicateCardPointsAsync(cardPack, cardIds, ct);
-                await _context.CardProgressService.UnlockCardsAsync(_context.DefaultEventId, cardIds, ct);
+                await _context.UnlockCardsAsync(_context.DefaultEventId, cardIds, ct);
             }
 
             return cardIds;
@@ -54,14 +54,14 @@ namespace CardCollection.Core
                 return;
             }
 
-            var openedCardsProgress = await _context.CardProgressService.GetCardsByIdsAsync(_context.DefaultEventId, openedCardIds, ct);
-            var duplicatePoints = _context.DuplicateCardPointsCalculator.Calculate(openedCardIds, openedCardsProgress);
+            var openedCardsProgress = await _context.GetCardsByIdsAsync(_context.DefaultEventId, openedCardIds, ct);
+            var duplicatePoints = _context.CalculateDuplicatePoints(openedCardIds, openedCardsProgress);
             if (!duplicatePoints.HasPoints)
             {
                 return;
             }
 
-            await _context.CardProgressService.AddPointsAsync(_context.DefaultEventId, duplicatePoints.TotalPoints, ct);
+            await _context.AddPointsAsync(_context.DefaultEventId, duplicatePoints.TotalPoints, ct);
 
             Debug.Log(
                 $"[CardCollectionModule] Added {duplicatePoints.TotalPoints} duplicate-card points after opening pack '{cardPack.PackId}'. " +
@@ -70,12 +70,12 @@ namespace CardCollection.Core
 
         public UniTask<List<CardProgressData>> GetCardsByIdsAsync(List<string> cardIds, CancellationToken ct = default)
         {
-            return _context.CardProgressService.GetCardsByIdsAsync(_context.DefaultEventId, cardIds, ct);
+            return _context.GetCardsByIdsAsync(_context.DefaultEventId, cardIds, ct);
         }
 
         public UniTask ResetNewFlagAsync(string cardId, CancellationToken ct = default)
         {
-            return _context.CardProgressService.ResetNewFlagAsync(_context.DefaultEventId, cardId, ct);
+            return _context.ResetNewFlagAsync(_context.DefaultEventId, cardId, ct);
         }
         
         public void Dispose()
@@ -89,7 +89,7 @@ namespace CardCollection.Core
         {
             try
             {
-                await _context.CardProgressService.UnlockCardAsync(_context.DefaultEventId, cardId, ct);
+                await _context.UnlockCardAsync(_context.DefaultEventId, cardId, ct);
             }
             catch (OperationCanceledException)
             {
@@ -107,13 +107,13 @@ namespace CardCollection.Core
             {
                 var cardCollectionData = new EventCardsSaveData { EventId = _context.DefaultEventId };
 
-                foreach (var cardCollectionConfig in _context.CardDefinitionProvider.GetCardDefinitions())
+                foreach (var cardCollectionConfig in _context.GetCardDefinitions())
                 {
                     var cardData = new CardProgressData { CardId = cardCollectionConfig.Id, IsUnlocked = false };
                     cardCollectionData.Cards.Add(cardData);
                 }
 
-                await _context.CardProgressService.SaveAsync(cardCollectionData, ct);
+                await _context.SaveAsync(cardCollectionData, ct);
             }
             catch (OperationCanceledException)
             {
@@ -129,7 +129,7 @@ namespace CardCollection.Core
         {
             try
             {
-                return await _context.CardProgressService.LoadAsync(_context.DefaultEventId, ct);
+                return await _context.LoadAsync(_context.DefaultEventId, ct);
             }
             catch (OperationCanceledException)
             {
@@ -145,7 +145,7 @@ namespace CardCollection.Core
         {
             try
             {
-                return await _context.CardProgressService.GetMissingCardIdsAsync(_context.DefaultEventId, allCards, ct);
+                return await _context.GetMissingCardIdsAsync(_context.DefaultEventId, allCards, ct);
             }
             catch (OperationCanceledException)
             {
@@ -157,11 +157,16 @@ namespace CardCollection.Core
             }
         }
 
+        public int GetCollectionPoints()
+        {
+            return _context.GetPoints(_context.DefaultEventId);
+        }
+
         public async UniTask Clear(CancellationToken ct = default)
         {
             try
             {
-                await _context.CardProgressService.ClearCollectionAsync(ct);
+                await _context.ClearCollectionAsync(ct);
             }
             catch (OperationCanceledException)
             {

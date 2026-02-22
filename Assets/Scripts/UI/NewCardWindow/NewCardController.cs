@@ -1,9 +1,7 @@
-using System.Collections.Generic;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
-using UnityEngine;
 
 namespace core
 {
@@ -12,12 +10,14 @@ namespace core
         public readonly CardPack CardPack;
         public readonly UIManager UiManager;
         public readonly ICardCollectionModule CollectionModule;
+        public readonly ICardCollectionReader CollectionReader;
 
-        public NewCardArgs(CardPack cardPack, UIManager uiManager, ICardCollectionModule collectionModule)
+        public NewCardArgs(CardPack cardPack, UIManager uiManager, ICardCollectionModule collectionModule, ICardCollectionReader collectionReader)
         {
             CardPack = cardPack;
             UiManager = uiManager;
             CollectionModule = collectionModule;
+            CollectionReader = collectionReader;
         }
     }
 
@@ -35,6 +35,9 @@ namespace core
 
         private async UniTask GetNewCardsAsync(CancellationToken ct)
         {
+            var collectionPoints = Args.CollectionReader.GetCollectionPoints();
+            View.UpdatePointsAmount(collectionPoints);
+            
             var cardsIdList = await Args.CollectionModule.OpenPackAndUnlockAsync(Args.CardPack, ct);
             var cardsData = await Args.CollectionModule.GetCardsByIdsAsync(cardsIdList, ct);
             var displayData = cardsData.ToNewCardDisplayData();
@@ -64,6 +67,13 @@ namespace core
 
         private void CloseWindow()
         {
+            CloseWindowAsync(_cts.Token).Forget();
+        }
+
+        private async UniTask CloseWindowAsync(CancellationToken ct)
+        {
+            View.CloseClick -= CloseWindow;
+            await View.HideAllCardsAsync(ct);
             Args.UiManager.Hide<NewCardController>();
         }
     }

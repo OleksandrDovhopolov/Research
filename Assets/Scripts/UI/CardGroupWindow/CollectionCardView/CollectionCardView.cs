@@ -1,4 +1,5 @@
 using System;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -137,6 +138,20 @@ namespace core
         public void OnCardAnimationCompleted()
         {
             SetOpenCardContainerActive(IsOpen);
+        }
+
+        public Tween Hide(float delay = 0f, float duration = 0.35f)
+        {
+            transform.DOKill();
+            return transform.DOScale(Vector3.zero, duration)
+                .SetDelay(delay)
+                .SetEase(Ease.InBack);
+        }
+
+        public void ResetView()
+        {
+            transform.DOKill();
+            transform.localScale = Vector3.one;
         }
     }
 }

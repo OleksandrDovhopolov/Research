@@ -12,7 +12,7 @@ namespace core
         public readonly ICardCollectionModule CardCollectionModule;
         public readonly EventCardsSaveData EventCardsSaveData;
         
-        public CardCollectionArgs(UIManager uiManager, ICardCollectionModule cardCollectionModule, EventCardsSaveData  eventCardsSaveData)
+        public CardCollectionArgs(UIManager uiManager, ICardCollectionModule cardCollectionModule, EventCardsSaveData eventCardsSaveData)
         {
             UiManager = uiManager;
             CardCollectionModule = cardCollectionModule;
@@ -29,6 +29,8 @@ namespace core
         
         protected override void OnShowStart()
         {
+            UpdatePointsAmount(Args.EventCardsSaveData.Points);
+            
             if (_groupsCreated)
             {
                 View.UpdateViews(Args.EventCardsSaveData);
@@ -64,6 +66,11 @@ namespace core
             {
                 View.ShowLoader(false);
             }
+        }
+        
+        public void UpdatePointsAmount(int pointsAmount)
+        {
+            View.UpdatePointsAmount(pointsAmount);
         }
         
         protected override void OnHideStart(bool isClosed)
