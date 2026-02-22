@@ -70,10 +70,11 @@ namespace core
                 var pool = i < 5 ? _upperCardsPool : _bottomCardsPool;
         
                 var cardView = pool.GetNext();
+                cardView.SetConfig(config);
                 cardView.SetCardOpen(data.IsUnlocked);
                 cardView.SetCardNew(data.IsNew);
-                cardView.SetCardName(config.CardName);
-                cardView.SetStars(config.Stars);
+                cardView.UpdateCardName();
+                cardView.UpdateCardStars();
                 cardView.OnCardPressed += OnCardPressedHandler;
         
                 _viewsDict[config] = cardView;

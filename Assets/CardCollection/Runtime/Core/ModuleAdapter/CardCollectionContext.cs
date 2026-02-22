@@ -19,6 +19,7 @@ namespace CardCollection.Core
         private readonly IDuplicateCardPointsCalculator _duplicateCardPointsCalculator;
 
         public string DefaultEventId { get; }
+        public ICardPointsCalculator CardPointsCalculator { get; }
 
         public CardCollectionContext(CardCollectionModuleConfig config)
         {
@@ -30,10 +31,11 @@ namespace CardCollection.Core
             _config = config;
 
             DefaultEventId = _config.DefaultEventId;
+            CardPointsCalculator = _config.CardPointsCalculator;
             _cardPackService = new CardPackService(_config.PackProvider);
             _cardProgressService = new CardProgressService(_config.EventCardsStorage);
             _cardRandomizer = new PackBasedCardsRandomizer(_config.CardSelector, _config.CardDefinitionProvider);
-            _duplicateCardPointsCalculator = new DuplicateCardPointsCalculator(_config.CardDefinitionProvider);
+            _duplicateCardPointsCalculator = new DuplicateCardPointsCalculator(_config.CardDefinitionProvider, _config.CardPointsCalculator);
         }
 
         public async UniTask InitializeAsync(CancellationToken ct = default)

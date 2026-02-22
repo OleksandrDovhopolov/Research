@@ -28,10 +28,12 @@ namespace CardCollection.Core
     public sealed class DuplicateCardPointsCalculator : IDuplicateCardPointsCalculator
     {
         private readonly ICardDefinitionProvider _cardDefinitionProvider;
+        private readonly ICardPointsCalculator _cardPointsCalculator;
 
-        public DuplicateCardPointsCalculator(ICardDefinitionProvider cardDefinitionProvider)
+        public DuplicateCardPointsCalculator(ICardDefinitionProvider cardDefinitionProvider, ICardPointsCalculator cardPointsCalculator)
         {
             _cardDefinitionProvider = cardDefinitionProvider ?? throw new ArgumentNullException(nameof(cardDefinitionProvider));
+            _cardPointsCalculator = cardPointsCalculator ?? throw new ArgumentNullException(nameof(cardPointsCalculator));
         }
 
         public DuplicateCardPointsCalculation Calculate(
@@ -83,7 +85,7 @@ namespace CardCollection.Core
                     continue;
                 }
 
-                var pointsForCard = GetCardPoints(cardDefinition);
+                var pointsForCard = _cardPointsCalculator.GetPoints(cardDefinition.Stars, cardDefinition.PremiumCard);
                 if (pointsForCard <= 0)
                 {
                     continue;
@@ -96,29 +98,6 @@ namespace CardCollection.Core
             return totalPoints > 0
                 ? new DuplicateCardPointsCalculation(totalPoints, awardedCards)
                 : DuplicateCardPointsCalculation.Empty;
-        }
-
-        private static int GetCardPoints(CardDefinition cardDefinition)
-        {
-            if (cardDefinition == null)
-            {
-                return 0;
-            }
-
-            if (cardDefinition.PremiumCard)
-            {
-                return 10;
-            }
-
-            return cardDefinition.Stars switch
-            {
-                1 => 1,
-                2 => 2,
-                3 => 3,
-                4 => 5,
-                5 => 10,
-                _ => 0
-            };
         }
     }
 }

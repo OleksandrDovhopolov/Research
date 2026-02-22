@@ -129,8 +129,10 @@ namespace core
         /// <summary>
         /// Converts a list of CardProgressData to NewCardDisplayData.
         /// This hides CardProgressData internals from the view layer.
+        /// Points for duplicate (non-new) cards are calculated via the provided <paramref name="pointsCalculator"/>.
         /// </summary>
         /// <param name="cardsData">List of CardProgressData to convert</param>
+        /// <param name="pointsCalculator">Strategy used to calculate points per card</param>
         /// <returns>List of NewCardDisplayData</returns>
         public static List<NewCardDisplayData> ToNewCardDisplayData(this List<CardProgressData> cardsData)
         {
@@ -142,7 +144,8 @@ namespace core
             foreach (var cardData in cardsData)
             {
                 var config = CardCollectionConfigStorage.Instance.GetById(cardData.CardId);
-                result.Add(new NewCardDisplayData(config, cardData.IsUnlocked, cardData.IsNew));
+                var points = CardsCollectionPointsCalculator.Instance.GetPoints(config.Stars, config.PremiumCard);
+                result.Add(new NewCardDisplayData(config, cardData.IsUnlocked, cardData.IsNew, points));
             }
             
             return result;

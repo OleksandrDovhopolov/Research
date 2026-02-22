@@ -434,6 +434,7 @@ MonoBehaviour:
   _pointStarsPool:
     prefab: {fileID: 537138233751391714, guid: 51d8ab84d2dae0b439864a2d8a33c960, type: 3}
     parent: {fileID: 7981710755319481082}
+  _animationDelay: 2
   _cardsCollectionPointsView: {fileID: 3719184103321766003}
 --- !u!1 &1920610708516495437
 GameObject:

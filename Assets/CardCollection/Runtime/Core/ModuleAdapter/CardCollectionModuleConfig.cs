@@ -12,6 +12,7 @@ namespace CardCollection.Core
         public ICardSelector CardSelector { get; }
         public IEventCardsStorage EventCardsStorage { get; }
         public ICardDefinitionProvider CardDefinitionProvider { get; }
+        public ICardPointsCalculator CardPointsCalculator { get; }
         public string DefaultEventId { get; }
 
         public CardCollectionModuleConfig (
@@ -19,13 +20,15 @@ namespace CardCollection.Core
             IEventCardsStorage eventCardsStorage,
             ICardDefinitionProvider cardDefinitionProvider,
             ICardSelector cardSelector,
+            ICardPointsCalculator cardPointsCalculator,
             string defaultEventId = "default")
         {
+            DefaultEventId = defaultEventId;
             PackProvider = packProvider ?? throw new ArgumentNullException(nameof(packProvider));
             EventCardsStorage = eventCardsStorage ?? throw new ArgumentNullException(nameof(eventCardsStorage));
             CardDefinitionProvider = cardDefinitionProvider ?? throw new ArgumentNullException(nameof(cardDefinitionProvider));
             CardSelector = cardSelector ?? throw new ArgumentNullException(nameof(cardSelector));
-            DefaultEventId = defaultEventId;
+            CardPointsCalculator = cardPointsCalculator ?? throw new ArgumentNullException(nameof(cardPointsCalculator));
         }
     }
 }

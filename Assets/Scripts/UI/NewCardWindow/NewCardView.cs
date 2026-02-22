@@ -18,10 +18,12 @@ namespace core
         [SerializeField] private UIListPool<CollectionPointView> _pointStarsPool;
         
         [Header("Points Container")]
+        [SerializeField] private float _animationDelay = 1f;
         [SerializeField] private CardsCollectionPointsView _cardsCollectionPointsView;
 
         private readonly Dictionary<CardCollectionConfig, CollectionCardView> _viewsDict = new();
         private readonly Dictionary<CardCollectionConfig, EmptyCardView> _mockDict = new();
+        private readonly Dictionary<CardCollectionConfig, int> _duplicatePointsDict = new();
         
         private void OnEnable()
         {
@@ -40,15 +42,17 @@ namespace core
                 var cardView = _newCardsPool.GetNext();
                 
                 var config = cardDisplayData.Config;
-                
+
+                cardView.SetConfig(config);
                 cardView.SetCardOpen(cardDisplayData.IsUnlocked);
                 cardView.SetCardNew(cardDisplayData.IsNew);
-                cardView.SetCardName(config.CardName);
-                cardView.SetStars(config.Stars);
+                cardView.UpdateCardName();
+                cardView.UpdateCardStars();
                 UIUtils.SetSprite(config, cardView, this.GetCancellationTokenOnDestroy()).Forget();
                 
                 cardView.SetAlpha(false);
                 _viewsDict[config] = cardView;
+                _duplicatePointsDict[config] = cardDisplayData.DuplicatePoints;
                 
                 var emptyCardView = _mockCardsPool.GetNext();
                 emptyCardView.transform.rotation = Quaternion.Euler(0, 0, 0);
@@ -58,21 +62,44 @@ namespace core
         
         public async UniTask HideAllCardsAsync(CancellationToken ct)
         {
-            var sequence = DOTween.Sequence();
-            var delay = 0f;
-            const float staggerInterval = 0.05f;
+            var targetPosition = _cardsCollectionPointsView.transform.position;
+            var tasks = new List<UniTask>();
 
-            foreach (var cardView in _viewsDict.Values)
+            foreach (var kvp in _viewsDict)
             {
-                sequence.Insert(delay, cardView.Hide());
-                delay += staggerInterval;
+                var config = kvp.Key;
+                var cardView = kvp.Value;
+
+                if (cardView.IsNew)
+                {
+                    tasks.Add(HideNewCardAsync(cardView, ct));
+                }
+                else
+                {
+                    var points = _duplicatePointsDict.GetValueOrDefault(config, 0);
+                    tasks.Add(HideCardWithPointAsync(cardView, points, targetPosition, ct));
+                }
             }
 
-            if (sequence.Duration() > 0)
-            {
-                await sequence.SetLink(gameObject).AsyncWaitForCompletion().AsUniTask()
-                    .AttachExternalCancellation(ct);
-            }
+            await UniTask.WhenAll(tasks);
+        }
+
+        private async UniTask HideNewCardAsync(CollectionCardView cardView, CancellationToken ct)
+        {
+            await UniTask.Delay((int)(_animationDelay * 1000), cancellationToken: ct);
+            await cardView.Hide().SetLink(gameObject).AsyncWaitForCompletion().AsUniTask()
+                .AttachExternalCancellation(ct);
+        }
+
+        private async UniTask HideCardWithPointAsync(CollectionCardView cardView, int pointsAmount, Vector3 targetPosition, CancellationToken ct)
+        {
+            var cardPosition = cardView.transform.position;
+            await cardView.Hide().SetLink(gameObject).AsyncWaitForCompletion().AsUniTask()
+                .AttachExternalCancellation(ct);
+
+            var pointView = _pointStarsPool.GetNext();
+            pointView.UpdatePointsAmount(pointsAmount);
+            await pointView.AnimateToTarget(cardPosition, targetPosition, ct);
         }
 
         public void DisableAll()
@@ -91,9 +118,11 @@ namespace core
             
             _newCardsPool.DisableAll();
             _mockCardsPool.DisableAll();
+            _pointStarsPool.DisableAll();
             
             _viewsDict.Clear();
             _mockDict.Clear();
+            _duplicatePointsDict.Clear();
         }
 
         public void UpdatePointsAmount(int pointsAmount)

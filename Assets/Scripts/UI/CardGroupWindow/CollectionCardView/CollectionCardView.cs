@@ -26,8 +26,10 @@ namespace core
         [SerializeField] private GameObject _newNotificationGameObject;
         [SerializeField] private CanvasGroup _canvasGroup;
 
+        private CardCollectionConfig _cardCollectionConfig;
         public bool IsOpen { get; private set; }
         public bool IsNew { get; private set; }
+        public int Stars { get; private set; }
 
         protected RectTransform CardRect;
         
@@ -56,21 +58,26 @@ namespace core
             OnCardPressed?.Invoke(this);
         }
         
+        public void SetConfig(CardCollectionConfig config)
+        {
+            _cardCollectionConfig = config;
+        }
+        
         public void SetCardOpen(bool isOpen)
         {
             IsOpen = isOpen;
             UpdateCardView();
         }
                 
-        public void SetCardName(string cardName)
+        public void UpdateCardName()
         {
-            _closedCardName.text = cardName;
-            _openCardName.text = cardName;
+            _closedCardName.text = _cardCollectionConfig.CardName;
+            _openCardName.text = _cardCollectionConfig.CardName;
         }
         
-        public void SetStars(int starsCount)
+        public void UpdateCardStars()
         {
-            starsCount = Mathf.Clamp(starsCount, 1, 5);
+            Stars = Mathf.Clamp(_cardCollectionConfig.Stars, 1, 5);
             
             star1.SetActive(false);
             star2.SetActive(false);
@@ -78,16 +85,16 @@ namespace core
             star4.SetActive(false);
             star5.SetActive(false);
 
-            if (starsCount == 5)
+            if (Stars == 5)
             {
                 star5.SetActive(true);
             }
             else
             {
-                if (starsCount >= 1) star1.SetActive(true);
-                if (starsCount >= 2) star2.SetActive(true);
-                if (starsCount >= 3) star3.SetActive(true);
-                if (starsCount >= 4) star4.SetActive(true);
+                if (Stars >= 1) star1.SetActive(true);
+                if (Stars >= 2) star2.SetActive(true);
+                if (Stars >= 3) star3.SetActive(true);
+                if (Stars >= 4) star4.SetActive(true);
             }            
         }
         

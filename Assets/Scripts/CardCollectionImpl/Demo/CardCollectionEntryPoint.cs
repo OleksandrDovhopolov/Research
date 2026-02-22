@@ -47,13 +47,14 @@ namespace core
         {
             try
             {
+                const string testEventId = "test";
+                
                 ICardPackProvider packProvider = new JsonCardPackProvider();
                 IEventCardsStorage cardsStorage = new JsonEventCardsStorage();
                 ICardDefinitionProvider cardDefinitionProvider = new DefaultCardDefinitionProvider();
                 ICardSelector cardSelector = new ProbabilityBasedCardSelector(PackRulesConfig.CreateDefaultRules());
 
-                const string testEventId = "test";
-                var config = new CardCollectionModuleConfig(packProvider, cardsStorage, cardDefinitionProvider, cardSelector, testEventId);
+                var config = new CardCollectionModuleConfig(packProvider, cardsStorage, cardDefinitionProvider, cardSelector, CardsCollectionPointsCalculator.Instance, testEventId);
 
                 _cardCollectionModule = new CardCollectionModule(config);
                 await _cardCollectionModule.InitializeAsync(ct);

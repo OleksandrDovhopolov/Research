@@ -17,7 +17,8 @@ namespace CardCollection.Tests
                     ("3", 3, false),
                     ("4", 4, false),
                     ("5", 5, false),
-                    ("6", 5, true))));
+                    ("6", 5, true))),
+                new DefaultCardPointsCalculator());
 
             var result = calculator.Calculate(
                 new[] { "1", "2", "3", "4", "5", "6" },
@@ -43,7 +44,8 @@ namespace CardCollection.Tests
                 new StubCardDefinitionProvider(CreateCardDefinitions(
                     ("5", 1, false),
                     ("10", 2, false),
-                    ("150", 5, true))));
+                    ("150", 5, true))),
+                new DefaultCardPointsCalculator());
 
             var result = calculator.Calculate(
                 new[] { "5", "10", "150" },

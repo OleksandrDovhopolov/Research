@@ -19,8 +19,9 @@ namespace core
             _clickedCardView = cardView;
             
             _clickedCardView.OnCardAnimationStarted();
-            _selectedCardContainer.gameObject.SetActive(true); 
-            
+            _selectedCardContainer.gameObject.SetActive(true);
+
+            _selectedCardView.SetConfig(config);
             _selectedCardView.SetOpenCardContainerActive(cardView.IsOpen);
             _selectedCardView.SetClosedCardContainerActive(!cardView.IsOpen);
             _selectedCardView.SetCardNew(cardView.IsNew);
@@ -28,8 +29,8 @@ namespace core
             UniTaskUtils.DelayCallbackAsync(SelectedCardCallback, _selectedCardView.AnimationDuration).Forget();
 
             _selectedCardView.GetRectTransform().position = _clickedCardView.GetRectTransform().position;
-            _selectedCardView.SetCardName(config.CardName);
-            _selectedCardView.SetStars(config.Stars);
+            _selectedCardView.UpdateCardName();
+            _selectedCardView.UpdateCardStars();
             
             SetSprite().Forget();
             _selectedCardView.PlayCardPreview(_targetRect.localPosition);

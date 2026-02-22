@@ -52,6 +52,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pointAmount: {fileID: 5147933750818698794}
   _container: {fileID: 4550918483047620484}
+  _scaleDuration: 0.5
+  _moveDelay: 0.3
+  _moveDuration: 1.25
+  _rotationSpeed: 360
 --- !u!1 &1948082936938789471
 GameObject:
   m_ObjectHideFlags: 0

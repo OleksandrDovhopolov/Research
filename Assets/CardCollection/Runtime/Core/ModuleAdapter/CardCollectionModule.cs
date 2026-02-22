@@ -11,6 +11,8 @@ namespace CardCollection.Core
         private readonly CardCollectionContext _context;
         private readonly CardSelectionContext _selectionContext;
 
+        public ICardPointsCalculator CardPointsCalculator => _context.CardPointsCalculator;
+
         public CardCollectionModule(CardCollectionModuleConfig  config)
         {
             _context = new CardCollectionContext(config);

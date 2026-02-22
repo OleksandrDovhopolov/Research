@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -105,12 +104,14 @@ namespace CardCollection.Tests
             var storage = new InMemoryEventCardsStorage(initialData);
             var definitionProvider = new StubCardDefinitionProvider(cardDefinitions);
             var selector = new StubCardSelector(openedCardIds);
+            var pointsCalculator = new DefaultCardPointsCalculator();
 
             var config = new CardCollectionModuleConfig(
                 packProvider,
                 storage,
                 definitionProvider,
                 selector,
+                pointsCalculator,
                 eventId);
 
             return new CardCollectionModule(config);
