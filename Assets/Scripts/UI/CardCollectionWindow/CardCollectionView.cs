@@ -18,9 +18,20 @@ namespace core
         private readonly Dictionary<string, CardsCollectionView> _viewsDict = new();
         
         public event Action<string> OnGroupButtonPressed;
-
+        public event Action OnPointsViewClicked;
+        
         private bool _groupsCreated;
 
+        private void Start()
+        {
+            _cardsCollectionPointsView.OnViewClicked += OnPointsViewClickedHandler;
+        }
+
+        private void OnPointsViewClickedHandler()
+        {
+            OnPointsViewClicked?.Invoke();
+        }
+        
         public void CreateViews(EventCardsSaveData collectionData)
         {
             _cardGroupsPool.DisableNonActive();
@@ -99,6 +110,8 @@ namespace core
         {
             base.OnDestroy();
 
+            _cardsCollectionPointsView.OnViewClicked -= OnPointsViewClickedHandler;
+            
             foreach (var view in _viewsDict.Values)
             {
                 view.OnButtonPressed -= OnButtonPressedHandler;

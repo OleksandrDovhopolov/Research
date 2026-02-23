@@ -32,6 +32,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4544c279cba48774d8a3dd0356732ce2
+    m_Address: CollectionPointsExchangeWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a1cd2d916a299c64a8e60b385e9f1683
     m_Address: CardCollectionWindow
     m_ReadOnly: 0

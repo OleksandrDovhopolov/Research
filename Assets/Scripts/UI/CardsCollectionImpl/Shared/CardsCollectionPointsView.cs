@@ -1,17 +1,32 @@
+using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace core
 {
     public class CardsCollectionPointsView : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI _pointAmount;
+        [SerializeField] private Button _viewButton;
         [SerializeField] private NewCardAnimationConfig _animationConfig;
         
         private int _currentPoints;
+
+        public event Action OnViewClicked;
+        
+        private void Start()
+        {
+            _viewButton.onClick.AddListener(OnViewClickedHandler);
+        }
+
+        private void OnViewClickedHandler()
+        {
+            OnViewClicked?.Invoke();
+        }
         
         public void SetPointsAmount(int pointsAmount)
         {
@@ -50,6 +65,11 @@ namespace core
                 .SetLink(gameObject)
                 .AsyncWaitForCompletion().AsUniTask()
                 .AttachExternalCancellation(ct);
+        }
+
+        private void OnDestroy()
+        {
+            _viewButton.onClick.RemoveAllListeners();
         }
     }
 }

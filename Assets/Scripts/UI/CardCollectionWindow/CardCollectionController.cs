@@ -45,12 +45,19 @@ namespace core
         protected override void OnShowComplete()
         {
             View.CloseClick += CloseWindow;
+            View.OnPointsViewClicked += OnPointsViewClickedHandler;
             View.OnGroupButtonPressed += OnGroupButtonPressedHandler;
             
             if (_groupsCreated) return;
             CreateGroupViews().Forget();
         }
 
+        private void OnPointsViewClickedHandler()
+        {
+            var args = new CollectionPointsExchangeArgs(Args.UiManager, Args.EventCardsSaveData.Points);
+            Args.UiManager.Show<CollectionPointsExchangeController>(args);
+        }
+        
         private async UniTask CreateGroupViews()
         {
             try
@@ -76,6 +83,7 @@ namespace core
         protected override void OnHideStart(bool isClosed)
         {
             View.CloseClick -= CloseWindow;
+            View.OnPointsViewClicked -= OnPointsViewClickedHandler;
             View.OnGroupButtonPressed -= OnGroupButtonPressedHandler;
         }
 
