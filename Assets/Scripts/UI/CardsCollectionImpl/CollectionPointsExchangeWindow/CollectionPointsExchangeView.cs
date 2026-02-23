@@ -7,6 +7,9 @@ namespace core
     public class CollectionPointsExchangeView : WindowView
     {
         [SerializeField] private TextMeshProUGUI _pointAmount;
+        
+        [Space, Space, Header("ExchangePackPool")]
+        [SerializeField] private UIListPool<ExchangePackView> _exchangePackPool;
 
         public void SetPointsAmount(int pointsAmount)
         {
