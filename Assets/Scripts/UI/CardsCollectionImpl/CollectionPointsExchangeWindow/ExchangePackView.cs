@@ -10,8 +10,12 @@ namespace core
         [SerializeField] private Button _cardsCollectionPointsViewButton;
         [SerializeField] private TextMeshProUGUI _starsAmountText;
         [SerializeField] private Image _packImage;
+        [SerializeField] private Image _buttonBackground;
+        [SerializeField] private Sprite _disabledBackgroundSprite;
+        [SerializeField] private Sprite _enabledBackgroundSprite;
 
-        public event Action OnButtonClicked;
+        private ExchangePackEntry _packEntry;
+        public event Action<string> OnButtonClicked;
 
         private void Start()
         {
@@ -20,17 +24,15 @@ namespace core
 
         private void OnButtonClickHandler()
         {
-            OnButtonClicked?.Invoke();
+            OnButtonClicked?.Invoke(_packEntry.Id);
         }
 
-        public void SetStarsAmount(float amount)
+        public void SetData(int starsAmount, ExchangePackEntry packEntry)
         {
-            _starsAmountText.text = amount.ToString("N0");
-        }
-
-        public void SetPackImage(Sprite sprite)
-        {
-            _packImage.sprite = sprite;
+            _packEntry =  packEntry;
+            _packImage.sprite = packEntry.Sprite;
+            _starsAmountText.text = packEntry.PackPrice.ToString("N0");
+            _buttonBackground.sprite = packEntry.PackPrice < starsAmount ? _enabledBackgroundSprite : _disabledBackgroundSprite;
         }
         
         private void OnDestroy()

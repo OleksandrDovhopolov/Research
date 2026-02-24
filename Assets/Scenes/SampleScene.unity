@@ -1658,6 +1658,7 @@ MonoBehaviour:
   _button: {fileID: 680737154}
   _cheatButton: {fileID: 1552899116}
   _cardCollectionEntryPoint: {fileID: 583103903}
+  _exchangePacksConfig: {fileID: 11400000, guid: 65c81ad1becc709499632b874a67d555, type: 2}
 --- !u!4 &1037090431
 Transform:
   m_ObjectHideFlags: 0

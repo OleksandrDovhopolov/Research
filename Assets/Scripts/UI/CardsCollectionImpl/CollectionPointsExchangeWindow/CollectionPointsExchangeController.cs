@@ -6,11 +6,13 @@ namespace core
     {
         public readonly UIManager UiManager;
         public readonly int PointsAmount;
+        public readonly IExchangePackProvider ExchangePackProvider;
         
-        public CollectionPointsExchangeArgs(UIManager uiManager,  int pointsAmount)
+        public CollectionPointsExchangeArgs(UIManager uiManager,  int pointsAmount,  IExchangePackProvider exchangePackProvider)
         {
             UiManager = uiManager;
             PointsAmount = pointsAmount;
+            ExchangePackProvider = exchangePackProvider;
         }
     }
     
@@ -21,7 +23,7 @@ namespace core
         
         protected override void OnShowStart()
         {
-            View.SetPointsAmount(Args.PointsAmount);
+            View.CreateView(Args.PointsAmount, Args.ExchangePackProvider);
         }
 
         protected override void OnShowComplete()
@@ -33,7 +35,12 @@ namespace core
         {
             View.CloseClick -= CloseWindow;
         }
-        
+
+        protected override void OnHideComplete(bool isClosed)
+        {
+            View.DisableAll();
+        }
+
         private void CloseWindow()
         {
             Args.UiManager.Hide<CollectionPointsExchangeController>();

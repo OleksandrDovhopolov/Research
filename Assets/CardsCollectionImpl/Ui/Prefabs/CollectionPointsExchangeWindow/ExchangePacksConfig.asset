@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 207b5a6eaf1a3444f9888e5e39729736, type: 3}
+  m_Name: ExchangePacksConfig
+  m_EditorClassIdentifier: 
+  _packs:
+  - Id: SmallPack
+    Sprite: {fileID: 21300000, guid: a34d6b812b764a24eb44ab4b3984a37d, type: 3}
+    PackPrice: 100
+  - Id: MiddlePack
+    Sprite: {fileID: 21300000, guid: d06ab8344710c644486d412f858a3c67, type: 3}
+    PackPrice: 250
+  - Id: BigPack
+    Sprite: {fileID: 21300000, guid: ad6290e5e00b7b54c89272c27b5a5661, type: 3}
+    PackPrice: 500

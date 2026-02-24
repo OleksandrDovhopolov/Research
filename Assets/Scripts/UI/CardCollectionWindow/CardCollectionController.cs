@@ -11,12 +11,18 @@ namespace core
         public readonly UIManager UiManager;
         public readonly ICardCollectionModule CardCollectionModule;
         public readonly EventCardsSaveData EventCardsSaveData;
+        public readonly IExchangePackProvider ExchangePackProvider;
         
-        public CardCollectionArgs(UIManager uiManager, ICardCollectionModule cardCollectionModule, EventCardsSaveData eventCardsSaveData)
+        public CardCollectionArgs(
+            UIManager uiManager,
+            ICardCollectionModule cardCollectionModule,
+            EventCardsSaveData eventCardsSaveData,
+            IExchangePackProvider exchangePackProvider)
         {
             UiManager = uiManager;
             CardCollectionModule = cardCollectionModule;
             EventCardsSaveData = eventCardsSaveData;
+            ExchangePackProvider = exchangePackProvider;
         }
     }
     
@@ -45,7 +51,6 @@ namespace core
         protected override void OnShowComplete()
         {
             View.CloseClick += CloseWindow;
-            View.InfoButtonPressed += OnInfoButtonPressedHandler;
             View.OnPointsViewClicked += OnPointsViewClickedHandler;
             View.OnGroupButtonPressed += OnGroupButtonPressedHandler;
             
@@ -53,15 +58,12 @@ namespace core
             CreateGroupViews().Forget();
         }
 
-        private void OnInfoButtonPressedHandler()
-        {
-            var args = new InfoWidgetArg(Args.UiManager, "Test");
-            Args.UiManager.Show<InfoWidgetController>(args);
-        }
-
         private void OnPointsViewClickedHandler()
         {
-            var args = new CollectionPointsExchangeArgs(Args.UiManager, Args.EventCardsSaveData.Points);
+            var args = new CollectionPointsExchangeArgs(
+                Args.UiManager,
+                Args.EventCardsSaveData.Points,
+                Args.ExchangePackProvider);
             Args.UiManager.Show<CollectionPointsExchangeController>(args);
         }
         
@@ -90,7 +92,6 @@ namespace core
         protected override void OnHideStart(bool isClosed)
         {
             View.CloseClick -= CloseWindow;
-            View.InfoButtonPressed -= OnInfoButtonPressedHandler;
             View.OnPointsViewClicked -= OnPointsViewClickedHandler;
             View.OnGroupButtonPressed -= OnGroupButtonPressedHandler;
         }
