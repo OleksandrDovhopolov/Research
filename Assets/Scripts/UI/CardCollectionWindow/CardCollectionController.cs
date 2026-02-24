@@ -45,11 +45,18 @@ namespace core
         protected override void OnShowComplete()
         {
             View.CloseClick += CloseWindow;
+            View.InfoButtonPressed += OnInfoButtonPressedHandler;
             View.OnPointsViewClicked += OnPointsViewClickedHandler;
             View.OnGroupButtonPressed += OnGroupButtonPressedHandler;
             
             if (_groupsCreated) return;
             CreateGroupViews().Forget();
+        }
+
+        private void OnInfoButtonPressedHandler()
+        {
+            var args = new InfoWidgetArg(Args.UiManager, "Test");
+            Args.UiManager.Show<InfoWidgetController>(args);
         }
 
         private void OnPointsViewClickedHandler()
@@ -83,6 +90,7 @@ namespace core
         protected override void OnHideStart(bool isClosed)
         {
             View.CloseClick -= CloseWindow;
+            View.InfoButtonPressed -= OnInfoButtonPressedHandler;
             View.OnPointsViewClicked -= OnPointsViewClickedHandler;
             View.OnGroupButtonPressed -= OnGroupButtonPressedHandler;
         }

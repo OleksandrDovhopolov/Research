@@ -4,6 +4,7 @@ using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace core
 {
@@ -11,6 +12,7 @@ namespace core
     {
         [SerializeField] private UIListPool<CardsCollectionView> _cardGroupsPool;
         [SerializeField] private GameObject _loadingAnimationObject;
+        [SerializeField] private Button _infoButton;
         
         [Header("Points Container")]
         [SerializeField] private CardsCollectionPointsView _cardsCollectionPointsView;
@@ -18,6 +20,7 @@ namespace core
         private readonly Dictionary<string, CardsCollectionView> _viewsDict = new();
         
         public event Action<string> OnGroupButtonPressed;
+        public event Action InfoButtonPressed;
         public event Action OnPointsViewClicked;
         
         private bool _groupsCreated;
@@ -25,11 +28,17 @@ namespace core
         private void Start()
         {
             _cardsCollectionPointsView.OnViewClicked += OnPointsViewClickedHandler;
+            _infoButton.onClick.AddListener(OnInfoButtonPressedHandler);
         }
 
         private void OnPointsViewClickedHandler()
         {
             OnPointsViewClicked?.Invoke();
+        }
+
+        private void OnInfoButtonPressedHandler()
+        {
+            InfoButtonPressed?.Invoke();
         }
         
         public void CreateViews(EventCardsSaveData collectionData)
@@ -109,7 +118,8 @@ namespace core
         protected override void OnDestroy()
         {
             base.OnDestroy();
-
+            
+            _infoButton.onClick.RemoveAllListeners();
             _cardsCollectionPointsView.OnViewClicked -= OnPointsViewClickedHandler;
             
             foreach (var view in _viewsDict.Values)

@@ -378,6 +378,9 @@ MonoBehaviour:
   - {fileID: 661212151933234847}
   - {fileID: 4875904500695864368}
   _pointAmount: {fileID: 4432944932579878324}
+  _exchangePackPool:
+    prefab: {fileID: 0}
+    parent: {fileID: 0}
 --- !u!1 &1738375635621923625
 GameObject:
   m_ObjectHideFlags: 0
