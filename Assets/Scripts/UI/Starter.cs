@@ -14,14 +14,17 @@ namespace core
         [SerializeField] private Button _button;
         [SerializeField] private Button _cheatButton;
         [SerializeField] private CardCollectionEntryPoint _cardCollectionEntryPoint;
+        [SerializeField] private ExchangePacksConfig _exchangePacksConfig;
 
         private ConfigManager _configManager;
         private CancellationToken _destroyCt;
+        private IExchangePackProvider _exchangePackProvider;
 
         private void Awake()
         {
             Application.targetFrameRate = 60;
             _destroyCt = this.GetCancellationTokenOnDestroy();
+            _exchangePackProvider = new ExchangePackProvider(_exchangePacksConfig);
         }
 
         private void Start()
@@ -66,7 +69,11 @@ namespace core
             await _cardCollectionEntryPoint.WaitForInitializationAsync();
             
             var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
-            var args = new CardCollectionArgs(_uiManager, _cardCollectionEntryPoint.CardCollectionModule, collectionData);
+            var args = new CardCollectionArgs(
+                _uiManager,
+                _cardCollectionEntryPoint.CardCollectionModule,
+                collectionData,
+                _exchangePackProvider);
             _uiManager.Show<CardCollectionController>(args);
         }
 
