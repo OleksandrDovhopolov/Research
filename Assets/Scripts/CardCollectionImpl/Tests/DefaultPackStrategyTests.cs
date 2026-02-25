@@ -2,10 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using CardCollection.Core;
+using Cysharp.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine.TestTools;
 
-namespace CardCollection.Tests
+namespace core
 {
     public class DefaultPackStrategyTests
     {

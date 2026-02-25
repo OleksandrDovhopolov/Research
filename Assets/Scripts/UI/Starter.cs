@@ -24,7 +24,6 @@ namespace core
         {
             Application.targetFrameRate = 60;
             _destroyCt = this.GetCancellationTokenOnDestroy();
-            _exchangePackProvider = new ExchangePackProvider(_exchangePacksConfig, _cardCollectionEntryPoint.CardCollectionModule);
         }
 
         private void Start()
@@ -67,6 +66,9 @@ namespace core
         private async UniTask OpenCardCollectionWindow()
         {
             await _cardCollectionEntryPoint.WaitForInitializationAsync();
+
+            _exchangePackProvider ??=
+                new ExchangePackProvider(_exchangePacksConfig, _cardCollectionEntryPoint.CardCollectionModule);
             
             var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
             var args = new CardCollectionArgs(
