@@ -1,5 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using CardCollection.Core;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace core
@@ -7,14 +10,11 @@ namespace core
     public class ExchangePackProvider : IExchangePackProvider
     {
         private readonly Dictionary<string, ExchangePackEntry> _packById;
+        private readonly ICardCollectionModule _cardCollectionModule;
         
-        public IReadOnlyCollection<ExchangePackEntry> GetAllPacks()
+        public ExchangePackProvider(ExchangePacksConfig packsConfig, ICardCollectionModule cardCollectionModule)
         {
-            return _packById.Values.ToArray();
-        }
-        
-        public ExchangePackProvider(ExchangePacksConfig packsConfig)
-        {
+            _cardCollectionModule = cardCollectionModule;
             _packById = new Dictionary<string, ExchangePackEntry>();
 
             if (packsConfig == null || packsConfig.Packs == null)
@@ -33,6 +33,11 @@ namespace core
             }
         }
 
+        public IReadOnlyCollection<ExchangePackEntry> GetAllPacks()
+        {
+            return _packById.Values.ToArray();
+        }
+        
         public Sprite GetPackSprite(string packId)
         {
             return TryGetPack(packId, out var pack) ? pack.Sprite : null;
@@ -41,6 +46,11 @@ namespace core
         public int GetPackPrice(string packId)
         {
             return TryGetPack(packId, out var pack) ? pack.PackPrice : 0;
+        }
+
+        public async UniTask<bool> TrySpendPointsAsync(int pointsToSpend, CancellationToken ct = default)
+        {
+            return await _cardCollectionModule.TrySpendPointsAsync(pointsToSpend, ct);
         }
 
         private bool TryGetPack(string packId, out ExchangePackEntry pack)

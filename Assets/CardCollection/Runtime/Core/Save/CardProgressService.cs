@@ -88,6 +88,28 @@ namespace CardCollection.Core
             await SaveAsync(currentData, ct);
         }
 
+        public async UniTask<bool> TrySpendPointsAsync(string eventId, int pointsToSpend, CancellationToken ct = default)
+        {
+            if (string.IsNullOrEmpty(eventId))
+                throw new ArgumentException("Event ID cannot be null or empty", nameof(eventId));
+
+            if (pointsToSpend <= 0)
+                return true;
+
+            await EnsureInitializedAsync(ct);
+
+            var currentData = await LoadAsync(eventId, ct);
+            if (currentData.Points < pointsToSpend)
+            {
+                return false;
+            }
+
+            currentData.Points -= pointsToSpend;
+            await SaveAsync(currentData, ct);
+
+            return true;
+        }
+
         public async UniTask<int> GetPoints(string eventId)
         {
             if (string.IsNullOrEmpty(eventId))

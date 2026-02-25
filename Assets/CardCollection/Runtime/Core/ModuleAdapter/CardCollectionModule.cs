@@ -77,6 +77,11 @@ namespace CardCollection.Core
         {
             return _context.ResetNewFlagAsync(_context.DefaultEventId, cardId, ct);
         }
+
+        public UniTask<bool> TrySpendPointsAsync(int pointsToSpend, CancellationToken ct = default)
+        {
+            return _context.TrySpendPointsAsync(_context.DefaultEventId, pointsToSpend, ct);
+        }
         
         public void Dispose()
         {

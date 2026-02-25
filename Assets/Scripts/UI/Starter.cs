@@ -24,7 +24,7 @@ namespace core
         {
             Application.targetFrameRate = 60;
             _destroyCt = this.GetCancellationTokenOnDestroy();
-            _exchangePackProvider = new ExchangePackProvider(_exchangePacksConfig);
+            _exchangePackProvider = new ExchangePackProvider(_exchangePacksConfig, _cardCollectionEntryPoint.CardCollectionModule);
         }
 
         private void Start()

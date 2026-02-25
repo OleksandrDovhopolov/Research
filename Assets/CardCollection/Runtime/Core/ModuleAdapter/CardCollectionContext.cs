@@ -82,6 +82,9 @@ namespace CardCollection.Core
         public UniTask AddPointsAsync(string eventId, int pointsToAdd, CancellationToken ct = default)
             => _cardProgressService.AddPointsAsync(eventId, pointsToAdd, ct);
 
+        public UniTask<bool> TrySpendPointsAsync(string eventId, int pointsToSpend, CancellationToken ct = default)
+            => _cardProgressService.TrySpendPointsAsync(eventId, pointsToSpend, ct);
+
         public UniTask<HashSet<string>> GetMissingCardIdsAsync(string eventId, List<CardDefinition> allCards, CancellationToken ct = default)
             => _cardProgressService.GetMissingCardIdsAsync(eventId, allCards, ct);
 

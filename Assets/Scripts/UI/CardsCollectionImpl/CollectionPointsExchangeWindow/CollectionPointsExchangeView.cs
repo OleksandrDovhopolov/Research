@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UISystem;
@@ -14,6 +15,9 @@ namespace core
 
         private readonly List<ExchangePackView> _exchangePacks = new();
         
+        public event Action<string> OnPackBuyClicked;
+        public event Action<string> OnPackInfoClicked;
+        
         public void CreateView(int pointsAmount, IExchangePackProvider exchangePackProvider)
         {
             _pointAmount.text = pointsAmount.ToString();
@@ -25,23 +29,30 @@ namespace core
             {
                 var packView = _exchangePackPool.GetNext();
 
-                packView.OnButtonClicked += OnPackClickedHandler;
+                packView.OnButtonClicked += OnBuyPackClickedHandler;
+                packView.OnPackClicked += OnInfoPackClickedHandler;
                 packView.SetData(pointsAmount, exchangePackEntry);
                 
                 _exchangePacks.Add(packView);
             }
         }
 
-        private void OnPackClickedHandler(string packName)
+        private void OnBuyPackClickedHandler(string packName)
         {
-            Debug.LogWarning($"Debug pack {packName} clicked");
+            OnPackBuyClicked?.Invoke(packName);
+        }
+
+        private void OnInfoPackClickedHandler(string packName)
+        {
+            OnPackInfoClicked?.Invoke(packName);
         }
         
         public void DisableAll()
         {
             foreach (var packView in _exchangePacks)
             {
-                packView.OnButtonClicked -= OnPackClickedHandler;
+                packView.OnButtonClicked -= OnBuyPackClickedHandler;
+                packView.OnPackClicked -= OnInfoPackClickedHandler;
             }
             _exchangePacks.Clear();
             

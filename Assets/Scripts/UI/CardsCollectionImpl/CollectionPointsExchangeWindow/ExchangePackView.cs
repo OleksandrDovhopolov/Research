@@ -7,7 +7,8 @@ namespace core
 {
     public class ExchangePackView : MonoBehaviour
     {
-        [SerializeField] private Button _cardsCollectionPointsViewButton;
+        [SerializeField] private Button _buyPackButton;
+        [SerializeField] private Button _packInfoButton;
         [SerializeField] private TextMeshProUGUI _starsAmountText;
         [SerializeField] private Image _packImage;
         [SerializeField] private Image _buttonBackground;
@@ -16,15 +17,22 @@ namespace core
 
         private ExchangePackEntry _packEntry;
         public event Action<string> OnButtonClicked;
+        public event Action<string> OnPackClicked;
 
         private void Start()
         {
-            _cardsCollectionPointsViewButton.onClick.AddListener(OnButtonClickHandler);
+            _buyPackButton.onClick.AddListener(OnBuyButtonClickHandler);
+            _packInfoButton.onClick.AddListener(OnInfoButtonClickHandler);
         }
 
-        private void OnButtonClickHandler()
+        private void OnBuyButtonClickHandler()
         {
             OnButtonClicked?.Invoke(_packEntry.Id);
+        }
+
+        private void OnInfoButtonClickHandler()
+        {
+            OnPackClicked?.Invoke(_packEntry.Id);
         }
 
         public void SetData(int starsAmount, ExchangePackEntry packEntry)
@@ -37,7 +45,8 @@ namespace core
         
         private void OnDestroy()
         {
-            _cardsCollectionPointsViewButton.onClick.RemoveAllListeners();
+            _buyPackButton.onClick.RemoveAllListeners();
+            _packInfoButton.onClick.RemoveAllListeners();
         }
     }
 }
