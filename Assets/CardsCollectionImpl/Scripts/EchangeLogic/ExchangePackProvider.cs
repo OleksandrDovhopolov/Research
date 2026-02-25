@@ -48,6 +48,18 @@ namespace core
             return TryGetPack(packId, out var pack) ? pack.PackPrice : 0;
         }
 
+        public PackContent GetPackContent(string packId)
+        {
+            return new PackContent();
+        }
+
+        public bool ReceivePackContent(string packId)
+        {
+            //TODO task 
+            // https://www.notion.so/Write-logic-for-pack-reward-collection-in-ExchangePackProvider-312511859db380278eeac6cd659ae47c?v=49ab588c8e164a33aa3b0ecd61d096d0&source=copy_link
+            return false;
+        }
+
         public async UniTask<bool> TrySpendPointsAsync(int pointsToSpend, CancellationToken ct = default)
         {
             return await _cardCollectionModule.TrySpendPointsAsync(pointsToSpend, ct);

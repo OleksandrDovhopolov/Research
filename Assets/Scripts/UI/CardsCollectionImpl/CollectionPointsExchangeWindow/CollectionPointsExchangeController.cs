@@ -1,3 +1,5 @@
+using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
@@ -23,8 +25,12 @@ namespace core
     {
         private CollectionPointsExchangeArgs Args => (CollectionPointsExchangeArgs) Arguments;
         
+        private CancellationTokenSource _buyCts;
+        private bool _isPurchaseInProgress;
+        
         protected override void OnShowStart()
         {
+            _buyCts = new CancellationTokenSource();
             View.CreateView(Args.PointsAmount, Args.ExchangePackProvider);
         }
 
@@ -35,32 +41,44 @@ namespace core
             View.OnPackInfoClicked += OnInfoPackClickedHandler;
         }
         
-
         private void OnBuyPackClickedHandler(string packName)
         {
-            OnBuyPackClickedHandlerAsync(packName).Forget();
+            OnBuyPackClickedHandlerAsync(packName, _buyCts?.Token ?? CancellationToken.None).Forget();
         }
 
-        private async UniTask OnBuyPackClickedHandlerAsync(string packName)
+        private async UniTask OnBuyPackClickedHandlerAsync(string packName, CancellationToken ct)
         {
+            if (_isPurchaseInProgress || string.IsNullOrWhiteSpace(packName))
+                return;
+            
             var packPrice = Args.ExchangePackProvider.GetPackPrice(packName);
-            var isBuyAvailable = Args.PointsAmount >= packPrice;
-            
-            Debug.LogWarning($"Debug pack {packName} clicked, packPrice {packPrice}, isBuyAvailable {isBuyAvailable}"); 
-            
-            if (isBuyAvailable)
+            if (packPrice <= 0)
             {
-                var result = await Args.ExchangePackProvider.TrySpendPointsAsync(packPrice);
-                if (!result)
+                ShowInfoWidget($"Invalid pack {packName} with zero price ");
+                return;
+            }
+            
+            _isPurchaseInProgress = true;
+            
+            try
+            {
+                var spent = await Args.ExchangePackProvider.TrySpendPointsAsync(packPrice, ct);
+                
+                Debug.LogWarning($"Debug pack {packName} clicked, packPrice {packPrice}"); 
+                if (spent)
                 {
-                    const string infoText = "Failed to spend points";
-                    ShowInfoWidget(infoText);
+                    if (!Args.ExchangePackProvider.ReceivePackContent(packName))
+                        ShowInfoWidget("Failed to open pack");
+                }
+                else
+                {
+                    ShowInfoWidget("Not enough stars to open this chest");
                 }
             }
-            else
+            catch (OperationCanceledException) { }
+            finally
             {
-                const string infoText = "Not enough stars to open this chest";
-                ShowInfoWidget(infoText);
+                _isPurchaseInProgress = false;
             }
         }
         
@@ -72,9 +90,10 @@ namespace core
 
         private void OnInfoPackClickedHandler(string packName)
         {
+            var packContent = Args.ExchangePackProvider.GetPackContent(packName);
             //TODO create general info window  
             // https://www.notion.so/Create-UI-system-for-panel-with-data-30b511859db380158289c4dd393a48c8?v=49ab588c8e164a33aa3b0ecd61d096d0&source=copy_link
-            Debug.LogWarning($"Debug pack {packName} clicked");
+            Debug.LogWarning($"Debug pack {packName} clicked. Content  {packContent.GemsAmount}");
         }
         
         protected override void OnHideStart(bool isClosed)
@@ -82,6 +101,10 @@ namespace core
             View.CloseClick -= CloseWindow;
             View.OnPackBuyClicked -= OnBuyPackClickedHandler;
             View.OnPackInfoClicked -= OnInfoPackClickedHandler;
+            
+            _buyCts?.Cancel();
+            _buyCts?.Dispose();
+            _buyCts = null;
         }
 
         protected override void OnHideComplete(bool isClosed)
