@@ -61,7 +61,7 @@ namespace CardCollection.Core
                 return;
             }
 
-            await _context.AddPointsAsync(_context.DefaultEventId, duplicatePoints.TotalPoints, ct);
+            await AddPointsAsync(duplicatePoints.TotalPoints, ct);
 
             Debug.Log(
                 $"[CardCollectionModule] Added {duplicatePoints.TotalPoints} duplicate-card points after opening pack '{cardPack.PackId}'. " +
@@ -76,6 +76,11 @@ namespace CardCollection.Core
         public UniTask ResetNewFlagAsync(string cardId, CancellationToken ct = default)
         {
             return _context.ResetNewFlagAsync(_context.DefaultEventId, cardId, ct);
+        }
+
+        internal async UniTask AddPointsAsync(int pointsToAdd, CancellationToken ct = default)
+        {
+            await _context.AddPointsAsync(_context.DefaultEventId, pointsToAdd, ct);
         }
 
         public UniTask<bool> TrySpendPointsAsync(int pointsToSpend, CancellationToken ct = default)
