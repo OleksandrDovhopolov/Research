@@ -14,10 +14,11 @@ namespace core
         [SerializeField] private Image _buttonBackground;
         [SerializeField] private Sprite _disabledBackgroundSprite;
         [SerializeField] private Sprite _enabledBackgroundSprite;
+        [SerializeField] private RectTransform _rectTransform;
 
         private ExchangePackEntry _packEntry;
         public event Action<string> OnButtonClicked;
-        public event Action<string> OnPackClicked;
+        public event Action<string, RectTransform> OnPackClicked;
 
         private void Start()
         {
@@ -32,7 +33,7 @@ namespace core
 
         private void OnInfoButtonClickHandler()
         {
-            OnPackClicked?.Invoke(_packEntry.Id);
+            OnPackClicked?.Invoke(_packEntry.Id, _rectTransform);
         }
 
         public void SetData(int starsAmount, ExchangePackEntry packEntry)

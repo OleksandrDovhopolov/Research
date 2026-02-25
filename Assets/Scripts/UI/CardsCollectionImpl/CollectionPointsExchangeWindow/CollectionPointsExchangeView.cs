@@ -16,7 +16,7 @@ namespace core
         private readonly List<ExchangePackView> _exchangePacks = new();
         
         public event Action<string> OnPackBuyClicked;
-        public event Action<string> OnPackInfoClicked;
+        public event Action<string, RectTransform> OnPackInfoClicked;
         
         public void CreateView(int pointsAmount, IExchangePackProvider exchangePackProvider)
         {
@@ -42,9 +42,9 @@ namespace core
             OnPackBuyClicked?.Invoke(packName);
         }
 
-        private void OnInfoPackClickedHandler(string packName)
+        private void OnInfoPackClickedHandler(string packName, RectTransform rectTransform)
         {
-            OnPackInfoClicked?.Invoke(packName);
+            OnPackInfoClicked?.Invoke(packName, rectTransform);
         }
         
         public void DisableAll()

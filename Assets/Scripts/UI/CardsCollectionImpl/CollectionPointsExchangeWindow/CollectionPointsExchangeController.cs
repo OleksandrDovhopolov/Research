@@ -88,12 +88,18 @@ namespace core
             Args.UiManager.Show<InfoWidgetController>(infoArgs);
         }
 
-        private void OnInfoPackClickedHandler(string packName)
+        private void OnInfoPackClickedHandler(string packName, RectTransform rectTransform)
         {
             var packContent = Args.ExchangePackProvider.GetPackContent(packName);
+            var args = new ContentWidgetArgs(Args.UiManager, packContent, rectTransform);
+            
+            //Debug.LogWarning($"Debug pack {packName} clicked. Resources {packContent.Resources.Count}, CardPacks {packContent.CardPack.Count}");
+            
+            Args.UiManager.Show<ContentWidgetController>(args);
+            
             //TODO create general info window  
             // https://www.notion.so/Create-UI-system-for-panel-with-data-30b511859db380158289c4dd393a48c8?v=49ab588c8e164a33aa3b0ecd61d096d0&source=copy_link
-            Debug.LogWarning($"Debug pack {packName} clicked. Content  {packContent.GemsAmount}");
+            
         }
         
         protected override void OnHideStart(bool isClosed)

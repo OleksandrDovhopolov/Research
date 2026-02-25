@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
+using UnityEditor.iOS;
 using UnityEngine;
 
 namespace core
@@ -50,7 +51,26 @@ namespace core
 
         public PackContent GetPackContent(string packId)
         {
-            return new PackContent();
+            if (!TryGetPack(packId, out var pack))
+            {
+                return new BasePackContent();
+            }
+
+            var firstResourceType = GetResourceTypeByIndex(packId, 0);
+            var secondResourceType = GetResourceTypeByIndex(packId, 1);
+
+            return new BasePackContent
+            {
+                Resources = new List<GameResource>
+                {
+                    new(firstResourceType, GetResourceAmount(pack.PackPrice, 2)),
+                    new(secondResourceType, GetResourceAmount(pack.PackPrice, 1)),
+                },
+                CardPack = new List<CardPack>
+                {
+                    CreateRewardCardPack(packId),
+                },
+            };
         }
 
         public bool ReceivePackContent(string packId)
@@ -74,6 +94,40 @@ namespace core
             }
 
             return _packById.TryGetValue(packId, out pack);
+        }
+
+        private static ResourceType GetResourceTypeByIndex(string packId, int offset)
+        {
+            var allTypes = new[]
+            {
+                ResourceType.Gold,
+                ResourceType.Energe,
+                ResourceType.Gems,
+            };
+
+            var startIndex = System.Math.Abs(packId.GetHashCode()) % allTypes.Length;
+            return allTypes[(startIndex + offset) % allTypes.Length];
+        }
+
+        private static int GetResourceAmount(int packPrice, int multiplier)
+        {
+            var safePrice = packPrice <= 0 ? 1 : packPrice;
+            return safePrice * multiplier;
+        }
+
+        private static CardPack CreateRewardCardPack(string packId)
+        {
+            var config = new CardPackConfig
+            {
+                packId = $"{packId}_reward",
+                packName = $"Reward {packId}",
+                cardCount = 1,
+                softCurrencyCost = 0,
+                hardCurrencyCost = 0,
+                availableCardRarities = new List<string>(),
+            };
+
+            return new CardPack(config);
         }
     }
 }

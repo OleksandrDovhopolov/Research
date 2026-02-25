@@ -294,6 +294,7 @@ MonoBehaviour:
   _buttonBackground: {fileID: 2062979019030730899}
   _disabledBackgroundSprite: {fileID: 21300000, guid: e416b0c6b4281654f9935df06d18077d, type: 3}
   _enabledBackgroundSprite: {fileID: 21300000, guid: baaa8be5a23158845b5ba054e823f3f7, type: 3}
+  _rectTransform: {fileID: 7402889259271749467}
 --- !u!1 &7908356354173868209
 GameObject:
   m_ObjectHideFlags: 0
