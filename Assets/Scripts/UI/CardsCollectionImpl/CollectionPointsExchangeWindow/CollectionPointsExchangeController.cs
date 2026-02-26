@@ -11,12 +11,16 @@ namespace core
         public readonly UIManager UiManager;
         public readonly int PointsAmount;
         public readonly IExchangePackProvider ExchangePackProvider;
+        public readonly Action OnPointsAmountChangedHandler;
         
-        public CollectionPointsExchangeArgs(UIManager uiManager,  int pointsAmount,  IExchangePackProvider exchangePackProvider)
+        public CollectionPointsExchangeArgs(UIManager uiManager,
+            int pointsAmount,
+            IExchangePackProvider exchangePackProvider, Action onPointsAmountChangedHandler)
         {
             UiManager = uiManager;
             PointsAmount = pointsAmount;
             ExchangePackProvider = exchangePackProvider;
+            OnPointsAmountChangedHandler = onPointsAmountChangedHandler;
         }
     }
     
@@ -63,12 +67,17 @@ namespace core
             try
             {
                 var spent = await Args.ExchangePackProvider.TrySpendPointsAsync(packPrice, ct);
-                
-                Debug.LogWarning($"Debug pack {packName} clicked, packPrice {packPrice}"); 
                 if (spent)
                 {
-                    if (!Args.ExchangePackProvider.ReceivePackContent(packName))
+                    if (Args.ExchangePackProvider.ReceivePackContent(packName))
+                    {
+                        Args.OnPointsAmountChangedHandler?.Invoke();
+                        CloseWindow();
+                    }
+                    else
+                    {
                         ShowInfoWidget("Failed to open pack");
+                    }
                 }
                 else
                 {
@@ -92,18 +101,16 @@ namespace core
         {
             var packContent = Args.ExchangePackProvider.GetPackContent(packName);
             var args = new ContentWidgetArgs(Args.UiManager, packContent, rectTransform);
-            
-            //Debug.LogWarning($"Debug pack {packName} clicked. Resources {packContent.Resources.Count}, CardPacks {packContent.CardPack.Count}");
-            
             Args.UiManager.Show<ContentWidgetController>(args);
-            
-            //TODO create general info window  
-            // https://www.notion.so/Create-UI-system-for-panel-with-data-30b511859db380158289c4dd393a48c8?v=49ab588c8e164a33aa3b0ecd61d096d0&source=copy_link
-            
         }
         
         protected override void OnHideStart(bool isClosed)
         {
+            if (Args.UiManager.IsWindowShown<ContentWidgetController>())
+            {
+                Args.UiManager.Hide<ContentWidgetController>();
+            }
+            
             View.CloseClick -= CloseWindow;
             View.OnPackBuyClicked -= OnBuyPackClickedHandler;
             View.OnPackInfoClicked -= OnInfoPackClickedHandler;

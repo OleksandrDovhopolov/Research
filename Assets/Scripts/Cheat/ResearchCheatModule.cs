@@ -56,10 +56,11 @@ namespace core
         {
             var updated = _cardCollectionEntryPoint.CardCollectionUpdater;
             var reader = _cardCollectionEntryPoint.CardCollectionReader;
+            var pointsAccount = _cardCollectionEntryPoint.CardCollectionPointsAccount;
             
             var cheatsModules = new List<ICheatsModule>
             {
-                new DefaultModule(updated, reader),
+                new DefaultModule(updated, reader, pointsAccount),
                 new SampleModule(),
             };
             

@@ -1,5 +1,4 @@
 using System.Threading;
-using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
@@ -68,7 +67,7 @@ namespace core
             await _cardCollectionEntryPoint.WaitForInitializationAsync();
 
             _exchangePackProvider ??=
-                new ExchangePackProvider(_exchangePacksConfig, _cardCollectionEntryPoint.CardCollectionModule);
+                new ExchangePackProvider(_exchangePacksConfig, _cardCollectionEntryPoint.CardCollectionPointsAccount, _uiManager);
             
             var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
             var args = new CardCollectionArgs(

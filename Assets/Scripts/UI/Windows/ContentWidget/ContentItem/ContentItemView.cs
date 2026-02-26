@@ -18,10 +18,5 @@ namespace core
         {
             _amount.text = text;
         }
-
-        public float GetSpriteWidth()
-        {
-            return _image.sprite.rect.width;
-        }
     }
 }

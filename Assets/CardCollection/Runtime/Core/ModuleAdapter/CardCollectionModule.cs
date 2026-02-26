@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace CardCollection.Core
 {
-    public sealed class CardCollectionModule : ICardCollectionModule, ICardCollectionReader, ICardCollectionUpdater, IDisposable
+    public sealed class CardCollectionModule : ICardCollectionModule, ICardCollectionReader, ICardCollectionUpdater, ICardCollectionPointsAccount, IDisposable
     {
         private readonly CardCollectionContext _context;
         private readonly CardSelectionContext _selectionContext;
@@ -81,6 +81,12 @@ namespace CardCollection.Core
         internal async UniTask AddPointsAsync(int pointsToAdd, CancellationToken ct = default)
         {
             await _context.AddPointsAsync(_context.DefaultEventId, pointsToAdd, ct);
+        }
+
+        public async UniTask<bool> TryAddPointsAsync(int pointsToAdd, CancellationToken ct = default)
+        {
+            await AddPointsAsync(pointsToAdd, ct);
+            return true;
         }
 
         public UniTask<bool> TrySpendPointsAsync(int pointsToSpend, CancellationToken ct = default)

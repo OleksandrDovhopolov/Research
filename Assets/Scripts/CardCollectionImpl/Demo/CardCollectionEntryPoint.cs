@@ -19,6 +19,7 @@ namespace core
         public ICardCollectionModule CardCollectionModule => GetInitializedModule();
         public ICardCollectionUpdater CardCollectionUpdater => GetInitializedModule();
         public ICardCollectionReader CardCollectionReader => GetInitializedModule();
+        public ICardCollectionPointsAccount CardCollectionPointsAccount => GetInitializedModule();
 
         public event Action<Exception> OnInitializationFailed;
 

@@ -1,21 +1,23 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using UnityEditor.iOS;
+using UISystem;
 using UnityEngine;
 
 namespace core
 {
     public class ExchangePackProvider : IExchangePackProvider
     {
+        private readonly UIManager _uiManager;
         private readonly Dictionary<string, ExchangePackEntry> _packById;
-        private readonly ICardCollectionModule _cardCollectionModule;
+        private readonly ICardCollectionPointsAccount _cardCollectionPointsAccount;
         
-        public ExchangePackProvider(ExchangePacksConfig packsConfig, ICardCollectionModule cardCollectionModule)
+        public ExchangePackProvider(ExchangePacksConfig packsConfig, ICardCollectionPointsAccount cardCollectionPointsAccount)
         {
-            _cardCollectionModule = cardCollectionModule;
+            _cardCollectionPointsAccount = cardCollectionPointsAccount;
             _packById = new Dictionary<string, ExchangePackEntry>();
 
             if (packsConfig == null || packsConfig.Packs == null)
@@ -32,6 +34,11 @@ namespace core
 
                 _packById[pack.Id] = pack;
             }
+        }
+        
+        public ExchangePackProvider(ExchangePacksConfig packsConfig, ICardCollectionPointsAccount cardCollectionPointsAccount, UIManager  uiManager) :  this(packsConfig, cardCollectionPointsAccount)
+        {
+            _uiManager = uiManager;
         }
 
         public IReadOnlyCollection<ExchangePackEntry> GetAllPacks()
@@ -75,14 +82,17 @@ namespace core
 
         public bool ReceivePackContent(string packId)
         {
+            const string infoText = "Pack received successfully";
+            var infoArgs = new InfoWidgetArg(_uiManager, infoText);
+            _uiManager.Show<InfoWidgetController>(infoArgs);
             //TODO task 
             // https://www.notion.so/Write-logic-for-pack-reward-collection-in-ExchangePackProvider-312511859db380278eeac6cd659ae47c?v=49ab588c8e164a33aa3b0ecd61d096d0&source=copy_link
-            return false;
+            return true;
         }
 
         public async UniTask<bool> TrySpendPointsAsync(int pointsToSpend, CancellationToken ct = default)
         {
-            return await _cardCollectionModule.TrySpendPointsAsync(pointsToSpend, ct);
+            return await _cardCollectionPointsAccount.TrySpendPointsAsync(pointsToSpend, ct);
         }
 
         private bool TryGetPack(string packId, out ExchangePackEntry pack)
@@ -105,7 +115,7 @@ namespace core
                 ResourceType.Gems,
             };
 
-            var startIndex = System.Math.Abs(packId.GetHashCode()) % allTypes.Length;
+            var startIndex = Math.Abs(packId.GetHashCode()) % allTypes.Length;
             return allTypes[(startIndex + offset) % allTypes.Length];
         }
 

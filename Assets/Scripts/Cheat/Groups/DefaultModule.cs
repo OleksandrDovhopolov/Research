@@ -6,13 +6,17 @@ namespace core
 {
     public class DefaultModule : ICheatsModule
     {
+        private const string CardCollectionPointsGroup = "CardCollectionPointsGroup";
+        
         private readonly ICardCollectionUpdater _collectionUpdater;
         private readonly ICardCollectionReader _cardCollectionReader;
+        private readonly ICardCollectionPointsAccount _cardCollectionPointsAccount;
         
-        public DefaultModule(ICardCollectionUpdater collectionUpdater,ICardCollectionReader  cardCollectionReader)
+        public DefaultModule(ICardCollectionUpdater collectionUpdater,ICardCollectionReader  cardCollectionReader, ICardCollectionPointsAccount  cardCollectionPointsAccount)
         {
             _collectionUpdater = collectionUpdater;
             _cardCollectionReader = cardCollectionReader;
+            _cardCollectionPointsAccount = cardCollectionPointsAccount;
         }
         
         public void Initialize(ICheatsContainer cheatsContainer)
@@ -36,6 +40,16 @@ namespace core
             {
                 _collectionUpdater.UnlockCard(cardId);
             }));
+            
+            cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Add points(int)", points =>
+            {
+                _cardCollectionPointsAccount.TryAddPointsAsync(points);
+            }).WithGroup(CardCollectionPointsGroup));
+            
+            cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Remove points(int)", points =>
+            {
+                _cardCollectionPointsAccount.TrySpendPointsAsync(points);
+            }).WithGroup(CardCollectionPointsGroup));
         }
     }
 }
