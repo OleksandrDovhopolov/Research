@@ -111,7 +111,7 @@ namespace core
             var allTypes = new[]
             {
                 ResourceType.Gold,
-                ResourceType.Energe,
+                ResourceType.Energy,
                 ResourceType.Gems,
             };
 

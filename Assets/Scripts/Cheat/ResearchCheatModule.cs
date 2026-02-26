@@ -10,8 +10,9 @@ namespace core
     {
         [SerializeField] private CheatsManager _cheatsManagerPrefab;
         [SerializeField] private CardCollectionEntryPoint _cardCollectionEntryPoint;
-        private CheatsManager _cheatsManager;
+        [SerializeField] private ResourcesView _resourcesView;
         
+        private CheatsManager _cheatsManager;
         private CheatPanelItem _rootPanel;
         private List<ICheatsModule> _cheatsModules;
         
@@ -61,7 +62,7 @@ namespace core
             var cheatsModules = new List<ICheatsModule>
             {
                 new DefaultModule(updated, reader, pointsAccount),
-                new SampleModule(),
+                new SampleModule(_resourcesView.ResourceManager),
             };
             
             return cheatsModules;

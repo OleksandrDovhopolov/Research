@@ -14,10 +14,14 @@ namespace core
         [SerializeField] private Button _cheatButton;
         [SerializeField] private CardCollectionEntryPoint _cardCollectionEntryPoint;
         [SerializeField] private ExchangePacksConfig _exchangePacksConfig;
+        
+        [Space, Header("Resources")]
+        [SerializeField] private ResourcesView _resourcesView;
 
         private ConfigManager _configManager;
         private CancellationToken _destroyCt;
         private IExchangePackProvider _exchangePackProvider;
+        private readonly ResourceManager _resourceManager = new();
 
         private void Awake()
         {
@@ -29,6 +33,7 @@ namespace core
         {
             LoadAddressables().Forget();
             LoadConfig().Forget();
+            InitResources(_destroyCt).Forget();
 
             WindowFactoryBase windowFactoryBase = new WindowFactoryDI(_uiManager);
             UIManagerEventHandlerBase eventHandler = new UIManagerSignalHandler();
@@ -78,6 +83,13 @@ namespace core
             _uiManager.Show<CardCollectionController>(args);
         }
 
+        private async UniTask InitResources(CancellationToken ct)
+        {
+            _resourcesView.InitView(_resourceManager);
+            await _resourceManager.InitializeAsync(ct);
+            _resourcesView.UpdateFromResourceManager(true);
+        }
+
         private void OpenCheatsPanel()
         {
             _researchCheatModule.OpenCheatPanel();
@@ -87,6 +99,7 @@ namespace core
         {
             _button.onClick.RemoveAllListeners();
             _cheatButton.onClick.RemoveAllListeners();
+            _resourceManager.Dispose();
         }
     }
 }

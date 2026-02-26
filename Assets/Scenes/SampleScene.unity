@@ -866,6 +866,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _cheatsManagerPrefab: {fileID: 8348622371714148914, guid: 58a4af7a00355ac4085007f9cd0e5698, type: 3}
   _cardCollectionEntryPoint: {fileID: 583103903}
+  _resourcesView: {fileID: 1395416288}
 --- !u!4 &343525369
 Transform:
   m_ObjectHideFlags: 0
@@ -881,6 +882,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &428869832 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4675893168356657741, guid: ba3fbbca536634ac1b95f1b6bff254a0, type: 3}
+  m_PrefabInstance: {fileID: 2009643037}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &443067273
 GameObject:
   m_ObjectHideFlags: 0
@@ -1659,6 +1671,7 @@ MonoBehaviour:
   _cheatButton: {fileID: 1552899116}
   _cardCollectionEntryPoint: {fileID: 583103903}
   _exchangePacksConfig: {fileID: 11400000, guid: 65c81ad1becc709499632b874a67d555, type: 2}
+  _resourcesView: {fileID: 1395416288}
 --- !u!4 &1037090431
 Transform:
   m_ObjectHideFlags: 0
@@ -1725,6 +1738,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1287502112 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6065141952986530511, guid: 400ea445297394f4d9ef534260f2f5ee, type: 3}
+  m_PrefabInstance: {fileID: 152393435}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1324443871
 GameObject:
   m_ObjectHideFlags: 0
@@ -1815,6 +1839,7 @@ GameObject:
   - component: {fileID: 1395416285}
   - component: {fileID: 1395416287}
   - component: {fileID: 1395416286}
+  - component: {fileID: 1395416288}
   m_Layer: 5
   m_Name: Resources
   m_TagString: Untagged
@@ -1884,6 +1909,22 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &1395416288
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1395416284}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94e8449b1c245854e8471b34f0517ff5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _amountChangeDurationSeconds: 0.4
+  _goldAmountText: {fileID: 1287502112}
+  _energyAmountText: {fileID: 2094166153}
+  _gemsAmountTest: {fileID: 428869832}
 --- !u!1 &1487937975
 GameObject:
   m_ObjectHideFlags: 0
@@ -2505,6 +2546,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2016475253}
   m_CullTransparentMesh: 1
+--- !u!114 &2094166153 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3125034830444858147, guid: ad847245fe0ed4094a7e0d3a47501b0f, type: 3}
+  m_PrefabInstance: {fileID: 141926894}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2095351935
 GameObject:
   m_ObjectHideFlags: 0
