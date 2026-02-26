@@ -20,7 +20,8 @@ namespace core
 
         private ConfigManager _configManager;
         private CancellationToken _destroyCt;
-        private IExchangePackProvider _exchangePackProvider;
+        private IExchangeOfferProvider _exchangeOfferProvider;
+        private IOfferRewardsReceiver _offerRewardsReceiver;
         private readonly ResourceManager _resourceManager = new();
 
         private void Awake()
@@ -71,11 +72,12 @@ namespace core
         {
             await _cardCollectionEntryPoint.WaitForInitializationAsync();
 
-            _exchangePackProvider ??=
-                new ExchangePackProvider(
+            _exchangeOfferProvider ??=
+                new ExchangeOfferProvider(
                     _exchangePacksConfig,
                     _cardCollectionEntryPoint.CardCollectionPointsAccount,
-                    _cardCollectionEntryPoint.CardPackProvider,
+                    _cardCollectionEntryPoint.CardPackProvider.GetCardConfigByIdAsync,
+                    _offerRewardsReceiver ??= new OfferRewardsReceiver(_resourceManager),
                     _uiManager);
             
             var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
@@ -83,7 +85,7 @@ namespace core
                 _uiManager,
                 _cardCollectionEntryPoint.CardCollectionModule,
                 collectionData,
-                _exchangePackProvider);
+                _exchangeOfferProvider);
             _uiManager.Show<CardCollectionController>(args);
         }
 

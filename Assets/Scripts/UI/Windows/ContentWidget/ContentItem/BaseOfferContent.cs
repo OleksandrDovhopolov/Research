@@ -3,7 +3,7 @@ using CardCollection.Core;
 
 namespace core
 {
-    public class BasePackContent : PackContent
+    public class BaseOfferContent : OfferContent
     {
         public List<GameResource> Resources = new();
         public List<CardPack> CardPack = new();

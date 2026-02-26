@@ -25,13 +25,13 @@ namespace core
         private RectTransform _contentRectTransform;
         private CancellationTokenSource _loadSpritesCts;
         
-        public void ShowContentView(BasePackContent packContent, RectTransform contentRectTransform)
+        public void ShowContentView(BaseOfferContent offerContent, RectTransform contentRectTransform)
         {
             _contentRectTransform =  contentRectTransform;
             
             StopAllCoroutines();
 
-            var totalItems = Configurate(packContent);
+            var totalItems = Configurate(offerContent);
             if (totalItems <= 0)
             {
                 
@@ -44,11 +44,11 @@ namespace core
             StartCoroutine(HidePopupCoroutine());
         }
         
-        public int Configurate(BasePackContent packContent)
+        public int Configurate(BaseOfferContent offerContent)
         {
             _itemsPool.DisableAll();
 
-            if (packContent == null)
+            if (offerContent == null)
             {
                 return 0;
             }
@@ -57,28 +57,28 @@ namespace core
             _loadSpritesCts?.Dispose();
             _loadSpritesCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
 
-            LoadContentSpritesSequentially(packContent, _loadSpritesCts.Token).Forget();
+            LoadContentSpritesSequentially(offerContent, _loadSpritesCts.Token).Forget();
 
             return _itemsPool.ActiveElements().Count();
         }
 
-        private async UniTask LoadContentSpritesSequentially(BasePackContent packContent, CancellationToken ct)
+        private async UniTask LoadContentSpritesSequentially(BaseOfferContent offerContent, CancellationToken ct)
         {
             try
             {
-                await LoadCarkPacksSprites(packContent, ct);
-                await LoadResourcesSprites(packContent, ct);
+                await LoadCarkPacksSprites(offerContent, ct);
+                await LoadResourcesSprites(offerContent, ct);
             }
             catch (OperationCanceledException)
             {
             }
         }
 
-        private async UniTask LoadCarkPacksSprites(BasePackContent packContent, CancellationToken ct)
+        private async UniTask LoadCarkPacksSprites(BaseOfferContent offerContent, CancellationToken ct)
         {
-            if (packContent.CardPack != null)
+            if (offerContent.CardPack != null)
             {
-                foreach (var cardPack in packContent.CardPack)
+                foreach (var cardPack in offerContent.CardPack)
                 {
                     ct.ThrowIfCancellationRequested();
                     var contentView = _itemsPool.GetNext();
@@ -90,11 +90,11 @@ namespace core
             }
         }
 
-        private async UniTask LoadResourcesSprites(BasePackContent packContent, CancellationToken ct)
+        private async UniTask LoadResourcesSprites(BaseOfferContent offerContent, CancellationToken ct)
         {
-            if (packContent.Resources != null)
+            if (offerContent.Resources != null)
             {
-                foreach (var contentResource in packContent.Resources)
+                foreach (var contentResource in offerContent.Resources)
                 {
                     ct.ThrowIfCancellationRequested();
                     var contentView = _itemsPool.GetNext();

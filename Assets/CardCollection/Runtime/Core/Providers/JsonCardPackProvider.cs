@@ -12,7 +12,7 @@ namespace CardCollection.Core
         private List<CardPackConfig> _cachedPacks;
         private bool _isInitialized;
 
-        public async UniTask<List<CardPackConfig>> GetCardPacksAsync(CancellationToken ct = default)
+        public async UniTask<List<CardPackConfig>> GetCardConfigsAsync(CancellationToken ct = default)
         {
             if (_isInitialized && _cachedPacks != null) return _cachedPacks;
 
@@ -46,9 +46,9 @@ namespace CardCollection.Core
             }
         }
 
-        public async UniTask<CardPackConfig> GetCardPackByIdAsync(string packId, CancellationToken ct = default)
+        public async UniTask<CardPackConfig> GetCardConfigByIdAsync(string packId, CancellationToken ct = default)
         {
-            var allPacks = await GetCardPacksAsync(ct);
+            var allPacks = await GetCardConfigsAsync(ct);
             return allPacks.Find(p => p.packId == packId);
         }
 

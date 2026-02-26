@@ -38,7 +38,7 @@ namespace CardCollection.Core
             {
                 Debug.Log("[CardCollectionService] Initializing...");
 
-                var packConfigs = await _cardPackProvider.GetCardPacksAsync(ct);
+                var packConfigs = await _cardPackProvider.GetCardConfigsAsync(ct);
 
                 _allPacks = packConfigs.Select(config => new CardPack(config)).ToList();
 

@@ -102,12 +102,12 @@ namespace CardCollection.Tests
 
         private class MockCardPackProvider : ICardPackProvider
         {
-            public async UniTask<List<CardPackConfig>> GetCardPacksAsync(CancellationToken ct = default)
+            public async UniTask<List<CardPackConfig>> GetCardConfigsAsync(CancellationToken ct = default)
             {
                 return GetTestPacks();
             }
 
-            public async UniTask<CardPackConfig> GetCardPackByIdAsync(string packId, CancellationToken ct = default)
+            public async UniTask<CardPackConfig> GetCardConfigByIdAsync(string packId, CancellationToken ct = default)
             {
                 var packs = GetTestPacks();
                 return packs.Find(p => p.packId == packId);

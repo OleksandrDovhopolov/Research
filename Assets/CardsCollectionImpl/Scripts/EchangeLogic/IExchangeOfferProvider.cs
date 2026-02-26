@@ -1,0 +1,15 @@
+using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+
+namespace core
+{
+    public interface IExchangeOfferProvider
+    {
+        IReadOnlyCollection<ExchangePackEntry> GetAllOffers();
+        int GetOfferPrice(string offerPackId);
+        UniTask<OfferContent> GetOfferContentAsync(string offerPackId, CancellationToken ct = default);
+        UniTask<bool> ReceiveOfferContent(string offerPackId, CancellationToken ct = default);
+        UniTask<bool> TrySpendCollectionPointsAsync(int pointsToSpend, CancellationToken ct = default);
+    }
+}

@@ -6,13 +6,13 @@ namespace core
     public class ContentWidgetArgs : WindowArgs
     {
         public readonly UIManager UiManager;
-        public readonly PackContent PackContent;
+        public readonly OfferContent OfferContent;
         public readonly RectTransform RectTransform;
         
-        public ContentWidgetArgs(UIManager uiManager, PackContent packContent, RectTransform rectTransform)
+        public ContentWidgetArgs(UIManager uiManager, OfferContent offerContent, RectTransform rectTransform)
         {
             UiManager = uiManager;
-            PackContent = packContent;
+            OfferContent = offerContent;
             RectTransform = rectTransform;
         }
     }
@@ -24,7 +24,7 @@ namespace core
         
         protected override void OnShowStart()
         {
-            View.ShowContentView((BasePackContent)Args.PackContent, Args.RectTransform);
+            View.ShowContentView((BaseOfferContent)Args.OfferContent, Args.RectTransform);
         }
 
         protected override void OnShowComplete()

@@ -11,18 +11,18 @@ namespace core
         public readonly UIManager UiManager;
         public readonly ICardCollectionModule CardCollectionModule;
         public readonly EventCardsSaveData EventCardsSaveData;
-        public readonly IExchangePackProvider ExchangePackProvider;
+        public readonly IExchangeOfferProvider ExchangeOfferProvider;
         
         public CardCollectionArgs(
             UIManager uiManager,
             ICardCollectionModule cardCollectionModule,
             EventCardsSaveData eventCardsSaveData,
-            IExchangePackProvider exchangePackProvider)
+            IExchangeOfferProvider exchangeOfferProvider)
         {
             UiManager = uiManager;
             CardCollectionModule = cardCollectionModule;
             EventCardsSaveData = eventCardsSaveData;
-            ExchangePackProvider = exchangePackProvider;
+            ExchangeOfferProvider = exchangeOfferProvider;
         }
     }
     
@@ -65,7 +65,7 @@ namespace core
             var args = new CollectionPointsExchangeArgs(
                 Args.UiManager,
                 _currentPoints,
-                Args.ExchangePackProvider, UpdatePointsAmount);
+                Args.ExchangeOfferProvider, UpdatePointsAmount);
             Args.UiManager.Show<CollectionPointsExchangeController>(args);
         }
         

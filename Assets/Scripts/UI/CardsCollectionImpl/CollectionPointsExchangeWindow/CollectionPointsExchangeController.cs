@@ -10,16 +10,16 @@ namespace core
     {
         public readonly UIManager UiManager;
         public readonly int PointsAmount;
-        public readonly IExchangePackProvider ExchangePackProvider;
+        public readonly IExchangeOfferProvider ExchangeOfferProvider;
         public readonly Action OnPointsAmountChangedHandler;
         
         public CollectionPointsExchangeArgs(UIManager uiManager,
             int pointsAmount,
-            IExchangePackProvider exchangePackProvider, Action onPointsAmountChangedHandler)
+            IExchangeOfferProvider exchangeOfferProvider, Action onPointsAmountChangedHandler)
         {
             UiManager = uiManager;
             PointsAmount = pointsAmount;
-            ExchangePackProvider = exchangePackProvider;
+            ExchangeOfferProvider = exchangeOfferProvider;
             OnPointsAmountChangedHandler = onPointsAmountChangedHandler;
         }
     }
@@ -35,32 +35,32 @@ namespace core
         protected override void OnShowStart()
         {
             _buyCts = new CancellationTokenSource();
-            View.CreateView(Args.PointsAmount, Args.ExchangePackProvider);
+            View.CreateView(Args.PointsAmount, Args.ExchangeOfferProvider);
         }
 
         protected override void OnShowComplete()
         {
             View.CloseClick += CloseWindow;
-            View.OnPackBuyClicked += OnBuyPackClickedHandler;
-            View.OnPackInfoClicked += OnInfoPackClickedHandler;
+            View.OnOfferBuyClicked += OnBuyOfferClickedHandler;
+            View.OnOfferInfoClicked += OnInfoOfferClickedHandler;
         }
         
-        private void OnBuyPackClickedHandler(string packName)
+        private void OnBuyOfferClickedHandler(string offerPackId)
         {
-            OnBuyPackClickedHandlerAsync(packName, _buyCts?.Token ?? CancellationToken.None).Forget();
+            OnBuyPackClickedHandlerAsync(offerPackId, _buyCts?.Token ?? CancellationToken.None).Forget();
         }
 
-        private async UniTask OnBuyPackClickedHandlerAsync(string packName, CancellationToken ct)
+        private async UniTask OnBuyPackClickedHandlerAsync(string offerPackId, CancellationToken ct)
         {
-            if (_isPurchaseInProgress || string.IsNullOrWhiteSpace(packName))
+            if (_isPurchaseInProgress || string.IsNullOrWhiteSpace(offerPackId))
                 return;
             
             TryHideContentWidget();
             
-            var packPrice = Args.ExchangePackProvider.GetPackPrice(packName);
+            var packPrice = Args.ExchangeOfferProvider.GetOfferPrice(offerPackId);
             if (packPrice <= 0)
             {
-                ShowInfoWidget($"Invalid pack {packName} with zero price ");
+                ShowInfoWidget($"Invalid offerPackId {offerPackId} with zero price ");
                 return;
             }
             
@@ -68,10 +68,10 @@ namespace core
             
             try
             {
-                var spent = await Args.ExchangePackProvider.TrySpendPointsAsync(packPrice, ct);
+                var spent = await Args.ExchangeOfferProvider.TrySpendCollectionPointsAsync(packPrice, ct);
                 if (spent)
                 {
-                    if (Args.ExchangePackProvider.ReceivePackContent(packName))
+                    if (await Args.ExchangeOfferProvider.ReceiveOfferContent(offerPackId, ct))
                     {
                         Args.OnPointsAmountChangedHandler?.Invoke();
                         CloseWindow();
@@ -99,7 +99,7 @@ namespace core
             Args.UiManager.Show<InfoWidgetController>(infoArgs);
         }
 
-        private void OnInfoPackClickedHandler(string packName, RectTransform rectTransform)
+        private void OnInfoOfferClickedHandler(string packName, RectTransform rectTransform)
         {
             OnInfoPackClickedHandlerAsync(packName, rectTransform, _buyCts?.Token ?? CancellationToken.None).Forget();
         }
@@ -113,7 +113,7 @@ namespace core
 
             try
             {
-                var packContent = await Args.ExchangePackProvider.GetPackContentAsync(packName, ct);
+                var packContent = await Args.ExchangeOfferProvider.GetOfferContentAsync(packName, ct);
                 var args = new ContentWidgetArgs(Args.UiManager, packContent, rectTransform);
                 Args.UiManager.Show<ContentWidgetController>(args);
             }
@@ -127,8 +127,8 @@ namespace core
             TryHideContentWidget();
             
             View.CloseClick -= CloseWindow;
-            View.OnPackBuyClicked -= OnBuyPackClickedHandler;
-            View.OnPackInfoClicked -= OnInfoPackClickedHandler;
+            View.OnOfferBuyClicked -= OnBuyOfferClickedHandler;
+            View.OnOfferInfoClicked -= OnInfoOfferClickedHandler;
             
             _buyCts?.Cancel();
             _buyCts?.Dispose();

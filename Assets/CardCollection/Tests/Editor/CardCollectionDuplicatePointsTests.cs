@@ -175,13 +175,13 @@ namespace CardCollection.Tests
                 };
             }
 
-            public UniTask<List<CardPackConfig>> GetCardPacksAsync(CancellationToken ct = default)
+            public UniTask<List<CardPackConfig>> GetCardConfigsAsync(CancellationToken ct = default)
             {
                 ct.ThrowIfCancellationRequested();
                 return UniTask.FromResult(_packs);
             }
 
-            public UniTask<CardPackConfig> GetCardPackByIdAsync(string packId, CancellationToken ct = default)
+            public UniTask<CardPackConfig> GetCardConfigByIdAsync(string packId, CancellationToken ct = default)
             {
                 ct.ThrowIfCancellationRequested();
                 return UniTask.FromResult(_packs.FirstOrDefault(pack => pack.packId == packId));

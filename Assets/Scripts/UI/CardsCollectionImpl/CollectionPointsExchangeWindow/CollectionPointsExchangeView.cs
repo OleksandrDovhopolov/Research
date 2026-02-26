@@ -15,17 +15,17 @@ namespace core
 
         private readonly List<ExchangePackView> _exchangePacks = new();
         
-        public event Action<string> OnPackBuyClicked;
-        public event Action<string, RectTransform> OnPackInfoClicked;
+        public event Action<string> OnOfferBuyClicked;
+        public event Action<string, RectTransform> OnOfferInfoClicked;
         
-        public void CreateView(int pointsAmount, IExchangePackProvider exchangePackProvider)
+        public void CreateView(int pointsAmount, IExchangeOfferProvider exchangeOfferProvider)
         {
             _pointAmount.text = pointsAmount.ToString();
             
             _exchangePacks.Clear();
             _exchangePackPool.DisableNonActive();
 
-            foreach (var exchangePackEntry in exchangePackProvider.GetAllPacks())
+            foreach (var exchangePackEntry in exchangeOfferProvider.GetAllOffers())
             {
                 var packView = _exchangePackPool.GetNext();
 
@@ -37,14 +37,14 @@ namespace core
             }
         }
 
-        private void OnBuyPackClickedHandler(string packName)
+        private void OnBuyPackClickedHandler(string offerPackId)
         {
-            OnPackBuyClicked?.Invoke(packName);
+            OnOfferBuyClicked?.Invoke(offerPackId);
         }
 
-        private void OnInfoPackClickedHandler(string packName, RectTransform rectTransform)
+        private void OnInfoPackClickedHandler(string offerPackId, RectTransform rectTransform)
         {
-            OnPackInfoClicked?.Invoke(packName, rectTransform);
+            OnOfferInfoClicked?.Invoke(offerPackId, rectTransform);
         }
         
         public void DisableAll()
