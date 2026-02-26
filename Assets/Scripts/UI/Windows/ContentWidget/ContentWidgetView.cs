@@ -1,5 +1,8 @@
+using System;
 using System.Collections;
 using System.Linq;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,7 +11,7 @@ namespace core
 {
     public class ContentWidgetView : WindowView 
     {
-        private const int ContentWidgetHideDelay = 100;
+        private const int ContentWidgetHideDelay = 10;
         
         [SerializeField] private UIListPool<ContentItemView> _itemsPool;
 
@@ -20,6 +23,7 @@ namespace core
         [SerializeField] private Sprite _mockSprite;
         
         private RectTransform _contentRectTransform;
+        private CancellationTokenSource _loadSpritesCts;
         
         public void ShowContentView(BasePackContent packContent, RectTransform contentRectTransform)
         {
@@ -30,6 +34,8 @@ namespace core
             var totalItems = Configurate(packContent);
             if (totalItems <= 0)
             {
+                
+                Debug.LogWarning($"Failed to open content widget {GetType()}. _itemsPool count == 0");
                 HideContentWidget();
                 return;
             }
@@ -47,27 +53,56 @@ namespace core
                 return 0;
             }
 
+            _loadSpritesCts?.Cancel();
+            _loadSpritesCts?.Dispose();
+            _loadSpritesCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+
+            LoadContentSpritesSequentially(packContent, _loadSpritesCts.Token).Forget();
+
+            return _itemsPool.ActiveElements().Count();
+        }
+
+        private async UniTask LoadContentSpritesSequentially(BasePackContent packContent, CancellationToken ct)
+        {
+            try
+            {
+                await LoadCarkPacksSprites(packContent, ct);
+                await LoadResourcesSprites(packContent, ct);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+
+        private async UniTask LoadCarkPacksSprites(BasePackContent packContent, CancellationToken ct)
+        {
             if (packContent.CardPack != null)
             {
                 foreach (var cardPack in packContent.CardPack)
                 {
+                    ct.ThrowIfCancellationRequested();
                     var contentView = _itemsPool.GetNext();
-                    contentView.SetSprite(_mockSprite);
-                    contentView.SetText($"x{Mathf.Max(1, cardPack.CardCount)}");
+                    
+                    var sprite = await AddressablesWrapper.LoadFromTask<Sprite>(cardPack.PackId);
+                    contentView.SetSprite(sprite);
+                    contentView.SetText($"x1");
                 }
             }
+        }
 
+        private async UniTask LoadResourcesSprites(BasePackContent packContent, CancellationToken ct)
+        {
             if (packContent.Resources != null)
             {
                 foreach (var contentResource in packContent.Resources)
                 {
+                    ct.ThrowIfCancellationRequested();
                     var contentView = _itemsPool.GetNext();
-                    contentView.SetSprite(_mockSprite);
+                    var sprite = await AddressablesWrapper.LoadFromTask<Sprite>(contentResource.Type.ToString());
+                    contentView.SetSprite(sprite);
                     contentView.SetText($"x{Mathf.Max(1, contentResource.Amount)}");
                 }
             }
-
-            return _itemsPool.ActiveElements().Count();
         }
         
         private void HideContentWidget()
@@ -175,6 +210,13 @@ namespace core
             anchoredPos.x = Mathf.Clamp(anchoredPos.x, minX, maxX);
             anchoredPos.y = Mathf.Clamp(anchoredPos.y, minY, maxY);
             _container.anchoredPosition = anchoredPos;
+        }
+
+        private void OnDestroy()
+        {
+            _loadSpritesCts?.Cancel();
+            _loadSpritesCts?.Dispose();
+            _loadSpritesCts = null;
         }
     }
 }

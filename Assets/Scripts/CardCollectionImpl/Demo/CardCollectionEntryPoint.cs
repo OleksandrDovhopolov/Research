@@ -9,6 +9,7 @@ namespace core
     public class CardCollectionEntryPoint : MonoBehaviour
     {
         private CardCollectionModule _cardCollectionModule;
+        private ICardPackProvider _cardPackProvider;
         private Exception _initializationException;
 
         private readonly UniTaskCompletionSource _initializationSource = new();
@@ -20,6 +21,7 @@ namespace core
         public ICardCollectionUpdater CardCollectionUpdater => GetInitializedModule();
         public ICardCollectionReader CardCollectionReader => GetInitializedModule();
         public ICardCollectionPointsAccount CardCollectionPointsAccount => GetInitializedModule();
+        public ICardPackProvider CardPackProvider => GetInitializedCardPackProvider();
 
         public event Action<Exception> OnInitializationFailed;
 
@@ -44,18 +46,33 @@ namespace core
             return _cardCollectionModule;
         }
 
+        private ICardPackProvider GetInitializedCardPackProvider()
+        {
+            if (_initializationException != null)
+                throw new InvalidOperationException(
+                    "CardCollection module initialization failed. See inner exception for details.",
+                    _initializationException);
+
+            if (!IsInitialized || _cardPackProvider == null)
+                throw new InvalidOperationException(
+                    "CardCollection module is not yet initialized. " +
+                    "Await WaitForInitializationAsync() before accessing the module.");
+
+            return _cardPackProvider;
+        }
+
         private async UniTask InitCardCollection(CancellationToken ct)
         {
             try
             {
                 const string testEventId = "test";
                 
-                ICardPackProvider packProvider = new JsonCardPackProvider();
+                _cardPackProvider = new JsonCardPackProvider();
                 IEventCardsStorage cardsStorage = new JsonEventCardsStorage();
                 ICardDefinitionProvider cardDefinitionProvider = new DefaultCardDefinitionProvider();
                 ICardSelector cardSelector = new ProbabilityBasedCardSelector(PackRulesConfig.CreateDefaultRules());
 
-                var config = new CardCollectionModuleConfig(packProvider, cardsStorage, cardDefinitionProvider, cardSelector, CardsCollectionPointsCalculator.Instance, testEventId);
+                var config = new CardCollectionModuleConfig(_cardPackProvider, cardsStorage, cardDefinitionProvider, cardSelector, CardsCollectionPointsCalculator.Instance, testEventId);
 
                 _cardCollectionModule = new CardCollectionModule(config);
                 await _cardCollectionModule.InitializeAsync(ct);

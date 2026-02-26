@@ -55,6 +55,8 @@ namespace core
             if (_isPurchaseInProgress || string.IsNullOrWhiteSpace(packName))
                 return;
             
+            TryHideContentWidget();
+            
             var packPrice = Args.ExchangePackProvider.GetPackPrice(packName);
             if (packPrice <= 0)
             {
@@ -99,17 +101,30 @@ namespace core
 
         private void OnInfoPackClickedHandler(string packName, RectTransform rectTransform)
         {
-            var packContent = Args.ExchangePackProvider.GetPackContent(packName);
-            var args = new ContentWidgetArgs(Args.UiManager, packContent, rectTransform);
-            Args.UiManager.Show<ContentWidgetController>(args);
+            OnInfoPackClickedHandlerAsync(packName, rectTransform, _buyCts?.Token ?? CancellationToken.None).Forget();
+        }
+
+        private async UniTask OnInfoPackClickedHandlerAsync(string packName, RectTransform rectTransform, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(packName))
+            {
+                return;
+            }
+
+            try
+            {
+                var packContent = await Args.ExchangePackProvider.GetPackContentAsync(packName, ct);
+                var args = new ContentWidgetArgs(Args.UiManager, packContent, rectTransform);
+                Args.UiManager.Show<ContentWidgetController>(args);
+            }
+            catch (OperationCanceledException)
+            {
+            }
         }
         
         protected override void OnHideStart(bool isClosed)
         {
-            if (Args.UiManager.IsWindowShown<ContentWidgetController>())
-            {
-                Args.UiManager.Hide<ContentWidgetController>();
-            }
+            TryHideContentWidget();
             
             View.CloseClick -= CloseWindow;
             View.OnPackBuyClicked -= OnBuyPackClickedHandler;
@@ -120,6 +135,14 @@ namespace core
             _buyCts = null;
         }
 
+        private void TryHideContentWidget()
+        {
+            if (Args.UiManager.IsWindowShown<ContentWidgetController>())
+            {
+                Args.UiManager.Hide<ContentWidgetController>();
+            }
+        }
+        
         protected override void OnHideComplete(bool isClosed)
         {
             View.DisableAll();

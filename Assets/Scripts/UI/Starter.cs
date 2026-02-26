@@ -72,7 +72,11 @@ namespace core
             await _cardCollectionEntryPoint.WaitForInitializationAsync();
 
             _exchangePackProvider ??=
-                new ExchangePackProvider(_exchangePacksConfig, _cardCollectionEntryPoint.CardCollectionPointsAccount, _uiManager);
+                new ExchangePackProvider(
+                    _exchangePacksConfig,
+                    _cardCollectionEntryPoint.CardCollectionPointsAccount,
+                    _cardCollectionEntryPoint.CardPackProvider,
+                    _uiManager);
             
             var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
             var args = new CardCollectionArgs(

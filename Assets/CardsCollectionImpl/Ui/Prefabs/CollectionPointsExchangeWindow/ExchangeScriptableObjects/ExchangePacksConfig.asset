@@ -16,9 +16,12 @@ MonoBehaviour:
   - Id: SmallPack
     Sprite: {fileID: 21300000, guid: a34d6b812b764a24eb44ab4b3984a37d, type: 3}
     PackPrice: 100
+    RewardEntry: {fileID: 11400000, guid: ef7d90156144bd94cb9632922c6bd83f, type: 2}
   - Id: MiddlePack
     Sprite: {fileID: 21300000, guid: d06ab8344710c644486d412f858a3c67, type: 3}
     PackPrice: 250
+    RewardEntry: {fileID: 11400000, guid: 683a834175da7724c8b972d7444279dd, type: 2}
   - Id: BigPack
     Sprite: {fileID: 21300000, guid: ad6290e5e00b7b54c89272c27b5a5661, type: 3}
     PackPrice: 500
+    RewardEntry: {fileID: 11400000, guid: 1c65f95b4a7edb14eb848397e9b10473, type: 2}

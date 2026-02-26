@@ -27,6 +27,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1092e3bfb2feca44294c05bc48c5b989
+    m_Address: Ruby_Pack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1a446817ead67a04c8cdc20caf74a5a1
     m_Address: Element3
     m_ReadOnly: 0
@@ -72,6 +77,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3cb0d1854023f914582a5f5735c936b7
+    m_Address: Ruby_Pack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 46806fdc6ca128d46972600a49df3ffc
+    m_Address: Sapphire_Pack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 489ed91ed2ef77644a3faa9312b520b6
     m_Address: Element9
     m_ReadOnly: 0
@@ -107,6 +122,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6d8515a205588524f8bff84418cc9b3f
+    m_Address: Emerald_Pack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 815efc91fda3c0043abbe08b12a9c143
     m_Address: Element14
     m_ReadOnly: 0
@@ -119,6 +139,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 864ff63eaaece96438a50c15a268c2ea
     m_Address: icon_potion_blue
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9e9881d78756a504da763c5f6e644412
+    m_Address: Lazurite_Pack
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
