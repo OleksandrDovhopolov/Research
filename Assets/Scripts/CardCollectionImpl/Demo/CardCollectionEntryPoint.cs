@@ -10,7 +10,9 @@ namespace core
     {
         private CardCollectionModule _cardCollectionModule;
         private ICardPackProvider _cardPackProvider;
+        private CardCollectionRewardHandler _rewardHandler;
         private Exception _initializationException;
+        private readonly UniTaskCompletionSource _rewardHandlerInitializationSource = new();
 
         private readonly UniTaskCompletionSource _initializationSource = new();
 
@@ -24,6 +26,31 @@ namespace core
         public ICardPackProvider CardPackProvider => GetInitializedCardPackProvider();
 
         public event Action<Exception> OnInitializationFailed;
+
+        public async UniTask InitializeRewardHandlerAsync(ResourceManager resourceManager, CancellationToken ct = default)
+        {
+            try
+            {
+                _rewardHandler = new CardCollectionRewardHandler(resourceManager);
+                await _rewardHandler.InitializeAsync(ct);
+                _rewardHandlerInitializationSource.TrySetResult();
+            }
+            catch (OperationCanceledException)
+            {
+                _rewardHandlerInitializationSource.TrySetCanceled(ct);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _rewardHandlerInitializationSource.TrySetException(ex);
+                throw;
+            }
+        }
+
+        public UniTask WaitForRewardHandlerInitializationAsync(CancellationToken ct = default)
+        {
+            return _rewardHandlerInitializationSource.Task.AttachExternalCancellation(ct);
+        }
 
         private void Awake()
         {
@@ -95,12 +122,20 @@ namespace core
 
         private void GroupCompletedHandler(CardGroupCompletedData groupCompletedData)
         {
-            Debug.LogWarning($"Debug groupCompletedData.GroupId {groupCompletedData.GroupId}");
+            Debug.LogWarning($"Debug groupCompletedData {groupCompletedData.GroupId}");
+            if (_rewardHandler == null) return;
+            if (_rewardHandler.TryHandleGroupCompleted(groupCompletedData))
+            {
+                
+            }
         }
 
         private void OnDestroy()
         {
-            _cardCollectionModule.OnGroupCompleted -= GroupCompletedHandler;
+            if (_cardCollectionModule != null)
+            {
+                _cardCollectionModule.OnGroupCompleted -= GroupCompletedHandler;
+            }
         }
     }
 }

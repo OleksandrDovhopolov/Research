@@ -28,6 +28,7 @@ namespace core
         {
             Application.targetFrameRate = 60;
             _destroyCt = this.GetCancellationTokenOnDestroy();
+            _cardCollectionEntryPoint.InitializeRewardHandlerAsync(_resourceManager, _destroyCt).Forget();
         }
 
         private void Start()
@@ -71,6 +72,7 @@ namespace core
         private async UniTask OpenCardCollectionWindow()
         {
             await _cardCollectionEntryPoint.WaitForInitializationAsync();
+            await _cardCollectionEntryPoint.WaitForRewardHandlerInitializationAsync(_destroyCt);
 
             _exchangeOfferProvider ??=
                 new ExchangeOfferProvider(

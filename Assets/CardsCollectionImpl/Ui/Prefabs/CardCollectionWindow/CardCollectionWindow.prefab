@@ -390,6 +390,7 @@ MonoBehaviour:
     prefab: {fileID: 311882119123826984, guid: 577c884bdb2a6b24785464edb79d11c6, type: 3}
     parent: {fileID: 2875479666885025632}
   _loadingAnimationObject: {fileID: 7320407409903046746}
+  _cardCollectionRewardsConfigSo: {fileID: 11400000, guid: 4673902ec1e84e64b84f93d6221f6cb7, type: 2}
   _cardsCollectionPointsView: {fileID: 5551365562229027960}
 --- !u!114 &-4344370285081404344
 MonoBehaviour:

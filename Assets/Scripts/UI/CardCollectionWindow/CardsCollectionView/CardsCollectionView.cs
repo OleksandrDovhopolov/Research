@@ -53,6 +53,12 @@ namespace core
             _collectedSlider.fillAmount = (float)collectedAmount / totalAmount;;
             _grouoCollectedAmountText.text = collectedAmount.ToString();
         }
+
+        public void SetRewardData(Sprite sprite, int amount)
+        {
+            _grouoRewardImage.sprite = sprite;
+            _groupRewardAmountText.text = amount.ToString();
+        }
         
         private void OnDestroy()
         {

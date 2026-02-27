@@ -11,6 +11,7 @@ namespace core
     {
         [SerializeField] private UIListPool<CardsCollectionView> _cardGroupsPool;
         [SerializeField] private GameObject _loadingAnimationObject;
+        [SerializeField] private CardCollectionRewardsConfigSO _cardCollectionRewardsConfigSo;
         
         [Header("Points Container")]
         [SerializeField] private CardsCollectionPointsView _cardsCollectionPointsView;
@@ -50,6 +51,9 @@ namespace core
                 var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
                 
                 groupView.SetData(groupType, groupName, collectedGroupAmount, totalGroupAmount);
+                var rewardViewData = CreateRewardViewData(groupType);
+                groupView.SetRewardData(rewardViewData.Icon, rewardViewData.Amount);
+                
                 groupView.OnButtonPressed += OnButtonPressedHandler;
                 
                 _viewsDict.Add(groupsConfig.GroupType, groupView);
@@ -66,6 +70,7 @@ namespace core
                 var groupType = groupView.GroupType;
                 var totalGroupAmount = collectionData.GetGroupAmount(groupType);
                 var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
+                
                 groupView.UpdateCollectedAmount(collectedGroupAmount, totalGroupAmount);
                 
                 var newCardsAmount = collectionData.GetNewGroupAmount(groupType);
@@ -89,6 +94,26 @@ namespace core
                 config => _viewsDict.TryGetValue(config.GroupType, out var view) ? view : null,
                 (view, sprite) => view.SetSprite(sprite),
                 config => config.GroupIcon);
+        }
+
+        private RewardViewData CreateRewardViewData(string groupType)
+        {
+            if (string.IsNullOrEmpty(groupType) || _cardCollectionRewardsConfigSo?.GroupRewards == null)
+            {
+                return RewardViewData.Empty;
+            }
+
+            foreach (var rewardDefinition in _cardCollectionRewardsConfigSo.GroupRewards)
+            {
+                if (!string.Equals(rewardDefinition.GroupId, groupType, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                return new RewardViewData(rewardDefinition.RewardId, rewardDefinition.Icon, rewardDefinition.Amount);
+            }
+
+            return RewardViewData.Empty;
         }
         
         private void OnButtonPressedHandler(string groupType)
@@ -115,6 +140,22 @@ namespace core
             foreach (var view in _viewsDict.Values)
             {
                 view.OnButtonPressed -= OnButtonPressedHandler;
+            }
+        }
+
+        private readonly struct RewardViewData
+        {
+            public static RewardViewData Empty => new(string.Empty, null, 0);
+
+            public readonly string Id;
+            public readonly Sprite Icon;
+            public readonly int Amount;
+
+            public RewardViewData(string id, Sprite icon, int amount)
+            {
+                Id = id;
+                Icon = icon;
+                Amount = amount;
             }
         }
     }
