@@ -77,6 +77,8 @@ namespace core
                 _cardCollectionModule = new CardCollectionModule(config);
                 await _cardCollectionModule.InitializeAsync(ct);
 
+                _cardCollectionModule.OnGroupCompleted += GroupCompletedHandler;
+                
                 _initializationSource.TrySetResult();
             }
             catch (OperationCanceledException)
@@ -89,6 +91,16 @@ namespace core
                 _initializationSource.TrySetException(ex);
                 OnInitializationFailed?.Invoke(ex);
             }
+        }
+
+        private void GroupCompletedHandler(CardGroupCompletedData groupCompletedData)
+        {
+            Debug.LogWarning($"Debug groupCompletedData.GroupId {groupCompletedData.GroupId}");
+        }
+
+        private void OnDestroy()
+        {
+            _cardCollectionModule.OnGroupCompleted -= GroupCompletedHandler;
         }
     }
 }

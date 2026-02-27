@@ -6,10 +6,20 @@ using UnityEngine;
 
 namespace CardCollection.Core
 {
-    public sealed class CardCollectionModule : ICardCollectionModule, ICardCollectionReader, ICardCollectionUpdater, ICardCollectionPointsAccount, IDisposable
+    public sealed class CardCollectionModule : 
+        ICardCollectionModule, 
+        ICardCollectionReader, 
+        ICardCollectionUpdater, 
+        ICardCollectionPointsAccount, 
+        ICardGroupCompletionNotifier,
+        IDisposable
     {
         private readonly CardCollectionContext _context;
         private readonly CardSelectionContext _selectionContext;
+        
+        private GroupCompletionTracker _groupCompletionTracker;
+        
+        public event Action<CardGroupCompletedData> OnGroupCompleted;
         
         public CardCollectionModule(CardCollectionModuleConfig  config)
         {
@@ -17,7 +27,15 @@ namespace CardCollection.Core
             _selectionContext = new CardSelectionContext(this);
         }
 
-        public UniTask InitializeAsync(CancellationToken ct = default) => _context.InitializeAsync(ct);
+        public async UniTask InitializeAsync(CancellationToken ct = default)
+        {
+            await _context.InitializeAsync(ct);
+
+            var allDefinitions = _context.GetCardDefinitions();
+            var progressData = await _context.LoadAsync(_context.DefaultEventId, ct);
+            
+            _groupCompletionTracker = new GroupCompletionTracker(allDefinitions, progressData);
+        }
 
         public List<CardPack> GetAllPacks() => _context.GetAllPacks();
 
@@ -42,6 +60,7 @@ namespace CardCollection.Core
             {
                 await AwardDuplicateCardPointsAsync(cardPack, cardIds, ct);
                 await _context.UnlockCardsAsync(_context.DefaultEventId, cardIds, ct);
+                NotifyCompletedGroups(cardIds);
             }
 
             return cardIds;
@@ -106,6 +125,7 @@ namespace CardCollection.Core
             try
             {
                 await _context.UnlockCardAsync(_context.DefaultEventId, cardId, ct);
+                NotifyCompletedGroups(new[] { cardId });
             }
             catch (OperationCanceledException)
             {
@@ -130,6 +150,7 @@ namespace CardCollection.Core
                 }
 
                 await _context.SaveAsync(cardCollectionData, ct);
+                _groupCompletionTracker?.ResetFromProgress(cardCollectionData);
             }
             catch (OperationCanceledException)
             {
@@ -183,6 +204,7 @@ namespace CardCollection.Core
             try
             {
                 await _context.ClearCollectionAsync(ct);
+                _groupCompletionTracker?.ResetFromProgress(new EventCardsSaveData { EventId = _context.DefaultEventId });
             }
             catch (OperationCanceledException)
             {
@@ -195,5 +217,19 @@ namespace CardCollection.Core
         }
         
         #endregion
+
+        private void NotifyCompletedGroups(IReadOnlyCollection<string> openedCardIds)
+        {
+            if (_groupCompletionTracker == null || openedCardIds == null || openedCardIds.Count == 0)
+            {
+                return;
+            }
+
+            var completedGroupIds = _groupCompletionTracker.RegisterOpenedCards(openedCardIds);
+            foreach (var groupId in completedGroupIds)
+            {
+                OnGroupCompleted?.Invoke(new CardGroupCompletedData { GroupId = groupId });
+            }
+        }
     }
 }
