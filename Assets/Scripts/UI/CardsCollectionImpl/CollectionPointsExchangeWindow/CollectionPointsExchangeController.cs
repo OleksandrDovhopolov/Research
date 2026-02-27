@@ -13,9 +13,11 @@ namespace core
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
         public readonly Action OnPointsAmountChangedHandler;
         
-        public CollectionPointsExchangeArgs(UIManager uiManager,
+        public CollectionPointsExchangeArgs(
+            UIManager uiManager,
             int pointsAmount,
-            IExchangeOfferProvider exchangeOfferProvider, Action onPointsAmountChangedHandler)
+            IExchangeOfferProvider exchangeOfferProvider, 
+            Action onPointsAmountChangedHandler)
         {
             UiManager = uiManager;
             PointsAmount = pointsAmount;

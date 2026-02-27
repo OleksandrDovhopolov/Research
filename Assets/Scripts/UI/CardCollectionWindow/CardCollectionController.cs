@@ -32,11 +32,9 @@ namespace core
         private CardCollectionArgs Args => (CardCollectionArgs) Arguments;
         
         private bool _groupsCreated;
-        private int _currentPoints;
         
         protected override void OnShowStart()
         {
-            _currentPoints = Args.EventCardsSaveData.Points;
             UpdatePointsAmount();
             
             if (_groupsCreated)
@@ -64,7 +62,7 @@ namespace core
         {
             var args = new CollectionPointsExchangeArgs(
                 Args.UiManager,
-                _currentPoints,
+                Args.EventCardsSaveData.Points,
                 Args.ExchangeOfferProvider, UpdatePointsAmount);
             Args.UiManager.Show<CollectionPointsExchangeController>(args);
         }

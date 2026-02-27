@@ -11,6 +11,18 @@ namespace core
 {
     public class ContentWidgetView : WindowView 
     {
+        private readonly struct SpriteLoadRequest
+        {
+            public readonly ContentItemView View;
+            public readonly string Address;
+
+            public SpriteLoadRequest(ContentItemView view, string address)
+            {
+                View = view;
+                Address = address;
+            }
+        }
+
         private const int ContentWidgetHideDelay = 10;
         
         [SerializeField] private UIListPool<ContentItemView> _itemsPool;
@@ -57,50 +69,81 @@ namespace core
             _loadSpritesCts?.Dispose();
             _loadSpritesCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
 
-            LoadContentSpritesSequentially(offerContent, _loadSpritesCts.Token).Forget();
+            var packRequests = CreateCardPacksViews(offerContent);
+            var resourceRequests = CreateResourcesViews(offerContent);
+            LoadContentSpritesSequentially(packRequests, resourceRequests, _loadSpritesCts.Token).Forget();
 
             return _itemsPool.ActiveElements().Count();
         }
 
-        private async UniTask LoadContentSpritesSequentially(BaseOfferContent offerContent, CancellationToken ct)
+        private async UniTask LoadContentSpritesSequentially(
+            SpriteLoadRequest[] packRequests,
+            SpriteLoadRequest[] resourceRequests,
+            CancellationToken ct)
         {
             try
             {
-                await LoadCarkPacksSprites(offerContent, ct);
-                await LoadResourcesSprites(offerContent, ct);
+                await LoadSprites(packRequests, ct);
+                await LoadSprites(resourceRequests, ct);
             }
             catch (OperationCanceledException)
             {
             }
         }
 
-        private async UniTask LoadCarkPacksSprites(BaseOfferContent offerContent, CancellationToken ct)
+        private SpriteLoadRequest[] CreateCardPacksViews(BaseOfferContent offerContent)
         {
-            if (offerContent.CardPack != null)
+            if (offerContent.CardPack == null || offerContent.CardPack.Count == 0)
             {
-                foreach (var cardPack in offerContent.CardPack)
-                {
-                    ct.ThrowIfCancellationRequested();
-                    var contentView = _itemsPool.GetNext();
-                    
-                    var sprite = await AddressablesWrapper.LoadFromTask<Sprite>(cardPack.PackId);
-                    contentView.SetSprite(sprite);
-                    contentView.SetText($"x1");
-                }
+                return Array.Empty<SpriteLoadRequest>();
             }
+
+            var requests = new SpriteLoadRequest[offerContent.CardPack.Count];
+            for (var i = 0; i < offerContent.CardPack.Count; i++)
+            {
+                var cardPack = offerContent.CardPack[i];
+                var contentView = _itemsPool.GetNext();
+                contentView.SetText("x1");
+                contentView.SetLoadingActive(true);
+                requests[i] = new SpriteLoadRequest(contentView, cardPack.PackId);
+            }
+
+            return requests;
         }
 
-        private async UniTask LoadResourcesSprites(BaseOfferContent offerContent, CancellationToken ct)
+        private SpriteLoadRequest[] CreateResourcesViews(BaseOfferContent offerContent)
         {
-            if (offerContent.Resources != null)
+            if (offerContent.Resources == null || offerContent.Resources.Count == 0)
             {
-                foreach (var contentResource in offerContent.Resources)
+                return Array.Empty<SpriteLoadRequest>();
+            }
+
+            var requests = new SpriteLoadRequest[offerContent.Resources.Count];
+            for (var i = 0; i < offerContent.Resources.Count; i++)
+            {
+                var contentResource = offerContent.Resources[i];
+                var contentView = _itemsPool.GetNext();
+                contentView.SetText($"x{Mathf.Max(1, contentResource.Amount)}");
+                contentView.SetLoadingActive(true);
+                requests[i] = new SpriteLoadRequest(contentView, contentResource.Type.ToString());
+            }
+
+            return requests;
+        }
+
+        private static async UniTask LoadSprites(SpriteLoadRequest[] requests, CancellationToken ct)
+        {
+            foreach (var request in requests)
+            {
+                ct.ThrowIfCancellationRequested();
+                try
                 {
-                    ct.ThrowIfCancellationRequested();
-                    var contentView = _itemsPool.GetNext();
-                    var sprite = await AddressablesWrapper.LoadFromTask<Sprite>(contentResource.Type.ToString());
-                    contentView.SetSprite(sprite);
-                    contentView.SetText($"x{Mathf.Max(1, contentResource.Amount)}");
+                    var sprite = await AddressablesWrapper.LoadFromTask<Sprite>(request.Address);
+                    request.View.SetSprite(sprite);
+                }
+                finally
+                {
+                    request.View.SetLoadingActive(false);
                 }
             }
         }
