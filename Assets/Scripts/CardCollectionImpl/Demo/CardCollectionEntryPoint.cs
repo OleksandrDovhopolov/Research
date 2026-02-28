@@ -105,6 +105,7 @@ namespace core
                 await _cardCollectionModule.InitializeAsync(ct);
 
                 _cardCollectionModule.OnGroupCompleted += GroupCompletedHandler;
+                _cardCollectionModule.OnCollectionCompleted += CollectionCompletedHandler;
                 
                 _initializationSource.TrySetResult();
             }
@@ -127,11 +128,19 @@ namespace core
                 Debug.LogWarning($"Failed to handler reward event. CardCollectionRewardHandler is null. Group id = {groupCompletedData.GroupId}");
                 return;
             }
-            
-            if (_rewardHandler.TryHandleGroupCompleted(groupCompletedData))
+
+            _rewardHandler.TryHandleGroupCompleted(groupCompletedData);
+        }
+
+        private void CollectionCompletedHandler(CardCollectionCompletedData collectionCompletedData)
+        {
+            if (_rewardHandler == null)
             {
-                
+                Debug.LogWarning("Failed to handle collection-completed reward event. CardCollectionRewardHandler is null.");
+                return;
             }
+
+            _rewardHandler.TryHandleCollectionCompleted(collectionCompletedData);
         }
 
         private void OnDestroy()
@@ -139,6 +148,7 @@ namespace core
             if (_cardCollectionModule != null)
             {
                 _cardCollectionModule.OnGroupCompleted -= GroupCompletedHandler;
+                _cardCollectionModule.OnCollectionCompleted -= CollectionCompletedHandler;
             }
         }
     }

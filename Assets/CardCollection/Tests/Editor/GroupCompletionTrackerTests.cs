@@ -71,6 +71,33 @@ namespace CardCollection.Tests
             CollectionAssert.AreEquivalent(new[] { "group-a" }, afterResetCompletion);
         }
 
+        [Test]
+        public void IsAllGroupsCompleted_WhenNotAllGroupsCompleted_ReturnsFalse()
+        {
+            var tracker = new GroupCompletionTracker(
+                CreateDefinitions(("a1", "group-a"), ("a2", "group-a"), ("b1", "group-b"), ("b2", "group-b")),
+                CreateProgress(("a1", true), ("a2", true), ("b1", true), ("b2", false)));
+
+            Assert.False(tracker.IsAllGroupsCompleted);
+            Assert.AreEqual(2, tracker.TotalGroupsCount);
+            Assert.AreEqual(1, tracker.CompletedGroupsCount);
+        }
+
+        [Test]
+        public void IsAllGroupsCompleted_WhenAllGroupsCompleted_ReturnsTrue()
+        {
+            var tracker = new GroupCompletionTracker(
+                CreateDefinitions(("a1", "group-a"), ("a2", "group-a"), ("b1", "group-b"), ("b2", "group-b")),
+                CreateProgress(("a1", true), ("a2", true), ("b1", true), ("b2", false)));
+
+            tracker.RegisterOpenedCards(new[] { "b2" });
+
+            Assert.True(tracker.IsAllGroupsCompleted);
+            Assert.AreEqual(2, tracker.TotalGroupsCount);
+            Assert.AreEqual(2, tracker.CompletedGroupsCount);
+            Assert.AreEqual(4, tracker.TotalTrackedCardsCount);
+        }
+
         private static List<CardDefinition> CreateDefinitions(params (string id, string groupId)[] cards)
         {
             var definitions = new List<CardDefinition>(cards.Length);

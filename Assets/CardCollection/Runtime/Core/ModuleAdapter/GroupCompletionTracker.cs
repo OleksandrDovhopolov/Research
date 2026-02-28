@@ -9,6 +9,11 @@ namespace CardCollection.Core
         private readonly HashSet<string> _unlockedCardIds = new();
         private readonly HashSet<string> _completedGroupIds = new();
 
+        public int TotalGroupsCount => _groupCardIds.Count;
+        public int CompletedGroupsCount => _completedGroupIds.Count;
+        public int TotalTrackedCardsCount => _groupByCardId.Count;
+        public bool IsAllGroupsCompleted => TotalGroupsCount > 0 && CompletedGroupsCount >= TotalGroupsCount;
+
         public GroupCompletionTracker(List<CardDefinition> allDefinitions, EventCardsSaveData progressData)
         {
             BuildGroupCache(allDefinitions);

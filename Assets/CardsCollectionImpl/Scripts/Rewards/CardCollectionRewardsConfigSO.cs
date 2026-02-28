@@ -9,5 +9,6 @@ namespace core
     public class CardCollectionRewardsConfigSO : ScriptableObject
     {
         public GroupRewardDefinition[] GroupRewards;
+        public CollectionRewardDefinition CollectionReward;
     }
 }

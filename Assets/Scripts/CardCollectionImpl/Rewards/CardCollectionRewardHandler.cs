@@ -13,6 +13,7 @@ namespace core
 
         private readonly ResourceManager _resourceManager;
         private Dictionary<string, GameResource> _groupRewardByGroupId = new(StringComparer.Ordinal);
+        private GameResource _collectionReward;
         private bool _isInitialized;
 
         public CardCollectionRewardHandler(ResourceManager resourceManager)
@@ -44,6 +45,7 @@ namespace core
                 }
 
                 _groupRewardByGroupId = BuildGroupRewards(config.GroupRewards);
+                _collectionReward = BuildCollectionReward(config.CollectionReward);
                 _isInitialized = true;
             }
             catch (OperationCanceledException)
@@ -77,6 +79,17 @@ namespace core
             }
             
             return false;
+        }
+
+        public bool TryHandleCollectionCompleted(CardCollectionCompletedData collectionCompletedData)
+        {
+            if (!_isInitialized)
+            {
+                Debug.LogError("[CardCollectionRewardHandler] Rewards config is not loaded. Call InitializeAsync before handling rewards.");
+                return false;
+            }
+
+            return TryApplyReward(_collectionReward);
         }
 
         private bool TryApplyReward(GameResource reward)
@@ -120,6 +133,21 @@ namespace core
             }
             
             return result;
+        }
+
+        private static GameResource BuildCollectionReward(CollectionRewardDefinition rewardDefinition)
+        {
+            if (rewardDefinition.Amount <= 0)
+            {
+                return null;
+            }
+
+            if (!Enum.TryParse(rewardDefinition.RewardId, true, out ResourceType resourceType))
+            {
+                return null;
+            }
+
+            return new GameResource(resourceType, rewardDefinition.Amount);
         }
     }
 }

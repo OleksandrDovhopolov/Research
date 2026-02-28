@@ -12,14 +12,17 @@ namespace CardCollection.Core
         ICardCollectionUpdater, 
         ICardCollectionPointsAccount, 
         ICardGroupCompletionNotifier,
+        ICardCollectionCompletionNotifier,
         IDisposable
     {
         private readonly CardCollectionContext _context;
         private readonly CardSelectionContext _selectionContext;
         
         private GroupCompletionTracker _groupCompletionTracker;
+        private bool _isCollectionCompleted;
         
         public event Action<CardGroupCompletedData> OnGroupCompleted;
+        public event Action<CardCollectionCompletedData> OnCollectionCompleted;
         
         public CardCollectionModule(CardCollectionModuleConfig  config)
         {
@@ -35,6 +38,7 @@ namespace CardCollection.Core
             var progressData = await _context.LoadAsync(_context.DefaultEventId, ct);
             
             _groupCompletionTracker = new GroupCompletionTracker(allDefinitions, progressData);
+            _isCollectionCompleted = _groupCompletionTracker.IsAllGroupsCompleted;
         }
 
         public List<CardPack> GetAllPacks() => _context.GetAllPacks();
@@ -61,6 +65,7 @@ namespace CardCollection.Core
                 await AwardDuplicateCardPointsAsync(cardPack, cardIds, ct);
                 await _context.UnlockCardsAsync(_context.DefaultEventId, cardIds, ct);
                 NotifyCompletedGroups(cardIds);
+                NotifyCollectionCompleted();
             }
 
             return cardIds;
@@ -126,6 +131,7 @@ namespace CardCollection.Core
             {
                 await _context.UnlockCardAsync(_context.DefaultEventId, cardId, ct);
                 NotifyCompletedGroups(new[] { cardId });
+                NotifyCollectionCompleted();
             }
             catch (OperationCanceledException)
             {
@@ -151,6 +157,7 @@ namespace CardCollection.Core
 
                 await _context.SaveAsync(cardCollectionData, ct);
                 _groupCompletionTracker?.ResetFromProgress(cardCollectionData);
+                _isCollectionCompleted = _groupCompletionTracker?.IsAllGroupsCompleted == true;
             }
             catch (OperationCanceledException)
             {
@@ -204,7 +211,9 @@ namespace CardCollection.Core
             try
             {
                 await _context.ClearCollectionAsync(ct);
-                _groupCompletionTracker?.ResetFromProgress(new EventCardsSaveData { EventId = _context.DefaultEventId });
+                var emptyData = new EventCardsSaveData { EventId = _context.DefaultEventId };
+                _groupCompletionTracker?.ResetFromProgress(emptyData);
+                _isCollectionCompleted = _groupCompletionTracker?.IsAllGroupsCompleted == true;
             }
             catch (OperationCanceledException)
             {
@@ -229,6 +238,23 @@ namespace CardCollection.Core
             foreach (var groupId in completedGroupIds)
             {
                 OnGroupCompleted?.Invoke(new CardGroupCompletedData { GroupId = groupId });
+            }
+        }
+
+        private void NotifyCollectionCompleted()
+        {
+            if (_groupCompletionTracker == null || _isCollectionCompleted)
+            {
+                return;
+            }
+
+            if (_groupCompletionTracker.IsAllGroupsCompleted)
+            {
+                _isCollectionCompleted = true;
+                OnCollectionCompleted?.Invoke(new CardCollectionCompletedData
+                {
+                    EventId = _context.DefaultEventId,
+                });
             }
         }
     }
