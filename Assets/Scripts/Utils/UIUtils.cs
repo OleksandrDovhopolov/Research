@@ -1,13 +1,34 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace core
 {
-    public static  class UIUtils
+    public static class UIUtils
     {
+        public static RewardViewData CreateRewardViewData(CardCollectionRewardsConfigSO so, string groupType)
+        {
+            if (string.IsNullOrEmpty(groupType) || so.GroupRewards == null || so.GroupRewards.Length == 0)
+            {
+                return RewardViewData.Empty;
+            }
+
+            foreach (var rewardDefinition in so.GroupRewards)
+            {
+                if (!string.Equals(rewardDefinition.GroupId, groupType, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                return new RewardViewData(rewardDefinition.RewardId, rewardDefinition.Icon, rewardDefinition.Amount);
+            }
+
+            return RewardViewData.Empty;
+        }
+        
         public static Vector2 ConvertWorldToLocalOfTargetParent(RectTransform source, RectTransform target)
         {
             var dstParent = (RectTransform)target.parent;

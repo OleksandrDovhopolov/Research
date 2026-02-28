@@ -3,7 +3,6 @@ using System.Linq;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
-using UnityEngine;
 
 namespace core
 {
@@ -13,26 +12,20 @@ namespace core
         public readonly UIManager UiManager;
         public readonly ICardCollectionModule CardCollectionModule;
         public readonly EventCardsSaveData EventCardsSaveData;
-        public readonly List<CardProgressData> GroupData;
-        public readonly int CollectedAmount;
-        public readonly int TotalAmount;
+        public readonly CardCollectionRewardsConfigSO RewardsConfigSo;
         
         public CardGroupArgs(
             UIManager uiManager, 
             ICardCollectionModule cardCollectionModule, 
             EventCardsSaveData eventCardsSaveData,
-            string groupType, 
-            List<CardProgressData> groupData,
-            int collectedAmount,
-            int totalAmount)
+            string groupType,
+            CardCollectionRewardsConfigSO rewardsConfigSo)
         {
             GroupType = groupType;
             UiManager = uiManager;
             CardCollectionModule = cardCollectionModule;
             EventCardsSaveData = eventCardsSaveData;
-            GroupData = groupData;
-            CollectedAmount = collectedAmount;
-            TotalAmount = totalAmount;
+            RewardsConfigSo = rewardsConfigSo;
         }
     }
     
@@ -40,6 +33,8 @@ namespace core
     public class CardGroupController :  WindowController<CardGroupView>
     {
         private CardGroupArgs Args => (CardGroupArgs) Arguments;
+
+        private List<CardProgressData> GroupCardsData => Args.EventCardsSaveData.GetCardsByGroupType(_currentGroupType);
         
         private List<CardGroupsConfig> _allGroups;
         private int _currentGroupIndex;
@@ -51,18 +46,26 @@ namespace core
             _currentGroupType = Args.GroupType;
             _currentGroupIndex = _allGroups.FindIndex(g => g.GroupType == _currentGroupType);
             
-            ShowCurrentGroup(Args.GroupData);
+            ShowCurrentGroup();
         }
         
-        private void ShowCurrentGroup(List<CardProgressData> groupData)
+        private void ShowCurrentGroup()
         {
-            View.CreateDataViews(_currentGroupType, groupData);
+            SetRewardData();
+            
+            View.CreateDataViews(_currentGroupType, GroupCardsData);
             
             UpdateGroupViewData();
             UpdateCardSprites();
-            ResetNewFlag(groupData);
+            ResetNewFlag(GroupCardsData);
         }
 
+        private void SetRewardData()
+        {
+            var rewardViewData = UIUtils.CreateRewardViewData(Args.RewardsConfigSo, _currentGroupType);
+            View.SetRewardData(rewardViewData.Icon, rewardViewData.Amount);
+        }
+        
         private void ResetNewFlag(List<CardProgressData> groupData)
         {
             foreach (var cardData in groupData.Where(cardData => cardData.IsNew))
@@ -125,6 +128,8 @@ namespace core
         
         private void UpdateGroupViewData()
         {
+            SetRewardData();
+            
             var collectionNumberText = "Set " + (_currentGroupIndex + 1) + "/" + _allGroups.Count;
             View.SetCollectionNumber(collectionNumberText);
             

@@ -17,6 +17,8 @@ namespace core
         [SerializeField] private CardsCollectionPointsView _cardsCollectionPointsView;
         
         private readonly Dictionary<string, CardsCollectionView> _viewsDict = new();
+
+        public CardCollectionRewardsConfigSO RewardsConfigSo => _cardCollectionRewardsConfigSo;
         
         public event Action<string> OnGroupButtonPressed;
         public event Action OnPointsViewClicked;
@@ -51,7 +53,7 @@ namespace core
                 var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
                 
                 groupView.SetData(groupType, groupName, collectedGroupAmount, totalGroupAmount);
-                var rewardViewData = CreateRewardViewData(groupType);
+                var rewardViewData = UIUtils.CreateRewardViewData(_cardCollectionRewardsConfigSo, groupType);
                 groupView.SetRewardData(rewardViewData.Icon, rewardViewData.Amount);
                 
                 groupView.OnButtonPressed += OnButtonPressedHandler;
@@ -98,7 +100,7 @@ namespace core
 
         private RewardViewData CreateRewardViewData(string groupType)
         {
-            if (string.IsNullOrEmpty(groupType) || _cardCollectionRewardsConfigSo?.GroupRewards == null)
+            if (string.IsNullOrEmpty(groupType) || _cardCollectionRewardsConfigSo.GroupRewards == null || _cardCollectionRewardsConfigSo.GroupRewards.Length == 0)
             {
                 return RewardViewData.Empty;
             }
@@ -140,22 +142,6 @@ namespace core
             foreach (var view in _viewsDict.Values)
             {
                 view.OnButtonPressed -= OnButtonPressedHandler;
-            }
-        }
-
-        private readonly struct RewardViewData
-        {
-            public static RewardViewData Empty => new(string.Empty, null, 0);
-
-            public readonly string Id;
-            public readonly Sprite Icon;
-            public readonly int Amount;
-
-            public RewardViewData(string id, Sprite icon, int amount)
-            {
-                Id = id;
-                Icon = icon;
-                Amount = amount;
             }
         }
     }

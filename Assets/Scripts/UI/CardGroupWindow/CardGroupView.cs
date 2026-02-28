@@ -30,6 +30,8 @@ namespace core
         [Space, Space, Header("GroupReward")]
         [SerializeField] private Image _collectedSlider;
         [SerializeField] private TextMeshProUGUI _groupCollectedAmountText;
+        [SerializeField] private Image _grouoRewardImage;
+        [SerializeField] private TextMeshProUGUI _groupRewardAmountText;
 
         private readonly Dictionary<CardCollectionConfig, CollectionCardView> _viewsDict = new();
         
@@ -90,6 +92,12 @@ namespace core
         {
             _collectedSlider.fillAmount = (float)collectedAmount / totalAmount;;
             _groupCollectedAmountText.text = collectedAmount.ToString();
+        }
+        
+        public void SetRewardData(Sprite sprite, int amount)
+        {
+            _grouoRewardImage.sprite = sprite;
+            _groupRewardAmountText.text = amount.ToString();
         }
         
         public async UniTask SetSprites(List<CardCollectionConfig> cardsData)

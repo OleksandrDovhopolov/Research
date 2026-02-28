@@ -100,11 +100,7 @@ namespace core
         {
             View.UpdateGroupNewCards(groupType, 0);
             
-            var groupCards = Args.EventCardsSaveData.GetCardsByGroupType(groupType);
-            var collectedGroupAmount = Args.EventCardsSaveData.GetCollectedGroupAmount(groupType);
-            var totalGroupAmount = Args.EventCardsSaveData.GetGroupAmount(groupType);
-            
-            var args = new CardGroupArgs(Args.UiManager, Args.CardCollectionModule, Args.EventCardsSaveData, groupType, groupCards, collectedGroupAmount, totalGroupAmount);
+            var args = new CardGroupArgs(Args.UiManager, Args.CardCollectionModule, Args.EventCardsSaveData, groupType, View.RewardsConfigSo);
             Args.UiManager.Show<CardGroupController>(args);
         }
         
