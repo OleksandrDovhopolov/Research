@@ -122,8 +122,12 @@ namespace core
 
         private void GroupCompletedHandler(CardGroupCompletedData groupCompletedData)
         {
-            Debug.LogWarning($"Debug groupCompletedData {groupCompletedData.GroupId}");
-            if (_rewardHandler == null) return;
+            if (_rewardHandler == null)
+            {
+                Debug.LogWarning($"Failed to handler reward event. CardCollectionRewardHandler is null. Group id = {groupCompletedData.GroupId}");
+                return;
+            }
+            
             if (_rewardHandler.TryHandleGroupCompleted(groupCompletedData))
             {
                 

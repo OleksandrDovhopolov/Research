@@ -71,8 +71,12 @@ namespace core
                 return false;
             }
 
-            return _groupRewardByGroupId.TryGetValue(groupCompletedData.GroupId, out var reward)
-                   && TryApplyReward(reward);
+            if (_groupRewardByGroupId.TryGetValue(groupCompletedData.GroupId, out var reward))
+            {
+                return TryApplyReward(reward);
+            }
+            
+            return false;
         }
 
         private bool TryApplyReward(GameResource reward)
