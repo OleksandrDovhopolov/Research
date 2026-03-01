@@ -126,11 +126,6 @@ namespace core
 
                 result[rewardDefinition.GroupId] = new GameResource(resourceType, rewardDefinition.Amount);
             }
-
-            foreach (var kvp in result)
-            {
-                Debug.LogWarning($"Debug Test groupCompletedData {kvp.Key}");
-            }
             
             return result;
         }

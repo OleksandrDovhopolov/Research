@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
+using TMPro;
 using UISystem;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace core
 {
@@ -15,6 +17,10 @@ namespace core
         
         [Header("Points Container")]
         [SerializeField] private CardsCollectionPointsView _cardsCollectionPointsView;
+        
+        [Space, Space, Header("GroupReward")]
+        [SerializeField] private Image _collectedSlider;
+        [SerializeField] private TextMeshProUGUI _groupCollectedAmountText;
         
         private readonly Dictionary<string, CardsCollectionView> _viewsDict = new();
 
@@ -97,25 +103,11 @@ namespace core
                 (view, sprite) => view.SetSprite(sprite),
                 config => config.GroupIcon);
         }
-
-        private RewardViewData CreateRewardViewData(string groupType)
+        
+        public void UpdateCollectedAmount(int collectedAmount, int totalAmount)
         {
-            if (string.IsNullOrEmpty(groupType) || _cardCollectionRewardsConfigSo.GroupRewards == null || _cardCollectionRewardsConfigSo.GroupRewards.Length == 0)
-            {
-                return RewardViewData.Empty;
-            }
-
-            foreach (var rewardDefinition in _cardCollectionRewardsConfigSo.GroupRewards)
-            {
-                if (!string.Equals(rewardDefinition.GroupId, groupType, StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                return new RewardViewData(rewardDefinition.RewardId, rewardDefinition.Icon, rewardDefinition.Amount);
-            }
-
-            return RewardViewData.Empty;
+            _collectedSlider.fillAmount = (float)collectedAmount / totalAmount;;
+            _groupCollectedAmountText.text = collectedAmount + " / " + totalAmount;
         }
         
         private void OnButtonPressedHandler(string groupType)

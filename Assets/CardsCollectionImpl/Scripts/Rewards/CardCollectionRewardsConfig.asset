@@ -73,3 +73,7 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: d37846b1ca5494942a3b7328b7b99a42, type: 3}
     RewardId: Energy
     Amount: 54
+  CollectionReward:
+    Icon: {fileID: 21300000, guid: c18565495745b3445a73b61b12bea321, type: 3}
+    RewardId: 
+    Amount: 0

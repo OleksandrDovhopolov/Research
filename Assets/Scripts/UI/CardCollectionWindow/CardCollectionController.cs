@@ -46,6 +46,10 @@ namespace core
                 View.ShowLoader(true); 
                 View.CreateViews(Args.EventCardsSaveData);
             }
+            
+            var collectedAmount = Args.EventCardsSaveData.GetCollectedCardsAmount();
+            var totalAmount = Args.EventCardsSaveData.Cards.Count;
+            View.UpdateCollectedAmount(collectedAmount, totalAmount);
         }
         
         protected override void OnShowComplete()
