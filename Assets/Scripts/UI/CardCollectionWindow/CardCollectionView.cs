@@ -21,6 +21,8 @@ namespace core
         [Space, Space, Header("GroupReward")]
         [SerializeField] private Image _collectedSlider;
         [SerializeField] private TextMeshProUGUI _groupCollectedAmountText;
+        [SerializeField] private Button _collectionRewardButton;
+        [SerializeField] private RectTransform _collectionRewardButtonRect;
         
         private readonly Dictionary<string, CardsCollectionView> _viewsDict = new();
 
@@ -28,17 +30,24 @@ namespace core
         
         public event Action<string> OnGroupButtonPressed;
         public event Action OnPointsViewClicked;
+        public event Action<RectTransform> OnRewardChestClicked;
         
         private bool _groupsCreated;
 
         private void Start()
         {
             _cardsCollectionPointsView.OnViewClicked += OnPointsViewClickedHandler;
+            _collectionRewardButton.onClick.AddListener(OnRewardChestClickedHandler);
         }
 
         private void OnPointsViewClickedHandler()
         {
             OnPointsViewClicked?.Invoke();
+        }
+        
+        private void OnRewardChestClickedHandler()
+        {
+            OnRewardChestClicked?.Invoke(_collectionRewardButtonRect);
         }
         
         public void CreateViews(EventCardsSaveData collectionData)
@@ -130,6 +139,7 @@ namespace core
             base.OnDestroy();
             
             _cardsCollectionPointsView.OnViewClicked -= OnPointsViewClickedHandler;
+            _collectionRewardButton.onClick.RemoveAllListeners();
             
             foreach (var view in _viewsDict.Values)
             {

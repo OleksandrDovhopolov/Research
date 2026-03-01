@@ -56,14 +56,29 @@ namespace core
         {
             View.CloseClick += CloseWindow;
             View.OnPointsViewClicked += OnPointsViewClickedHandler;
+            View.OnRewardChestClicked += OnRewardChestClickedHandler;
             View.OnGroupButtonPressed += OnGroupButtonPressedHandler;
             
             if (_groupsCreated) return;
             CreateGroupViews().Forget();
         }
 
+        private void OnRewardChestClickedHandler(RectTransform rectTransform)
+        {
+            OnRewardChestClickedHandlerAsync(rectTransform).Forget();
+        }
+
+        private async UniTask OnRewardChestClickedHandlerAsync(RectTransform rectTransform)
+        {
+            var cardCollectionRewardContent = await Args.ExchangeOfferProvider.GetCollectionRewardData();
+            var args = new ContentWidgetArgs(Args.UiManager, cardCollectionRewardContent, rectTransform);
+            Args.UiManager.Show<ContentWidgetController>(args);
+        }
+        
         private void OnPointsViewClickedHandler()
         {
+            TryHideContentWidget();
+            
             var args = new CollectionPointsExchangeArgs(
                 Args.UiManager,
                 Args.EventCardsSaveData.Points,
@@ -93,15 +108,28 @@ namespace core
             View.UpdatePointsAmount(Args.EventCardsSaveData.Points);
         }
         
+        private void TryHideContentWidget()
+        {
+            if (Args.UiManager.IsWindowShown<ContentWidgetController>())
+            {
+                Args.UiManager.Hide<ContentWidgetController>();
+            }
+        }
+        
         protected override void OnHideStart(bool isClosed)
         {
+            TryHideContentWidget();
+            
             View.CloseClick -= CloseWindow;
             View.OnPointsViewClicked -= OnPointsViewClickedHandler;
+            View.OnRewardChestClicked -= OnRewardChestClickedHandler;
             View.OnGroupButtonPressed -= OnGroupButtonPressedHandler;
         }
 
         private void OnGroupButtonPressedHandler(string groupType)
         {
+            TryHideContentWidget();
+            
             View.UpdateGroupNewCards(groupType, 0);
             
             var args = new CardGroupArgs(Args.UiManager, Args.CardCollectionModule, Args.EventCardsSaveData, groupType, View.RewardsConfigSo);

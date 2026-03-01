@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UISystem;
@@ -9,7 +8,7 @@ using UnityEngine.UI;
 
 namespace core
 {
-    public class ContentWidgetView : WindowView 
+    public partial class ContentWidgetView : WindowView 
     {
         private readonly struct SpriteLoadRequest
         {
@@ -37,14 +36,24 @@ namespace core
         private RectTransform _contentRectTransform;
         private CancellationTokenSource _loadSpritesCts;
         
-        public void ShowContentView(BaseOfferContent offerContent, RectTransform contentRectTransform)
+        public void ShowContentView(OfferContent baseContent, RectTransform contentRectTransform)
         {
-            _contentRectTransform =  contentRectTransform;
+            _contentRectTransform = contentRectTransform;
             
             StopAllCoroutines();
 
-            var totalItems = Configurate(offerContent);
-            if (totalItems <= 0)
+            var viewItems = 0;
+            switch (baseContent)
+            {
+                case BaseOfferContent offerContent:
+                    viewItems = CreateAndGetOfferViews(offerContent);
+                    break;
+                case CardCollectionRewardContent cardCollectionRewardContent:
+                    viewItems = CreateAndGetOfferViews(cardCollectionRewardContent);
+                    break;
+            }
+            
+            if (viewItems <= 0)
             {
                 
                 Debug.LogWarning($"Failed to open content widget {GetType()}. _itemsPool count == 0");
@@ -56,26 +65,6 @@ namespace core
             StartCoroutine(HidePopupCoroutine());
         }
         
-        public int Configurate(BaseOfferContent offerContent)
-        {
-            _itemsPool.DisableAll();
-
-            if (offerContent == null)
-            {
-                return 0;
-            }
-
-            _loadSpritesCts?.Cancel();
-            _loadSpritesCts?.Dispose();
-            _loadSpritesCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
-
-            var packRequests = CreateCardPacksViews(offerContent);
-            var resourceRequests = CreateResourcesViews(offerContent);
-            LoadContentSpritesSequentially(packRequests, resourceRequests, _loadSpritesCts.Token).Forget();
-
-            return _itemsPool.ActiveElements().Count();
-        }
-
         private async UniTask LoadContentSpritesSequentially(
             SpriteLoadRequest[] packRequests,
             SpriteLoadRequest[] resourceRequests,
@@ -89,46 +78,6 @@ namespace core
             catch (OperationCanceledException)
             {
             }
-        }
-
-        private SpriteLoadRequest[] CreateCardPacksViews(BaseOfferContent offerContent)
-        {
-            if (offerContent.CardPack == null || offerContent.CardPack.Count == 0)
-            {
-                return Array.Empty<SpriteLoadRequest>();
-            }
-
-            var requests = new SpriteLoadRequest[offerContent.CardPack.Count];
-            for (var i = 0; i < offerContent.CardPack.Count; i++)
-            {
-                var cardPack = offerContent.CardPack[i];
-                var contentView = _itemsPool.GetNext();
-                contentView.SetText("x1");
-                contentView.SetLoadingActive(true);
-                requests[i] = new SpriteLoadRequest(contentView, cardPack.PackId);
-            }
-
-            return requests;
-        }
-
-        private SpriteLoadRequest[] CreateResourcesViews(BaseOfferContent offerContent)
-        {
-            if (offerContent.Resources == null || offerContent.Resources.Count == 0)
-            {
-                return Array.Empty<SpriteLoadRequest>();
-            }
-
-            var requests = new SpriteLoadRequest[offerContent.Resources.Count];
-            for (var i = 0; i < offerContent.Resources.Count; i++)
-            {
-                var contentResource = offerContent.Resources[i];
-                var contentView = _itemsPool.GetNext();
-                contentView.SetText($"x{Mathf.Max(1, contentResource.Amount)}");
-                contentView.SetLoadingActive(true);
-                requests[i] = new SpriteLoadRequest(contentView, contentResource.Type.ToString());
-            }
-
-            return requests;
         }
 
         private static async UniTask LoadSprites(SpriteLoadRequest[] requests, CancellationToken ct)

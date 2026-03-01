@@ -31,6 +31,8 @@ namespace core
 
             var duration = animationTime <= 0f ? _hideAnimationDuration : animationTime;
 
+            Debug.LogWarning($"Debug animationTime, {animationTime}, duration {duration}");
+            
             transform.localScale = Vector3.one;
             _canvasGroup.alpha = 1f;
             _canvasGroup.interactable = false;

@@ -17,7 +17,7 @@ namespace core
             UIManager uiManager,
             int pointsAmount,
             IExchangeOfferProvider exchangeOfferProvider, 
-            Action onPointsAmountChangedHandler)
+            Action onPointsAmountChangedHandler = null)
         {
             UiManager = uiManager;
             PointsAmount = pointsAmount;
@@ -115,7 +115,7 @@ namespace core
 
             try
             {
-                var packContent = await Args.ExchangeOfferProvider.GetOfferContentAsync(packName, ct);
+                OfferContent packContent = await Args.ExchangeOfferProvider.GetOfferContentAsync(packName, ct);
                 var args = new ContentWidgetArgs(Args.UiManager, packContent, rectTransform);
                 Args.UiManager.Show<ContentWidgetController>(args);
             }

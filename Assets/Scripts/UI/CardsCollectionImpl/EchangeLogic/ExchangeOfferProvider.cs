@@ -107,7 +107,18 @@ namespace core
                 CardPack = cardPacks,
             };
         }
-        
+
+        public async UniTask<OfferContent> GetCollectionRewardData(CancellationToken ct = default)
+        {
+            var collectionRewardContent = new CardCollectionRewardContent();
+            collectionRewardContent.Resources.Add(new GameResource(ResourceType.Gold, 1000));
+            collectionRewardContent.Resources.Add(new GameResource(ResourceType.Gems, 50));
+            collectionRewardContent.Resources.Add(new GameResource(ResourceType.Energy, 100));
+            
+            await UniTask.CompletedTask;
+            return collectionRewardContent;
+        }
+
         private async UniTask<List<CardPack>> GetRewardCardPacksAsync(ExchangePackEntry pack, CancellationToken ct)
         {
             if (pack?.RewardEntry?.CardPacks is not { Count: > 0 })

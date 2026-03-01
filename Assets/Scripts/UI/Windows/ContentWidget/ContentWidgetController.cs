@@ -24,9 +24,9 @@ namespace core
         
         protected override void OnShowStart()
         {
-            View.ShowContentView((BaseOfferContent)Args.OfferContent, Args.RectTransform);
+            View.ShowContentView(Args.OfferContent, Args.RectTransform);
         }
-
+        
         protected override void OnShowComplete()
         {
             View.CloseClick += CloseWindow;
