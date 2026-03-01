@@ -8,6 +8,8 @@ namespace core
 {
     public class CardCollectionEntryPoint : MonoBehaviour
     {
+        [SerializeField] private Starter _starter;
+        
         private CardCollectionModule _cardCollectionModule;
         private ICardPackProvider _cardPackProvider;
         private CardCollectionRewardHandler _rewardHandler;
@@ -31,7 +33,8 @@ namespace core
         {
             try
             {
-                _rewardHandler = new CardCollectionRewardHandler(resourceManager);
+                //TODO combine OfferRewardsReceiver with init in Starter
+                _rewardHandler = new CardCollectionRewardHandler(resourceManager, new OfferRewardsReceiver(resourceManager));
                 await _rewardHandler.InitializeAsync(ct);
                 _rewardHandlerInitializationSource.TrySetResult();
             }
@@ -140,7 +143,16 @@ namespace core
                 return;
             }
 
-            _rewardHandler.TryHandleCollectionCompleted(collectionCompletedData);
+            CollectionCompletedHandlerAsync(collectionCompletedData).Forget();
+        }
+
+        private async UniTask CollectionCompletedHandlerAsync(CardCollectionCompletedData collectionCompletedData)
+        {
+            //TODO add Cancel token + resolve CardCollectionEntryPoint - Starter dependency
+            var collectionRewardContent = 
+                await _starter.ExchangeOfferProvider.GetCollectionRewardData();
+            
+            _rewardHandler.TryHandleCollectionCompleted(collectionRewardContent);
         }
 
         private void OnDestroy()

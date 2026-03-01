@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using cheatModule;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -58,10 +59,11 @@ namespace core
             var updated = _cardCollectionEntryPoint.CardCollectionUpdater;
             var reader = _cardCollectionEntryPoint.CardCollectionReader;
             var pointsAccount = _cardCollectionEntryPoint.CardCollectionPointsAccount;
+            CancellationToken destroyCt = this.GetCancellationTokenOnDestroy();
             
             var cheatsModules = new List<ICheatsModule>
             {
-                new DefaultModule(updated, reader, pointsAccount),
+                new DefaultModule(updated, reader, pointsAccount, destroyCt),
                 new SampleModule(_resourcesView.ResourceManager),
             };
             

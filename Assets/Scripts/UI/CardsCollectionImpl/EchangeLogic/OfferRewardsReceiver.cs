@@ -21,17 +21,27 @@ namespace core
                 return UniTask.FromResult(false);
             }
 
-            if (offerContent is not BaseOfferContent baseOfferContent)
+            switch (offerContent)
             {
-                return UniTask.FromResult(false);
-            }
+                case BaseOfferContent baseOfferContent:
+                    TryGetOfferReward(baseOfferContent, ct); 
+                    break;
+                case CardCollectionRewardContent  cardCollectionRewardContent:
+                    TryGetOfferReward(cardCollectionRewardContent, ct);
+                    break;
+                }
 
+            return UniTask.FromResult(true);
+        }
+
+        private void TryGetOfferReward(BaseOfferContent baseOfferContent, CancellationToken ct = default)
+        {
             if (baseOfferContent.Resources != null)
             {
                 foreach (var rewardResource in baseOfferContent.Resources)
                 {
                     ct.ThrowIfCancellationRequested();
-                    if (rewardResource == null || rewardResource.Amount <= 0)
+                    if (rewardResource is not { Amount: > 0 })
                     {
                         continue;
                     }
@@ -39,8 +49,23 @@ namespace core
                     _resourceManager.Add(rewardResource.Type, rewardResource.Amount);
                 }
             }
+        }
 
-            return UniTask.FromResult(true);
+        private void TryGetOfferReward(CardCollectionRewardContent rewardContent, CancellationToken ct = default)
+        {
+            if (rewardContent.Resources != null)
+            {
+                foreach (var rewardResource in rewardContent.Resources)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    if (rewardResource is not { Amount: > 0 })
+                    {
+                        continue;
+                    }
+
+                    _resourceManager.Add(rewardResource.Type, rewardResource.Amount);
+                }
+            }
         }
     }
 }

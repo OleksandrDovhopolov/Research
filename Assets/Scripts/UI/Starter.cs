@@ -21,6 +21,9 @@ namespace core
         private ConfigManager _configManager;
         private CancellationToken _destroyCt;
         private IExchangeOfferProvider _exchangeOfferProvider;
+
+        public IExchangeOfferProvider ExchangeOfferProvider => _exchangeOfferProvider;
+
         private IOfferRewardsReceiver _offerRewardsReceiver;
         private readonly ResourceManager _resourceManager = new();
 

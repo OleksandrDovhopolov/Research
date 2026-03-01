@@ -12,13 +12,15 @@ namespace core
         private const string DefaultRewardsConfigAddress = "CardCollectionRewardsConfig";
 
         private readonly ResourceManager _resourceManager;
+        private readonly IOfferRewardsReceiver _offerRewardsReceiver;
         private Dictionary<string, GameResource> _groupRewardByGroupId = new(StringComparer.Ordinal);
-        private GameResource _collectionReward;
+            
         private bool _isInitialized;
 
-        public CardCollectionRewardHandler(ResourceManager resourceManager)
+        public CardCollectionRewardHandler(ResourceManager resourceManager, IOfferRewardsReceiver  offerRewardsReceiver)
         {
             _resourceManager = resourceManager;
+            _offerRewardsReceiver = offerRewardsReceiver;
         }
 
         public async UniTask InitializeAsync(CancellationToken ct = default)
@@ -45,7 +47,6 @@ namespace core
                 }
 
                 _groupRewardByGroupId = BuildGroupRewards(config.GroupRewards);
-                _collectionReward = BuildCollectionReward(config.CollectionReward);
                 _isInitialized = true;
             }
             catch (OperationCanceledException)
@@ -81,7 +82,7 @@ namespace core
             return false;
         }
 
-        public bool TryHandleCollectionCompleted(CardCollectionCompletedData collectionCompletedData)
+        public bool TryHandleCollectionCompleted(OfferContent collectionRewardContent)
         {
             if (!_isInitialized)
             {
@@ -89,7 +90,10 @@ namespace core
                 return false;
             }
 
-            return TryApplyReward(_collectionReward);
+            //TODO await this 
+            _offerRewardsReceiver.ReceiveRewardsAsync(collectionRewardContent).Forget();
+            return true;
+            //return TryApplyReward(_collectionReward);
         }
 
         private bool TryApplyReward(GameResource reward)
@@ -128,21 +132,6 @@ namespace core
             }
             
             return result;
-        }
-
-        private static GameResource BuildCollectionReward(CollectionRewardDefinition rewardDefinition)
-        {
-            if (rewardDefinition.Amount <= 0)
-            {
-                return null;
-            }
-
-            if (!Enum.TryParse(rewardDefinition.RewardId, true, out ResourceType resourceType))
-            {
-                return null;
-            }
-
-            return new GameResource(resourceType, rewardDefinition.Amount);
         }
     }
 }
