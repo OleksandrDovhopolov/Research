@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
+using Infrastructure;
 using TMPro;
 using UIShared;
 using UISystem;

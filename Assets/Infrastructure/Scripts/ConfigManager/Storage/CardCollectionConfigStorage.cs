@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 
-namespace core
+namespace Infrastructure
 {
     public class CardCollectionConfigStorage : ConfigStorageBase<CardCollectionConfigStorage>
     {

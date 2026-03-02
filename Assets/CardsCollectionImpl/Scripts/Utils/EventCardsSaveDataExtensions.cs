@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CardCollection.Core;
+using Infrastructure;
 
 namespace core
 {

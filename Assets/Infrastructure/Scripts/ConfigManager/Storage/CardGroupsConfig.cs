@@ -1,7 +1,7 @@
 using System;
 using Newtonsoft.Json;
 
-namespace core
+namespace Infrastructure
 {
     [Serializable]
     public class CardGroupsConfig : ConfigBase

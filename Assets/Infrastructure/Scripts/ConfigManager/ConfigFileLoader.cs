@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 
-namespace core
+namespace Infrastructure
 {
     public abstract class ConfigFileLoader
     {

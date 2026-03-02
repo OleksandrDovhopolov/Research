@@ -8,7 +8,7 @@ using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace core
+namespace Infrastructure
 {
     public static class ConfigSerializer
     {

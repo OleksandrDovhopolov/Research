@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 
-namespace core
+namespace Infrastructure
 {
     public interface IConfigStorage
     {

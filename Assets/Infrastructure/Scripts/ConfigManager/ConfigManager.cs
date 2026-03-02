@@ -5,7 +5,7 @@ using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEngine;
 
-namespace core
+namespace Infrastructure
 {
     public class ConfigManager
     {

@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 
-namespace core
+namespace Infrastructure
 {
     /// <summary>
     /// Config file representation class

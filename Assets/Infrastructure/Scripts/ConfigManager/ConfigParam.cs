@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-namespace core
+namespace Infrastructure
 {
     public class ConfigParam
     {

@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace core
+namespace Infrastructure
 {
     public static class BinarySaverBytes
     {

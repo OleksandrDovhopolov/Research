@@ -5,7 +5,7 @@ using System.Threading;
 using JetBrains.Annotations;
 using UnityEngine;
 
-namespace core
+namespace Infrastructure
 {
     [Serializable]
     public abstract class ConfigBase

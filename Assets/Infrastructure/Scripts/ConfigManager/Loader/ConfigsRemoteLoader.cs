@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace core
+namespace Infrastructure
 {
     public static class ConfigsRemoteLoader
     {
@@ -26,3 +26,4 @@ namespace core
         }
     }
 }
+
