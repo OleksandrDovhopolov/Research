@@ -11,7 +11,6 @@ namespace core
         [SerializeField] private Starter _starter;
         
         private CardCollectionModule _cardCollectionModule;
-        private ICardPackProvider _cardPackProvider;
         private CardCollectionRewardHandler _rewardHandler;
         private Exception _initializationException;
         private readonly UniTaskCompletionSource _rewardHandlerInitializationSource = new();
@@ -25,7 +24,6 @@ namespace core
         public ICardCollectionUpdater CardCollectionUpdater => GetInitializedModule();
         public ICardCollectionReader CardCollectionReader => GetInitializedModule();
         public ICardCollectionPointsAccount CardCollectionPointsAccount => GetInitializedModule();
-        public ICardPackProvider CardPackProvider => GetInitializedCardPackProvider();
 
         public event Action<Exception> OnInitializationFailed;
 
@@ -58,7 +56,7 @@ namespace core
         private void Awake()
         {
             var ct = this.GetCancellationTokenOnDestroy();
-            InitCardCollection(ct).Forget();
+            //InitCardCollection(ct).Forget();
         }
 
         private CardCollectionModule GetInitializedModule()
@@ -76,33 +74,17 @@ namespace core
             return _cardCollectionModule;
         }
 
-        private ICardPackProvider GetInitializedCardPackProvider()
-        {
-            if (_initializationException != null)
-                throw new InvalidOperationException(
-                    "CardCollection module initialization failed. See inner exception for details.",
-                    _initializationException);
-
-            if (!IsInitialized || _cardPackProvider == null)
-                throw new InvalidOperationException(
-                    "CardCollection module is not yet initialized. " +
-                    "Await WaitForInitializationAsync() before accessing the module.");
-
-            return _cardPackProvider;
-        }
-
-        private async UniTask InitCardCollection(CancellationToken ct)
+        public async UniTask InitCardCollection(ICardPackProvider cardPackProvider, CancellationToken ct)
         {
             try
             {
                 const string testEventId = "test";
                 
-                _cardPackProvider = new JsonCardPackProvider();
                 IEventCardsStorage cardsStorage = new JsonEventCardsStorage();
                 ICardDefinitionProvider cardDefinitionProvider = new DefaultCardDefinitionProvider();
                 ICardSelector cardSelector = new ProbabilityBasedCardSelector(PackRulesConfig.CreateDefaultRules());
 
-                var config = new CardCollectionModuleConfig(_cardPackProvider, cardsStorage, cardDefinitionProvider, cardSelector, CardsCollectionPointsCalculator.Instance, testEventId);
+                var config = new CardCollectionModuleConfig(cardPackProvider, cardsStorage, cardDefinitionProvider, cardSelector, CardsCollectionPointsCalculator.Instance, testEventId);
 
                 _cardCollectionModule = new CardCollectionModule(config);
                 await _cardCollectionModule.InitializeAsync(ct);

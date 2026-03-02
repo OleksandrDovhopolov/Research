@@ -1,7 +1,10 @@
 using System.Reflection;
+using System.Threading;
 using CardCollection.Core;
+using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 
 namespace core
@@ -15,7 +18,7 @@ namespace core
             var rewardFactory = new FakeRewardDefinitionFactory();
             var handler = new CardCollectionRewardHandler(rewardsReceiver, rewardFactory);
 
-            var config = UnityEditor.AssetDatabase.LoadAssetAtPath<CardCollectionRewardsConfigSO>(
+            var config = AssetDatabase.LoadAssetAtPath<CardCollectionRewardsConfigSO>(
                 "Assets/CardsCollectionImpl/Scripts/Rewards/CardCollectionRewardsConfig.asset");
             
             Assert.IsNotNull(config, "CardCollectionRewardsConfig asset not found at expected path.");
@@ -68,7 +71,7 @@ namespace core
         {
             public int ReceiveCallsCount { get; private set; }
 
-            public UniTask<bool> ReceiveRewardsAsync(CardCollectionImpl.CollectionRewardDefinition collectionRewardDefinition, System.Threading.CancellationToken ct = default)
+            public UniTask<bool> ReceiveRewardsAsync(CollectionRewardDefinition collectionRewardDefinition, CancellationToken ct = default)
             {
                 ReceiveCallsCount++;
                 return UniTask.FromResult(true);
@@ -79,20 +82,15 @@ namespace core
         {
             public int CreateCollectionCallsCount { get; private set; }
 
-            public CardCollectionImpl.CollectionRewardDefinition CreateFromGroupReward(CollectionCompletionRewardConfig collectionCompletionRewardConfig)
+            public CollectionRewardDefinition CreateFromGroupReward(CollectionCompletionRewardConfig collectionCompletionRewardConfig)
             {
                 return new CardGroupCompletionReward();
             }
 
-            public CardCollectionImpl.CollectionRewardDefinition CreateFromCollectionReward(FullCollectionRewardConfig fullCollectionRewardConfig = default)
+            public CollectionRewardDefinition CreateFromCollectionReward(FullCollectionRewardConfig fullCollectionRewardConfig = default)
             {
                 CreateCollectionCallsCount++;
                 return new FullCollectionReward();
-            }
-
-            public CardCollectionImpl.CollectionRewardDefinition CreateFromExchangePack(ExchangePackEntry exchangePackEntry, System.Collections.Generic.IReadOnlyCollection<CardPack> cardPacks)
-            {
-                return new DuplicatePointsChestOffer();
             }
         }
     }

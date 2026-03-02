@@ -80,7 +80,9 @@ namespace core
             var args = new CollectionPointsExchangeArgs(
                 Args.UiManager,
                 Args.EventCardsSaveData.Points,
-                Args.ExchangeOfferProvider, UpdatePointsAmount);
+                Args.ExchangeOfferProvider, 
+                (IOfferDefinitionFactory)Args.RewardDefinitionFactory,
+                UpdatePointsAmount);
             Args.UiManager.Show<CollectionPointsExchangeController>(args);
         }
         

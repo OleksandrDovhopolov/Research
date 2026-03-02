@@ -1,12 +1,17 @@
-using System.Collections.Generic;
+using System.Threading;
 using CardCollection.Core;
+using CardCollectionImpl;
 
 namespace core
 {
     public interface IRewardDefinitionFactory
     {
-        CardCollectionImpl.CollectionRewardDefinition CreateFromGroupReward(CollectionCompletionRewardConfig collectionCompletionRewardConfig);
-        CardCollectionImpl.CollectionRewardDefinition CreateFromCollectionReward(FullCollectionRewardConfig fullCollectionRewardConfig = default);
-        CardCollectionImpl.CollectionRewardDefinition CreateFromExchangePack(ExchangePackEntry exchangePackEntry, IReadOnlyCollection<CardPack> cardPacks);
+        CollectionRewardDefinition CreateFromGroupReward(CollectionCompletionRewardConfig collectionCompletionRewardConfig);
+        CollectionRewardDefinition CreateFromCollectionReward(FullCollectionRewardConfig fullCollectionRewardConfig = default);
+    }
+
+    public interface IOfferDefinitionFactory
+    {
+        CollectionRewardDefinition CreateFromOfferReward(string offerPackId, CancellationToken ct = default);
     }
 }

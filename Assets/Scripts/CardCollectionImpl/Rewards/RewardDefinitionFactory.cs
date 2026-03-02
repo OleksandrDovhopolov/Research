@@ -1,13 +1,40 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using CardCollection.Core;
 using CardCollectionImpl;
+using UnityEngine;
 using CollectionRewardDefinition = CardCollectionImpl.CollectionRewardDefinition;
 
 namespace core
 {
-    public class RewardDefinitionFactory : IRewardDefinitionFactory
+    public class RewardDefinitionFactory : IRewardDefinitionFactory, IOfferDefinitionFactory
     {
+        private readonly List<CardPackConfig> _cardPackConfigs;
+        private readonly Dictionary<string, ExchangePackEntry> _packById;
+
+        public RewardDefinitionFactory(ExchangePacksConfig exchangePacksConfig, List<CardPackConfig> cardPackConfigs)
+        {
+            _cardPackConfigs = cardPackConfigs;
+            _packById = new Dictionary<string, ExchangePackEntry>();
+            
+            if (exchangePacksConfig == null || exchangePacksConfig.Packs == null)
+            {
+                return;
+            }
+
+            foreach (var pack in exchangePacksConfig.Packs)
+            {
+                if (pack == null || string.IsNullOrWhiteSpace(pack.Id))
+                {
+                    continue;
+                }
+
+                _packById[pack.Id] = pack;
+            }
+        }
+        
         public CollectionRewardDefinition CreateFromGroupReward(CollectionCompletionRewardConfig collectionCompletionRewardConfig)
         {
             var content = new CardGroupCompletionReward
@@ -24,7 +51,7 @@ namespace core
             return content;
         }
 
-        public CollectionRewardDefinition CreateFromCollectionReward(CardCollection.Core.FullCollectionRewardConfig fullCollectionRewardConfig)
+        public CollectionRewardDefinition CreateFromCollectionReward(FullCollectionRewardConfig fullCollectionRewardConfig)
         {
             var fullCollectionReward = new FullCollectionReward
             {
@@ -37,40 +64,94 @@ namespace core
             
             return fullCollectionReward;
         }
-
-        public CollectionRewardDefinition CreateFromExchangePack(ExchangePackEntry exchangePackEntry, IReadOnlyCollection<CardPack> cardPacks)
+        
+        public CollectionRewardDefinition CreateFromOfferReward(string offerPackId, CancellationToken ct = default)
         {
-            var content = new DuplicatePointsChestOffer
+            if (!TryGetPackEntry(offerPackId, out var exchangePackEntry))
+            {
+                return new DuplicatePointsChestOffer();
+            }
+
+            var cardPacks = GetRewardCardPacksAsync(exchangePackEntry, ct);
+            var resources = GetRewardResources(exchangePackEntry);
+
+            return new DuplicatePointsChestOffer
             {
                 Source = RewardSource.CollectionPointsExchangeOffer,
+                Resources = resources,
+                CardPack = cardPacks,
             };
+        }
 
-            if (cardPacks != null)
+        private bool TryGetPackEntry(string packId, out ExchangePackEntry pack)
+        {
+            if (string.IsNullOrWhiteSpace(packId))
             {
-                content.CardPack.AddRange(cardPacks);
+                pack = null;
+                return false;
             }
 
-            if (exchangePackEntry?.RewardEntry?.ResourcesData == null)
+            return _packById.TryGetValue(packId, out pack);
+        }
+        
+        private static List<GameResource> GetRewardResources(ExchangePackEntry pack)
+        {
+            if (pack?.RewardEntry is not ExchangePackCardsRewardEntrySO { ResourcesData: { Count: > 0 } } cardsReward)
             {
-                return content;
+                return new List<GameResource>();
+            }
+            
+            var mappedResources = cardsReward.ResourcesData
+                .Where(resourceData => resourceData is { Amount: > 0 })
+                .Select(TryCreateGameResource)
+                .Where(resource => resource != null)
+                .ToList();
+
+            return mappedResources.Count > 0 ? mappedResources : new List<GameResource>();
+        }
+        
+        private List<CardPack> GetRewardCardPacksAsync(ExchangePackEntry pack, CancellationToken ct)
+        {
+            if (pack?.RewardEntry?.CardPacks is not { Count: > 0 } || _cardPackConfigs == null)
+            {
+                return new List<CardPack>();
             }
 
-            foreach (var rewardData in exchangePackEntry.RewardEntry.ResourcesData)
+            var result = new List<CardPack>();
+            foreach (var cardPackId in pack.RewardEntry.CardPacks)
             {
-                if (rewardData == null)
+                ct.ThrowIfCancellationRequested();
+
+                var config = _cardPackConfigs.FirstOrDefault(cfg =>
+                    cfg != null && string.Equals(cfg.packId, cardPackId, StringComparison.Ordinal));
+
+                if (config == null)
                 {
+                    Debug.LogWarning($"Failed to find CardPackConfig with ID {cardPackId}");
                     continue;
                 }
 
-                if (TryCreateResource(rewardData.ResourceId, rewardData.Amount, out var resource))
-                {
-                    content.Resources.Add(resource);
-                }
+                result.Add(new CardPack(config));
             }
 
-            return content;
+            return result;
         }
 
+        private static GameResource TryCreateGameResource(ResourceRewardData data)
+        {
+            if (data is not { Amount: > 0 } || string.IsNullOrWhiteSpace(data.ResourceId))
+            {
+                return null;
+            }
+
+            if (!Enum.TryParse<ResourceType>(data.ResourceId, true, out var resourceType))
+            {
+                return null;
+            }
+
+            return new GameResource(resourceType, data.Amount);
+        }
+        
         private static bool TryCreateResource(string resourceId, int amount, out GameResource resource)
         {
             resource = null;

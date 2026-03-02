@@ -1,4 +1,5 @@
 using System.Threading;
+using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
@@ -22,27 +23,22 @@ namespace core
         private CancellationToken _destroyCt;
         
         private ResourceManager _resourceManager;
+        private ICardPackProvider _cardPackProvider;
         private IExchangeOfferProvider _exchangeOfferProvider;
         private IOfferRewardsReceiver _offerRewardsReceiver;
-        private IRewardDefinitionFactory _rewardDefinitionFactory;
+        private RewardDefinitionFactory _rewardDefinitionFactory;
 
         private void Awake()
         {
             Application.targetFrameRate = 60;
             _destroyCt = this.GetCancellationTokenOnDestroy();
-
-            _resourceManager = new ResourceManager();
-            _offerRewardsReceiver = new OfferRewardsReceiver(_resourceManager);
-            _rewardDefinitionFactory = new RewardDefinitionFactory();
-                
-            _cardCollectionEntryPoint.InitializeRewardHandlerAsync(_offerRewardsReceiver, _rewardDefinitionFactory, _destroyCt).Forget();
         }
 
         private void Start()
         {
-            LoadAddressables().Forget();
+            /*LoadAddressables().Forget();
             LoadConfig().Forget();
-            InitResources(_destroyCt).Forget();
+            InitResources(_destroyCt).Forget();*/
 
             WindowFactoryBase windowFactoryBase = new WindowFactoryDI(_uiManager);
             UIManagerEventHandlerBase eventHandler = new UIManagerSignalHandler();
@@ -51,8 +47,27 @@ namespace core
 
             _button.onClick.AddListener(() => OpenCardCollectionWindow().Forget());
             _cheatButton.onClick.AddListener(OpenCheatsPanel);
+            
+            Init().Forget();
         }
 
+        private async UniTask Init()
+        {
+            _resourceManager = new ResourceManager();
+            _cardPackProvider = new JsonCardPackProvider();
+            _offerRewardsReceiver = new OfferRewardsReceiver(_resourceManager);
+            
+            await LoadAddressables();
+            await LoadConfig(); 
+            await InitResources(_destroyCt);
+            
+            var cardPackConfigs = await _cardPackProvider.GetCardConfigsAsync(_destroyCt);
+            _rewardDefinitionFactory = new RewardDefinitionFactory(_exchangePacksConfig, cardPackConfigs);
+                
+            await _cardCollectionEntryPoint.InitializeRewardHandlerAsync(_offerRewardsReceiver, _rewardDefinitionFactory, _destroyCt);
+            await _cardCollectionEntryPoint.InitCardCollection(_cardPackProvider, _destroyCt);
+        }
+        
         private async UniTask LoadAddressables()
         {
             await AddressablesUpdater.CheckAndUpdateAsync();
@@ -85,9 +100,9 @@ namespace core
                 new ExchangeOfferProvider(
                     _exchangePacksConfig,
                     _cardCollectionEntryPoint.CardCollectionPointsAccount,
-                    _cardCollectionEntryPoint.CardPackProvider.GetCardConfigByIdAsync,
                     _offerRewardsReceiver,
-                    _uiManager);
+                    _uiManager,
+                    _rewardDefinitionFactory);
             
             var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
             var args = new CardCollectionArgs(

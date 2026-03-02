@@ -127,6 +127,7 @@ namespace CardCollection.Core
         
         public async UniTask UnlockCard(string cardId, CancellationToken ct = default)
         {
+            //TODO add here duplicate points. move from OpenPackAndUnlockAsync ? 
             try
             {
                 await _context.UnlockCardAsync(_context.DefaultEventId, cardId, ct);

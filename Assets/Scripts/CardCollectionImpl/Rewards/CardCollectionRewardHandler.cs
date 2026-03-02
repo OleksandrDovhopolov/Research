@@ -94,5 +94,10 @@ namespace core
             Debug.LogWarning($"Failed to find CollectionRewardDefinition for group with ID groupCompletedData.GroupId");
             return false;
         }
+
+        public bool TryHandleBuyPointsOffer(string offerId)
+        {
+            return false;
+        }
     }
 }

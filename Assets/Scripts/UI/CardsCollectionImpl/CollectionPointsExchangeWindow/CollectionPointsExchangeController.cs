@@ -1,6 +1,5 @@
 using System;
 using System.Threading;
-using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
@@ -13,16 +12,19 @@ namespace core
         public readonly int PointsAmount;
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
         public readonly Action OnPointsAmountChangedHandler;
+        public readonly IOfferDefinitionFactory OfferDefinitionFactory;
         
         public CollectionPointsExchangeArgs(
             UIManager uiManager,
             int pointsAmount,
             IExchangeOfferProvider exchangeOfferProvider, 
+            IOfferDefinitionFactory offerDefinitionFactory,
             Action onPointsAmountChangedHandler = null)
         {
             UiManager = uiManager;
             PointsAmount = pointsAmount;
             ExchangeOfferProvider = exchangeOfferProvider;
+            OfferDefinitionFactory = offerDefinitionFactory;
             OnPointsAmountChangedHandler = onPointsAmountChangedHandler;
         }
     }
@@ -104,25 +106,11 @@ namespace core
 
         private void OnInfoOfferClickedHandler(string packName, RectTransform rectTransform)
         {
-            OnInfoPackClickedHandlerAsync(packName, rectTransform, _buyCts?.Token ?? CancellationToken.None).Forget();
-        }
+            if (string.IsNullOrWhiteSpace(packName)) return;
 
-        private async UniTask OnInfoPackClickedHandlerAsync(string packName, RectTransform rectTransform, CancellationToken ct)
-        {
-            if (string.IsNullOrWhiteSpace(packName))
-            {
-                return;
-            }
-
-            try
-            {
-                CardCollectionImpl.CollectionRewardDefinition packContent = await Args.ExchangeOfferProvider.GetOfferContentAsync(packName, ct);
-                var args = new ContentWidgetArgs(Args.UiManager, packContent, rectTransform);
-                Args.UiManager.Show<ContentWidgetController>(args);
-            }
-            catch (OperationCanceledException)
-            {
-            }
+            var packContent = Args.OfferDefinitionFactory.CreateFromOfferReward(packName);
+            var args = new ContentWidgetArgs(Args.UiManager, packContent, rectTransform);
+            Args.UiManager.Show<ContentWidgetController>(args);
         }
         
         protected override void OnHideStart(bool isClosed)
