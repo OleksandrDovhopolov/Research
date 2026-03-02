@@ -3,9 +3,8 @@ using System.Threading.Tasks;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Object = UnityEngine.Object;
-using System.Threading;
 
-namespace core
+namespace UIShared
 {
     public static class ProdAddressablesWrapper
     {

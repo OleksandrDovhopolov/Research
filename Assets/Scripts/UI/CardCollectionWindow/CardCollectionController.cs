@@ -72,7 +72,8 @@ namespace core
         private void OnRewardChestClickedHandler(RectTransform rectTransform)
         {
             var cardCollectionRewardContent = Args.RewardDefinitionFactory.CreateFromCollectionReward();
-            var args = new ContentWidgetArgs(Args.UiManager, cardCollectionRewardContent, rectTransform);
+            var contentWidgetData = cardCollectionRewardContent.ToContentWidgetData();
+            var args = new ContentWidgetArgs(Args.UiManager, contentWidgetData, rectTransform);
             Args.UiManager.Show<ContentWidgetController>(args);
         }
         

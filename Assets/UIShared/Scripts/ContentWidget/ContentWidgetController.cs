@@ -1,4 +1,3 @@
-using CardCollectionImpl;
 using UISystem;
 using UnityEngine;
 
@@ -7,19 +6,17 @@ namespace core
     public class ContentWidgetArgs : WindowArgs
     {
         public readonly UIManager UiManager;
-        public readonly CollectionRewardDefinition CollectionRewardDefinition;
+        public readonly ContentWidgetData ContentWidgetData;
         public readonly RectTransform RectTransform;
         
-        public ContentWidgetArgs(UIManager uiManager, CollectionRewardDefinition collectionRewardDefinition, RectTransform rectTransform)
+        public ContentWidgetArgs(UIManager uiManager, ContentWidgetData contentWidgetData, RectTransform rectTransform)
         {
             UiManager = uiManager;
-            CollectionRewardDefinition = collectionRewardDefinition;
+            ContentWidgetData = contentWidgetData;
             RectTransform = rectTransform;
         }
     }
-    
-    //TODO try remove this dependency using CardCollectionImpl;. ContentWidgetController is UIShared. should it know about CardCollectionImpl ? no. 
-    // CardCollectionImpl knows about UIShared and game (core) knows about UIShared
+
     [Window("ContentWidget", WindowType.Widget)]
     public class ContentWidgetController : WindowController<ContentWidgetView>
     {
@@ -27,7 +24,7 @@ namespace core
         
         protected override void OnShowStart()
         {
-            View.ShowContentView(Args.CollectionRewardDefinition, Args.RectTransform);
+            View.ShowContentView(Args.ContentWidgetData, Args.RectTransform);
         }
         
         protected override void OnShowComplete()

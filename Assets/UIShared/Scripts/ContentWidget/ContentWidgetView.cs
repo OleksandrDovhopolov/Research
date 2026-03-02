@@ -1,8 +1,8 @@
 using System;
 using System.Collections;
 using System.Threading;
-using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
+using UIShared;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
@@ -37,22 +37,13 @@ namespace core
         private RectTransform _contentRectTransform;
         private CancellationTokenSource _loadSpritesCts;
         
-        public void ShowContentView(CardCollectionImpl.CollectionRewardDefinition baseContent, RectTransform contentRectTransform)
+        public void ShowContentView(ContentWidgetData contentData, RectTransform contentRectTransform)
         {
             _contentRectTransform = contentRectTransform;
             
             StopAllCoroutines();
 
-            var viewItems = 0;
-            switch (baseContent)
-            {
-                case DuplicatePointsChestOffer offerContent:
-                    viewItems = CreateAndGetOfferViews(offerContent);
-                    break;
-                case FullCollectionReward cardCollectionRewardContent:
-                    viewItems = CreateAndGetOfferViews(cardCollectionRewardContent);
-                    break;
-            }
+            var viewItems = CreateAndGetOfferViews(contentData ?? ContentWidgetData.Empty);
             
             if (viewItems <= 0)
             {
@@ -88,7 +79,7 @@ namespace core
                 ct.ThrowIfCancellationRequested();
                 try
                 {
-                    var sprite = await AddressablesWrapper.LoadFromTask<Sprite>(request.Address);
+                    var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(request.Address);
                     request.View.SetSprite(sprite);
                 }
                 finally

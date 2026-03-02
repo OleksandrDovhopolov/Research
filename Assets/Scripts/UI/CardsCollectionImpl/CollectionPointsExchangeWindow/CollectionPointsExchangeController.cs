@@ -113,7 +113,8 @@ namespace core
             if (string.IsNullOrWhiteSpace(packName)) return;
 
             var packContent = Args.OfferDefinitionFactory.CreateFromOfferReward(packName);
-            var args = new ContentWidgetArgs(Args.UiManager, packContent, rectTransform);
+            var contentWidgetData = packContent.ToContentWidgetData();
+            var args = new ContentWidgetArgs(Args.UiManager, contentWidgetData, rectTransform);
             Args.UiManager.Show<ContentWidgetController>(args);
         }
         

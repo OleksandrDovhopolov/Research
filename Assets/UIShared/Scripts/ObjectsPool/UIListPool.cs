@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace core
 {
@@ -48,7 +49,7 @@ namespace core
            CheckSize(curIndex + 1);
        
            var elem = Pool[curIndex];
-           if (elem == null || elem.IsNull())
+           if (elem == null || IsNull(elem))
            {
                elem = SpawnNewElem();
                elem.transform.SetSiblingIndex(curIndex);
@@ -68,7 +69,7 @@ namespace core
 
             for (var i = LastActiveIndex + 1; i < Pool.Count; i++)
             {
-                if (Pool[i].IsNull()) continue;
+                if (IsNull(Pool[i])) continue;
                 Pool[i].gameObject.SetActive(false);
             }
 
@@ -93,5 +94,8 @@ namespace core
 
         public bool IsEmpty() => !Pool.Any(poolElem => poolElem != null && poolElem.gameObject.activeSelf);
         public int Count() => Pool.Count(poolElem => poolElem != null && poolElem.gameObject.activeSelf);
+        
+        
+        public bool IsNull(Object o) => o == null || !o;
     }
 }
