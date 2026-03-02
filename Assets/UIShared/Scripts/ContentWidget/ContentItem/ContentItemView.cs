@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace core
+namespace UIShared
 {
     public class ContentItemView : MonoBehaviour
     {

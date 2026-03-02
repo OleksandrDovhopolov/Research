@@ -4,7 +4,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace core
+namespace UIShared
 {
     public partial class ContentWidgetView
     {

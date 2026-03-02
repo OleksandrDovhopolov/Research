@@ -1,6 +1,7 @@
 using System;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
+using UIShared;
 using UISystem;
 using UnityEngine;
 

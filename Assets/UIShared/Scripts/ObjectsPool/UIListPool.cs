@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace core
+namespace UIShared
 {
     [Serializable]
     public class UIListPool<T> : ListPoolBase<T> where T : MonoBehaviour

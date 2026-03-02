@@ -4,6 +4,7 @@ using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using TMPro;
+using UIShared;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;

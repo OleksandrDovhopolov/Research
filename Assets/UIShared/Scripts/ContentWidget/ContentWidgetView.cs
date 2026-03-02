@@ -7,7 +7,7 @@ using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace core
+namespace UIShared
 {
     public partial class ContentWidgetView : WindowView 
     {

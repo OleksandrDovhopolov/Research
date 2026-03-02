@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace core
+namespace UIShared
 {
     public sealed class ContentWidgetData
     {

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace core
+namespace UIShared
 {
     public delegate GameObject PoolInstantiateCommand(GameObject prefab, Transform parent, bool worldPositionStays = false);
     

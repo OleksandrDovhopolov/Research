@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace core
+namespace UIShared
 {
     [Serializable]
     public abstract class PoolBase

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using TMPro;
+using UIShared;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
