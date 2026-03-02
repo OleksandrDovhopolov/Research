@@ -1,4 +1,5 @@
 using System.Threading;
+using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 
 namespace core
@@ -16,56 +17,45 @@ namespace core
         {
             ct.ThrowIfCancellationRequested();
 
-            if (_resourceManager == null)
+            if (_resourceManager == null || offerContent == null)
             {
                 return UniTask.FromResult(false);
             }
 
-            switch (offerContent)
-            {
-                case BaseOfferContent baseOfferContent:
-                    TryGetOfferReward(baseOfferContent, ct); 
-                    break;
-                case CardCollectionRewardContent  cardCollectionRewardContent:
-                    TryGetOfferReward(cardCollectionRewardContent, ct);
-                    break;
-                }
+            TryGetResourceRewards(offerContent, ct);
 
             return UniTask.FromResult(true);
         }
 
-        private void TryGetOfferReward(BaseOfferContent baseOfferContent, CancellationToken ct = default)
+        private void TryGetResourceRewards(OfferContent offerContent, CancellationToken ct = default)
         {
-            if (baseOfferContent.Resources != null)
+            var resources = GetResources(offerContent);
+            if (resources == null)
             {
-                foreach (var rewardResource in baseOfferContent.Resources)
+                return;
+            }
+            
+            foreach (var rewardResource in resources)
+            {
+                ct.ThrowIfCancellationRequested();
+                if (rewardResource is not { Amount: > 0 })
                 {
-                    ct.ThrowIfCancellationRequested();
-                    if (rewardResource is not { Amount: > 0 })
-                    {
-                        continue;
-                    }
-
-                    _resourceManager.Add(rewardResource.Type, rewardResource.Amount);
+                    continue;
                 }
+
+                _resourceManager.Add(rewardResource.Type, rewardResource.Amount);
             }
         }
 
-        private void TryGetOfferReward(CardCollectionRewardContent rewardContent, CancellationToken ct = default)
+        private static System.Collections.Generic.IReadOnlyCollection<GameResource> GetResources(OfferContent offerContent)
         {
-            if (rewardContent.Resources != null)
+            return offerContent switch
             {
-                foreach (var rewardResource in rewardContent.Resources)
-                {
-                    ct.ThrowIfCancellationRequested();
-                    if (rewardResource is not { Amount: > 0 })
-                    {
-                        continue;
-                    }
-
-                    _resourceManager.Add(rewardResource.Type, rewardResource.Amount);
-                }
-            }
+                BaseOfferContent baseOfferContent => baseOfferContent.Resources,
+                CardCollectionRewardContent collectionRewardContent => collectionRewardContent.Resources,
+                CardGroupCompletedContent groupCompletedContent => groupCompletedContent.Resources,
+                _ => null
+            };
         }
     }
 }

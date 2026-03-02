@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using CardCollection.Core;
+using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -11,27 +12,19 @@ namespace core
     {
         private const string DefaultRewardsConfigAddress = "CardCollectionRewardsConfig";
 
-        private readonly ResourceManager _resourceManager;
         private readonly IOfferRewardsReceiver _offerRewardsReceiver;
         private Dictionary<string, GameResource> _groupRewardByGroupId = new(StringComparer.Ordinal);
             
         private bool _isInitialized;
 
-        public CardCollectionRewardHandler(ResourceManager resourceManager, IOfferRewardsReceiver  offerRewardsReceiver)
+        public CardCollectionRewardHandler(IOfferRewardsReceiver  offerRewardsReceiver)
         {
-            _resourceManager = resourceManager;
             _offerRewardsReceiver = offerRewardsReceiver;
         }
 
         public async UniTask InitializeAsync(CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
-
-            if (_resourceManager == null)
-            {
-                Debug.LogError("[CardCollectionRewardHandler] ResourceManager is null. Rewards cannot be applied.");
-                return;
-            }
             
             try
             {
@@ -76,7 +69,15 @@ namespace core
 
             if (_groupRewardByGroupId.TryGetValue(groupCompletedData.GroupId, out var reward))
             {
-                return TryApplyReward(reward);
+                var groupCompletedContent = new CardGroupCompletedContent
+                {
+                    Source = RewardSource.GroupCompleted,
+                };
+                groupCompletedContent.Resources.Add(reward);
+
+                //TODO await this + handle result + add token
+                _offerRewardsReceiver.ReceiveRewardsAsync(groupCompletedContent).Forget();
+                return true;
             }
             
             return false;
@@ -92,18 +93,6 @@ namespace core
 
             //TODO await this 
             _offerRewardsReceiver.ReceiveRewardsAsync(collectionRewardContent).Forget();
-            return true;
-            //return TryApplyReward(_collectionReward);
-        }
-
-        private bool TryApplyReward(GameResource reward)
-        {
-            if (_resourceManager == null || reward == null || reward.Amount <= 0)
-            {
-                return false;
-            }
-
-            _resourceManager.Add(reward.Type, reward.Amount);
             return true;
         }
 

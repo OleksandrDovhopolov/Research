@@ -29,12 +29,12 @@ namespace core
 
         public event Action<Exception> OnInitializationFailed;
 
-        public async UniTask InitializeRewardHandlerAsync(ResourceManager resourceManager, CancellationToken ct = default)
+        public async UniTask InitializeRewardHandlerAsync(IOfferRewardsReceiver rewardsReceiver, CancellationToken ct = default)
         {
             try
             {
                 //TODO combine OfferRewardsReceiver with init in Starter
-                _rewardHandler = new CardCollectionRewardHandler(resourceManager, new OfferRewardsReceiver(resourceManager));
+                _rewardHandler = new CardCollectionRewardHandler(rewardsReceiver);
                 await _rewardHandler.InitializeAsync(ct);
                 _rewardHandlerInitializationSource.TrySetResult();
             }

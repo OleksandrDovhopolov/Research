@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using CardCollection.Core;
+using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
@@ -103,6 +104,7 @@ namespace core
 
             return new BaseOfferContent
             {
+                Source = RewardSource.ShopOffer,
                 Resources = resources,
                 CardPack = cardPacks,
             };
@@ -111,6 +113,7 @@ namespace core
         public async UniTask<OfferContent> GetCollectionRewardData(CancellationToken ct = default)
         {
             var collectionRewardContent = new CardCollectionRewardContent();
+            collectionRewardContent.Source = RewardSource.CollectionCompleted;
             collectionRewardContent.Resources.Add(new GameResource(ResourceType.Gold, 1000));
             collectionRewardContent.Resources.Add(new GameResource(ResourceType.Gems, 50));
             collectionRewardContent.Resources.Add(new GameResource(ResourceType.Energy, 100));

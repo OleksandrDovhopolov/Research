@@ -1,3 +1,4 @@
+using CardCollectionImpl;
 using UISystem;
 using UnityEngine;
 
@@ -17,6 +18,8 @@ namespace core
         }
     }
     
+    //TODO try remove this dependency using CardCollectionImpl;. ContentWidgetController is UIShared. should it know about CardCollectionImpl ? no. 
+    // CardCollectionImpl knows about UIShared and game (core) knows about UIShared
     [Window("ContentWidget", WindowType.Widget)]
     public class ContentWidgetController : WindowController<ContentWidgetView>
     {

@@ -31,7 +31,10 @@ namespace core
         {
             Application.targetFrameRate = 60;
             _destroyCt = this.GetCancellationTokenOnDestroy();
-            _cardCollectionEntryPoint.InitializeRewardHandlerAsync(_resourceManager, _destroyCt).Forget();
+
+            _offerRewardsReceiver = new OfferRewardsReceiver(_resourceManager);
+                
+            _cardCollectionEntryPoint.InitializeRewardHandlerAsync(_offerRewardsReceiver, _destroyCt).Forget();
         }
 
         private void Start()
@@ -82,7 +85,7 @@ namespace core
                     _exchangePacksConfig,
                     _cardCollectionEntryPoint.CardCollectionPointsAccount,
                     _cardCollectionEntryPoint.CardPackProvider.GetCardConfigByIdAsync,
-                    _offerRewardsReceiver ??= new OfferRewardsReceiver(_resourceManager),
+                    _offerRewardsReceiver,
                     _uiManager);
             
             var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
