@@ -1,8 +1,9 @@
 using System;
 using UnityEngine;
 
-namespace core
+namespace CardCollection.Core
 {
+    //TODO rename FullCollectionRewardConfig. can cause data clear in CardCollectionRewardsConfigSO
     [Serializable]
     public struct CollectionRewardDefinition
     {

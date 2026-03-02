@@ -1,3 +1,4 @@
+using CardCollection.Core;
 using UnityEngine;
 
 namespace core

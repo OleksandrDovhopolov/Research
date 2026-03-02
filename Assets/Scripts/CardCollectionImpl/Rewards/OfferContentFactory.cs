@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using CardCollection.Core;
 using CardCollectionImpl;
+using CollectionRewardDefinition = CardCollectionImpl.CollectionRewardDefinition;
 
 namespace core
 {
     public class OfferContentFactory : IOfferContentFactory
     {
-        public CardCollectionImpl.CollectionRewardDefinition CreateFromGroupReward(GroupRewardDefinition groupRewardDefinition)
+        public CollectionRewardDefinition CreateFromGroupReward(GroupRewardDefinition groupRewardDefinition)
         {
             var content = new CardGroupCompletionReward
             {
@@ -23,7 +24,7 @@ namespace core
             return content;
         }
 
-        public CardCollectionImpl.CollectionRewardDefinition CreateFromCollectionReward(CollectionRewardDefinition collectionRewardDefinition)
+        public CollectionRewardDefinition CreateFromCollectionReward(CardCollection.Core.CollectionRewardDefinition collectionRewardDefinition)
         {
             var content = new FullCollectionReward
             {
@@ -39,7 +40,7 @@ namespace core
             return content;
         }
 
-        public CardCollectionImpl.CollectionRewardDefinition CreateFromExchangePack(ExchangePackEntry exchangePackEntry, IReadOnlyCollection<CardPack> cardPacks)
+        public CollectionRewardDefinition CreateFromExchangePack(ExchangePackEntry exchangePackEntry, IReadOnlyCollection<CardPack> cardPacks)
         {
             var content = new DuplicatePointsChestOffer
             {
