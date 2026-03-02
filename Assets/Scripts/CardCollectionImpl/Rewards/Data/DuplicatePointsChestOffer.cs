@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using CardCollectionImpl;
 
 namespace core
 {
-    public class CardGroupCompletedContent : OfferContent
+    public class DuplicatePointsChestOffer : CardCollectionImpl.CollectionRewardDefinition
     {
         public List<GameResource> Resources = new();
     }

@@ -37,7 +37,7 @@ namespace core
         private RectTransform _contentRectTransform;
         private CancellationTokenSource _loadSpritesCts;
         
-        public void ShowContentView(OfferContent baseContent, RectTransform contentRectTransform)
+        public void ShowContentView(CardCollectionImpl.CollectionRewardDefinition baseContent, RectTransform contentRectTransform)
         {
             _contentRectTransform = contentRectTransform;
             
@@ -46,10 +46,10 @@ namespace core
             var viewItems = 0;
             switch (baseContent)
             {
-                case BaseOfferContent offerContent:
+                case DuplicatePointsChestOffer offerContent:
                     viewItems = CreateAndGetOfferViews(offerContent);
                     break;
-                case CardCollectionRewardContent cardCollectionRewardContent:
+                case FullCollectionReward cardCollectionRewardContent:
                     viewItems = CreateAndGetOfferViews(cardCollectionRewardContent);
                     break;
             }

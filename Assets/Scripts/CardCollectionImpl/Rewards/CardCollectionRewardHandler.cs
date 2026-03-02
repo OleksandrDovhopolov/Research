@@ -69,7 +69,7 @@ namespace core
 
             if (_groupRewardByGroupId.TryGetValue(groupCompletedData.GroupId, out var reward))
             {
-                var groupCompletedContent = new CardGroupCompletedContent
+                var groupCompletedContent = new CardGroupCompletionReward
                 {
                     Source = RewardSource.GroupCompleted,
                 };
@@ -83,7 +83,7 @@ namespace core
             return false;
         }
 
-        public bool TryHandleCollectionCompleted(OfferContent collectionRewardContent)
+        public bool TryHandleCollectionCompleted(CardCollectionImpl.CollectionRewardDefinition collectionRewardContent)
         {
             if (!_isInitialized)
             {

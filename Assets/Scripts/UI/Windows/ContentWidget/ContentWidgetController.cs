@@ -7,13 +7,13 @@ namespace core
     public class ContentWidgetArgs : WindowArgs
     {
         public readonly UIManager UiManager;
-        public readonly OfferContent OfferContent;
+        public readonly CardCollectionImpl.CollectionRewardDefinition CollectionRewardDefinition;
         public readonly RectTransform RectTransform;
         
-        public ContentWidgetArgs(UIManager uiManager, OfferContent offerContent, RectTransform rectTransform)
+        public ContentWidgetArgs(UIManager uiManager, CardCollectionImpl.CollectionRewardDefinition collectionRewardDefinition, RectTransform rectTransform)
         {
             UiManager = uiManager;
-            OfferContent = offerContent;
+            CollectionRewardDefinition = collectionRewardDefinition;
             RectTransform = rectTransform;
         }
     }
@@ -27,7 +27,7 @@ namespace core
         
         protected override void OnShowStart()
         {
-            View.ShowContentView(Args.OfferContent, Args.RectTransform);
+            View.ShowContentView(Args.CollectionRewardDefinition, Args.RectTransform);
         }
         
         protected override void OnShowComplete()

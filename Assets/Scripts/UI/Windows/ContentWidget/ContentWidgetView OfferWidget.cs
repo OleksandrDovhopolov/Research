@@ -8,12 +8,12 @@ namespace core
 {
     public partial class ContentWidgetView
     {
-        private int CreateAndGetOfferViews(BaseOfferContent offerContent)
+        private int CreateAndGetOfferViews(DuplicatePointsChestOffer collectionRewardDefinition)
         {
             Debug.LogWarning($"Debug BaseOfferContent");
             _itemsPool.DisableAll();
 
-            if (offerContent == null)
+            if (collectionRewardDefinition == null)
             {
                 return 0;
             }
@@ -22,25 +22,25 @@ namespace core
             _loadSpritesCts?.Dispose();
             _loadSpritesCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
 
-            var packRequests = CreateCardPacksViews(offerContent);
-            var resourceRequests = CreateResourcesViews(offerContent);
+            var packRequests = CreateCardPacksViews(collectionRewardDefinition);
+            var resourceRequests = CreateResourcesViews(collectionRewardDefinition);
             LoadContentSpritesSequentially(packRequests, resourceRequests, _loadSpritesCts.Token).Forget();
 
             return _itemsPool.ActiveElements().Count();
         }
         
 
-        private SpriteLoadRequest[] CreateCardPacksViews(BaseOfferContent offerContent)
+        private SpriteLoadRequest[] CreateCardPacksViews(DuplicatePointsChestOffer collectionRewardDefinition)
         {
-            if (offerContent?.CardPack == null || offerContent.CardPack.Count == 0)
+            if (collectionRewardDefinition?.CardPack == null || collectionRewardDefinition.CardPack.Count == 0)
             {
                 return Array.Empty<SpriteLoadRequest>();
             }
 
-            var requests = new SpriteLoadRequest[offerContent.CardPack.Count];
-            for (var i = 0; i < offerContent.CardPack.Count; i++)
+            var requests = new SpriteLoadRequest[collectionRewardDefinition.CardPack.Count];
+            for (var i = 0; i < collectionRewardDefinition.CardPack.Count; i++)
             {
-                var cardPack = offerContent.CardPack[i];
+                var cardPack = collectionRewardDefinition.CardPack[i];
                 var contentView = _itemsPool.GetNext();
                 contentView.SetText("x1");
                 contentView.SetLoadingActive(true);
@@ -50,17 +50,17 @@ namespace core
             return requests;
         }
 
-        private SpriteLoadRequest[] CreateResourcesViews(BaseOfferContent offerContent)
+        private SpriteLoadRequest[] CreateResourcesViews(DuplicatePointsChestOffer collectionRewardDefinition)
         {
-            if (offerContent?.Resources == null || offerContent.Resources.Count == 0)
+            if (collectionRewardDefinition?.Resources == null || collectionRewardDefinition.Resources.Count == 0)
             {
                 return Array.Empty<SpriteLoadRequest>();
             }
 
-            var requests = new SpriteLoadRequest[offerContent.Resources.Count];
-            for (var i = 0; i < offerContent.Resources.Count; i++)
+            var requests = new SpriteLoadRequest[collectionRewardDefinition.Resources.Count];
+            for (var i = 0; i < collectionRewardDefinition.Resources.Count; i++)
             {
-                var contentResource = offerContent.Resources[i];
+                var contentResource = collectionRewardDefinition.Resources[i];
                 var contentView = _itemsPool.GetNext();
                 contentView.SetText($"x{Mathf.Max(1, contentResource.Amount)}");
                 contentView.SetLoadingActive(true);

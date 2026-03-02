@@ -12,7 +12,7 @@ namespace core
         UniTask<bool> ReceiveOfferContent(string offerPackId, CancellationToken ct = default);
         UniTask<bool> TrySpendCollectionPointsAsync(int pointsToSpend, CancellationToken ct = default);
         
-        UniTask<OfferContent> GetOfferContentAsync(string offerPackId, CancellationToken ct = default);
-        UniTask<OfferContent> GetCollectionRewardData(CancellationToken ct = default);
+        UniTask<CardCollectionImpl.CollectionRewardDefinition> GetOfferContentAsync(string offerPackId, CancellationToken ct = default);
+        UniTask<CardCollectionImpl.CollectionRewardDefinition> GetCollectionRewardData(CancellationToken ct = default);
     }
 }

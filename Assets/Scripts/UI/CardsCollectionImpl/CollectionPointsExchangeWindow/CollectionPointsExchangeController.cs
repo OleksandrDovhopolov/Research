@@ -116,7 +116,7 @@ namespace core
 
             try
             {
-                OfferContent packContent = await Args.ExchangeOfferProvider.GetOfferContentAsync(packName, ct);
+                CardCollectionImpl.CollectionRewardDefinition packContent = await Args.ExchangeOfferProvider.GetOfferContentAsync(packName, ct);
                 var args = new ContentWidgetArgs(Args.UiManager, packContent, rectTransform);
                 Args.UiManager.Show<ContentWidgetController>(args);
             }

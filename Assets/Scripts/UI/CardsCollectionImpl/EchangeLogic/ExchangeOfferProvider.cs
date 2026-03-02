@@ -92,17 +92,17 @@ namespace core
             return _packById.TryGetValue(packId, out pack);
         }
         
-        public async UniTask<OfferContent> GetOfferContentAsync(string offerPackId, CancellationToken ct = default)
+        public async UniTask<CardCollectionImpl.CollectionRewardDefinition> GetOfferContentAsync(string offerPackId, CancellationToken ct = default)
         {
             if (!TryGetPackEntry(offerPackId, out var exchangePackEntry))
             {
-                return new BaseOfferContent();
+                return new DuplicatePointsChestOffer();
             }
 
             var cardPacks = await GetRewardCardPacksAsync(exchangePackEntry, ct);
             var resources = GetRewardResources(exchangePackEntry);
 
-            return new BaseOfferContent
+            return new DuplicatePointsChestOffer
             {
                 Source = RewardSource.ShopOffer,
                 Resources = resources,
@@ -110,9 +110,9 @@ namespace core
             };
         }
 
-        public async UniTask<OfferContent> GetCollectionRewardData(CancellationToken ct = default)
+        public async UniTask<CardCollectionImpl.CollectionRewardDefinition> GetCollectionRewardData(CancellationToken ct = default)
         {
-            var collectionRewardContent = new CardCollectionRewardContent();
+            var collectionRewardContent = new FullCollectionReward();
             collectionRewardContent.Source = RewardSource.CollectionCompleted;
             collectionRewardContent.Resources.Add(new GameResource(ResourceType.Gold, 1000));
             collectionRewardContent.Resources.Add(new GameResource(ResourceType.Gems, 50));

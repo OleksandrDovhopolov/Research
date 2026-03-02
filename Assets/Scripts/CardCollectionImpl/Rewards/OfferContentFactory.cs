@@ -7,9 +7,9 @@ namespace core
 {
     public class OfferContentFactory : IOfferContentFactory
     {
-        public OfferContent CreateFromGroupReward(GroupRewardDefinition groupRewardDefinition)
+        public CardCollectionImpl.CollectionRewardDefinition CreateFromGroupReward(GroupRewardDefinition groupRewardDefinition)
         {
-            var content = new CardGroupCompletedContent
+            var content = new CardGroupCompletionReward
             {
                 Source = RewardSource.GroupCompleted,
             };
@@ -23,9 +23,9 @@ namespace core
             return content;
         }
 
-        public OfferContent CreateFromCollectionReward(CollectionRewardDefinition collectionRewardDefinition)
+        public CardCollectionImpl.CollectionRewardDefinition CreateFromCollectionReward(CollectionRewardDefinition collectionRewardDefinition)
         {
-            var content = new CardCollectionRewardContent
+            var content = new FullCollectionReward
             {
                 Source = RewardSource.CollectionCompleted,
             };
@@ -39,9 +39,9 @@ namespace core
             return content;
         }
 
-        public OfferContent CreateFromExchangePack(ExchangePackEntry exchangePackEntry, IReadOnlyCollection<CardPack> cardPacks)
+        public CardCollectionImpl.CollectionRewardDefinition CreateFromExchangePack(ExchangePackEntry exchangePackEntry, IReadOnlyCollection<CardPack> cardPacks)
         {
-            var content = new BaseOfferContent
+            var content = new DuplicatePointsChestOffer
             {
                 Source = RewardSource.ShopOffer,
             };

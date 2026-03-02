@@ -13,23 +13,23 @@ namespace core
             _resourceManager = resourceManager;
         }
 
-        public UniTask<bool> ReceiveRewardsAsync(OfferContent offerContent, CancellationToken ct = default)
+        public UniTask<bool> ReceiveRewardsAsync(CardCollectionImpl.CollectionRewardDefinition collectionRewardDefinition, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
 
-            if (_resourceManager == null || offerContent == null)
+            if (_resourceManager == null || collectionRewardDefinition == null)
             {
                 return UniTask.FromResult(false);
             }
 
-            TryGetResourceRewards(offerContent, ct);
+            TryGetResourceRewards(collectionRewardDefinition, ct);
 
             return UniTask.FromResult(true);
         }
 
-        private void TryGetResourceRewards(OfferContent offerContent, CancellationToken ct = default)
+        private void TryGetResourceRewards(CardCollectionImpl.CollectionRewardDefinition collectionRewardDefinition, CancellationToken ct = default)
         {
-            var resources = GetResources(offerContent);
+            var resources = GetResources(collectionRewardDefinition);
             if (resources == null)
             {
                 return;
@@ -47,13 +47,13 @@ namespace core
             }
         }
 
-        private static System.Collections.Generic.IReadOnlyCollection<GameResource> GetResources(OfferContent offerContent)
+        private static System.Collections.Generic.IReadOnlyCollection<GameResource> GetResources(CardCollectionImpl.CollectionRewardDefinition collectionRewardDefinition)
         {
-            return offerContent switch
+            return collectionRewardDefinition switch
             {
-                BaseOfferContent baseOfferContent => baseOfferContent.Resources,
-                CardCollectionRewardContent collectionRewardContent => collectionRewardContent.Resources,
-                CardGroupCompletedContent groupCompletedContent => groupCompletedContent.Resources,
+                DuplicatePointsChestOffer baseOfferContent => baseOfferContent.Resources,
+                FullCollectionReward collectionRewardContent => collectionRewardContent.Resources,
+                CardGroupCompletionReward groupCompletedContent => groupCompletedContent.Resources,
                 _ => null
             };
         }

@@ -6,6 +6,6 @@ namespace core
 {
     public interface IOfferRewardsReceiver
     {
-        UniTask<bool> ReceiveRewardsAsync(OfferContent offerContent, CancellationToken ct = default);
+        UniTask<bool> ReceiveRewardsAsync(CardCollectionImpl.CollectionRewardDefinition collectionRewardDefinition, CancellationToken ct = default);
     }
 }
