@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using Object = UnityEngine.Object;
 
-namespace UIShared
+namespace Infrastructure
 {
     public static class AddressablesWrapper
     {

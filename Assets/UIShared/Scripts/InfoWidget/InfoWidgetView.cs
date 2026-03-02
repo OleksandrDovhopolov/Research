@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using UIShared;
 using UISystem;
 using UnityEngine;
 
-namespace core
+namespace UIShared
 {
     public class InfoWidgetView : WindowView
     {

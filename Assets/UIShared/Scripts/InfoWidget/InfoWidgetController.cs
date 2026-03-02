@@ -1,6 +1,6 @@
 using UISystem;
 
-namespace core
+namespace UIShared
 {
     public class InfoWidgetArg : WindowArgs
     {

@@ -1,12 +1,11 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using Infrastructure;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace core
+namespace UIShared
 {
     public class HintView : MonoBehaviour
     {

@@ -3,7 +3,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Animations;
 
-namespace core
+namespace Infrastructure
 {
     [SharedBetweenAnimators]
     public class AnimatorStateObserver : StateMachineBehaviour

@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using UIShared;
+using Infrastructure;
 using UISystem;
 using UnityEngine;
 using Object = UnityEngine.Object;

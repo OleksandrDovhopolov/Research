@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using UIShared;
+using Infrastructure;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;

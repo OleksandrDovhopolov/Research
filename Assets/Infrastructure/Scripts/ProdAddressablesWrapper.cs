@@ -4,7 +4,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Object = UnityEngine.Object;
 
-namespace UIShared
+namespace Infrastructure
 {
     public static class ProdAddressablesWrapper
     {

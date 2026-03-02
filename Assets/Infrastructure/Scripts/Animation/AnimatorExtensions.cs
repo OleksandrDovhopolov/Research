@@ -1,9 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace core
+namespace Infrastructure
 {
     public static class AnimatorExtensions 
     {
