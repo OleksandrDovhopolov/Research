@@ -103,7 +103,10 @@ namespace core
             
             var mappedResources = cardsReward.ResourcesData
                 .Where(resourceData => resourceData is { Amount: > 0 })
-                .Select(TryCreateGameResource)
+                .Select(resourceData =>
+                    TryCreateResource(resourceData?.ResourceId, resourceData?.Amount ?? 0, out var resource)
+                        ? resource
+                        : null)
                 .Where(resource => resource != null)
                 .ToList();
 
@@ -135,21 +138,6 @@ namespace core
             }
 
             return result;
-        }
-
-        private static GameResource TryCreateGameResource(ResourceRewardData data)
-        {
-            if (data is not { Amount: > 0 } || string.IsNullOrWhiteSpace(data.ResourceId))
-            {
-                return null;
-            }
-
-            if (!Enum.TryParse<ResourceType>(data.ResourceId, true, out var resourceType))
-            {
-                return null;
-            }
-
-            return new GameResource(resourceType, data.Amount);
         }
         
         private static bool TryCreateResource(string resourceId, int amount, out GameResource resource)

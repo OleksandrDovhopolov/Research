@@ -1,7 +1,7 @@
+using System.Collections.Generic;
 using System.Threading;
 using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
-using UnityEngine;
 
 namespace core
 {
@@ -43,15 +43,12 @@ namespace core
                 {
                     continue;
                 }
-
-                
-                Debug.LogWarning($"Test _resourceManager Add {rewardResource.Type} / {rewardResource.Amount}");
                 
                 _resourceManager.Add(rewardResource.Type, rewardResource.Amount);
             }
         }
 
-        private static System.Collections.Generic.IReadOnlyCollection<GameResource> GetResources(CollectionRewardDefinition collectionRewardDefinition)
+        private static IReadOnlyCollection<GameResource> GetResources(CollectionRewardDefinition collectionRewardDefinition)
         {
             return collectionRewardDefinition switch
             {

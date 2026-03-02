@@ -16,7 +16,7 @@ namespace core
         {
             var rewardsReceiver = new FakeOfferRewardsReceiver();
             var rewardFactory = new FakeRewardDefinitionFactory();
-            var handler = new CardCollectionRewardHandler(rewardsReceiver, rewardFactory);
+            var handler = new CardCollectionRewardHandler(rewardsReceiver, null, rewardFactory);
 
             var config = AssetDatabase.LoadAssetAtPath<CardCollectionRewardsConfigSO>(
                 "Assets/CardsCollectionImpl/Scripts/Rewards/CardCollectionRewardsConfig.asset");
@@ -40,7 +40,7 @@ namespace core
         {
             var rewardsReceiver = new FakeOfferRewardsReceiver();
             var rewardFactory = new FakeRewardDefinitionFactory();
-            var handler = new CardCollectionRewardHandler(rewardsReceiver, rewardFactory);
+            var handler = new CardCollectionRewardHandler(rewardsReceiver, null, rewardFactory);
 
             var config = ScriptableObject.CreateInstance<CardCollectionRewardsConfigSO>();
             config.FullCollectionReward = new FullCollectionRewardConfig

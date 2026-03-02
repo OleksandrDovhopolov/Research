@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
@@ -24,6 +25,7 @@ namespace core
         
         private ResourceManager _resourceManager;
         private ICardPackProvider _cardPackProvider;
+        private CardCollectionRewardHandler _rewardHandler;
         private IExchangeOfferProvider _exchangeOfferProvider;
         private IOfferRewardsReceiver _offerRewardsReceiver;
         private RewardDefinitionFactory _rewardDefinitionFactory;
@@ -36,10 +38,6 @@ namespace core
 
         private void Start()
         {
-            /*LoadAddressables().Forget();
-            LoadConfig().Forget();
-            InitResources(_destroyCt).Forget();*/
-
             WindowFactoryBase windowFactoryBase = new WindowFactoryDI(_uiManager);
             UIManagerEventHandlerBase eventHandler = new UIManagerSignalHandler();
 
@@ -64,8 +62,8 @@ namespace core
             var cardPackConfigs = await _cardPackProvider.GetCardConfigsAsync(_destroyCt);
             _rewardDefinitionFactory = new RewardDefinitionFactory(_exchangePacksConfig, cardPackConfigs);
                 
-            await _cardCollectionEntryPoint.InitializeRewardHandlerAsync(_offerRewardsReceiver, _rewardDefinitionFactory, _destroyCt);
-            await _cardCollectionEntryPoint.InitCardCollection(_cardPackProvider, _destroyCt);
+            await InitializeRewardHandlerAsync(_offerRewardsReceiver, _rewardDefinitionFactory, _destroyCt);
+            await _cardCollectionEntryPoint.InitCardCollection(_cardPackProvider, _rewardHandler, _destroyCt);
         }
         
         private async UniTask LoadAddressables()
@@ -91,18 +89,43 @@ namespace core
             await _configManager.ApplyParsedConfigs(configStorages);
         }
 
+        
+        private readonly UniTaskCompletionSource _rewardHandlerInitializationSource = new();
+        public async UniTask InitializeRewardHandlerAsync(IOfferRewardsReceiver rewardsReceiver, IRewardDefinitionFactory rewardDefinitionFactory, CancellationToken ct = default)
+        {
+            try
+            {
+                //TODO combine OfferRewardsReceiver with init in Starter
+                _rewardHandler = new CardCollectionRewardHandler(_offerRewardsReceiver, _rewardDefinitionFactory, _rewardDefinitionFactory);
+                await _rewardHandler.InitializeAsync(ct);
+                _rewardHandlerInitializationSource.TrySetResult();
+            }
+            catch (OperationCanceledException)
+            {
+                _rewardHandlerInitializationSource.TrySetCanceled(ct);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _rewardHandlerInitializationSource.TrySetException(ex);
+                throw;
+            }
+        }
+        
+        
+        public UniTask WaitForRewardHandlerInitializationAsync(CancellationToken ct = default)
+        {
+            return _rewardHandlerInitializationSource.Task.AttachExternalCancellation(ct);
+        }
+        
         private async UniTask OpenCardCollectionWindow()
         {
             await _cardCollectionEntryPoint.WaitForInitializationAsync();
-            await _cardCollectionEntryPoint.WaitForRewardHandlerInitializationAsync(_destroyCt);
+            await WaitForRewardHandlerInitializationAsync(_destroyCt);
 
             _exchangeOfferProvider ??=
                 new ExchangeOfferProvider(
-                    _exchangePacksConfig,
-                    _cardCollectionEntryPoint.CardCollectionPointsAccount,
-                    _offerRewardsReceiver,
-                    _uiManager,
-                    _rewardDefinitionFactory);
+                    _exchangePacksConfig, _cardCollectionEntryPoint.CardCollectionPointsAccount, _rewardHandler, _uiManager);
             
             var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
             var args = new CardCollectionArgs(

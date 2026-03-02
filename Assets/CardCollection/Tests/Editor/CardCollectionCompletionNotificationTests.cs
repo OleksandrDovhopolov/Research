@@ -160,12 +160,6 @@ namespace CardCollection.Tests
                 ct.ThrowIfCancellationRequested();
                 return UniTask.FromResult(EmptyPacks);
             }
-
-            public UniTask<CardPackConfig> GetCardConfigByIdAsync(string packId, CancellationToken ct = default)
-            {
-                ct.ThrowIfCancellationRequested();
-                return UniTask.FromResult<CardPackConfig>(null);
-            }
         }
 
         private sealed class StubCardDefinitionProvider : ICardDefinitionProvider

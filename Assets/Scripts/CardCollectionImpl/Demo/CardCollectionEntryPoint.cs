@@ -13,7 +13,6 @@ namespace core
         private CardCollectionModule _cardCollectionModule;
         private CardCollectionRewardHandler _rewardHandler;
         private Exception _initializationException;
-        private readonly UniTaskCompletionSource _rewardHandlerInitializationSource = new();
 
         private readonly UniTaskCompletionSource _initializationSource = new();
 
@@ -26,39 +25,7 @@ namespace core
         public ICardCollectionPointsAccount CardCollectionPointsAccount => GetInitializedModule();
 
         public event Action<Exception> OnInitializationFailed;
-
-        public async UniTask InitializeRewardHandlerAsync(IOfferRewardsReceiver rewardsReceiver, IRewardDefinitionFactory rewardDefinitionFactory, CancellationToken ct = default)
-        {
-            try
-            {
-                //TODO combine OfferRewardsReceiver with init in Starter
-                _rewardHandler = new CardCollectionRewardHandler(rewardsReceiver, rewardDefinitionFactory);
-                await _rewardHandler.InitializeAsync(ct);
-                _rewardHandlerInitializationSource.TrySetResult();
-            }
-            catch (OperationCanceledException)
-            {
-                _rewardHandlerInitializationSource.TrySetCanceled(ct);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _rewardHandlerInitializationSource.TrySetException(ex);
-                throw;
-            }
-        }
-
-        public UniTask WaitForRewardHandlerInitializationAsync(CancellationToken ct = default)
-        {
-            return _rewardHandlerInitializationSource.Task.AttachExternalCancellation(ct);
-        }
-
-        private void Awake()
-        {
-            var ct = this.GetCancellationTokenOnDestroy();
-            //InitCardCollection(ct).Forget();
-        }
-
+        
         private CardCollectionModule GetInitializedModule()
         {
             if (_initializationException != null)
@@ -74,8 +41,9 @@ namespace core
             return _cardCollectionModule;
         }
 
-        public async UniTask InitCardCollection(ICardPackProvider cardPackProvider, CancellationToken ct)
+        public async UniTask InitCardCollection(ICardPackProvider cardPackProvider, CardCollectionRewardHandler cardCollectionRewardHandler, CancellationToken ct)
         {
+            _rewardHandler = cardCollectionRewardHandler;
             try
             {
                 const string testEventId = "test";

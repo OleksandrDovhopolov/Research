@@ -12,14 +12,16 @@ namespace core
         private const string DefaultRewardsConfigAddress = "CardCollectionRewardsConfig";
 
         private readonly IOfferRewardsReceiver _offerRewardsReceiver;
+        private readonly IOfferDefinitionFactory _offerDefinitionFactory;
         private readonly IRewardDefinitionFactory _rewardDefinitionFactory;
         
         private bool _isInitialized;
         private CardCollectionRewardsConfigSO _cardCollectionRewardsConfigSo;
         
-        public CardCollectionRewardHandler(IOfferRewardsReceiver offerRewardsReceiver, IRewardDefinitionFactory rewardDefinitionFactory)
+        public CardCollectionRewardHandler(IOfferRewardsReceiver offerRewardsReceiver, IOfferDefinitionFactory offerDefinitionFactory, IRewardDefinitionFactory rewardDefinitionFactory)
         {
             _offerRewardsReceiver = offerRewardsReceiver;
+            _offerDefinitionFactory = offerDefinitionFactory;
             _rewardDefinitionFactory = rewardDefinitionFactory;
         }
 
@@ -97,7 +99,11 @@ namespace core
 
         public bool TryHandleBuyPointsOffer(string offerId)
         {
-            return false;
+            var exchangeOfferModule = _offerDefinitionFactory.CreateFromOfferReward(offerId);
+            
+            //TODO await this  + implement logic for pack added to inventory / open immidiatlly 
+            _offerRewardsReceiver.ReceiveRewardsAsync(exchangeOfferModule).Forget();
+            return true;
         }
     }
 }

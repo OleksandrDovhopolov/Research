@@ -11,22 +11,19 @@ namespace core
     {
         private readonly UIManager _uiManager;
         private readonly ICardCollectionPointsAccount _cardCollectionPointsAccount;
-        private readonly IOfferRewardsReceiver _offerRewardsReceiver;
-        private readonly IOfferDefinitionFactory _offerDefinitionFactory;
+        private readonly CardCollectionRewardHandler _cardCollectionRewardHandler;
         
         private readonly Dictionary<string, ExchangePackEntry> _packById;
         
         public ExchangeOfferProvider(ExchangePacksConfig packsConfig,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
-            IOfferRewardsReceiver offerRewardsReceiver,
-            UIManager uiManager, 
-            IOfferDefinitionFactory offerDefinitionFactory)
+            CardCollectionRewardHandler cardCollectionRewardHandler,
+            UIManager uiManager)
         {
             _cardCollectionPointsAccount = cardCollectionPointsAccount;
-            _offerRewardsReceiver = offerRewardsReceiver;
             _packById = new Dictionary<string, ExchangePackEntry>();
             _uiManager = uiManager;
-            _offerDefinitionFactory = offerDefinitionFactory;
+            _cardCollectionRewardHandler = cardCollectionRewardHandler;
 
             if (packsConfig == null || packsConfig.Packs == null)
             {
@@ -60,8 +57,9 @@ namespace core
             var infoArgs = new InfoWidgetArg(_uiManager, infoText);
             _uiManager.Show<InfoWidgetController>(infoArgs);
             
-            var offerContent = _offerDefinitionFactory.CreateFromOfferReward(offerPackId);
-            return await _offerRewardsReceiver.ReceiveRewardsAsync(offerContent, ct);
+            //TODO await ? 
+            _cardCollectionRewardHandler.TryHandleBuyPointsOffer(offerPackId);
+            return await UniTask.FromResult(true);
         }
 
         public async UniTask<bool> TrySpendCollectionPointsAsync(int pointsToSpend, CancellationToken ct = default)

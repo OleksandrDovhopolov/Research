@@ -46,12 +46,6 @@ namespace CardCollection.Core
             }
         }
 
-        public async UniTask<CardPackConfig> GetCardConfigByIdAsync(string packId, CancellationToken ct = default)
-        {
-            var allPacks = await GetCardConfigsAsync(ct);
-            return allPacks.Find(p => p.packId == packId);
-        }
-
         public void ClearCache()
         {
             _cachedPacks = null;

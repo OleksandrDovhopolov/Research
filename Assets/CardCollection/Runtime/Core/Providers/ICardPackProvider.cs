@@ -7,7 +7,5 @@ namespace CardCollection.Core
     public interface ICardPackProvider
     {
         UniTask<List<CardPackConfig>> GetCardConfigsAsync(CancellationToken ct = default);
-
-        UniTask<CardPackConfig> GetCardConfigByIdAsync(string packId, CancellationToken ct = default);
     }
 }

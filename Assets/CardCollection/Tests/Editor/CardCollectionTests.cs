@@ -107,12 +107,6 @@ namespace CardCollection.Tests
                 return GetTestPacks();
             }
 
-            public async UniTask<CardPackConfig> GetCardConfigByIdAsync(string packId, CancellationToken ct = default)
-            {
-                var packs = GetTestPacks();
-                return packs.Find(p => p.packId == packId);
-            }
-
             public List<CardPackConfig> GetTestPacks()
             {
                 return new List<CardPackConfig>
