@@ -1,10 +1,9 @@
 using System.Collections.Generic;
 using System.Threading;
-using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 using Resources.Core;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class OfferRewardsReceiver : IOfferRewardsReceiver
     {

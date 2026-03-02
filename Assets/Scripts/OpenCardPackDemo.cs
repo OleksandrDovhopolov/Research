@@ -1,3 +1,4 @@
+using CardCollectionImpl;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;

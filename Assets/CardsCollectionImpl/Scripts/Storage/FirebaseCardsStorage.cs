@@ -8,7 +8,7 @@ using Firebase.Auth;
 using Firebase.Firestore;
 using UnityEngine;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class FirebaseCardsStorage : IEventCardsStorage
     {

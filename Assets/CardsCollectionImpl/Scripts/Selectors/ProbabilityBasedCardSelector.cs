@@ -3,7 +3,7 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class ProbabilityBasedCardSelector : ICardSelector
     {

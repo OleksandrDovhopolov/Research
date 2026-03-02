@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace core
+namespace CardCollectionImpl
 {
     /// <summary>
     /// Configuration helper for pack-specific rules.

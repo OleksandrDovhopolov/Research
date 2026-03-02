@@ -4,7 +4,7 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class CollectionPointView : MonoBehaviour
     {

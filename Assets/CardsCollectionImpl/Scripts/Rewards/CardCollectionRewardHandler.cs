@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 using Infrastructure;
 using UnityEngine;
 
-namespace core
+namespace CardCollectionImpl
 {
     public sealed class CardCollectionRewardHandler
     {

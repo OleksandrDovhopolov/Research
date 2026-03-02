@@ -1,10 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using CardCollectionImpl;
 using Resources.Core;
 using UIShared;
 
-namespace core
+namespace CardCollectionImpl
 {
     public static class ContentWidgetDataMapper
     {
@@ -28,7 +28,7 @@ namespace core
             return new ContentWidgetData(cardPackAddresses, resources);
         }
 
-        private static System.Collections.Generic.List<GameResource> GetResources(CollectionRewardDefinition rewardDefinition)
+        private static List<GameResource> GetResources(CollectionRewardDefinition rewardDefinition)
         {
             return rewardDefinition switch
             {

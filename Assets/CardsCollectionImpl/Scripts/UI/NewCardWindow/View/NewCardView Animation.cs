@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 
-namespace core
+namespace CardCollectionImpl
 {
     public partial class NewCardView
     {

@@ -1,8 +1,7 @@
 using System.Collections.Generic;
-using CardCollectionImpl;
 using Resources.Core;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class FullCollectionReward : CollectionRewardDefinition
     {

@@ -5,7 +5,7 @@ using UIShared;
 using UISystem;
 using UnityEngine;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class CollectionPointsExchangeView : WindowView
     {

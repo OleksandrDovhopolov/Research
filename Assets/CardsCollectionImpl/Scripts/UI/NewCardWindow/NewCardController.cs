@@ -3,7 +3,7 @@ using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class NewCardArgs : WindowArgs
     {

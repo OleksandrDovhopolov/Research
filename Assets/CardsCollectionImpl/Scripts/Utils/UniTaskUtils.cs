@@ -1,7 +1,7 @@
 using System;
 using Cysharp.Threading.Tasks;
 
-namespace core
+namespace CardCollectionImpl
 {
     public static class UniTaskUtils
     {

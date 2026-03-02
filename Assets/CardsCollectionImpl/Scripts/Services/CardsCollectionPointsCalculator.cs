@@ -1,6 +1,6 @@
 using CardCollection.Core;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class CardsCollectionPointsCalculator : ICardPointsCalculator
     {

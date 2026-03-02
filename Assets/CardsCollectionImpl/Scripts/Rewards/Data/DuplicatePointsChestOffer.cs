@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using Resources.Core;
 
-namespace core
+namespace CardCollectionImpl
 {
-    public class DuplicatePointsChestOffer : CardCollectionImpl.CollectionRewardDefinition
+    public class DuplicatePointsChestOffer : CollectionRewardDefinition
     {
         public List<GameResource> Resources = new();
     }

@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace core
+namespace CardCollectionImpl
 {
     /// <summary>
     /// Data-driven pack selection strategy that reads its rules from a <see cref="PackRule"/>.

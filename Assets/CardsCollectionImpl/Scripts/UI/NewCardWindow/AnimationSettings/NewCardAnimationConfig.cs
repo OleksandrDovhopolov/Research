@@ -1,7 +1,7 @@
 using DG.Tweening;
 using UnityEngine;
 
-namespace core
+namespace CardCollectionImpl
 {
     [CreateAssetMenu(fileName = "NewCardAnimationConfig", menuName = "Config/NewCardAnimationConfig")]
     public class NewCardAnimationConfig : ScriptableObject

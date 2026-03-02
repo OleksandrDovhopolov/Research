@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class CardsCollectionView : MonoBehaviour
     {

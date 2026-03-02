@@ -1,8 +1,7 @@
 using System.Threading;
 using CardCollection.Core;
-using CardCollectionImpl;
 
-namespace core
+namespace CardCollectionImpl
 {
     public interface IRewardDefinitionFactory
     {

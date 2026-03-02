@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace core
+namespace CardCollectionImpl
 {
     /// <summary>
     /// Tracks pack opening history to support missing card boost logic.

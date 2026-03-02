@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using CardCollection.Core;
-using CardCollectionImpl;
 using Resources.Core;
 using UnityEngine;
-using CollectionRewardDefinition = CardCollectionImpl.CollectionRewardDefinition;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class RewardDefinitionFactory : IRewardDefinitionFactory, IOfferDefinitionFactory
     {

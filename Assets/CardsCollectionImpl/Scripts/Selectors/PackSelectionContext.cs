@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using CardCollection.Core;
 
-namespace core
+namespace CardCollectionImpl
 {
     /// <summary>
     /// Context object passed to pack selection strategies.

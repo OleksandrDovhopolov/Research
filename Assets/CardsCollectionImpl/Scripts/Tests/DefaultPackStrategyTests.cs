@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine.TestTools;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class DefaultPackStrategyTests
     {
@@ -39,8 +39,8 @@ namespace core
         [UnityTest]
         public IEnumerator SelectCardsAsync_ReturnsCardCount_AndNoDuplicates()
         {
-            var strategy = new core.DefaultPackStrategy();
-            var context = new core.PackSelectionContext();
+            var strategy = new DefaultPackStrategy();
+            var context = new PackSelectionContext();
 
             var pack = CreatePack("default", 6);
             var allCards = CreateCards(
@@ -59,8 +59,8 @@ namespace core
         [UnityTest]
         public IEnumerator SelectCardsAsync_WhenCardCountExceedsAllCards_ReturnsAllCardsCount()
         {
-            var strategy = new core.DefaultPackStrategy();
-            var context = new core.PackSelectionContext();
+            var strategy = new DefaultPackStrategy();
+            var context = new PackSelectionContext();
 
             var pack = CreatePack("default", 10);
             var allCards = CreateCards(

@@ -9,7 +9,7 @@ using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class JsonEventCardsStorage : IEventCardsStorage
     {

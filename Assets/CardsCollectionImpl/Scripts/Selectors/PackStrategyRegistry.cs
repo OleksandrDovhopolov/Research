@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using CardCollection.Core;
 
-namespace core
+namespace CardCollectionImpl
 {
     /// <summary>
     /// Registry that maps pack IDs to their selection strategies.

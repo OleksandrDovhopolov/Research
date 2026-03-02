@@ -3,7 +3,7 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 
-namespace core
+namespace CardCollectionImpl
 {
     /// <summary>
     /// Strategy interface for pack-specific card selection logic.

@@ -1,13 +1,12 @@
 using System.Reflection;
 using System.Threading;
 using CardCollection.Core;
-using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class CardCollectionRewardHandlerTests
     {

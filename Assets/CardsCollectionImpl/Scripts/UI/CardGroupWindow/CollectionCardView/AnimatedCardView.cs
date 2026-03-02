@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class AnimatedCardView : CollectionCardView
     {

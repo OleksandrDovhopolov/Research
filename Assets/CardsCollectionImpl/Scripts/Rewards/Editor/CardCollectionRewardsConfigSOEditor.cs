@@ -2,7 +2,7 @@ using CardCollection.Core;
 using UnityEditor;
 using UnityEngine;
 
-namespace core.Editor
+namespace CardCollectionImpl.Editor
 {
     [CustomEditor(typeof(CardCollectionRewardsConfigSO))]
     public class CardCollectionRewardsConfigSOEditor : UnityEditor.Editor

@@ -4,10 +4,9 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
-using UIShared;
 using UnityEngine;
 
-namespace core
+namespace CardCollectionImpl
 {
     public static class UIUtils
     {

@@ -1,8 +1,7 @@
 using System.Threading;
-using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 
-namespace core
+namespace CardCollectionImpl
 {
     public interface IOfferRewardsReceiver
     {

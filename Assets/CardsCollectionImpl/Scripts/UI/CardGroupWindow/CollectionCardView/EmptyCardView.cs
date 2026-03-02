@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class EmptyCardView : MonoBehaviour
     {

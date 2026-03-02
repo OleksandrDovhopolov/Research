@@ -5,7 +5,7 @@ using Cysharp.Threading.Tasks;
 using Infrastructure;
 using UISystem;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class CardGroupArgs : WindowArgs
     {

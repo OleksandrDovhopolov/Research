@@ -1,7 +1,7 @@
 using System;
 using Infrastructure;
 
-namespace core
+namespace CardCollectionImpl
 {
     [Serializable]
     public class NewCardDisplayData

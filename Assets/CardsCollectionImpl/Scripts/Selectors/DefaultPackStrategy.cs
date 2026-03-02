@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace core
+namespace CardCollectionImpl
 {
     /// <summary>
     /// Default pack selection strategy using base probability distribution:

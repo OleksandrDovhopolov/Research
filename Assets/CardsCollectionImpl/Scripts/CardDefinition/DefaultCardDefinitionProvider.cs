@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using CardCollection.Core;
 using Infrastructure;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class DefaultCardDefinitionProvider : ICardDefinitionProvider
     {

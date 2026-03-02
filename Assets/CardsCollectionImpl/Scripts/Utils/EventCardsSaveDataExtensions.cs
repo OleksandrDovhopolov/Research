@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using CardCollection.Core;
 using Infrastructure;
 
-namespace core
+namespace CardCollectionImpl
 {
     public static class EventCardsSaveDataExtensions
     {

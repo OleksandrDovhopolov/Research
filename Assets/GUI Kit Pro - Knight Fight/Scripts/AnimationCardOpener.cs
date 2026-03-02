@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using CardCollectionImpl;
+using UnityEngine;
 
 namespace core
 {

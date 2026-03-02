@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace core
+namespace CardCollectionImpl
 {
     [Serializable]
     public class ResourceRewardData

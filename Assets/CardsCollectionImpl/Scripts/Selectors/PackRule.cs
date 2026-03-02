@@ -1,6 +1,6 @@
 using System;
 
-namespace core
+namespace CardCollectionImpl
 {
     /// <summary>
     /// Defines pack-specific rules for card selection.

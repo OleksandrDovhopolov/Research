@@ -3,6 +3,7 @@ using cheatModule;
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using System.Threading;
+using CardCollectionImpl;
 using UnityEngine;
 
 namespace core

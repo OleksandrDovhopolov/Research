@@ -1,7 +1,7 @@
 using CardCollection.Core;
 using UnityEngine;
 
-namespace core
+namespace CardCollectionImpl
 {
     [CreateAssetMenu(
         fileName = "CardCollectionRewardsConfig",

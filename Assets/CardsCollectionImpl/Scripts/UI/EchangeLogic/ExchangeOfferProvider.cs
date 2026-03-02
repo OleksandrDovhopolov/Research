@@ -5,7 +5,7 @@ using Cysharp.Threading.Tasks;
 using UIShared;
 using UISystem;
 
-namespace core
+namespace CardCollectionImpl
 {
     public class ExchangeOfferProvider : IExchangeOfferProvider
     {
