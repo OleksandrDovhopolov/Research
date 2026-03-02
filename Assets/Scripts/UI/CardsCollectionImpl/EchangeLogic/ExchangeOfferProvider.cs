@@ -7,6 +7,7 @@ using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
+using CollectionRewardDefinition = CardCollectionImpl.CollectionRewardDefinition;
 
 namespace core
 {
@@ -92,7 +93,7 @@ namespace core
             return _packById.TryGetValue(packId, out pack);
         }
         
-        public async UniTask<CardCollectionImpl.CollectionRewardDefinition> GetOfferContentAsync(string offerPackId, CancellationToken ct = default)
+        public async UniTask<CollectionRewardDefinition> GetOfferContentAsync(string offerPackId, CancellationToken ct = default)
         {
             if (!TryGetPackEntry(offerPackId, out var exchangePackEntry))
             {
@@ -104,22 +105,10 @@ namespace core
 
             return new DuplicatePointsChestOffer
             {
-                Source = RewardSource.ShopOffer,
+                Source = RewardSource.CollectionPointsExchangeOffer,
                 Resources = resources,
                 CardPack = cardPacks,
             };
-        }
-
-        public async UniTask<CardCollectionImpl.CollectionRewardDefinition> GetCollectionRewardData(CancellationToken ct = default)
-        {
-            var collectionRewardContent = new FullCollectionReward();
-            collectionRewardContent.Source = RewardSource.CollectionCompleted;
-            collectionRewardContent.Resources.Add(new GameResource(ResourceType.Gold, 1000));
-            collectionRewardContent.Resources.Add(new GameResource(ResourceType.Gems, 50));
-            collectionRewardContent.Resources.Add(new GameResource(ResourceType.Energy, 100));
-            
-            await UniTask.CompletedTask;
-            return collectionRewardContent;
         }
 
         private async UniTask<List<CardPack>> GetRewardCardPacksAsync(ExchangePackEntry pack, CancellationToken ct)

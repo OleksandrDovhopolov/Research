@@ -20,21 +20,22 @@ namespace core
 
         private ConfigManager _configManager;
         private CancellationToken _destroyCt;
+        
+        private ResourceManager _resourceManager;
         private IExchangeOfferProvider _exchangeOfferProvider;
-
-        public IExchangeOfferProvider ExchangeOfferProvider => _exchangeOfferProvider;
-
         private IOfferRewardsReceiver _offerRewardsReceiver;
-        private readonly ResourceManager _resourceManager = new();
+        private IRewardDefinitionFactory _rewardDefinitionFactory;
 
         private void Awake()
         {
             Application.targetFrameRate = 60;
             _destroyCt = this.GetCancellationTokenOnDestroy();
 
+            _resourceManager = new ResourceManager();
             _offerRewardsReceiver = new OfferRewardsReceiver(_resourceManager);
+            _rewardDefinitionFactory = new RewardDefinitionFactory();
                 
-            _cardCollectionEntryPoint.InitializeRewardHandlerAsync(_offerRewardsReceiver, _destroyCt).Forget();
+            _cardCollectionEntryPoint.InitializeRewardHandlerAsync(_offerRewardsReceiver, _rewardDefinitionFactory, _destroyCt).Forget();
         }
 
         private void Start()
@@ -93,7 +94,8 @@ namespace core
                 _uiManager,
                 _cardCollectionEntryPoint.CardCollectionModule,
                 collectionData,
-                _exchangeOfferProvider);
+                _exchangeOfferProvider,
+                _rewardDefinitionFactory);
             _uiManager.Show<CardCollectionController>(args);
         }
 

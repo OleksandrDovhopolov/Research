@@ -11,8 +11,6 @@ namespace core
         int GetOfferPrice(string offerPackId);
         UniTask<bool> ReceiveOfferContent(string offerPackId, CancellationToken ct = default);
         UniTask<bool> TrySpendCollectionPointsAsync(int pointsToSpend, CancellationToken ct = default);
-        
-        UniTask<CardCollectionImpl.CollectionRewardDefinition> GetOfferContentAsync(string offerPackId, CancellationToken ct = default);
-        UniTask<CardCollectionImpl.CollectionRewardDefinition> GetCollectionRewardData(CancellationToken ct = default);
+        UniTask<CollectionRewardDefinition> GetOfferContentAsync(string offerPackId, CancellationToken ct = default);
     }
 }

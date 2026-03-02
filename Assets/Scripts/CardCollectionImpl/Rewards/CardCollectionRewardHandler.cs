@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using CardCollection.Core;
-using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -13,13 +12,15 @@ namespace core
         private const string DefaultRewardsConfigAddress = "CardCollectionRewardsConfig";
 
         private readonly IOfferRewardsReceiver _offerRewardsReceiver;
-        private Dictionary<string, GameResource> _groupRewardByGroupId = new(StringComparer.Ordinal);
-            
+        private readonly IRewardDefinitionFactory _rewardDefinitionFactory;
+        
         private bool _isInitialized;
-
-        public CardCollectionRewardHandler(IOfferRewardsReceiver  offerRewardsReceiver)
+        private CardCollectionRewardsConfigSO _cardCollectionRewardsConfigSo;
+        
+        public CardCollectionRewardHandler(IOfferRewardsReceiver offerRewardsReceiver, IRewardDefinitionFactory rewardDefinitionFactory)
         {
             _offerRewardsReceiver = offerRewardsReceiver;
+            _rewardDefinitionFactory = rewardDefinitionFactory;
         }
 
         public async UniTask InitializeAsync(CancellationToken ct = default)
@@ -28,18 +29,17 @@ namespace core
             
             try
             {
-                var config = await AddressablesWrapper.LoadFromTask<CardCollectionRewardsConfigSO>(DefaultRewardsConfigAddress)
+                _cardCollectionRewardsConfigSo = await AddressablesWrapper.LoadFromTask<CardCollectionRewardsConfigSO>(DefaultRewardsConfigAddress)
                     .AsUniTask()
                     .AttachExternalCancellation(ct);
 
-                if (config == null)
+                if (_cardCollectionRewardsConfigSo == null)
                 {
                     Debug.LogError(
                         $"[CardCollectionRewardHandler] Failed to load rewards config from address '{DefaultRewardsConfigAddress}': loaded asset is null.");
                     return;
                 }
 
-                _groupRewardByGroupId = BuildGroupRewards(config.GroupRewards);
                 _isInitialized = true;
             }
             catch (OperationCanceledException)
@@ -61,29 +61,20 @@ namespace core
                 return false;
             }
 
-            if (string.IsNullOrEmpty(groupCompletedData.GroupId))
+            var groupDefinition = _cardCollectionRewardsConfigSo.GroupRewards.FirstOrDefault(group => group.GroupId == groupCompletedData.GroupId);
+            if (string.IsNullOrEmpty(groupDefinition.GroupId))
             {
-                Debug.LogWarning($"No reward configured for completed group '{groupCompletedData.GroupId}'.");
+                Debug.LogWarning($"Failed to find GroupRewardDefinition for group with ID {groupCompletedData.GroupId}");
                 return false;
             }
-
-            if (_groupRewardByGroupId.TryGetValue(groupCompletedData.GroupId, out var reward))
-            {
-                var groupCompletedContent = new CardGroupCompletionReward
-                {
-                    Source = RewardSource.GroupCompleted,
-                };
-                groupCompletedContent.Resources.Add(reward);
-
-                //TODO await this + handle result + add token
-                _offerRewardsReceiver.ReceiveRewardsAsync(groupCompletedContent).Forget();
-                return true;
-            }
             
-            return false;
+            var groupRewards = _rewardDefinitionFactory.CreateFromGroupReward(groupDefinition);
+            //TODO await this 
+            _offerRewardsReceiver.ReceiveRewardsAsync(groupRewards).Forget();
+            return true;
         }
 
-        public bool TryHandleCollectionCompleted(CardCollectionImpl.CollectionRewardDefinition collectionRewardContent)
+        public bool TryHandleCollectionCompleted(CardCollectionCompletedData collectionCompletedData)
         {
             if (!_isInitialized)
             {
@@ -91,36 +82,18 @@ namespace core
                 return false;
             }
 
-            //TODO await this 
-            _offerRewardsReceiver.ReceiveRewardsAsync(collectionRewardContent).Forget();
-            return true;
-        }
-
-        private static Dictionary<string, GameResource> BuildGroupRewards(
-            IReadOnlyCollection<GroupRewardDefinition> groupRewardDefinitions)
-        {
-            var result = new Dictionary<string, GameResource>(StringComparer.Ordinal);
-            if (groupRewardDefinitions == null)
+            var collectionRewardDefinition = _cardCollectionRewardsConfigSo.CollectionReward; 
+            if (collectionRewardDefinition.RewardId == collectionCompletedData.EventId)
             {
-                return result;
-            }
-
-            foreach (var rewardDefinition in groupRewardDefinitions)
-            {
-                if (string.IsNullOrEmpty(rewardDefinition.GroupId) || rewardDefinition.Amount <= 0)
-                {
-                    continue;
-                }
-
-                if (!Enum.TryParse(rewardDefinition.RewardId, true, out ResourceType resourceType))
-                {
-                    continue;
-                }
-
-                result[rewardDefinition.GroupId] = new GameResource(resourceType, rewardDefinition.Amount);
+                var collectionRewardModel = _rewardDefinitionFactory.CreateFromCollectionReward(collectionRewardDefinition);
+                //TODO await this 
+                Debug.LogWarning($"Test collectionRewardModel {collectionRewardModel.GetType()}");
+                _offerRewardsReceiver.ReceiveRewardsAsync(collectionRewardModel).Forget();
+                return true;
             }
             
-            return result;
+            Debug.LogWarning($"Failed to find CollectionRewardDefinition for group with ID groupCompletedData.GroupId");
+            return false;
         }
     }
 }

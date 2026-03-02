@@ -29,12 +29,12 @@ namespace core
 
         public event Action<Exception> OnInitializationFailed;
 
-        public async UniTask InitializeRewardHandlerAsync(IOfferRewardsReceiver rewardsReceiver, CancellationToken ct = default)
+        public async UniTask InitializeRewardHandlerAsync(IOfferRewardsReceiver rewardsReceiver, IRewardDefinitionFactory rewardDefinitionFactory, CancellationToken ct = default)
         {
             try
             {
                 //TODO combine OfferRewardsReceiver with init in Starter
-                _rewardHandler = new CardCollectionRewardHandler(rewardsReceiver);
+                _rewardHandler = new CardCollectionRewardHandler(rewardsReceiver, rewardDefinitionFactory);
                 await _rewardHandler.InitializeAsync(ct);
                 _rewardHandlerInitializationSource.TrySetResult();
             }
@@ -143,16 +143,7 @@ namespace core
                 return;
             }
 
-            CollectionCompletedHandlerAsync(collectionCompletedData).Forget();
-        }
-
-        private async UniTask CollectionCompletedHandlerAsync(CardCollectionCompletedData collectionCompletedData)
-        {
-            //TODO add Cancel token + resolve CardCollectionEntryPoint - Starter dependency
-            var collectionRewardContent = 
-                await _starter.ExchangeOfferProvider.GetCollectionRewardData();
-            
-            _rewardHandler.TryHandleCollectionCompleted(collectionRewardContent);
+            _rewardHandler.TryHandleCollectionCompleted(collectionCompletedData);
         }
 
         private void OnDestroy()

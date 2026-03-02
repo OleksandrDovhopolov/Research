@@ -12,17 +12,20 @@ namespace core
         public readonly ICardCollectionModule CardCollectionModule;
         public readonly EventCardsSaveData EventCardsSaveData;
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
+        public readonly IRewardDefinitionFactory RewardDefinitionFactory;
         
         public CardCollectionArgs(
             UIManager uiManager,
             ICardCollectionModule cardCollectionModule,
             EventCardsSaveData eventCardsSaveData,
-            IExchangeOfferProvider exchangeOfferProvider)
+            IExchangeOfferProvider exchangeOfferProvider,
+            IRewardDefinitionFactory rewardDefinitionFactory)
         {
             UiManager = uiManager;
             CardCollectionModule = cardCollectionModule;
             EventCardsSaveData = eventCardsSaveData;
             ExchangeOfferProvider = exchangeOfferProvider;
+            RewardDefinitionFactory = rewardDefinitionFactory;
         }
     }
     
@@ -65,12 +68,7 @@ namespace core
 
         private void OnRewardChestClickedHandler(RectTransform rectTransform)
         {
-            OnRewardChestClickedHandlerAsync(rectTransform).Forget();
-        }
-
-        private async UniTask OnRewardChestClickedHandlerAsync(RectTransform rectTransform)
-        {
-            var cardCollectionRewardContent = await Args.ExchangeOfferProvider.GetCollectionRewardData();
+            var cardCollectionRewardContent = Args.RewardDefinitionFactory.CreateFromCollectionReward();
             var args = new ContentWidgetArgs(Args.UiManager, cardCollectionRewardContent, rectTransform);
             Args.UiManager.Show<ContentWidgetController>(args);
         }

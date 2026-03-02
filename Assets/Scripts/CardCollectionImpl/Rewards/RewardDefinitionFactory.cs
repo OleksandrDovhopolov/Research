@@ -6,7 +6,7 @@ using CollectionRewardDefinition = CardCollectionImpl.CollectionRewardDefinition
 
 namespace core
 {
-    public class OfferContentFactory : IOfferContentFactory
+    public class RewardDefinitionFactory : IRewardDefinitionFactory
     {
         public CollectionRewardDefinition CreateFromGroupReward(GroupRewardDefinition groupRewardDefinition)
         {
@@ -26,25 +26,23 @@ namespace core
 
         public CollectionRewardDefinition CreateFromCollectionReward(CardCollection.Core.CollectionRewardDefinition collectionRewardDefinition)
         {
-            var content = new FullCollectionReward
+            var fullCollectionReward = new FullCollectionReward
             {
                 Source = RewardSource.CollectionCompleted,
             };
 
-            if (!TryCreateResource(collectionRewardDefinition.RewardId, collectionRewardDefinition.Amount, out var resource))
-            {
-                return content;
-            }
-
-            content.Resources.Add(resource);
-            return content;
+            fullCollectionReward.Resources.Add(new GameResource(ResourceType.Gold, 1000));
+            fullCollectionReward.Resources.Add(new GameResource(ResourceType.Gems, 50));
+            fullCollectionReward.Resources.Add(new GameResource(ResourceType.Energy, 100));
+            
+            return fullCollectionReward;
         }
 
         public CollectionRewardDefinition CreateFromExchangePack(ExchangePackEntry exchangePackEntry, IReadOnlyCollection<CardPack> cardPacks)
         {
             var content = new DuplicatePointsChestOffer
             {
-                Source = RewardSource.ShopOffer,
+                Source = RewardSource.CollectionPointsExchangeOffer,
             };
 
             if (cardPacks != null)

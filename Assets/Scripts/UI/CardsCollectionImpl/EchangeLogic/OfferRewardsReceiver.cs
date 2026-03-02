@@ -1,6 +1,7 @@
 using System.Threading;
 using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace core
 {
@@ -13,7 +14,7 @@ namespace core
             _resourceManager = resourceManager;
         }
 
-        public UniTask<bool> ReceiveRewardsAsync(CardCollectionImpl.CollectionRewardDefinition collectionRewardDefinition, CancellationToken ct = default)
+        public UniTask<bool> ReceiveRewardsAsync(CollectionRewardDefinition collectionRewardDefinition, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
 
@@ -27,7 +28,7 @@ namespace core
             return UniTask.FromResult(true);
         }
 
-        private void TryGetResourceRewards(CardCollectionImpl.CollectionRewardDefinition collectionRewardDefinition, CancellationToken ct = default)
+        private void TryGetResourceRewards(CollectionRewardDefinition collectionRewardDefinition, CancellationToken ct = default)
         {
             var resources = GetResources(collectionRewardDefinition);
             if (resources == null)
@@ -43,11 +44,14 @@ namespace core
                     continue;
                 }
 
+                
+                Debug.LogWarning($"Test _resourceManager Add {rewardResource.Type} / {rewardResource.Amount}");
+                
                 _resourceManager.Add(rewardResource.Type, rewardResource.Amount);
             }
         }
 
-        private static System.Collections.Generic.IReadOnlyCollection<GameResource> GetResources(CardCollectionImpl.CollectionRewardDefinition collectionRewardDefinition)
+        private static System.Collections.Generic.IReadOnlyCollection<GameResource> GetResources(CollectionRewardDefinition collectionRewardDefinition)
         {
             return collectionRewardDefinition switch
             {
