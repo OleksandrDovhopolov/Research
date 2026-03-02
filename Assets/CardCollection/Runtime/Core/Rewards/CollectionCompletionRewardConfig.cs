@@ -3,10 +3,10 @@ using UnityEngine;
 
 namespace CardCollection.Core
 {
-    //TODO rename FullCollectionRewardConfig. can cause data clear in CardCollectionRewardsConfigSO
     [Serializable]
-    public struct CollectionRewardDefinition
+    public struct CollectionCompletionRewardConfig
     {
+        public string GroupId;
         public Sprite Icon;
         public string RewardId;
         public int Amount;

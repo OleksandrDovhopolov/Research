@@ -9,7 +9,7 @@ namespace core
         order = 0)]
     public class CardCollectionRewardsConfigSO : ScriptableObject
     {
-        public GroupRewardDefinition[] GroupRewards;
-        public CollectionRewardDefinition CollectionReward;
+        public CollectionCompletionRewardConfig[] GroupRewards;
+        public FullCollectionRewardConfig FullCollectionReward;
     }
 }

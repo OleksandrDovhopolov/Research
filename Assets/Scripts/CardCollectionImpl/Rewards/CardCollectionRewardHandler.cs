@@ -82,12 +82,11 @@ namespace core
                 return false;
             }
 
-            var collectionRewardDefinition = _cardCollectionRewardsConfigSo.CollectionReward; 
+            var collectionRewardDefinition = _cardCollectionRewardsConfigSo.FullCollectionReward; 
             if (collectionRewardDefinition.RewardId == collectionCompletedData.EventId)
             {
                 var collectionRewardModel = _rewardDefinitionFactory.CreateFromCollectionReward(collectionRewardDefinition);
                 //TODO await this 
-                Debug.LogWarning($"Test collectionRewardModel {collectionRewardModel.GetType()}");
                 _offerRewardsReceiver.ReceiveRewardsAsync(collectionRewardModel).Forget();
                 return true;
             }

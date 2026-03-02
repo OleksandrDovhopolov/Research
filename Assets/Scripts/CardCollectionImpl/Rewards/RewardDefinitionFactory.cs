@@ -8,14 +8,14 @@ namespace core
 {
     public class RewardDefinitionFactory : IRewardDefinitionFactory
     {
-        public CollectionRewardDefinition CreateFromGroupReward(GroupRewardDefinition groupRewardDefinition)
+        public CollectionRewardDefinition CreateFromGroupReward(CollectionCompletionRewardConfig collectionCompletionRewardConfig)
         {
             var content = new CardGroupCompletionReward
             {
                 Source = RewardSource.GroupCompleted,
             };
 
-            if (!TryCreateResource(groupRewardDefinition.RewardId, groupRewardDefinition.Amount, out var resource))
+            if (!TryCreateResource(collectionCompletionRewardConfig.RewardId, collectionCompletionRewardConfig.Amount, out var resource))
             {
                 return content;
             }
@@ -24,7 +24,7 @@ namespace core
             return content;
         }
 
-        public CollectionRewardDefinition CreateFromCollectionReward(CardCollection.Core.CollectionRewardDefinition collectionRewardDefinition)
+        public CollectionRewardDefinition CreateFromCollectionReward(CardCollection.Core.FullCollectionRewardConfig fullCollectionRewardConfig)
         {
             var fullCollectionReward = new FullCollectionReward
             {

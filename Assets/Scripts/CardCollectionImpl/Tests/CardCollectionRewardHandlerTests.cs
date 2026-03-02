@@ -40,10 +40,9 @@ namespace core
             var handler = new CardCollectionRewardHandler(rewardsReceiver, rewardFactory);
 
             var config = ScriptableObject.CreateInstance<CardCollectionRewardsConfigSO>();
-            config.CollectionReward = new CollectionRewardDefinition
+            config.FullCollectionReward = new FullCollectionRewardConfig
             {
                 RewardId = "event-1",
-                Amount = 100
             };
 
             SetInitializedConfig(handler, config);
@@ -80,12 +79,12 @@ namespace core
         {
             public int CreateCollectionCallsCount { get; private set; }
 
-            public CardCollectionImpl.CollectionRewardDefinition CreateFromGroupReward(GroupRewardDefinition groupRewardDefinition)
+            public CardCollectionImpl.CollectionRewardDefinition CreateFromGroupReward(CollectionCompletionRewardConfig collectionCompletionRewardConfig)
             {
                 return new CardGroupCompletionReward();
             }
 
-            public CardCollectionImpl.CollectionRewardDefinition CreateFromCollectionReward(CollectionRewardDefinition collectionRewardDefinition = default)
+            public CardCollectionImpl.CollectionRewardDefinition CreateFromCollectionReward(FullCollectionRewardConfig fullCollectionRewardConfig = default)
             {
                 CreateCollectionCallsCount++;
                 return new FullCollectionReward();

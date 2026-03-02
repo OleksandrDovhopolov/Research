@@ -29,10 +29,10 @@ namespace core.Editor
 
             Undo.RecordObject(config, "Generate Card Collection Group Rewards");
 
-            var rewards = new GroupRewardDefinition[15];
+            var rewards = new CollectionCompletionRewardConfig[15];
             for (var i = 0; i < rewards.Length; i++)
             {
-                rewards[i] = new GroupRewardDefinition
+                rewards[i] = new CollectionCompletionRewardConfig
                 {
                     GroupId = (i + 1).ToString(),
                     RewardId = RewardIds[i % RewardIds.Length],
