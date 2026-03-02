@@ -10,7 +10,6 @@ namespace UIShared
     {
         private int CreateAndGetOfferViews(ContentWidgetData contentData)
         {
-            Debug.LogWarning($"Debug BaseOfferContent");
             _itemsPool.DisableAll();
 
             if (contentData == null)
