@@ -7,10 +7,10 @@ namespace core
     public class ContentWidgetArgs : WindowArgs
     {
         public readonly UIManager UiManager;
-        public readonly CardCollectionImpl.CollectionRewardDefinition CollectionRewardDefinition;
+        public readonly CollectionRewardDefinition CollectionRewardDefinition;
         public readonly RectTransform RectTransform;
         
-        public ContentWidgetArgs(UIManager uiManager, CardCollectionImpl.CollectionRewardDefinition collectionRewardDefinition, RectTransform rectTransform)
+        public ContentWidgetArgs(UIManager uiManager, CollectionRewardDefinition collectionRewardDefinition, RectTransform rectTransform)
         {
             UiManager = uiManager;
             CollectionRewardDefinition = collectionRewardDefinition;

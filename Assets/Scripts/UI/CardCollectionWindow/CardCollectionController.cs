@@ -10,6 +10,7 @@ namespace core
     {
         public readonly UIManager UiManager;
         public readonly ICardCollectionModule CardCollectionModule;
+        public readonly ICardCollectionPointsAccount CardCollectionPointsAccount;
         public readonly EventCardsSaveData EventCardsSaveData;
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
         public readonly IRewardDefinitionFactory RewardDefinitionFactory;
@@ -19,13 +20,15 @@ namespace core
             ICardCollectionModule cardCollectionModule,
             EventCardsSaveData eventCardsSaveData,
             IExchangeOfferProvider exchangeOfferProvider,
-            IRewardDefinitionFactory rewardDefinitionFactory)
+            IRewardDefinitionFactory rewardDefinitionFactory,
+            ICardCollectionPointsAccount cardCollectionPointsAccount)
         {
             UiManager = uiManager;
             CardCollectionModule = cardCollectionModule;
             EventCardsSaveData = eventCardsSaveData;
             ExchangeOfferProvider = exchangeOfferProvider;
             RewardDefinitionFactory = rewardDefinitionFactory;
+            CardCollectionPointsAccount = cardCollectionPointsAccount;
         }
     }
     
@@ -82,6 +85,7 @@ namespace core
                 Args.EventCardsSaveData.Points,
                 Args.ExchangeOfferProvider, 
                 (IOfferDefinitionFactory)Args.RewardDefinitionFactory,
+                Args.CardCollectionPointsAccount,
                 UpdatePointsAmount);
             Args.UiManager.Show<CollectionPointsExchangeController>(args);
         }

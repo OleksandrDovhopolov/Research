@@ -9,6 +9,5 @@ namespace core
         IReadOnlyCollection<ExchangePackEntry> GetAllOffers();
         int GetOfferPrice(string offerPackId);
         UniTask<bool> ReceiveOfferContent(string offerPackId, CancellationToken ct = default);
-        UniTask<bool> TrySpendCollectionPointsAsync(int pointsToSpend, CancellationToken ct = default);
     }
 }

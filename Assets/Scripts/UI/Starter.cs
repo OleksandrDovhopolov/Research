@@ -123,9 +123,7 @@ namespace core
             await _cardCollectionEntryPoint.WaitForInitializationAsync();
             await WaitForRewardHandlerInitializationAsync(_destroyCt);
 
-            _exchangeOfferProvider ??=
-                new ExchangeOfferProvider(
-                    _exchangePacksConfig, _cardCollectionEntryPoint.CardCollectionPointsAccount, _rewardHandler, _uiManager);
+            _exchangeOfferProvider ??= new ExchangeOfferProvider(_exchangePacksConfig, _rewardHandler, _uiManager);
             
             var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
             var args = new CardCollectionArgs(
@@ -133,7 +131,7 @@ namespace core
                 _cardCollectionEntryPoint.CardCollectionModule,
                 collectionData,
                 _exchangeOfferProvider,
-                _rewardDefinitionFactory);
+                _rewardDefinitionFactory, _cardCollectionEntryPoint.CardCollectionPointsAccount);
             _uiManager.Show<CardCollectionController>(args);
         }
 

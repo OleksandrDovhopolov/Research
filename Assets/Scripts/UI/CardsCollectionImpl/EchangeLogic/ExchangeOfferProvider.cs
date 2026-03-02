@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
 
@@ -10,17 +9,15 @@ namespace core
     public class ExchangeOfferProvider : IExchangeOfferProvider
     {
         private readonly UIManager _uiManager;
-        private readonly ICardCollectionPointsAccount _cardCollectionPointsAccount;
         private readonly CardCollectionRewardHandler _cardCollectionRewardHandler;
         
         private readonly Dictionary<string, ExchangePackEntry> _packById;
         
-        public ExchangeOfferProvider(ExchangePacksConfig packsConfig,
-            ICardCollectionPointsAccount cardCollectionPointsAccount,
+        public ExchangeOfferProvider(
+            ExchangePacksConfig packsConfig,
             CardCollectionRewardHandler cardCollectionRewardHandler,
             UIManager uiManager)
         {
-            _cardCollectionPointsAccount = cardCollectionPointsAccount;
             _packById = new Dictionary<string, ExchangePackEntry>();
             _uiManager = uiManager;
             _cardCollectionRewardHandler = cardCollectionRewardHandler;
@@ -60,11 +57,6 @@ namespace core
             //TODO await ? 
             _cardCollectionRewardHandler.TryHandleBuyPointsOffer(offerPackId);
             return await UniTask.FromResult(true);
-        }
-
-        public async UniTask<bool> TrySpendCollectionPointsAsync(int pointsToSpend, CancellationToken ct = default)
-        {
-            return await _cardCollectionPointsAccount.TrySpendPointsAsync(pointsToSpend, ct);
         }
 
         private bool TryGetPackEntry(string packId, out ExchangePackEntry pack)

@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using UnityEngine;
@@ -11,6 +12,7 @@ namespace core
         public readonly UIManager UiManager;
         public readonly int PointsAmount;
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
+        public readonly ICardCollectionPointsAccount CardCollectionPointsAccount;
         public readonly Action OnPointsAmountChangedHandler;
         public readonly IOfferDefinitionFactory OfferDefinitionFactory;
         
@@ -19,12 +21,14 @@ namespace core
             int pointsAmount,
             IExchangeOfferProvider exchangeOfferProvider, 
             IOfferDefinitionFactory offerDefinitionFactory,
+            ICardCollectionPointsAccount cardCollectionPointsAccount,
             Action onPointsAmountChangedHandler = null)
         {
             UiManager = uiManager;
             PointsAmount = pointsAmount;
             ExchangeOfferProvider = exchangeOfferProvider;
             OfferDefinitionFactory = offerDefinitionFactory;
+            CardCollectionPointsAccount = cardCollectionPointsAccount;
             OnPointsAmountChangedHandler = onPointsAmountChangedHandler;
         }
     }
@@ -73,7 +77,7 @@ namespace core
             
             try
             {
-                var spent = await Args.ExchangeOfferProvider.TrySpendCollectionPointsAsync(packPrice, ct);
+                var spent = await Args.CardCollectionPointsAccount.TrySpendPointsAsync(packPrice, ct);
                 if (spent)
                 {
                     if (await Args.ExchangeOfferProvider.ReceiveOfferContent(offerPackId, ct))
