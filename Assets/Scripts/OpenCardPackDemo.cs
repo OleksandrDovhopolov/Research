@@ -1,5 +1,4 @@
 using CardCollection.Core;
-using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,7 +6,6 @@ namespace core
 {
     public class OpenCardPackDemo : MonoBehaviour
     {
-        [SerializeField] private UIManager _uiManager;
         [SerializeField] private CardCollectionEntryPoint _cardCollectionEntryPoint;
         
         [SerializeField] private Button _twoCardButton;
@@ -45,13 +43,10 @@ namespace core
             
             Debug.LogWarning($"Debug {pack.PackId}, {pack.CardCount}, {pack.PackName}");
             
-            var cardCollectionWindowPresenter = CardCollectionCompositionRegistry
-                .Resolve()
-                .CreateNewCardWindowPresenter(_uiManager);
-
-            cardCollectionWindowPresenter.OpenNewCardWindow(pack, cardCollectionModule, cardCollectionReader);
-            //var args = new NewCardArgs(pack, _uiManager, cardCollectionModule, cardCollectionReader);
-            //_uiManager.Show<NewCardController>(args);
+            var compositionRoot = CardCollectionCompositionRegistry.Resolve();
+            var windowPresenter = compositionRoot.CreateWindowPresenter();
+            
+            windowPresenter.OpenNewCardWindow(pack, cardCollectionModule, cardCollectionReader);
         }
         
         private void OnDestroy()

@@ -243,6 +243,55 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 57162551}
   m_CullTransparentMesh: 1
+--- !u!1 &67235299
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 67235301}
+  - component: {fileID: 67235300}
+  m_Layer: 0
+  m_Name: CardCollectionImplInstaller
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &67235300
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 67235299}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5106d67d9039e2247a6e24964c21ced0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  parentReference:
+    TypeName: 
+  autoRun: 1
+  autoInjectGameObjects: []
+  _uiManager: {fileID: 120959149}
+--- !u!4 &67235301
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 67235299}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &67534646
 GameObject:
   m_ObjectHideFlags: 0
@@ -1300,7 +1349,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8a10b173042cae4aabf5edf71e70754, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _starter: {fileID: 1037090430}
 --- !u!4 &583103904
 Transform:
   m_ObjectHideFlags: 0
@@ -1717,7 +1765,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f73be4dd324961b4ba956bb9925b2115, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _uiManager: {fileID: 120959149}
   _cardCollectionEntryPoint: {fileID: 583103903}
   _twoCardButton: {fileID: 443067275}
   _threeCardButton: {fileID: 578928282}
@@ -2718,3 +2765,4 @@ SceneRoots:
   - {fileID: 343525369}
   - {fileID: 1266437340}
   - {fileID: 583103904}
+  - {fileID: 67235301}

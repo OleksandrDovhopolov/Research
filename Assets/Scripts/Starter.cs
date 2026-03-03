@@ -29,9 +29,9 @@ namespace core
         private ICardPackProvider _cardPackProvider;
         private ICardCollectionRewardHandler _rewardHandler;
         private IExchangeOfferProvider _exchangeOfferProvider;
-        private IOfferRewardsReceiver _offerRewardsReceiver;
         private IRewardDefinitionFactory _rewardDefinitionFactory;
         private ICardCollectionCompositionRoot _compositionRoot;
+        private ICardCollectionExchangeConfigContext _exchangeConfigContext;
 
         private void Awake()
         {
@@ -59,16 +59,16 @@ namespace core
             _compositionRoot = CardCollectionCompositionRegistry.Resolve();
             _resourceManager = new ResourceManager();
             _cardPackProvider = new JsonCardPackProvider();
-            _offerRewardsReceiver = _compositionRoot.CreateOfferRewardsReceiver(_resourceManager);
+            _exchangeConfigContext = new CardCollectionExchangeConfigContext(_exchangePacksConfig);
             
             await LoadAddressables(ct);
             await LoadConfig(ct); 
             await InitResources(ct);
             
             var cardPackConfigs = await _cardPackProvider.GetCardConfigsAsync(ct);
-            _rewardDefinitionFactory = _compositionRoot.CreateRewardDefinitionFactory(_exchangePacksConfig, cardPackConfigs);
+            _rewardDefinitionFactory = _compositionRoot.CreateRewardDefinitionFactory(_exchangeConfigContext, cardPackConfigs);
                 
-            await InitializeRewardHandlerAsync(_offerRewardsReceiver, _rewardDefinitionFactory, ct);
+            await InitializeRewardHandlerAsync(_rewardDefinitionFactory, ct);
             await _cardCollectionEntryPoint.InitCardCollection(_cardPackProvider, _rewardHandler, ct);
         }
         
@@ -101,11 +101,14 @@ namespace core
 
         
         private readonly UniTaskCompletionSource _rewardHandlerInitializationSource = new();
-        public async UniTask InitializeRewardHandlerAsync(IOfferRewardsReceiver rewardsReceiver, IRewardDefinitionFactory rewardDefinitionFactory, CancellationToken ct = default)
+        public async UniTask InitializeRewardHandlerAsync(IRewardDefinitionFactory rewardDefinitionFactory, CancellationToken ct = default)
         {
             try
             {
-                _rewardHandler = _compositionRoot.CreateRewardHandler(rewardsReceiver, rewardDefinitionFactory);
+                var resourceContext = new CardCollectionResourceContext(_resourceManager);
+                var offerRewardsReceiver = _compositionRoot.CreateOfferRewardsReceiver(resourceContext);
+                
+                _rewardHandler = _compositionRoot.CreateRewardHandler(offerRewardsReceiver, rewardDefinitionFactory);
                 await _rewardHandler.InitializeAsync(ct);
                 _rewardHandlerInitializationSource.TrySetResult();
             }
@@ -132,14 +135,11 @@ namespace core
             await _cardCollectionEntryPoint.WaitForInitializationAsync();
             await WaitForRewardHandlerInitializationAsync(_destroyCt);
 
-            _exchangeOfferProvider ??= _compositionRoot.CreateExchangeOfferProvider(_exchangePacksConfig, _rewardHandler, _uiManager);
+            _exchangeOfferProvider ??= _compositionRoot.CreateExchangeOfferProvider(_exchangeConfigContext, _rewardHandler);
             
             var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
             
-            
-            var cardCollectionWindowPresenter = CardCollectionCompositionRegistry
-                .Resolve()
-                .CreateNewCardWindowPresenter(_uiManager);
+            var cardCollectionWindowPresenter = _compositionRoot.CreateWindowPresenter();
             
             cardCollectionWindowPresenter.OpenCardCollectionWindow( 
                 _cardCollectionEntryPoint.CardCollectionModule,
@@ -147,14 +147,6 @@ namespace core
                 _exchangeOfferProvider,
                 _rewardDefinitionFactory,
                 _cardCollectionEntryPoint.CardCollectionPointsAccount);
-            
-            /*var args = new CardCollectionArgs(
-                _uiManager,
-                _cardCollectionEntryPoint.CardCollectionModule,
-                collectionData,
-                _exchangeOfferProvider,
-                _rewardDefinitionFactory, _cardCollectionEntryPoint.CardCollectionPointsAccount);
-            _uiManager.Show<CardCollectionController>(args);*/
         }
 
         private async UniTask InitResources(CancellationToken ct)
@@ -173,7 +165,7 @@ namespace core
         {
             _button.onClick.RemoveAllListeners();
             _cheatButton.onClick.RemoveAllListeners();
-            _resourceManager.Dispose();
+            _resourceManager?.Dispose();
         }
     }
 }

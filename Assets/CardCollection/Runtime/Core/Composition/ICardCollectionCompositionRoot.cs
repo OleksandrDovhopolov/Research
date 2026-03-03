@@ -4,15 +4,11 @@ namespace CardCollection.Core
 {
     public interface ICardCollectionCompositionRoot
     {
-        IOfferRewardsReceiver CreateOfferRewardsReceiver(object resourceManager);
-        IRewardDefinitionFactory CreateRewardDefinitionFactory(object exchangePacksConfig, List<CardPackConfig> cardPackConfigs);
+        IWindowPresenter CreateWindowPresenter();
+        IOfferRewardsReceiver CreateOfferRewardsReceiver(ICardCollectionResourceContext resourceContext);
+        IRewardDefinitionFactory CreateRewardDefinitionFactory(ICardCollectionExchangeConfigContext exchangeConfigContext, List<CardPackConfig> cardPackConfigs);
         ICardCollectionRewardHandler CreateRewardHandler(IOfferRewardsReceiver offerRewardsReceiver, IRewardDefinitionFactory rewardDefinitionFactory);
-        IExchangeOfferProvider CreateExchangeOfferProvider(
-            object exchangePacksConfig,
-            ICardCollectionRewardHandler rewardHandler,
-            object uiManager);
+        IExchangeOfferProvider CreateExchangeOfferProvider(ICardCollectionExchangeConfigContext exchangeConfigContext, ICardCollectionRewardHandler rewardHandler);
         CardCollectionModuleConfig CreateModuleConfig(ICardPackProvider cardPackProvider, string eventId);
-        
-        IWindowPresenter CreateNewCardWindowPresenter(object uiManager);
     }
 }

@@ -8,8 +8,6 @@ namespace core
 {
     public class CardCollectionEntryPoint : MonoBehaviour
     {
-        [SerializeField] private Starter _starter;
-        
         private CardCollectionModule _cardCollectionModule;
         private ICardCollectionRewardHandler _rewardHandler;
         private Exception _initializationException;
