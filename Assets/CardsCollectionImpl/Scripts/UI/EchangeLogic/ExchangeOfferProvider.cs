@@ -11,14 +11,11 @@ namespace CardCollectionImpl
     public class ExchangeOfferProvider : IExchangeOfferProvider
     {
         private readonly UIManager _uiManager;
-        private readonly CardCollectionRewardHandler _cardCollectionRewardHandler;
+        private readonly ICardCollectionRewardHandler _cardCollectionRewardHandler;
         
         private readonly Dictionary<string, ExchangePackEntry> _packById;
         
-        public ExchangeOfferProvider(
-            ExchangePacksConfig packsConfig,
-            CardCollectionRewardHandler cardCollectionRewardHandler,
-            UIManager uiManager)
+        public ExchangeOfferProvider(ExchangePacksConfig packsConfig, ICardCollectionRewardHandler cardCollectionRewardHandler, UIManager uiManager)
         {
             _packById = new Dictionary<string, ExchangePackEntry>();
             _uiManager = uiManager;

@@ -31,7 +31,6 @@ namespace core
         private IExchangeOfferProvider _exchangeOfferProvider;
         private IRewardDefinitionFactory _rewardDefinitionFactory;
         private ICardCollectionCompositionRoot _compositionRoot;
-        private ICardCollectionExchangeConfigContext _exchangeConfigContext;
 
         private void Awake()
         {
@@ -59,14 +58,13 @@ namespace core
             _compositionRoot = CardCollectionCompositionRegistry.Resolve();
             _resourceManager = new ResourceManager();
             _cardPackProvider = new JsonCardPackProvider();
-            _exchangeConfigContext = new CardCollectionExchangeConfigContext(_exchangePacksConfig);
             
             await LoadAddressables(ct);
             await LoadConfig(ct); 
             await InitResources(ct);
             
             var cardPackConfigs = await _cardPackProvider.GetCardConfigsAsync(ct);
-            _rewardDefinitionFactory = _compositionRoot.CreateRewardDefinitionFactory(_exchangeConfigContext, cardPackConfigs);
+            _rewardDefinitionFactory = _compositionRoot.CreateRewardDefinitionFactory(cardPackConfigs);
                 
             await InitializeRewardHandlerAsync(_rewardDefinitionFactory, ct);
             await _cardCollectionEntryPoint.InitCardCollection(_cardPackProvider, _rewardHandler, ct);
@@ -105,8 +103,7 @@ namespace core
         {
             try
             {
-                var resourceContext = new CardCollectionResourceContext(_resourceManager);
-                var offerRewardsReceiver = _compositionRoot.CreateOfferRewardsReceiver(resourceContext);
+                var offerRewardsReceiver = _compositionRoot.CreateOfferRewardsReceiver();
                 
                 _rewardHandler = _compositionRoot.CreateRewardHandler(offerRewardsReceiver, rewardDefinitionFactory);
                 await _rewardHandler.InitializeAsync(ct);
@@ -135,7 +132,7 @@ namespace core
             await _cardCollectionEntryPoint.WaitForInitializationAsync();
             await WaitForRewardHandlerInitializationAsync(_destroyCt);
 
-            _exchangeOfferProvider ??= _compositionRoot.CreateExchangeOfferProvider(_exchangeConfigContext, _rewardHandler);
+            _exchangeOfferProvider ??= _compositionRoot.CreateExchangeOfferProvider(_rewardHandler);
             
             var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
             

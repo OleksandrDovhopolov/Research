@@ -277,6 +277,7 @@ MonoBehaviour:
   autoRun: 1
   autoInjectGameObjects: []
   _uiManager: {fileID: 120959149}
+  _exchangePacksConfig: {fileID: 11400000, guid: 65c81ad1becc709499632b874a67d555, type: 2}
 --- !u!4 &67235301
 Transform:
   m_ObjectHideFlags: 0

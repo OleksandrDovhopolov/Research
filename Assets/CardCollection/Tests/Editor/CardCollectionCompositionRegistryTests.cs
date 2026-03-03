@@ -41,14 +41,12 @@ namespace CardCollection.Tests
 
         private sealed class FakeCompositionRoot : ICardCollectionCompositionRoot
         {
-            public IOfferRewardsReceiver CreateOfferRewardsReceiver(ICardCollectionResourceContext resourceContext)
+            public IOfferRewardsReceiver CreateOfferRewardsReceiver()
             {
                 throw new NotImplementedException();
             }
 
-            public IRewardDefinitionFactory CreateRewardDefinitionFactory(
-                ICardCollectionExchangeConfigContext exchangeConfigContext,
-                List<CardPackConfig> cardPackConfigs)
+            public IRewardDefinitionFactory CreateRewardDefinitionFactory(List<CardPackConfig> cardPackConfigs)
             {
                 throw new NotImplementedException();
             }
@@ -60,9 +58,7 @@ namespace CardCollection.Tests
                 throw new NotImplementedException();
             }
 
-            public IExchangeOfferProvider CreateExchangeOfferProvider(
-                ICardCollectionExchangeConfigContext exchangeConfigContext,
-                ICardCollectionRewardHandler rewardHandler)
+            public IExchangeOfferProvider CreateExchangeOfferProvider(ICardCollectionRewardHandler rewardHandler)
             {
                 throw new NotImplementedException();
             }

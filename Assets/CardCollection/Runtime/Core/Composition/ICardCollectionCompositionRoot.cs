@@ -5,10 +5,10 @@ namespace CardCollection.Core
     public interface ICardCollectionCompositionRoot
     {
         IWindowPresenter CreateWindowPresenter();
-        IOfferRewardsReceiver CreateOfferRewardsReceiver(ICardCollectionResourceContext resourceContext);
-        IRewardDefinitionFactory CreateRewardDefinitionFactory(ICardCollectionExchangeConfigContext exchangeConfigContext, List<CardPackConfig> cardPackConfigs);
+        IOfferRewardsReceiver CreateOfferRewardsReceiver();
         ICardCollectionRewardHandler CreateRewardHandler(IOfferRewardsReceiver offerRewardsReceiver, IRewardDefinitionFactory rewardDefinitionFactory);
-        IExchangeOfferProvider CreateExchangeOfferProvider(ICardCollectionExchangeConfigContext exchangeConfigContext, ICardCollectionRewardHandler rewardHandler);
         CardCollectionModuleConfig CreateModuleConfig(ICardPackProvider cardPackProvider, string eventId);
+        IRewardDefinitionFactory CreateRewardDefinitionFactory(List<CardPackConfig> cardPackConfigs);
+        IExchangeOfferProvider CreateExchangeOfferProvider(ICardCollectionRewardHandler rewardHandler);
     }
 }

@@ -9,38 +9,27 @@ namespace CardCollectionImpl
     public sealed class CardCollectionImplCompositionRoot : ICardCollectionCompositionRoot
     {
         private readonly UIManager _uiManager;
+        private readonly ResourceManager _resourceManager;
+        private readonly ExchangePacksConfig _exchangePacksConfig;
 
-        public CardCollectionImplCompositionRoot(UIManager uiManager)
+        public CardCollectionImplCompositionRoot(
+            UIManager uiManager,
+            ResourceManager resourceManager,
+            ExchangePacksConfig exchangePacksConfig)
         {
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
+            _resourceManager = resourceManager ?? throw new ArgumentNullException(nameof(resourceManager));
+            _exchangePacksConfig = exchangePacksConfig ?? throw new ArgumentNullException(nameof(exchangePacksConfig));
         }
 
-        public IOfferRewardsReceiver CreateOfferRewardsReceiver(ICardCollectionResourceContext resourceContext)
+        public IOfferRewardsReceiver CreateOfferRewardsReceiver()
         {
-            if (resourceContext is not CardCollectionResourceContext typedResourceContext ||
-                typedResourceContext.ResourceManager is not ResourceManager typedResourceManager)
-            {
-                throw new ArgumentException(
-                    $"Expected {nameof(CardCollectionResourceContext)} with a valid {nameof(ResourceManager)}.",
-                    nameof(resourceContext));
-            }
-
-            return new OfferRewardsReceiver(typedResourceManager);
+            return new OfferRewardsReceiver(_resourceManager);
         }
 
-        public IRewardDefinitionFactory CreateRewardDefinitionFactory(
-            ICardCollectionExchangeConfigContext exchangeConfigContext,
-            List<CardPackConfig> cardPackConfigs)
+        public IRewardDefinitionFactory CreateRewardDefinitionFactory(List<CardPackConfig> cardPackConfigs)
         {
-            if (exchangeConfigContext is not CardCollectionExchangeConfigContext typedExchangeConfigContext ||
-                typedExchangeConfigContext.ExchangePacksConfig is not ExchangePacksConfig typedExchangePacksConfig)
-            {
-                throw new ArgumentException(
-                    $"Expected {nameof(CardCollectionExchangeConfigContext)} with a valid {nameof(ExchangePacksConfig)}.",
-                    nameof(exchangeConfigContext));
-            }
-
-            return new RewardDefinitionFactory(typedExchangePacksConfig, cardPackConfigs);
+            return new RewardDefinitionFactory(_exchangePacksConfig, cardPackConfigs);
         }
 
         public ICardCollectionRewardHandler CreateRewardHandler(
@@ -50,29 +39,9 @@ namespace CardCollectionImpl
             return new CardCollectionRewardHandler(offerRewardsReceiver, rewardDefinitionFactory);
         }
 
-        public IExchangeOfferProvider CreateExchangeOfferProvider(
-            ICardCollectionExchangeConfigContext exchangeConfigContext,
-            ICardCollectionRewardHandler rewardHandler)
+        public IExchangeOfferProvider CreateExchangeOfferProvider(ICardCollectionRewardHandler rewardHandler)
         {
-            if (exchangeConfigContext is not CardCollectionExchangeConfigContext typedExchangeConfigContext ||
-                typedExchangeConfigContext.ExchangePacksConfig is not ExchangePacksConfig typedExchangePacksConfig)
-            {
-                throw new ArgumentException(
-                    $"Expected {nameof(CardCollectionExchangeConfigContext)} with a valid {nameof(ExchangePacksConfig)}.",
-                    nameof(exchangeConfigContext));
-            }
-
-            if (rewardHandler is not CardCollectionRewardHandler typedRewardHandler)
-            {
-                throw new ArgumentException(
-                    "Expected CardCollectionRewardHandler implementation from CardsCollectionImpl.",
-                    nameof(rewardHandler));
-            }
-
-            return new ExchangeOfferProvider(
-                typedExchangePacksConfig,
-                typedRewardHandler,
-                _uiManager);
+            return new ExchangeOfferProvider(_exchangePacksConfig, rewardHandler, _uiManager);
         }
 
         public CardCollectionModuleConfig CreateModuleConfig(ICardPackProvider cardPackProvider, string eventId)
