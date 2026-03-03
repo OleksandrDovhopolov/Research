@@ -64,6 +64,9 @@ namespace CardCollectionImpl
             return fullCollectionReward;
         }
         
+        //TODO write test for SO content 
+        // Assets/CardsCollectionImpl/Ui/Prefabs/CollectionPointsExchangeWindow/ExchangeScriptableObjects
+        //BUG was that SO was empty
         public CollectionRewardDefinition CreateFromOfferReward(string offerPackId, CancellationToken ct = default)
         {
             if (!TryGetPackEntry(offerPackId, out var exchangePackEntry))
@@ -71,7 +74,7 @@ namespace CardCollectionImpl
                 return new DuplicatePointsChestOffer();
             }
 
-            var cardPacks = GetRewardCardPacksAsync(exchangePackEntry, ct);
+            var cardPacks = GetRewardCardPacks(exchangePackEntry, ct);
             var resources = GetRewardResources(exchangePackEntry);
 
             return new DuplicatePointsChestOffer
@@ -112,7 +115,7 @@ namespace CardCollectionImpl
             return mappedResources.Count > 0 ? mappedResources : new List<GameResource>();
         }
         
-        private List<CardPack> GetRewardCardPacksAsync(ExchangePackEntry pack, CancellationToken ct)
+        private List<CardPack> GetRewardCardPacks(ExchangePackEntry pack, CancellationToken ct)
         {
             if (pack?.RewardEntry?.CardPacks is not { Count: > 0 } || _cardPackConfigs == null)
             {
