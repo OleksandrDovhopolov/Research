@@ -87,7 +87,7 @@ namespace CardCollectionImpl
                 Args.UiManager,
                 Args.EventCardsSaveData.Points,
                 Args.ExchangeOfferProvider, 
-                (IOfferDefinitionFactory)Args.RewardDefinitionFactory,
+                Args.RewardDefinitionFactory,
                 Args.CardCollectionPointsAccount,
                 UpdatePointsAmount);
             Args.UiManager.Show<CollectionPointsExchangeController>(args);

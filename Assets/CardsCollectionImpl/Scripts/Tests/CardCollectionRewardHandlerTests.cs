@@ -15,7 +15,7 @@ namespace CardCollectionImpl
         {
             var rewardsReceiver = new FakeOfferRewardsReceiver();
             var rewardFactory = new FakeRewardDefinitionFactory();
-            var handler = new CardCollectionRewardHandler(rewardsReceiver, null, rewardFactory);
+            var handler = new CardCollectionRewardHandler(rewardsReceiver, rewardFactory);
 
             var config = AssetDatabase.LoadAssetAtPath<CardCollectionRewardsConfigSO>(
                 "Assets/CardsCollectionImpl/Scripts/Rewards/CardCollectionRewardsConfig.asset");
@@ -39,7 +39,7 @@ namespace CardCollectionImpl
         {
             var rewardsReceiver = new FakeOfferRewardsReceiver();
             var rewardFactory = new FakeRewardDefinitionFactory();
-            var handler = new CardCollectionRewardHandler(rewardsReceiver, null, rewardFactory);
+            var handler = new CardCollectionRewardHandler(rewardsReceiver, rewardFactory);
 
             var config = ScriptableObject.CreateInstance<CardCollectionRewardsConfigSO>();
             config.FullCollectionReward = new FullCollectionRewardConfig
@@ -90,6 +90,11 @@ namespace CardCollectionImpl
             {
                 CreateCollectionCallsCount++;
                 return new FullCollectionReward();
+            }
+
+            public CollectionRewardDefinition CreateFromOfferReward(string offerPackId, CancellationToken ct = default)
+            {
+                throw new System.NotImplementedException();
             }
         }
     }

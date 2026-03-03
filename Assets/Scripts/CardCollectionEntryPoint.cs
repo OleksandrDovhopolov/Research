@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using CardCollection.Core;
-using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -12,7 +11,7 @@ namespace core
         [SerializeField] private Starter _starter;
         
         private CardCollectionModule _cardCollectionModule;
-        private CardCollectionRewardHandler _rewardHandler;
+        private ICardCollectionRewardHandler _rewardHandler;
         private Exception _initializationException;
 
         private readonly UniTaskCompletionSource _initializationSource = new();
@@ -42,18 +41,15 @@ namespace core
             return _cardCollectionModule;
         }
 
-        public async UniTask InitCardCollection(ICardPackProvider cardPackProvider, CardCollectionRewardHandler cardCollectionRewardHandler, CancellationToken ct)
+        public async UniTask InitCardCollection(ICardPackProvider cardPackProvider, ICardCollectionRewardHandler cardCollectionRewardHandler, CancellationToken ct)
         {
             _rewardHandler = cardCollectionRewardHandler;
             try
             {
                 const string testEventId = "test";
-                
-                IEventCardsStorage cardsStorage = new JsonEventCardsStorage();
-                ICardDefinitionProvider cardDefinitionProvider = new DefaultCardDefinitionProvider();
-                ICardSelector cardSelector = new ProbabilityBasedCardSelector(PackRulesConfig.CreateDefaultRules());
-
-                var config = new CardCollectionModuleConfig(cardPackProvider, cardsStorage, cardDefinitionProvider, cardSelector, CardsCollectionPointsCalculator.Instance, testEventId);
+                var config = CardCollectionCompositionRegistry
+                    .Resolve()
+                    .CreateModuleConfig(cardPackProvider, testEventId);
 
                 _cardCollectionModule = new CardCollectionModule(config);
                 await _cardCollectionModule.InitializeAsync(ct);
@@ -65,7 +61,8 @@ namespace core
             }
             catch (OperationCanceledException)
             {
-                
+                _initializationSource.TrySetCanceled(ct);
+                throw;
             }
             catch (Exception ex)
             {

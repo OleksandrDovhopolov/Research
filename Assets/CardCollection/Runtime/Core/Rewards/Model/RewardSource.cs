@@ -1,4 +1,4 @@
-namespace CardCollectionImpl
+namespace CardCollection.Core
 {
     public enum RewardSource
     {

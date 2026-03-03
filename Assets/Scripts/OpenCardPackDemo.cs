@@ -1,4 +1,4 @@
-using CardCollectionImpl;
+using CardCollection.Core;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
@@ -45,8 +45,13 @@ namespace core
             
             Debug.LogWarning($"Debug {pack.PackId}, {pack.CardCount}, {pack.PackName}");
             
-            var args = new NewCardArgs(pack, _uiManager, cardCollectionModule, cardCollectionReader);
-            _uiManager.Show<NewCardController>(args);
+            var cardCollectionWindowPresenter = CardCollectionCompositionRegistry
+                .Resolve()
+                .CreateNewCardWindowPresenter(_uiManager);
+
+            cardCollectionWindowPresenter.OpenNewCardWindow(pack, cardCollectionModule, cardCollectionReader);
+            //var args = new NewCardArgs(pack, _uiManager, cardCollectionModule, cardCollectionReader);
+            //_uiManager.Show<NewCardController>(args);
         }
         
         private void OnDestroy()

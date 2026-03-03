@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using CardCollection.Core;
 
-namespace CardCollectionImpl
+namespace CardCollection.Core
 {
     public abstract class CollectionRewardDefinition
     {

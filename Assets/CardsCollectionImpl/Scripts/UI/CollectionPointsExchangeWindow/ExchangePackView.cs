@@ -1,4 +1,5 @@
 using System;
+using CardCollection.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,7 +17,7 @@ namespace CardCollectionImpl
         [SerializeField] private Sprite _enabledBackgroundSprite;
         [SerializeField] private RectTransform _rectTransform;
 
-        private ExchangePackEntry _packEntry;
+        private ExchangeOfferData _packEntry;
         public event Action<string> OnButtonClicked;
         public event Action<string, RectTransform> OnPackClicked;
 
@@ -28,20 +29,20 @@ namespace CardCollectionImpl
 
         private void OnBuyButtonClickHandler()
         {
-            OnButtonClicked?.Invoke(_packEntry.Id);
+            OnButtonClicked?.Invoke(_packEntry.OfferId);
         }
 
         private void OnInfoButtonClickHandler()
         {
-            OnPackClicked?.Invoke(_packEntry.Id, _rectTransform);
+            OnPackClicked?.Invoke(_packEntry.OfferId, _rectTransform);
         }
 
-        public void SetData(int starsAmount, ExchangePackEntry packEntry)
+        public void SetData(int starsAmount, ExchangeOfferData packEntry)
         {
             _packEntry =  packEntry;
             _packImage.sprite = packEntry.Sprite;
-            _starsAmountText.text = packEntry.PackPrice.ToString("N0");
-            _buttonBackground.sprite = packEntry.PackPrice < starsAmount ? _enabledBackgroundSprite : _disabledBackgroundSprite;
+            _starsAmountText.text = packEntry.Price.ToString("N0");
+            _buttonBackground.sprite = packEntry.Price < starsAmount ? _enabledBackgroundSprite : _disabledBackgroundSprite;
         }
         
         private void OnDestroy()

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UIShared;
 using UISystem;
@@ -39,9 +40,11 @@ namespace CardCollectionImpl
             }
         }
 
-        public IReadOnlyCollection<ExchangePackEntry> GetAllOffers()
+        public IReadOnlyCollection<ExchangeOfferData> GetAllOffers()
         {
-            return _packById.Values.ToArray();
+            return _packById.Values
+                .Select(pack => new ExchangeOfferData(pack.Id, pack.Sprite, pack.PackPrice))
+                .ToArray();
         }
 
         public int GetOfferPrice(string offerPackId)

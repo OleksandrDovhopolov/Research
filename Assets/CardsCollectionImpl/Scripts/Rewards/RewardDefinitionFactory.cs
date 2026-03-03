@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace CardCollectionImpl
 {
-    public class RewardDefinitionFactory : IRewardDefinitionFactory, IOfferDefinitionFactory
+    public class RewardDefinitionFactory : IRewardDefinitionFactory
     {
         private readonly List<CardPackConfig> _cardPackConfigs;
         private readonly Dictionary<string, ExchangePackEntry> _packById;

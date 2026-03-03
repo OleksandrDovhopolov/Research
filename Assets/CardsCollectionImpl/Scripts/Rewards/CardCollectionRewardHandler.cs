@@ -8,21 +8,19 @@ using UnityEngine;
 
 namespace CardCollectionImpl
 {
-    public sealed class CardCollectionRewardHandler
+    public sealed class CardCollectionRewardHandler : ICardCollectionRewardHandler
     {
         private const string DefaultRewardsConfigAddress = "CardCollectionRewardsConfig";
 
         private readonly IOfferRewardsReceiver _offerRewardsReceiver;
-        private readonly IOfferDefinitionFactory _offerDefinitionFactory;
         private readonly IRewardDefinitionFactory _rewardDefinitionFactory;
         
         private bool _isInitialized;
         private CardCollectionRewardsConfigSO _cardCollectionRewardsConfigSo;
         
-        public CardCollectionRewardHandler(IOfferRewardsReceiver offerRewardsReceiver, IOfferDefinitionFactory offerDefinitionFactory, IRewardDefinitionFactory rewardDefinitionFactory)
+        public CardCollectionRewardHandler(IOfferRewardsReceiver offerRewardsReceiver, IRewardDefinitionFactory rewardDefinitionFactory)
         {
             _offerRewardsReceiver = offerRewardsReceiver;
-            _offerDefinitionFactory = offerDefinitionFactory;
             _rewardDefinitionFactory = rewardDefinitionFactory;
         }
 
@@ -100,7 +98,7 @@ namespace CardCollectionImpl
 
         public bool TryHandleBuyPointsOffer(string offerId)
         {
-            var exchangeOfferModule = _offerDefinitionFactory.CreateFromOfferReward(offerId);
+            var exchangeOfferModule = _rewardDefinitionFactory.CreateFromOfferReward(offerId);
             
             //TODO await this  + implement logic for pack added to inventory / open immidiatlly 
             _offerRewardsReceiver.ReceiveRewardsAsync(exchangeOfferModule).Forget();

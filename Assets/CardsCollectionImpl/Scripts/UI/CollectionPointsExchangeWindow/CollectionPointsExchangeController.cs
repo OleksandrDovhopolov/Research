@@ -15,13 +15,13 @@ namespace CardCollectionImpl
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
         public readonly ICardCollectionPointsAccount CardCollectionPointsAccount;
         public readonly Action OnPointsAmountChangedHandler;
-        public readonly IOfferDefinitionFactory OfferDefinitionFactory;
+        public readonly IRewardDefinitionFactory OfferDefinitionFactory;
         
         public CollectionPointsExchangeArgs(
             UIManager uiManager,
             int pointsAmount,
             IExchangeOfferProvider exchangeOfferProvider, 
-            IOfferDefinitionFactory offerDefinitionFactory,
+            IRewardDefinitionFactory offerDefinitionFactory,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
             Action onPointsAmountChangedHandler = null)
         {

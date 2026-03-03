@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CardCollection.Core;
 using TMPro;
 using UIShared;
 using UISystem;
@@ -26,13 +27,13 @@ namespace CardCollectionImpl
             _exchangePacks.Clear();
             _exchangePackPool.DisableNonActive();
 
-            foreach (var exchangePackEntry in exchangeOfferProvider.GetAllOffers())
+            foreach (var exchangeOffer in exchangeOfferProvider.GetAllOffers())
             {
                 var packView = _exchangePackPool.GetNext();
 
                 packView.OnButtonClicked += OnBuyPackClickedHandler;
                 packView.OnPackClicked += OnInfoPackClickedHandler;
-                packView.SetData(pointsAmount, exchangePackEntry);
+                packView.SetData(pointsAmount, exchangeOffer);
                 
                 _exchangePacks.Add(packView);
             }

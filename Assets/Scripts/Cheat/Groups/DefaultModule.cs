@@ -1,9 +1,8 @@
+using System.Collections.Generic;
+using System.Threading;
 using CardCollection.Core;
 using cheatModule;
 using Cysharp.Threading.Tasks;
-using System.Collections.Generic;
-using System.Threading;
-using CardCollectionImpl;
 using UnityEngine;
 
 namespace core
@@ -76,7 +75,7 @@ namespace core
         {
             ct.ThrowIfCancellationRequested();
 
-            var cardIds = GetAllCardIdsFromDefinitions();
+            var cardIds = await GetAllCardIdsAsync(ct);
             if (cardIds.Count == 0)
             {
                 Debug.LogWarning("[Cheat] Could not find card IDs to complete collection.");
@@ -94,7 +93,7 @@ namespace core
         {
             ct.ThrowIfCancellationRequested();
 
-            var cardIds = GetAllCardIdsFromDefinitions();
+            var cardIds = await GetAllCardIdsAsync(ct);
             if (cardIds.Count <= 1)
             {
                 Debug.LogWarning("[Cheat] Not enough cards to unlock all minus one.");
@@ -110,24 +109,18 @@ namespace core
             }
         }
 
-        private static List<string> GetAllCardIdsFromDefinitions()
+        private async UniTask<List<string>> GetAllCardIdsAsync(CancellationToken ct)
         {
-            var provider = new DefaultCardDefinitionProvider();
-            var definitions = provider.GetCardDefinitions();
+            ct.ThrowIfCancellationRequested();
+            var data = await _cardCollectionReader.Load(ct);
 
             var result = new List<string>();
             var seen = new HashSet<string>();
-            foreach (var definition in definitions)
+            foreach (var card in data.Cards)
             {
-                if (string.IsNullOrEmpty(definition?.Id))
-                {
-                    continue;
-                }
-
-                if (seen.Add(definition.Id))
-                {
-                    result.Add(definition.Id);
-                }
+                ct.ThrowIfCancellationRequested();
+                if (!string.IsNullOrEmpty(card?.CardId) && seen.Add(card.CardId))
+                    result.Add(card.CardId);
             }
 
             return result;
