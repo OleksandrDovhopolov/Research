@@ -148,7 +148,7 @@ namespace CardCollection.Core
             
             if (cardsToUnlock.Count > 0)
             {
-                await _storage.UnlockCardsAsync(eventId, cardsToUnlock, ct);
+                await _storage.UnlockCardsAsync(currentData, cardsToUnlock, ct);
                 
                 ApplyUnlockToCache(currentData, cardsToUnlock);
                 

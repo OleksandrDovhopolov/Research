@@ -260,7 +260,7 @@ namespace CardCollection.Tests
                 return UniTask.CompletedTask;
             }
 
-            public async UniTask UnlockCardsAsync(string eventId, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
+            public async UniTask UnlockCardsAsync(EventCardsSaveData data, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
             {
                 ct.ThrowIfCancellationRequested();
                 if (cardIds == null || cardIds.Count == 0)
@@ -268,7 +268,6 @@ namespace CardCollection.Tests
                     return;
                 }
 
-                var data = await LoadAsync(eventId, ct);
                 foreach (var cardId in cardIds)
                 {
                     ct.ThrowIfCancellationRequested();

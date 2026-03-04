@@ -128,14 +128,15 @@ namespace CardCollectionImpl
             }
         }
 
-        public async UniTask UnlockCardsAsync(string eventId, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
+        public async UniTask UnlockCardsAsync(EventCardsSaveData data, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
         {
             if (cardIds == null || cardIds.Count == 0)
                 return;
 
-            ValidateEventId(eventId);
-
-            var data = await LoadAsync(eventId, ct);
+            if (data == null)
+                throw new ArgumentNullException(nameof(data));
+            
+            ValidateEventId(data.EventId);
 
             var cardDict = data.Cards.ToDictionary(c => c.CardId, c => c);
 
@@ -143,7 +144,7 @@ namespace CardCollectionImpl
             {
                 if (string.IsNullOrEmpty(cardId))
                 {
-                    Debug.LogWarning($"[JsonEventCardsStorage] Skipping null or empty cardId for event {eventId}");
+                    Debug.LogWarning($"[JsonEventCardsStorage] Skipping null or empty cardId for event {data.EventId}");
                     continue;
                 }
 

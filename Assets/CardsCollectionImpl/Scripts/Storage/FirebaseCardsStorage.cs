@@ -90,7 +90,7 @@ namespace CardCollectionImpl
             Debug.LogWarning($"[Firebase] Saved event {data.EventId}");
         }
 
-        public UniTask UnlockCardsAsync(string eventId, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
+        public UniTask UnlockCardsAsync(EventCardsSaveData data, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
         {
             throw new NotImplementedException("not implemented");
         }

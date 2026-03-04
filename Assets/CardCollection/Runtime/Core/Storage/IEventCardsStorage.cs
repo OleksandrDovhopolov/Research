@@ -10,7 +10,7 @@ namespace CardCollection.Core
         UniTask InitializeAsync(CancellationToken ct = default);
         UniTask<EventCardsSaveData> LoadAsync(string eventId, CancellationToken ct = default);
         UniTask SaveAsync(EventCardsSaveData data, CancellationToken ct = default);
-        UniTask UnlockCardsAsync(string eventId, IReadOnlyCollection<string> cardIds, CancellationToken ct = default);
+        UniTask UnlockCardsAsync(EventCardsSaveData data, IReadOnlyCollection<string> cardIds, CancellationToken ct = default);
         UniTask ClearCollectionAsync(CancellationToken ct = default);
     }
 }
