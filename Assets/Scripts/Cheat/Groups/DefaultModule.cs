@@ -104,7 +104,6 @@ namespace core
             for (var i = 0; i < unlockCount; i++)
             {
                 ct.ThrowIfCancellationRequested();
-                //TODO this method works a lot of time 
                 await _collectionUpdater.UnlockCard(cardIds[i], ct);
             }
         }

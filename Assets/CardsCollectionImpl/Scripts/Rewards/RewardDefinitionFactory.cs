@@ -64,9 +64,6 @@ namespace CardCollectionImpl
             return fullCollectionReward;
         }
         
-        //TODO write test for SO content 
-        // Assets/CardsCollectionImpl/Ui/Prefabs/CollectionPointsExchangeWindow/ExchangeScriptableObjects
-        //BUG was that SO was empty
         public CollectionRewardDefinition CreateFromOfferReward(string offerPackId, CancellationToken ct = default)
         {
             if (!TryGetPackEntry(offerPackId, out var exchangePackEntry))

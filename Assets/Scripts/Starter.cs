@@ -63,10 +63,7 @@ namespace core
             await LoadConfig(ct); 
             await InitResources(ct);
             
-            var cardPackConfigs = await _cardPackProvider.GetCardConfigsAsync(ct);
-            _rewardDefinitionFactory = _compositionRoot.CreateRewardDefinitionFactory(cardPackConfigs);
-                
-            await InitializeRewardHandlerAsync(_rewardDefinitionFactory, ct);
+            await InitializeRewardHandlerAsync(ct);
             await _cardCollectionEntryPoint.InitCardCollection(_cardPackProvider, _rewardHandler, ct);
         }
         
@@ -90,8 +87,14 @@ namespace core
             }
 
             var groudId = "cardGroups";
+            var configFile = _configManager.GetConfigFile(groudId);
+            if (configFile == null)
+            {
+                Debug.LogWarning($"Failed to find configFile for groupId {groudId}");
+                return;
+            }
             //_configManager.GetConfigFile(groudId).CurLoader = ConfigManager.LocalLoader;
-            _configManager.GetConfigFile(groudId).CurLoader = ConfigManager.ResourcesLoader;
+            configFile.CurLoader = ConfigManager.ResourcesLoader;
 
             await _configManager.ApplyParsedConfigs(configStorages);
             ct.ThrowIfCancellationRequested();
@@ -99,13 +102,15 @@ namespace core
 
         
         private readonly UniTaskCompletionSource _rewardHandlerInitializationSource = new();
-        public async UniTask InitializeRewardHandlerAsync(IRewardDefinitionFactory rewardDefinitionFactory, CancellationToken ct = default)
+        public async UniTask InitializeRewardHandlerAsync(CancellationToken ct = default)
         {
             try
             {
+                var cardPackConfigs = await _cardPackProvider.GetCardConfigsAsync(ct);
+                _rewardDefinitionFactory = _compositionRoot.CreateRewardDefinitionFactory(cardPackConfigs);
                 var offerRewardsReceiver = _compositionRoot.CreateOfferRewardsReceiver();
                 
-                _rewardHandler = _compositionRoot.CreateRewardHandler(offerRewardsReceiver, rewardDefinitionFactory);
+                _rewardHandler = _compositionRoot.CreateRewardHandler(offerRewardsReceiver, _rewardDefinitionFactory);
                 await _rewardHandler.InitializeAsync(ct);
                 _rewardHandlerInitializationSource.TrySetResult();
             }

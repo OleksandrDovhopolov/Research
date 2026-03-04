@@ -27,7 +27,7 @@ namespace CardCollectionImpl
             var result = handler.TryHandleCollectionCompleted(new CardCollectionCompletedData
             {
                 EventId = "test"
-            });
+            }).GetAwaiter().GetResult();
 
             Assert.IsTrue(result);
             Assert.AreEqual(1, rewardsReceiver.ReceiveCallsCount);
@@ -52,7 +52,7 @@ namespace CardCollectionImpl
             var result = handler.TryHandleCollectionCompleted(new CardCollectionCompletedData
             {
                 EventId = "event-1"
-            });
+            }).GetAwaiter().GetResult();
 
             Assert.IsTrue(result);
             Assert.AreEqual(1, rewardsReceiver.ReceiveCallsCount);
@@ -94,7 +94,8 @@ namespace CardCollectionImpl
 
             public CollectionRewardDefinition CreateFromOfferReward(string offerPackId, CancellationToken ct = default)
             {
-                throw new System.NotImplementedException();
+                CreateCollectionCallsCount++;
+                return new DuplicatePointsChestOffer();
             }
         }
     }

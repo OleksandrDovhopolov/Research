@@ -30,12 +30,10 @@ public class EventWebSocketClient : MonoBehaviour
             if (type == "EVENT_STARTED")
             {
                 Debug.LogWarning($"Ивент начался: {msg["name"]}");
-                // TODO: показать UI, запустить таймер, активировать квесты
             }
             else if (type == "EVENT_ENDED")
             {
                 Debug.LogWarning($"Ивент завершён: {msg["name"]}");
-                // TODO: скрыть UI, выдать награды, отключить активности
             }
         };
 

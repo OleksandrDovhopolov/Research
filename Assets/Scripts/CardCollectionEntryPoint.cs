@@ -11,6 +11,7 @@ namespace core
         private CardCollectionModule _cardCollectionModule;
         private ICardCollectionRewardHandler _rewardHandler;
         private Exception _initializationException;
+        private readonly CancellationTokenSource _destroyCts = new();
 
         private readonly UniTaskCompletionSource _initializationSource = new();
 
@@ -78,7 +79,7 @@ namespace core
                 return;
             }
 
-            _rewardHandler.TryHandleGroupCompleted(groupCompletedData);
+            _rewardHandler.TryHandleGroupCompleted(groupCompletedData, _destroyCts.Token).Forget();
         }
 
         private void CollectionCompletedHandler(CardCollectionCompletedData collectionCompletedData)
@@ -89,11 +90,14 @@ namespace core
                 return;
             }
 
-            _rewardHandler.TryHandleCollectionCompleted(collectionCompletedData);
+            _rewardHandler.TryHandleCollectionCompleted(collectionCompletedData, _destroyCts.Token).Forget();
         }
 
         private void OnDestroy()
         {
+            _destroyCts.Cancel();
+            _destroyCts.Dispose();
+
             if (_cardCollectionModule != null)
             {
                 _cardCollectionModule.OnGroupCompleted -= GroupCompletedHandler;

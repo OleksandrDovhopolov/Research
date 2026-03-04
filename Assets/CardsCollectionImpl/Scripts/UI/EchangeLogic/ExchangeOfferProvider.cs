@@ -51,13 +51,13 @@ namespace CardCollectionImpl
 
         public async UniTask<bool> ReceiveOfferContent(string offerPackId, CancellationToken ct = default)
         {
+            ct.ThrowIfCancellationRequested();
+
             const string infoText = "Pack received successfully";
             var infoArgs = new InfoWidgetArg(_uiManager, infoText);
             _uiManager.Show<InfoWidgetController>(infoArgs);
             
-            //TODO await ? 
-            _cardCollectionRewardHandler.TryHandleBuyPointsOffer(offerPackId);
-            return await UniTask.FromResult(true);
+            return await _cardCollectionRewardHandler.TryHandleBuyPointsOffer(offerPackId, ct);
         }
 
         private bool TryGetPackEntry(string packId, out ExchangePackEntry pack)

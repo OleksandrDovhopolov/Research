@@ -54,8 +54,10 @@ namespace CardCollectionImpl
             }
         }
 
-        public bool TryHandleGroupCompleted(CardGroupCompletedData groupCompletedData)
+        public async UniTask<bool> TryHandleGroupCompleted(CardGroupCompletedData groupCompletedData, CancellationToken ct = default)
         {
+            ct.ThrowIfCancellationRequested();
+
             if (!_isInitialized)
             {
                 Debug.LogError("[CardCollectionRewardHandler] Rewards config is not loaded. Call InitializeAsync before handling rewards.");
@@ -70,13 +72,13 @@ namespace CardCollectionImpl
             }
             
             var groupRewards = _rewardDefinitionFactory.CreateFromGroupReward(groupDefinition);
-            //TODO await this 
-            _offerRewardsReceiver.ReceiveRewardsAsync(groupRewards).Forget();
-            return true;
+            return await _offerRewardsReceiver.ReceiveRewardsAsync(groupRewards, ct);
         }
 
-        public bool TryHandleCollectionCompleted(CardCollectionCompletedData collectionCompletedData)
+        public async UniTask<bool> TryHandleCollectionCompleted(CardCollectionCompletedData collectionCompletedData, CancellationToken ct = default)
         {
+            ct.ThrowIfCancellationRequested();
+            
             if (!_isInitialized)
             {
                 Debug.LogError("[CardCollectionRewardHandler] Rewards config is not loaded. Call InitializeAsync before handling rewards.");
@@ -87,22 +89,17 @@ namespace CardCollectionImpl
             if (collectionRewardDefinition.RewardId == collectionCompletedData.EventId)
             {
                 var collectionRewardModel = _rewardDefinitionFactory.CreateFromCollectionReward(collectionRewardDefinition);
-                //TODO await this 
-                _offerRewardsReceiver.ReceiveRewardsAsync(collectionRewardModel).Forget();
-                return true;
+                return await _offerRewardsReceiver.ReceiveRewardsAsync(collectionRewardModel, ct);
             }
             
             Debug.LogWarning($"Failed to find CollectionRewardDefinition for group with ID groupCompletedData.GroupId");
             return false;
         }
 
-        public bool TryHandleBuyPointsOffer(string offerId)
+        public async UniTask<bool> TryHandleBuyPointsOffer(string offerId, CancellationToken ct = default)
         {
             var exchangeOfferModule = _rewardDefinitionFactory.CreateFromOfferReward(offerId);
-            
-            //TODO await this  + implement logic for pack added to inventory / open immidiatlly 
-            _offerRewardsReceiver.ReceiveRewardsAsync(exchangeOfferModule).Forget();
-            return true;
+            return await _offerRewardsReceiver.ReceiveRewardsAsync(exchangeOfferModule, ct);
         }
     }
 }
