@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
@@ -21,11 +22,18 @@ namespace CardCollectionImpl
     {
         private readonly PackRule _rule;
         private readonly PackOpeningHistory _packOpeningHistory;
+        private readonly JsonPackOpeningHistoryStorage _packOpeningHistoryStorage;
+        private readonly SemaphoreSlim _initializeSemaphore = new(1, 1);
+        private bool _isInitialized;
 
-        public SapphirePackStrategy(PackRule rule, PackOpeningHistory packOpeningHistory)
+        public SapphirePackStrategy(
+            PackRule rule,
+            PackOpeningHistory packOpeningHistory,
+            JsonPackOpeningHistoryStorage packOpeningHistoryStorage = null)
         {
             _rule = rule ?? throw new System.ArgumentNullException(nameof(rule));
-            _packOpeningHistory = packOpeningHistory;
+            _packOpeningHistory = packOpeningHistory ?? new PackOpeningHistory();
+            _packOpeningHistoryStorage = packOpeningHistoryStorage ?? new JsonPackOpeningHistoryStorage();
         }
 
         public override async UniTask<List<string>> SelectCardsAsync(
@@ -34,6 +42,7 @@ namespace CardCollectionImpl
             PackSelectionContext context,
             CancellationToken ct = default)
         {
+            await EnsureInitializedAsync(ct);
             await UniTask.Yield(ct);
 
             if (allCards == null || allCards.Count == 0)
@@ -151,12 +160,45 @@ namespace CardCollectionImpl
             if (_packOpeningHistory != null)
             {
                 _packOpeningHistory.RecordPackOpening(pack.PackId, hasMissingCard);
+                await PersistHistoryAsync(ct);
             }
 
             // Sort cards by stars (ascending), with PremiumCard (Gold) treated as highest value
             var sortedCards = selectedCards.OrderBy(c => c.PremiumCard ? 6 : c.Stars).ToList();
             
             return sortedCards.Select(c => c.Id).ToList();
+        }
+
+        private async UniTask EnsureInitializedAsync(CancellationToken ct)
+        {
+            if (_isInitialized)
+            {
+                return;
+            }
+
+            await _initializeSemaphore.WaitAsync(ct);
+            try
+            {
+                if (_isInitialized)
+                {
+                    return;
+                }
+
+                await _packOpeningHistoryStorage.InitializeAsync(ct);
+                var historyData = await _packOpeningHistoryStorage.LoadAsync(ct);
+                _packOpeningHistory.LoadFromSaveData(historyData);
+                _isInitialized = true;
+            }
+            finally
+            {
+                _initializeSemaphore.Release();
+            }
+        }
+
+        private async UniTask PersistHistoryAsync(CancellationToken ct)
+        {
+            var historyData = _packOpeningHistory.ToSaveData();
+            await _packOpeningHistoryStorage.SaveAsync(historyData, ct);
         }
 
 

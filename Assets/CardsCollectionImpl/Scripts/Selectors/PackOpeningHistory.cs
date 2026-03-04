@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace CardCollectionImpl
@@ -79,6 +80,45 @@ namespace CardCollectionImpl
         public void ClearAllHistory()
         {
             _packHistory.Clear();
+        }
+
+        public PackOpeningHistorySaveData ToSaveData()
+        {
+            return new PackOpeningHistorySaveData
+            {
+                Entries = _packHistory.Values
+                    .Select(entry => new PackOpeningHistoryEntrySaveData
+                    {
+                        PackId = entry.PackId,
+                        ConsecutivePacksWithoutMissingCard = entry.ConsecutivePacksWithoutMissingCard,
+                        TotalPacksOpened = entry.TotalPacksOpened
+                    })
+                    .ToList()
+            };
+        }
+
+        public void LoadFromSaveData(PackOpeningHistorySaveData saveData)
+        {
+            _packHistory.Clear();
+            if (saveData?.Entries == null)
+            {
+                return;
+            }
+
+            foreach (var entry in saveData.Entries)
+            {
+                if (string.IsNullOrEmpty(entry.PackId))
+                {
+                    continue;
+                }
+
+                _packHistory[entry.PackId] = new PackHistoryEntry
+                {
+                    PackId = entry.PackId,
+                    ConsecutivePacksWithoutMissingCard = Mathf.Max(0, entry.ConsecutivePacksWithoutMissingCard),
+                    TotalPacksOpened = Mathf.Max(0, entry.TotalPacksOpened)
+                };
+            }
         }
 
         private class PackHistoryEntry
