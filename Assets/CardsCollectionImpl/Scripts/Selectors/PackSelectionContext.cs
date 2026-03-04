@@ -24,36 +24,40 @@ namespace CardCollectionImpl
 
             foreach (var card in cards)
             {
-                CardCategory category;
-                
-                if (card.PremiumCard)
+                if (!TryGetCardCategory(card, out var category))
+                    continue;
+
+                if (!grouped.TryGetValue(category, out var categoryCards))
                 {
-                    category = CardCategory.Gold;
-                }
-                else
-                {
-                    category = card.Stars switch
-                    {
-                        1 => CardCategory.Silver1Star,
-                        2 => CardCategory.Silver2Star,
-                        3 => CardCategory.Silver3Star,
-                        4 => CardCategory.Silver4Star,
-                        5 => CardCategory.Silver5Star,
-                        _ => CardCategory.Unknown
-                    };
+                    categoryCards = new List<CardDefinition>();
+                    grouped[category] = categoryCards;
                 }
 
-                if (category != CardCategory.Unknown)
-                {
-                    if (!grouped.ContainsKey(category))
-                    {
-                        grouped[category] = new List<CardDefinition>();
-                    }
-                    grouped[category].Add(card);
-                }
+                categoryCards.Add(card);
             }
 
             return grouped;
+        }
+        
+        public bool TryGetCardCategory(CardDefinition card, out CardCategory category)
+        {
+            if (card.PremiumCard)
+            {
+                category = CardCategory.Gold;
+                return true;
+            }
+
+            category = card.Stars switch
+            {
+                1 => CardCategory.Silver1Star,
+                2 => CardCategory.Silver2Star,
+                3 => CardCategory.Silver3Star,
+                4 => CardCategory.Silver4Star,
+                5 => CardCategory.Silver5Star,
+                _ => CardCategory.Unknown
+            };
+
+            return category != CardCategory.Unknown;
         }
     }
 

@@ -50,9 +50,11 @@ namespace CardCollectionImpl
             }
 
             var cardCount = pack.CardCount;
-            var selectedCardIds = new List<string>(cardCount);
+            var selectedCardIds = new HashSet<string>();
             var selectedCards = new List<CardDefinition>(cardCount);
             var remainingCards = new List<CardDefinition>(allCards);
+            var cardsByCategory = context.GroupCardsByCategory(remainingCards);
+            var missingCardsByCategory = BuildMissingCardsByCategory(remainingCards, missingCardIds, context);
 
             // Track if we've met the minimum 3+ star requirement
             int cardsWith3PlusStars = 0;
@@ -62,20 +64,11 @@ namespace CardCollectionImpl
             {
                 ct.ThrowIfCancellationRequested();
 
-                // Update available cards (remove already selected ones)
-                var availableCardsForSelection = remainingCards.Where(c => !selectedCardIds.Contains(c.Id)).ToList();
-                
-                if (availableCardsForSelection.Count == 0)
+                if (remainingCards.Count == 0)
                 {
                     Debug.LogWarning("[SapphirePackStrategy] No more cards available to select");
                     break;
                 }
-
-                // Group cards by category from remaining cards
-                var cardsByCategory = context.GroupCardsByCategory(availableCardsForSelection);
-                var missingCardsByCategory = missingCardIds != null 
-                    ? context.GroupCardsByCategory(availableCardsForSelection.Where(c => missingCardIds.Contains(c.Id)).ToList())
-                    : new Dictionary<CardCategory, List<CardDefinition>>();
 
                 CardDefinition selectedCard = null;
 
@@ -122,11 +115,17 @@ namespace CardCollectionImpl
                     }
                 }
 
-                if (selectedCard != null)
+                if (selectedCard == null)
                 {
-                    selectedCardIds.Add(selectedCard.Id);
+                    // Fallback: if no card found in selected category, pick any random card from remaining
+                    Debug.LogWarning($"[SapphirePackStrategy] No card found in selected category, falling back to random selection");
+                    selectedCard = remainingCards[Random.Range(0, remainingCards.Count)];
+                }
+
+                if (selectedCard != null && selectedCardIds.Add(selectedCard.Id))
+                {
                     selectedCards.Add(selectedCard);
-                    
+
                     // Track 3+ star cards
                     if (selectedCard.Stars >= 3 && !selectedCard.PremiumCard)
                     {
@@ -143,17 +142,8 @@ namespace CardCollectionImpl
                     {
                         hasMissingCard = true;
                     }
-                }
-                else
-                {
-                    // Fallback: if no card found in selected category, pick any random card from remaining
-                    Debug.LogWarning($"[SapphirePackStrategy] No card found in selected category, falling back to random selection");
-                    if (availableCardsForSelection.Count > 0)
-                    {
-                        var fallbackCard = availableCardsForSelection[Random.Range(0, availableCardsForSelection.Count)];
-                        selectedCardIds.Add(fallbackCard.Id);
-                        selectedCards.Add(fallbackCard);
-                    }
+
+                    RemoveSelectedCardFromPools(selectedCard, remainingCards, cardsByCategory, missingCardsByCategory, context);
                 }
             }
 
@@ -221,6 +211,67 @@ namespace CardCollectionImpl
             var selectedCategory = eligibleCategories[Random.Range(0, eligibleCategories.Count)];
             var categoryCards = cardsByCategory[selectedCategory];
             return categoryCards[Random.Range(0, categoryCards.Count)];
+        }
+
+        private static Dictionary<CardCategory, List<CardDefinition>> BuildMissingCardsByCategory(
+            List<CardDefinition> allCards,
+            HashSet<string> missingCardIds, 
+            PackSelectionContext context)
+        {
+            if (missingCardIds == null || missingCardIds.Count == 0)
+                return null;
+
+            var grouped = new Dictionary<CardCategory, List<CardDefinition>>();
+            foreach (var card in allCards)
+            {
+                if (!missingCardIds.Contains(card.Id))
+                    continue;
+
+                if (!context.TryGetCardCategory(card, out var category))
+                    continue;
+
+                if (!grouped.TryGetValue(category, out var categoryCards))
+                {
+                    categoryCards = new List<CardDefinition>();
+                    grouped[category] = categoryCards;
+                }
+
+                categoryCards.Add(card);
+            }
+
+            return grouped;
+        }
+
+        private static void RemoveSelectedCardFromPools(CardDefinition selectedCard,
+            List<CardDefinition> remainingCards,
+            Dictionary<CardCategory, List<CardDefinition>> cardsByCategory,
+            Dictionary<CardCategory, List<CardDefinition>> missingCardsByCategory, PackSelectionContext context)
+        {
+            remainingCards.Remove(selectedCard);
+
+            if (context.TryGetCardCategory(selectedCard, out var category))
+            {
+                RemoveCardFromCategory(cardsByCategory, category, selectedCard);
+                RemoveCardFromCategory(missingCardsByCategory, category, selectedCard);
+            }
+        }
+
+        private static void RemoveCardFromCategory(
+            Dictionary<CardCategory, List<CardDefinition>> cardsByCategory,
+            CardCategory category,
+            CardDefinition card)
+        {
+            if (cardsByCategory == null)
+                return;
+
+            if (!cardsByCategory.TryGetValue(category, out var categoryCards))
+                return;
+
+            categoryCards.Remove(card);
+            if (categoryCards.Count == 0)
+            {
+                cardsByCategory.Remove(category);
+            }
         }
     }
 }
