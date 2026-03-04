@@ -36,13 +36,11 @@ namespace core
         [Inject]
         private void Construct(ResourceManager resourceManager)
         {
-            Debug.LogWarning($"Debug Construct");
             _resourceManager = resourceManager;
         }
 
         private void Awake()
         {
-            Debug.LogWarning($"Debug Awake");
             Application.targetFrameRate = 60;
             _destroyCt = this.GetCancellationTokenOnDestroy();
         }
