@@ -99,7 +99,10 @@ namespace CardCollectionImpl
         public async UniTask<bool> TryHandleBuyPointsOffer(string offerId, CancellationToken ct = default)
         {
             var exchangeOfferModule = _rewardDefinitionFactory.CreateFromOfferReward(offerId);
-            return await _offerRewardsReceiver.ReceiveRewardsAsync(exchangeOfferModule, ct);
+            var result = await _offerRewardsReceiver.ReceiveRewardsAsync(exchangeOfferModule, ct);
+            
+            Debug.LogWarning($"Debug exchangeOfferModule {exchangeOfferModule.CardPack.Count} / {exchangeOfferModule.Source}, result {result}");
+            return result;
         }
     }
 }

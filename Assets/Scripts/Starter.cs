@@ -7,6 +7,7 @@ using Resources.Core;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 namespace core
 {
@@ -32,8 +33,16 @@ namespace core
         private IRewardDefinitionFactory _rewardDefinitionFactory;
         private ICardCollectionCompositionRoot _compositionRoot;
 
+        [Inject]
+        private void Construct(ResourceManager resourceManager)
+        {
+            Debug.LogWarning($"Debug Construct");
+            _resourceManager = resourceManager;
+        }
+
         private void Awake()
         {
+            Debug.LogWarning($"Debug Awake");
             Application.targetFrameRate = 60;
             _destroyCt = this.GetCancellationTokenOnDestroy();
         }
@@ -56,7 +65,6 @@ namespace core
             ct.ThrowIfCancellationRequested();
 
             _compositionRoot = CardCollectionCompositionRegistry.Resolve();
-            _resourceManager = new ResourceManager();
             _cardPackProvider = new JsonCardPackProvider();
             
             await LoadAddressables(ct);
