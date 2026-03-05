@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using DG.Tweening;
 using Infrastructure;
 using TMPro;
@@ -26,6 +27,11 @@ namespace CardCollectionImpl
         
         [SerializeField] private GameObject _newNotificationGameObject;
         [SerializeField] private CanvasGroup _canvasGroup;
+
+        [Space, Header("Frame")]
+        [SerializeField] private List<Image> _cardFrameImage;
+        [SerializeField] private Color _defaultFrameColor;
+        [SerializeField] private Color _premiumFrameColor;
 
         private CardCollectionConfig _cardCollectionConfig;
         public bool IsOpen { get; private set; }
@@ -74,6 +80,15 @@ namespace CardCollectionImpl
         {
             _closedCardName.text = _cardCollectionConfig.CardName;
             _openCardName.text = _cardCollectionConfig.CardName;
+        }
+
+        public void UpdateCardFrame()
+        {
+            var frameColor = _cardCollectionConfig.PremiumCard ? _premiumFrameColor : _defaultFrameColor;
+            foreach (var image in _cardFrameImage)
+            {
+                image.color = frameColor;
+            }
         }
         
         public void UpdateCardStars()

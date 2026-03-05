@@ -42,6 +42,7 @@ namespace CardCollectionImpl
                 cardView.SetConfig(config);
                 cardView.SetCardOpen(cardDisplayData.IsUnlocked);
                 cardView.SetCardNew(cardDisplayData.IsNew);
+                cardView.UpdateCardFrame();
                 cardView.UpdateCardName();
                 cardView.UpdateCardStars();
                 UIUtils.SetSprite(config, cardView, this.GetCancellationTokenOnDestroy()).Forget();

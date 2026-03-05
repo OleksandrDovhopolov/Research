@@ -77,6 +77,7 @@ namespace CardCollectionImpl
                 cardView.SetConfig(config);
                 cardView.SetCardOpen(data.IsUnlocked);
                 cardView.SetCardNew(data.IsNew);
+                cardView.UpdateCardFrame();
                 cardView.UpdateCardName();
                 cardView.UpdateCardStars();
                 cardView.OnCardPressed += OnCardPressedHandler;

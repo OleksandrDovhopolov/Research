@@ -23,6 +23,7 @@ namespace CardCollectionImpl
             _selectedCardContainer.gameObject.SetActive(true);
 
             _selectedCardView.SetConfig(config);
+            _selectedCardView.UpdateCardFrame();
             _selectedCardView.SetOpenCardContainerActive(cardView.IsOpen);
             _selectedCardView.SetClosedCardContainerActive(!cardView.IsOpen);
             _selectedCardView.SetCardNew(cardView.IsNew);
