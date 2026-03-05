@@ -23,6 +23,7 @@ namespace CardCollectionImpl
         [SerializeField] private Button _leftSwitchButton;
         [SerializeField] private Button _rightSwitchButton;
         [SerializeField] private TextMeshProUGUI _collectionNumberText;
+        [SerializeField] private TextMeshProUGUI _groupTitleText;
         
         [Space, Space, Header("SlideAnimation")]
         [SerializeField] private RectTransform _cardsContainer;
@@ -55,6 +56,8 @@ namespace CardCollectionImpl
             
             _upperCardsPool.DisableNonActive();
             _bottomCardsPool.DisableNonActive();
+            
+            _groupTitleText.text = groupType;
             
             for (var i = 0; i < cardsData.Count; i++)
             {
