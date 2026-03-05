@@ -218,45 +218,52 @@ namespace CardCollection.Core
                 .ToList();
         }
         
-        /// <summary>
-        /// Resets the IsNew flag for the specified card.
-        /// </summary>
-        /// <param name="eventId">The event identifier</param>
-        /// <param name="cardId">The card identifier to reset</param>
-        /// <param name="ct">Cancellation token for cooperative cancellation</param>
         public async UniTask ResetNewFlagAsync(string eventId, string cardId, CancellationToken ct = default)
+        {
+            if (string.IsNullOrEmpty(cardId))
+                throw new ArgumentException("Card ID cannot be null or empty", nameof(cardId));
+
+            await ResetNewFlagsAsync(eventId, new[] { cardId }, ct);
+        }
+
+        public async UniTask ResetNewFlagsAsync(string eventId, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
         {
             if (string.IsNullOrEmpty(eventId))
                 throw new ArgumentException("Event ID cannot be null or empty", nameof(eventId));
-            
-            if (string.IsNullOrEmpty(cardId))
-                throw new ArgumentException("Card ID cannot be null or empty", nameof(cardId));
+
+            if (cardIds == null || cardIds.Count == 0)
+                return;
 
             await EnsureInitializedAsync(ct);
 
             var data = await LoadAsync(eventId, ct);
-            
+
             if (data?.Cards == null)
                 return;
 
-            var card = data.Cards.Find(c => c.CardId == cardId);
-            if (card != null && card.IsNew)
+            var idsToReset = new HashSet<string>(
+                cardIds.Where(id => !string.IsNullOrEmpty(id)),
+                StringComparer.Ordinal);
+
+            if (idsToReset.Count == 0)
+                return;
+
+            var hasChanges = false;
+            foreach (var card in data.Cards)
             {
-                card.IsNew = false;
-                
-                Debug.LogWarning($"Debug EventCardsService cardData.CardId {card.CardId} / {card.IsNew}");
+                if (card is { IsNew: true } && idsToReset.Contains(card.CardId))
+                {
+                    card.IsNew = false;
+                    hasChanges = true;
+                }
+            }
+
+            if (hasChanges)
+            {
                 await SaveAsync(data, ct);
             }
         }
 
-        /// <summary>
-        /// Gets the IDs of cards that are missing (not unlocked) from the available cards list.
-        /// Results are cached per eventId and invalidated when cards are unlocked.
-        /// </summary>
-        /// <param name="eventId">The event identifier</param>
-        /// <param name="allCards">List of all available card definitions</param>
-        /// <param name="ct">Cancellation token for cooperative cancellation</param>
-        /// <returns>HashSet of card IDs that are missing (not unlocked)</returns>
         internal async UniTask<HashSet<string>> GetMissingCardIdsAsync(string eventId, List<CardDefinition> allCards, CancellationToken ct = default)
         {
             if (string.IsNullOrEmpty(eventId))
@@ -267,7 +274,6 @@ namespace CardCollection.Core
 
             await EnsureInitializedAsync(ct);
 
-            // Get or compute unlocked card IDs cache
             if (!_unlockedCardIdsCache.TryGetValue(eventId, out var unlockedCardIds))
             {
                 var progressData = await LoadAsync(eventId, ct);
@@ -276,7 +282,6 @@ namespace CardCollection.Core
                 _unlockedCardIdsCache[eventId] = unlockedCardIds;
             }
 
-            // Return missing card IDs (cards not in unlocked set)
             return new HashSet<string>(
                 allCards.Where(c => !unlockedCardIds.Contains(c.Id)).Select(c => c.Id));
         }

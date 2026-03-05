@@ -23,6 +23,7 @@ namespace CardCollection.Core
         // Progress helpers
         UniTask<List<CardProgressData>> GetCardsByIdsAsync(List<string> cardIds, CancellationToken ct = default);
         UniTask ResetNewFlagAsync(string cardId, CancellationToken ct = default);
+        UniTask ResetNewFlagsAsync(IReadOnlyCollection<string> cardIds, CancellationToken ct = default);
     }
 
     public interface ICardCollectionPointsAccount

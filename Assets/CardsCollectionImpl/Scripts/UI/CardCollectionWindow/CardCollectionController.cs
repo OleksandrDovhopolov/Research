@@ -136,11 +136,22 @@ namespace CardCollectionImpl
         private void OnGroupButtonPressedHandler(string groupType)
         {
             TryHideContentWidget();
+
+            OnGroupViewChangedHandler(groupType);
             
-            View.UpdateGroupNewCards(groupType, 0);
-            
-            var args = new CardGroupArgs(Args.UiManager, Args.CardCollectionModule, Args.EventCardsSaveData, groupType, View.RewardsConfigSo);
+            var args = new CardGroupArgs(
+                Args.UiManager, 
+                Args.CardCollectionModule, 
+                Args.EventCardsSaveData, 
+                groupType, 
+                View.RewardsConfigSo,
+                OnGroupViewChangedHandler);
             Args.UiManager.Show<CardGroupController>(args);
+        }
+
+        private void OnGroupViewChangedHandler(string currentGroupType)
+        {
+            View.UpdateGroupNewCards(currentGroupType, 0);
         }
         
         private void CloseWindow()

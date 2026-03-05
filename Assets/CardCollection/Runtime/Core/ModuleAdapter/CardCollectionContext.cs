@@ -76,6 +76,9 @@ namespace CardCollection.Core
         public UniTask ResetNewFlagAsync(string eventId, string cardId, CancellationToken ct = default)
             => _cardProgressService.ResetNewFlagAsync(eventId, cardId, ct);
 
+        public UniTask ResetNewFlagsAsync(string eventId, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
+            => _cardProgressService.ResetNewFlagsAsync(eventId, cardIds, ct);
+
         public async UniTask<int> GetPoints(string eventId)
             => await _cardProgressService.GetPoints(eventId);
 

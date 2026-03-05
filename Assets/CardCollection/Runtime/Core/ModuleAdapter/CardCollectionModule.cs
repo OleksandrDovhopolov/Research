@@ -102,6 +102,11 @@ namespace CardCollection.Core
             return _context.ResetNewFlagAsync(_context.DefaultEventId, cardId, ct);
         }
 
+        public UniTask ResetNewFlagsAsync(IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
+        {
+            return _context.ResetNewFlagsAsync(_context.DefaultEventId, cardIds, ct);
+        }
+
         internal async UniTask AddPointsAsync(int pointsToAdd, CancellationToken ct = default)
         {
             await _context.AddPointsAsync(_context.DefaultEventId, pointsToAdd, ct);
