@@ -161,7 +161,10 @@ namespace CardCollectionImpl
 
         private async UniTask AnimateHideNewCardAsync(CollectionCardView cardView, CancellationToken ct)
         {
-            await UniTask.Delay((int)(_animationConfig.NewCardHideDelay * 1000), cancellationToken: ct);
+            if (_hasDuplicates)
+            {
+                await UniTask.Delay((int)(_animationConfig.NewCardHideDelay * 1000), cancellationToken: ct);
+            }
             await cardView.Hide().SetLink(gameObject).AsyncWaitForCompletion().AsUniTask()
                 .AttachExternalCancellation(ct);
         }
