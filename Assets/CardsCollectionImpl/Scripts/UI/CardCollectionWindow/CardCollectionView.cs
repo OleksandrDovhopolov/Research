@@ -16,6 +16,7 @@ namespace CardCollectionImpl
         [SerializeField] private UIListPool<CardsCollectionView> _cardGroupsPool;
         [SerializeField] private GameObject _loadingAnimationObject;
         [SerializeField] private CardCollectionRewardsConfigSO _cardCollectionRewardsConfigSo;
+        [SerializeField] private Button _infoButton;
         
         [Header("Points Container")]
         [SerializeField] private CardsCollectionPointsView _cardsCollectionPointsView;
@@ -32,6 +33,7 @@ namespace CardCollectionImpl
         
         public event Action<string> OnGroupButtonPressed;
         public event Action OnPointsViewClicked;
+        public event Action OnInfoButtonClicked;
         public event Action<RectTransform> OnRewardChestClicked;
         
         private bool _groupsCreated;
@@ -40,6 +42,7 @@ namespace CardCollectionImpl
         {
             _cardsCollectionPointsView.OnViewClicked += OnPointsViewClickedHandler;
             _collectionRewardButton.onClick.AddListener(OnRewardChestClickedHandler);
+            _infoButton.onClick.AddListener(OnInfoButtonClickedHandler);
         }
 
         private void OnPointsViewClickedHandler()
@@ -50,6 +53,11 @@ namespace CardCollectionImpl
         private void OnRewardChestClickedHandler()
         {
             OnRewardChestClicked?.Invoke(_collectionRewardButtonRect);
+        }
+        
+        private void OnInfoButtonClickedHandler()
+        {
+            OnInfoButtonClicked?.Invoke();
         }
         
         public void CreateViews(EventCardsSaveData collectionData)
@@ -142,6 +150,7 @@ namespace CardCollectionImpl
             
             _cardsCollectionPointsView.OnViewClicked -= OnPointsViewClickedHandler;
             _collectionRewardButton.onClick.RemoveAllListeners();
+            _infoButton.onClick.RemoveAllListeners();
             
             foreach (var view in _viewsDict.Values)
             {

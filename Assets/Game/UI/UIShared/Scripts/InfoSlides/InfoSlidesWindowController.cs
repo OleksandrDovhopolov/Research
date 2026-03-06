@@ -15,7 +15,7 @@ namespace UIShared
         }
     }
     
-    [Window("InfoSlidesWindow")]
+    [Window("InfoSlidesWindow", WindowType.Popup)]
     public class InfoSlidesPageController : WindowController<InfoSlidesWindowView>
     {
         private InfoSlidesPageArgs Args => (InfoSlidesPageArgs)Arguments;

@@ -64,6 +64,7 @@ namespace CardCollectionImpl
         {
             View.CloseClick += CloseWindow;
             View.OnPointsViewClicked += OnPointsViewClickedHandler;
+            View.OnInfoButtonClicked += OnInfoButtonClickedHandler;
             View.OnRewardChestClicked += OnRewardChestClickedHandler;
             View.OnGroupButtonPressed += OnGroupButtonPressedHandler;
             
@@ -91,6 +92,12 @@ namespace CardCollectionImpl
                 Args.CardCollectionPointsAccount,
                 UpdatePointsAmount);
             Args.UiManager.Show<CollectionPointsExchangeController>(args);
+        }
+        
+        private void OnInfoButtonClickedHandler()
+        {
+            var args = new InfoSlidesPageArgs(SlidesType.PiggyBank, Args.UiManager);
+            Args.UiManager.Show<InfoSlidesPageController>(args);
         }
         
         private async UniTask CreateGroupViews()
@@ -129,6 +136,7 @@ namespace CardCollectionImpl
             
             View.CloseClick -= CloseWindow;
             View.OnPointsViewClicked -= OnPointsViewClickedHandler;
+            View.OnInfoButtonClicked -= OnInfoButtonClickedHandler;
             View.OnRewardChestClicked -= OnRewardChestClickedHandler;
             View.OnGroupButtonPressed -= OnGroupButtonPressedHandler;
         }
