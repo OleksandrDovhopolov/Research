@@ -18,8 +18,7 @@ namespace CardCollectionImpl
 
             if (eventCardsSaveData != null)
             {
-                _collectionProgressSnapshotService.SetSnapshot(
-                    eventCardsSaveData.GetCollectedCardsAmount(), eventCardsSaveData.Cards.Count);
+                _collectionProgressSnapshotService.SetSnapshot(eventCardsSaveData);
             }
         }
 
@@ -41,7 +40,7 @@ namespace CardCollectionImpl
             IRewardDefinitionFactory  rewardDefinitionFactory,
             ICardCollectionPointsAccount cardCollectionPointsAccount)
         {
-            var hasPreviousCollectedSnapshot = _collectionProgressSnapshotService.TryGetSnapshot(out var previousSnapshot);
+            var hasPreviousCollectedSnapshot = _collectionProgressSnapshotService.TryGetSnapshot(out CollectionProgressSnapshot previousSnapshot);
             var args = new CardCollectionArgs(
                 _uiManager,
                 cardCollectionModule,
@@ -49,14 +48,10 @@ namespace CardCollectionImpl
                 exchangeOfferProvider,
                 rewardDefinitionFactory, 
                 cardCollectionPointsAccount,
-                hasPreviousCollectedSnapshot,
-                previousSnapshot.CollectedAmount,
-                previousSnapshot.TotalAmount);
+                previousSnapshot);
             _uiManager.Show<CardCollectionController>(args);
 
-            _collectionProgressSnapshotService.SetSnapshot(
-                eventCardsSaveData.GetCollectedCardsAmount(),
-                eventCardsSaveData.Cards.Count);
+            _collectionProgressSnapshotService.SetSnapshot(eventCardsSaveData);
         }
     }
 }

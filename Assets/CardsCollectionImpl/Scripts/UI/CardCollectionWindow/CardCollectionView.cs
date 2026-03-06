@@ -72,11 +72,11 @@ namespace CardCollectionImpl
                 
                 var groupType = groupsConfig.GroupType;
                 var groupName = groupsConfig.GroupName;
-                var totalGroupAmount = collectionData.GetGroupAmount(groupType);
-                var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
+                //var totalGroupAmount = collectionData.GetGroupAmount(groupType);
+                //var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
                 
                 groupView.SetData(groupType, groupName);
-                groupView.UpdateCollectedAmount(collectedGroupAmount, totalGroupAmount);
+                //groupView.UpdateCollectedAmount(collectedGroupAmount, totalGroupAmount);
                 var rewardViewData = UIUtils.CreateRewardViewData(_cardCollectionRewardsConfigSo, groupType);
                 groupView.SetRewardData(rewardViewData.Icon, rewardViewData.Amount);
                 
@@ -89,15 +89,36 @@ namespace CardCollectionImpl
             }
         }
 
-        public void UpdateViews(EventCardsSaveData collectionData)
+        public void SetGroupsProgress(IReadOnlyList<CollectionProgressSnapshot.GroupProgressSnapshot> collectionData)
+        {
+            foreach (var groupProgressSnapshot in collectionData)
+            {
+                if (_viewsDict.TryGetValue(groupProgressSnapshot.GroupType, out var groupView))
+                {
+                    groupView.SetCollectedAmountProgressStart(groupProgressSnapshot.CollectedAmount, groupProgressSnapshot.TotalAmount);
+                }
+            }
+        }
+
+        public void UpdateGroupsProgressAnimated(EventCardsSaveData collectionData)
         {
             foreach (var groupView in _viewsDict.Values)
             {
                 var groupType = groupView.GroupType;
                 var totalGroupAmount = collectionData.GetGroupAmount(groupType);
                 var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
-                
                 groupView.UpdateCollectedAmount(collectedGroupAmount, totalGroupAmount);
+            }
+        }
+
+        public void UpdateViews(EventCardsSaveData collectionData)
+        {
+            foreach (var groupView in _viewsDict.Values)
+            {
+                var groupType = groupView.GroupType;
+                //var totalGroupAmount = collectionData.GetGroupAmount(groupType);
+                //var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
+                //groupView.UpdateCollectedAmount(collectedGroupAmount, totalGroupAmount);
                 
                 var newCardsAmount = collectionData.GetNewGroupAmount(groupType);
                 UpdateGroupNewCards(groupType, newCardsAmount);

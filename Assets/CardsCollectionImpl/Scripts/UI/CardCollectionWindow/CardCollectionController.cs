@@ -16,9 +16,7 @@ namespace CardCollectionImpl
         public readonly EventCardsSaveData EventCardsSaveData;
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
         public readonly IRewardDefinitionFactory RewardDefinitionFactory;
-        public readonly bool HasPreviousCollectedSnapshot;
-        public readonly int PreviousCollectedAmount;
-        public readonly int PreviousTotalAmount;
+        public readonly CollectionProgressSnapshot CollectionProgressSnapshot;
         
         public CardCollectionArgs(
             UIManager uiManager,
@@ -27,9 +25,7 @@ namespace CardCollectionImpl
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory rewardDefinitionFactory,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
-            bool hasPreviousCollectedSnapshot,
-            int previousCollectedAmount,
-            int previousTotalAmount)
+            CollectionProgressSnapshot  collectionProgressSnapshot)
         {
             UiManager = uiManager;
             CardCollectionModule = cardCollectionModule;
@@ -37,9 +33,7 @@ namespace CardCollectionImpl
             ExchangeOfferProvider = exchangeOfferProvider;
             RewardDefinitionFactory = rewardDefinitionFactory;
             CardCollectionPointsAccount = cardCollectionPointsAccount;
-            HasPreviousCollectedSnapshot = hasPreviousCollectedSnapshot;
-            PreviousCollectedAmount = previousCollectedAmount;
-            PreviousTotalAmount = previousTotalAmount;
+            CollectionProgressSnapshot = collectionProgressSnapshot;
         }
     }
     
@@ -63,9 +57,10 @@ namespace CardCollectionImpl
                 View.ShowLoader(true); 
                 View.CreateViews(Args.EventCardsSaveData);
             }
-            
-            Debug.LogWarning($"Test ShowStart {Args.PreviousCollectedAmount} / ");
-            View.SetCollectedAmountProgressStart(Args.PreviousCollectedAmount, Args.PreviousTotalAmount);
+
+            View.SetGroupsProgress(Args.CollectionProgressSnapshot.GroupProgress);
+            Debug.LogWarning($"Test ShowStart {Args.CollectionProgressSnapshot.CollectedAmount} / ");
+            View.SetCollectedAmountProgressStart(Args.CollectionProgressSnapshot.CollectedAmount, Args.CollectionProgressSnapshot.TotalAmount);
         }
         
         protected override void OnShowComplete()
@@ -80,6 +75,7 @@ namespace CardCollectionImpl
             var totalAmount = Args.EventCardsSaveData.Cards.Count;
             Debug.LogWarning($"Test OnShowComplete {collectedAmount} / ");
             View.UpdateCollectedAmount(collectedAmount, totalAmount);
+            View.UpdateGroupsProgressAnimated(Args.EventCardsSaveData);
             
             if (_groupsCreated) return;
             CreateGroupViews().Forget();
