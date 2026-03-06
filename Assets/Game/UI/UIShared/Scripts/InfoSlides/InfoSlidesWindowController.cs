@@ -6,26 +6,38 @@ namespace UIShared
     public class InfoSlidesPageArgs : WindowArgs
     {
         public readonly SlidesType SlidesType;
+        public readonly UIManager UIManager;
         
-        public InfoSlidesPageArgs(SlidesType slidesType)
+        public InfoSlidesPageArgs(SlidesType slidesType,  UIManager uiManager)
         {
             SlidesType = slidesType;
+            UIManager = uiManager;
         }
     }
     
     [Window("InfoSlidesWindow")]
     public class InfoSlidesPageController : WindowController<InfoSlidesWindowView>
     {
-        protected override void OnInit()
+        private InfoSlidesPageArgs Args => (InfoSlidesPageArgs)Arguments;
+
+        protected override void OnShowComplete()
         {
-            base.OnInit();
-            //View.Init(_localizationManager);
+            View.CloseClick += OnCloseClickHandler;
+        }
+
+        private void OnCloseClickHandler()
+        {
+            Args.UIManager.Hide<InfoSlidesPageController>();
+        }
+        
+        protected override void OnHideStart(bool isClosed)
+        {
+            View.CloseClick -= OnCloseClickHandler;
         }
 
         public override void UpdateWindow()
         {
-            var windowArg = (InfoSlidesPageArgs)Arguments;
-            View.UpdateWindow(windowArg.SlidesType, CreatePrefab);
+            View.UpdateWindow(Args.SlidesType, CreatePrefab);
         }
 
         private GameObject CreatePrefab(GameObject prefab, Transform parent)

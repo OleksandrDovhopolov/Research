@@ -9,8 +9,6 @@ namespace UIShared
 {
     public class InfoSlidesPageAnimation : WindowAnimation
     {
-        private const float ArrowOffset = 130;
-        
         [SerializeField] private Image _darkBG;
         [SerializeField] private CanvasGroup _rootCanvasGroup;
         [SerializeField] private float _fadeInDelay = 0.2f;
@@ -18,11 +16,9 @@ namespace UIShared
         [SerializeField] private CanvasGroup _tapButtonCanvasGroup;
         [SerializeField] private float _tapButtonDelay = .35f;
         [SerializeField] private List<InfoSlideUIItem> _items;
-        [SerializeField] private List<InfoSlideUIItem> _arrows;
         
         private float _mainOffset = Screen.height;
         private float _targetAlpha;
-        private bool _isInit;
         
         public override float ShowAnimationTime => _showDuration;
         
@@ -31,7 +27,6 @@ namespace UIShared
             _mainOffset = Screen.height / 3f;
             _targetAlpha = _darkBG.color.a;
             _items.ForEach(i => i.StartPosition = i.Item.anchoredPosition);
-            _arrows.ForEach(a => a.StartPosition = a.Item.anchoredPosition);
         }
 
         public override IEnumerator AnimationIn()
@@ -46,12 +41,6 @@ namespace UIShared
             foreach (var item in _items)
             {
                 sequence.Insert(item.AppearDelay, item.Item.DOAnchorPos(item.StartPosition, item.Duration).SetEase(item.AppearCurve));
-            }
-
-            foreach (var arrow in _arrows)
-            {
-                sequence.Insert(arrow.AppearDelay, arrow.Item.DOAnchorPos(arrow.StartPosition, arrow.Duration));
-                sequence.Insert(arrow.AppearDelay, arrow.Item.DOScale(Vector3.one, 0.1f));
             }
             
             yield return sequence.WaitForCompletion();
@@ -73,12 +62,6 @@ namespace UIShared
             foreach (var item in _items)
             {
                 item.Item.anchoredPosition = item.StartPosition + GetSideOffset(item.DockSide, _mainOffset);
-            }
-
-            foreach (var arrow in _arrows)
-            {
-                arrow.Item.localScale = Vector3.zero;
-                arrow.Item.anchoredPosition = arrow.StartPosition + GetSideOffset(arrow.DockSide, ArrowOffset);
             }
 
             _tapButtonCanvasGroup.alpha = 0;

@@ -4,6 +4,7 @@ using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
 using Resources.Core;
+using UIShared;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
