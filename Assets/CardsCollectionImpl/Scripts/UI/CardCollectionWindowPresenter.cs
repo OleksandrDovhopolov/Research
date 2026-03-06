@@ -6,10 +6,21 @@ namespace CardCollectionImpl
     public class CardCollectionWindowPresenter : IWindowPresenter
     {
         private readonly UIManager _uiManager;
+        private readonly ICollectionProgressSnapshotService _collectionProgressSnapshotService;
         
-        public CardCollectionWindowPresenter(UIManager uiManager)
+        public CardCollectionWindowPresenter(
+            UIManager uiManager, 
+            ICollectionProgressSnapshotService collectionProgressSnapshotService,
+            EventCardsSaveData eventCardsSaveData = null)
         {
             _uiManager = uiManager;
+            _collectionProgressSnapshotService = collectionProgressSnapshotService;
+
+            if (eventCardsSaveData != null)
+            {
+                _collectionProgressSnapshotService.SetSnapshot(
+                    eventCardsSaveData.GetCollectedCardsAmount(), eventCardsSaveData.Cards.Count);
+            }
         }
 
         public bool OpenWindow(string windowId, object args)
@@ -30,14 +41,22 @@ namespace CardCollectionImpl
             IRewardDefinitionFactory  rewardDefinitionFactory,
             ICardCollectionPointsAccount cardCollectionPointsAccount)
         {
+            var hasPreviousCollectedSnapshot = _collectionProgressSnapshotService.TryGetSnapshot(out var previousSnapshot);
             var args = new CardCollectionArgs(
                 _uiManager,
                 cardCollectionModule,
                 eventCardsSaveData,
                 exchangeOfferProvider,
                 rewardDefinitionFactory, 
-                cardCollectionPointsAccount);
+                cardCollectionPointsAccount,
+                hasPreviousCollectedSnapshot,
+                previousSnapshot.CollectedAmount,
+                previousSnapshot.TotalAmount);
             _uiManager.Show<CardCollectionController>(args);
+
+            _collectionProgressSnapshotService.SetSnapshot(
+                eventCardsSaveData.GetCollectedCardsAmount(),
+                eventCardsSaveData.Cards.Count);
         }
     }
 }

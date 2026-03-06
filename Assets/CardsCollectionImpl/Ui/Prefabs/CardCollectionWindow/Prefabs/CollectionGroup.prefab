@@ -56,6 +56,7 @@ MonoBehaviour:
   _collectedSlider: {fileID: 6560969108523795828}
   _grouoRewardImage: {fileID: 2409689374264594305}
   _groupRewardAmountText: {fileID: 2872481423211423849}
+  _collectedAmountProgressView: {fileID: 2177680225316216564}
   _newCardsContainer: {fileID: 7607344385265300644}
   _nexCardsAmountText: {fileID: 6546438615881299121}
 --- !u!1 &1400199488330238286
@@ -814,6 +815,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7d8611a9ea654fb45b2ba1f8e8c01f1c, type: 3}
+--- !u!114 &2177680225316216564 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8098647952680474791, guid: 7d8611a9ea654fb45b2ba1f8e8c01f1c, type: 3}
+  m_PrefabInstance: {fileID: 7952373733797873235}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ddef8946f3d92a54ca69ba21bfdd05b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &2409689374264594305 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5705056319715166674, guid: 7d8611a9ea654fb45b2ba1f8e8c01f1c, type: 3}

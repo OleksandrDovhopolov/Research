@@ -222,7 +222,6 @@ GameObject:
   - component: {fileID: 5472811749548134964}
   - component: {fileID: 2566387604313258527}
   - component: {fileID: -7291648491525133735}
-  - component: {fileID: -4344370285081404344}
   m_Layer: 5
   m_Name: CardCollectionWindow
   m_TagString: Untagged
@@ -312,7 +311,7 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1261705890744712783}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: 4af12036504e6a049be91aa56ea77952, type: 2}
   m_CullingMode: 0
@@ -337,7 +336,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a4d4927e0c8b6849ae0fa55de033e6e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _animation: {fileID: -4344370285081404344}
+  _animation: {fileID: 0}
   _closeButtons:
   - {fileID: 4875904500695864368}
   - {fileID: 661212151933234847}
@@ -348,24 +347,9 @@ MonoBehaviour:
   _cardCollectionRewardsConfigSo: {fileID: 11400000, guid: 4673902ec1e84e64b84f93d6221f6cb7, type: 2}
   _infoButton: {fileID: 5240449161174257642}
   _cardsCollectionPointsView: {fileID: 5551365562229027960}
-  _collectedSlider: {fileID: 170904634521019873}
-  _groupCollectedAmountText: {fileID: 3997277677466529958}
+  _collectedAmountProgressView: {fileID: 5146135359156207201}
   _collectionRewardButton: {fileID: 5760489675583522895}
   _collectionRewardButtonRect: {fileID: 9103466700667826800}
---- !u!114 &-4344370285081404344
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1261705890744712783}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 44fc1c65e8a48674194cc56675af8c67, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _animationDuration: 0.25
-  _canvasGroup: {fileID: 5472811749548134964}
 --- !u!1 &1536287286893424970
 GameObject:
   m_ObjectHideFlags: 0
@@ -1455,6 +1439,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: CollectionProgress
       objectReference: {fileID: 0}
+    - target: {fileID: 3842062391260218151, guid: 7d8611a9ea654fb45b2ba1f8e8c01f1c, type: 3}
+      propertyPath: m_FillAmount
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4549885579193505994, guid: 7d8611a9ea654fb45b2ba1f8e8c01f1c, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -1487,6 +1475,14 @@ PrefabInstance:
       propertyPath: m_RaycastTarget
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8292936618459290210, guid: 7d8611a9ea654fb45b2ba1f8e8c01f1c, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: -3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8292936618459290210, guid: 7d8611a9ea654fb45b2ba1f8e8c01f1c, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -10.5
+      objectReference: {fileID: 0}
     - target: {fileID: 9055670915541419531, guid: 7d8611a9ea654fb45b2ba1f8e8c01f1c, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 14.200012
@@ -1502,31 +1498,20 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 5760489675583522895}
   m_SourcePrefab: {fileID: 100100000, guid: 7d8611a9ea654fb45b2ba1f8e8c01f1c, type: 3}
---- !u!114 &170904634521019873 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3842062391260218151, guid: 7d8611a9ea654fb45b2ba1f8e8c01f1c, type: 3}
-  m_PrefabInstance: {fileID: 3967270772671768262}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!224 &2119644377651294709 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 3054829141572245299, guid: 7d8611a9ea654fb45b2ba1f8e8c01f1c, type: 3}
   m_PrefabInstance: {fileID: 3967270772671768262}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &3997277677466529958 stripped
+--- !u!114 &5146135359156207201 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 33703746758137440, guid: 7d8611a9ea654fb45b2ba1f8e8c01f1c, type: 3}
+  m_CorrespondingSourceObject: {fileID: 8098647952680474791, guid: 7d8611a9ea654fb45b2ba1f8e8c01f1c, type: 3}
   m_PrefabInstance: {fileID: 3967270772671768262}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Script: {fileID: 11500000, guid: ddef8946f3d92a54ca69ba21bfdd05b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &5499552326994093892 stripped

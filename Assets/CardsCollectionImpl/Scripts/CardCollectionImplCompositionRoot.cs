@@ -11,6 +11,7 @@ namespace CardCollectionImpl
         private readonly UIManager _uiManager;
         private readonly ResourceManager _resourceManager;
         private readonly ExchangePacksConfig _exchangePacksConfig;
+        private readonly ICollectionProgressSnapshotService _collectionProgressSnapshotService;
 
         public CardCollectionImplCompositionRoot(
             UIManager uiManager,
@@ -20,6 +21,10 @@ namespace CardCollectionImpl
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
             _resourceManager = resourceManager ?? throw new ArgumentNullException(nameof(resourceManager));
             _exchangePacksConfig = exchangePacksConfig ?? throw new ArgumentNullException(nameof(exchangePacksConfig));
+            _collectionProgressSnapshotService = new CollectionProgressSnapshotService();
+            
+            /*_iWindowPresenter ??= new CardCollectionWindowPresenter(
+                _uiManager, _collectionProgressSnapshotService, eventCardsSaveData);*/
         }
 
         public IOfferRewardsReceiver CreateOfferRewardsReceiver()
@@ -59,9 +64,12 @@ namespace CardCollectionImpl
                 eventId);
         }
 
-        public IWindowPresenter CreateWindowPresenter()
+        private IWindowPresenter _iWindowPresenter;
+        public IWindowPresenter CreateWindowPresenter(EventCardsSaveData eventCardsSaveData = null)
         {
-            return new CardCollectionWindowPresenter(_uiManager);
+            _iWindowPresenter ??= new CardCollectionWindowPresenter
+                (_uiManager, _collectionProgressSnapshotService, eventCardsSaveData);
+            return _iWindowPresenter;
         }
     }
 }

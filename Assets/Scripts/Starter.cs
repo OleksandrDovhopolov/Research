@@ -29,6 +29,7 @@ namespace core
         
         private ResourceManager _resourceManager;
         private ICardPackProvider _cardPackProvider;
+        private IWindowPresenter _windowPresenter;
         private ICardCollectionRewardHandler _rewardHandler;
         private IExchangeOfferProvider _exchangeOfferProvider;
         private IRewardDefinitionFactory _rewardDefinitionFactory;
@@ -72,8 +73,15 @@ namespace core
             
             await InitializeRewardHandlerAsync(ct);
             await _cardCollectionEntryPoint.InitCardCollection(_cardPackProvider, _rewardHandler, ct);
+            
+            
+            //TODO. should be called on start in order to create snapshot in CardCollectionWindowPresenter
+            // find way to make it clear
+            //TODO + bake sprites for groups to prevent loading when window open
+            var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
+            _windowPresenter = _compositionRoot.CreateWindowPresenter(collectionData);
         }
-        
+
         private async UniTask LoadAddressables(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
@@ -148,9 +156,7 @@ namespace core
             
             var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
             
-            var cardCollectionWindowPresenter = _compositionRoot.CreateWindowPresenter();
-            
-            cardCollectionWindowPresenter.OpenCardCollectionWindow( 
+            _windowPresenter.OpenCardCollectionWindow( 
                 _cardCollectionEntryPoint.CardCollectionModule,
                 collectionData,
                 _exchangeOfferProvider,

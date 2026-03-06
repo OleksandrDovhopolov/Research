@@ -16,6 +16,7 @@ namespace CardCollectionImpl
         [Space, Header("Rewards")]
         [SerializeField] private Image _grouoRewardImage;
         [SerializeField] private TextMeshProUGUI _groupRewardAmountText;
+        [SerializeField] private CollectedAmountProgressView _collectedAmountProgressView;
         
         [Space, Header("NewCards")]
         [SerializeField] private GameObject _newCardsContainer;
@@ -35,11 +36,10 @@ namespace CardCollectionImpl
             OnButtonPressed?.Invoke(GroupType);
         }
         
-        public void SetData(string groupType, string groupName, int collectedAmount, int totalAmount)
+        public void SetData(string groupType, string groupName)
         {
             GroupType = groupType;
             _cardsGroupName.text = groupName;
-            UpdateCollectedAmount(collectedAmount, totalAmount);
         }
 
         public void UpdateNewCards(int newCardsAmount)
@@ -48,10 +48,14 @@ namespace CardCollectionImpl
             _nexCardsAmountText.text = newCardsAmount.ToString();
         }
         
+        public void SetCollectedAmountProgressStart(int collectedAmount, int totalAmount)
+        {
+            _collectedAmountProgressView.SetPreviousProgress(collectedAmount, totalAmount);
+        }
+        
         public void UpdateCollectedAmount(int collectedAmount, int totalAmount)
         {
-            _collectedSlider.fillAmount = (float)collectedAmount / totalAmount;;
-            _grouoCollectedAmountText.text = collectedAmount.ToString();
+            _collectedAmountProgressView.UpdateCollectedAmount(collectedAmount, totalAmount);
         }
 
         public void SetRewardData(Sprite sprite, int amount)

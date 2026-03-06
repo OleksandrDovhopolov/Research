@@ -16,6 +16,9 @@ namespace CardCollectionImpl
         public readonly EventCardsSaveData EventCardsSaveData;
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
         public readonly IRewardDefinitionFactory RewardDefinitionFactory;
+        public readonly bool HasPreviousCollectedSnapshot;
+        public readonly int PreviousCollectedAmount;
+        public readonly int PreviousTotalAmount;
         
         public CardCollectionArgs(
             UIManager uiManager,
@@ -23,7 +26,10 @@ namespace CardCollectionImpl
             EventCardsSaveData eventCardsSaveData,
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory rewardDefinitionFactory,
-            ICardCollectionPointsAccount cardCollectionPointsAccount)
+            ICardCollectionPointsAccount cardCollectionPointsAccount,
+            bool hasPreviousCollectedSnapshot,
+            int previousCollectedAmount,
+            int previousTotalAmount)
         {
             UiManager = uiManager;
             CardCollectionModule = cardCollectionModule;
@@ -31,6 +37,9 @@ namespace CardCollectionImpl
             ExchangeOfferProvider = exchangeOfferProvider;
             RewardDefinitionFactory = rewardDefinitionFactory;
             CardCollectionPointsAccount = cardCollectionPointsAccount;
+            HasPreviousCollectedSnapshot = hasPreviousCollectedSnapshot;
+            PreviousCollectedAmount = previousCollectedAmount;
+            PreviousTotalAmount = previousTotalAmount;
         }
     }
     
@@ -55,9 +64,8 @@ namespace CardCollectionImpl
                 View.CreateViews(Args.EventCardsSaveData);
             }
             
-            var collectedAmount = Args.EventCardsSaveData.GetCollectedCardsAmount();
-            var totalAmount = Args.EventCardsSaveData.Cards.Count;
-            View.UpdateCollectedAmount(collectedAmount, totalAmount);
+            Debug.LogWarning($"Test ShowStart {Args.PreviousCollectedAmount} / ");
+            View.SetCollectedAmountProgressStart(Args.PreviousCollectedAmount, Args.PreviousTotalAmount);
         }
         
         protected override void OnShowComplete()
@@ -67,6 +75,11 @@ namespace CardCollectionImpl
             View.OnInfoButtonClicked += OnInfoButtonClickedHandler;
             View.OnRewardChestClicked += OnRewardChestClickedHandler;
             View.OnGroupButtonPressed += OnGroupButtonPressedHandler;
+
+            var collectedAmount = Args.EventCardsSaveData.GetCollectedCardsAmount();
+            var totalAmount = Args.EventCardsSaveData.Cards.Count;
+            Debug.LogWarning($"Test OnShowComplete {collectedAmount} / ");
+            View.UpdateCollectedAmount(collectedAmount, totalAmount);
             
             if (_groupsCreated) return;
             CreateGroupViews().Forget();

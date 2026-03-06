@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
-using TMPro;
 using UIShared;
 using UISystem;
 using UnityEngine;
@@ -22,8 +21,7 @@ namespace CardCollectionImpl
         [SerializeField] private CardsCollectionPointsView _cardsCollectionPointsView;
         
         [Space, Space, Header("GroupReward")]
-        [SerializeField] private Image _collectedSlider;
-        [SerializeField] private TextMeshProUGUI _groupCollectedAmountText;
+        [SerializeField] private CollectedAmountProgressView _collectedAmountProgressView;
         [SerializeField] private Button _collectionRewardButton;
         [SerializeField] private RectTransform _collectionRewardButtonRect;
         
@@ -77,7 +75,8 @@ namespace CardCollectionImpl
                 var totalGroupAmount = collectionData.GetGroupAmount(groupType);
                 var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
                 
-                groupView.SetData(groupType, groupName, collectedGroupAmount, totalGroupAmount);
+                groupView.SetData(groupType, groupName);
+                groupView.UpdateCollectedAmount(collectedGroupAmount, totalGroupAmount);
                 var rewardViewData = UIUtils.CreateRewardViewData(_cardCollectionRewardsConfigSo, groupType);
                 groupView.SetRewardData(rewardViewData.Icon, rewardViewData.Amount);
                 
@@ -125,8 +124,12 @@ namespace CardCollectionImpl
         
         public void UpdateCollectedAmount(int collectedAmount, int totalAmount)
         {
-            _collectedSlider.fillAmount = (float)collectedAmount / totalAmount;;
-            _groupCollectedAmountText.text = collectedAmount + " / " + totalAmount;
+            _collectedAmountProgressView.UpdateCollectedAmount(collectedAmount, totalAmount);
+        }
+
+        public void SetCollectedAmountProgressStart(int collectedAmount, int totalAmount)
+        {
+            _collectedAmountProgressView.SetPreviousProgress(collectedAmount, totalAmount);
         }
         
         private void OnButtonPressedHandler(string groupType)

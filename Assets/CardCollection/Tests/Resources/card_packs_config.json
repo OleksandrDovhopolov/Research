@@ -35,7 +35,7 @@
     {
       "packId": "Ruby_Pack",
       "packName": "Ruby Pack",
-      "cardCount": 6,
+      "cardCount": 30,
       "softCurrencyCost": 0,
       "hardCurrencyCost": 199,
       "availableCardRarities": ["epic", "legendary"]

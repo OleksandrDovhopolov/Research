@@ -4,7 +4,7 @@ namespace CardCollection.Core
 {
     public interface ICardCollectionCompositionRoot
     {
-        IWindowPresenter CreateWindowPresenter();
+        IWindowPresenter CreateWindowPresenter(EventCardsSaveData eventCardsSaveData = null);
         IOfferRewardsReceiver CreateOfferRewardsReceiver();
         ICardCollectionRewardHandler CreateRewardHandler(IOfferRewardsReceiver offerRewardsReceiver, IRewardDefinitionFactory rewardDefinitionFactory);
         CardCollectionModuleConfig CreateModuleConfig(ICardPackProvider cardPackProvider, string eventId);

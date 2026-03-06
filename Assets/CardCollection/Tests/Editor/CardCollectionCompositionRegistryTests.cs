@@ -68,7 +68,7 @@ namespace CardCollection.Tests
                 throw new NotImplementedException();
             }
 
-            public IWindowPresenter CreateWindowPresenter()
+            public IWindowPresenter CreateWindowPresenter(EventCardsSaveData eventCardsSaveData = null)
             {
                 throw new NotImplementedException();
             }

@@ -145,6 +145,7 @@ GameObject:
   - component: {fileID: 3054829141572245299}
   - component: {fileID: 6693734579647935174}
   - component: {fileID: 2444977336868644916}
+  - component: {fileID: 8098647952680474791}
   m_Layer: 5
   m_Name: CollectionProgress
   m_TagString: Untagged
@@ -212,6 +213,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1.35
+--- !u!114 &8098647952680474791
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3559310011016748487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ddef8946f3d92a54ca69ba21bfdd05b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _collectedSlider: {fileID: 3842062391260218151}
+  _groupCollectedAmountText: {fileID: 33703746758137440}
+  _animationDuration: 3
 --- !u!1 &4447804799894010005
 GameObject:
   m_ObjectHideFlags: 0
@@ -336,8 +352,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.4020996}
-  m_SizeDelta: {x: 18, y: -5.6291}
+  m_AnchoredPosition: {x: -10.5, y: -0.4020996}
+  m_SizeDelta: {x: -3, y: -5.6291}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9047956996129041568
 CanvasRenderer:
