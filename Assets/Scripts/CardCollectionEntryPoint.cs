@@ -27,6 +27,7 @@ namespace core
         
         private CardCollectionModule GetInitializedModule()
         {
+            
             if (_initializationException != null)
                 throw new InvalidOperationException(
                     "CardCollection module initialization failed. See inner exception for details.",
