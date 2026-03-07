@@ -1,3 +1,6 @@
+using System.Threading;
+using Cysharp.Threading.Tasks;
+
 namespace CardCollection.Core
 {
     public interface IWindowPresenter
@@ -5,11 +8,12 @@ namespace CardCollection.Core
         bool OpenWindow(string windowId, object args);
         void OpenNewCardWindow(CardPack pack, ICardCollectionModule cardCollectionModule, ICardCollectionReader cardCollectionReader);
 
-        void OpenCardCollectionWindow(
+        UniTask OpenCardCollectionWindow(
             ICardCollectionModule cardCollectionModule,
             EventCardsSaveData eventCardsSaveData,
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory rewardDefinitionFactory,
-            ICardCollectionPointsAccount cardCollectionPointsAccount);
+            ICardCollectionPointsAccount cardCollectionPointsAccount,
+            CancellationToken ct);
     }
 }

@@ -62,7 +62,7 @@ namespace CardCollectionImpl
             OnInfoButtonClicked?.Invoke();
         }
         
-        public void CreateViews(EventCardsSaveData collectionData)
+        public void CreateViews(CardCollectionNewCardsDto newCardsData)
         {
             _cardGroupsPool.DisableNonActive();
 
@@ -85,7 +85,7 @@ namespace CardCollectionImpl
                 
                 _viewsDict.Add(groupsConfig.GroupType, groupView);
                 
-                var newCardsAmount = collectionData.GetNewGroupAmount(groupType);
+                var newCardsAmount = newCardsData.GetNewGroupAmount(groupType);
                 UpdateGroupNewCards(groupType, newCardsAmount);
             }
         }
@@ -112,12 +112,12 @@ namespace CardCollectionImpl
             }
         }
 
-        public void UpdateViews(EventCardsSaveData collectionData)
+        public void UpdateViews(CardCollectionNewCardsDto newCardsData)
         {
             foreach (var groupView in _viewsDict.Values)
             {
                 var groupType = groupView.GroupType;
-                var newCardsAmount = collectionData.GetNewGroupAmount(groupType);
+                var newCardsAmount = newCardsData.GetNewGroupAmount(groupType);
                 UpdateGroupNewCards(groupType, newCardsAmount);
             }
         }
