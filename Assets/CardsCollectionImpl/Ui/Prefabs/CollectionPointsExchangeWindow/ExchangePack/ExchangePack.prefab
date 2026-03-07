@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 476323667067504856}
   - component: {fileID: 2062979019030730899}
   - component: {fileID: 52123671016328736}
+  - component: {fileID: 300076228901949697}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -122,6 +123,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &300076228901949697
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 713016798443959984}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d388b06b7ab034e96a2f897880fe69b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _duration: 0.18
+  _animationRoot: {fileID: 8220618053368704091}
 --- !u!1 &1122987018815590871
 GameObject:
   m_ObjectHideFlags: 0
@@ -441,6 +456,7 @@ GameObject:
   - component: {fileID: 1800153511138867451}
   - component: {fileID: 1667281044945942474}
   - component: {fileID: 8332642172086296313}
+  - component: {fileID: 579672373385697682}
   m_Layer: 5
   m_Name: ExchangePackButton
   m_TagString: Untagged
@@ -549,3 +565,17 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &579672373385697682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8358336720125871995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d388b06b7ab034e96a2f897880fe69b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _duration: 0.18
+  _animationRoot: {fileID: 7402889259271749467}
