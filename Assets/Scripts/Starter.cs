@@ -177,6 +177,7 @@ namespace core
 
         private void OpenCheatsPanel()
         {
+            return;
             _researchCheatModule.OpenCheatPanel();
         }
 

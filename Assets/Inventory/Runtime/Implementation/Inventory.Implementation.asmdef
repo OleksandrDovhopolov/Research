@@ -3,9 +3,11 @@
     "rootNamespace": "Inventory.Implementation",
     "references": [
         "Inventory.API",
-        "R3",
         "UniTask",
-        "VContainer"
+        "VContainer",
+        "UIShared",
+        "UISystem",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
