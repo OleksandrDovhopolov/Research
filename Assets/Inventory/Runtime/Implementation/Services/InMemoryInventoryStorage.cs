@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Inventory.API;
 
 namespace Inventory.Implementation.Services
@@ -10,27 +10,27 @@ namespace Inventory.Implementation.Services
     {
         private readonly Dictionary<string, List<InventoryItemView>> _storage = new();
 
-        public Task<IReadOnlyList<InventoryItemView>> LoadAsync(
+        public UniTask<IReadOnlyList<InventoryItemView>> LoadAsync(
             string ownerId,
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (_storage.TryGetValue(ownerId, out var savedItems))
             {
-                return Task.FromResult((IReadOnlyList<InventoryItemView>)savedItems.ToArray());
+                return UniTask.FromResult((IReadOnlyList<InventoryItemView>)savedItems.ToArray());
             }
 
-            return Task.FromResult((IReadOnlyList<InventoryItemView>)new List<InventoryItemView>());
+            return UniTask.FromResult((IReadOnlyList<InventoryItemView>)new List<InventoryItemView>());
         }
 
-        public Task SaveAsync(
+        public UniTask SaveAsync(
             string ownerId,
             IReadOnlyList<InventoryItemView> items,
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             _storage[ownerId] = new List<InventoryItemView>(items);
-            return Task.CompletedTask;
+            return UniTask.CompletedTask;
         }
     }
 }

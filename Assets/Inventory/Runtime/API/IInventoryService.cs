@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using R3;
 
 namespace Inventory.API
@@ -10,12 +10,12 @@ namespace Inventory.API
     {
         Observable<InventoryChangedEvent> OnInventoryChanged { get; }
 
-        Task AddItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default);
+        UniTask AddItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default);
 
-        Task RemoveItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default);
+        UniTask RemoveItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default);
 
         //TODO GetItemsAsync should be another interface IInventoryReadService
-        Task<IReadOnlyList<InventoryItemView>> GetItemsAsync(
+        UniTask<IReadOnlyList<InventoryItemView>> GetItemsAsync(
             string ownerId,
             InventoryItemCategory category,
             CancellationToken cancellationToken = default);

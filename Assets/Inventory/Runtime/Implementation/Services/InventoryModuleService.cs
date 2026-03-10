@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Inventory.API;
 using Inventory.Implementation.Core;
 using R3;
@@ -27,7 +27,7 @@ namespace Inventory.Implementation.Services
 
         public Observable<InventoryChangedEvent> OnInventoryChanged => _inventoryChangedSubject;
 
-        public async Task AddItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default)
+        public async UniTask AddItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var changed = _addItemSystem.Execute(itemDelta);
@@ -39,7 +39,7 @@ namespace Inventory.Implementation.Services
             await PublishAndPersistAsync(itemDelta.OwnerId, cancellationToken);
         }
 
-        public async Task RemoveItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default)
+        public async UniTask RemoveItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var changed = _removeItemSystem.Execute(itemDelta);
@@ -51,14 +51,14 @@ namespace Inventory.Implementation.Services
             await PublishAndPersistAsync(itemDelta.OwnerId, cancellationToken);
         }
 
-        public Task<IReadOnlyList<InventoryItemView>> GetItemsAsync(
+        public UniTask<IReadOnlyList<InventoryItemView>> GetItemsAsync(
             string ownerId,
             InventoryItemCategory category,
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var items = _querySystem.Execute(ownerId, category);
-            return Task.FromResult(items);
+            return UniTask.FromResult(items);
         }
 
         public void Dispose()
@@ -67,7 +67,7 @@ namespace Inventory.Implementation.Services
             _inventoryChangedSubject?.Dispose();
         }
 
-        private async Task PublishAndPersistAsync(string ownerId, CancellationToken cancellationToken)
+        private async UniTask PublishAndPersistAsync(string ownerId, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 

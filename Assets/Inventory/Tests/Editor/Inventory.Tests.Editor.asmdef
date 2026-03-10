@@ -3,7 +3,8 @@
     "rootNamespace": "Inventory.Tests.Editor",
     "references": [
         "Inventory.API",
-        "Inventory.Implementation"
+        "Inventory.Implementation",
+        "UniTask"
     ],
     "includePlatforms": [
         "Editor"

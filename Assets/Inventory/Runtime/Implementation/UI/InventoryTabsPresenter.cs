@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Inventory.API;
 using R3;
 
@@ -24,7 +24,7 @@ namespace Inventory.Implementation.UI
         public RegularItemsTabViewModel RegularItems { get; }
         public CardPacksTabViewModel CardPacks { get; }
 
-        public async Task InitializeAsync(CancellationToken cancellationToken = default)
+        public async UniTask InitializeAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 

@@ -2,7 +2,8 @@
     "name": "Inventory.API",
     "rootNamespace": "Inventory.API",
     "references": [
-        "R3"
+        "R3",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
