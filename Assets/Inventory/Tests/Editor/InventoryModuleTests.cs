@@ -1,6 +1,5 @@
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using Inventory.API;
 using Inventory.Implementation.Services;
 using NUnit.Framework;
@@ -12,53 +11,77 @@ namespace Inventory.Tests.Editor
         private const string OwnerId = "player_1";
 
         [Test]
-        public async Task AddItem_StacksByOwnerItemAndCategory()
+        public void AddItem_StacksByOwnerItemAndCategory()
         {
             var service = new InventoryModuleService();
 
-            await service.AddItemAsync(new InventoryItemDelta(OwnerId, "wood", "Wood", 2, InventoryItemCategory.Regular));
-            await service.AddItemAsync(new InventoryItemDelta(OwnerId, "wood", "Wood", 3, InventoryItemCategory.Regular));
+            service.AddItemAsync(new InventoryItemDelta(OwnerId, "wood", "Wood", 2, InventoryItemCategory.Regular))
+                .GetAwaiter()
+                .GetResult();
+            service.AddItemAsync(new InventoryItemDelta(OwnerId, "wood", "Wood", 3, InventoryItemCategory.Regular))
+                .GetAwaiter()
+                .GetResult();
 
-            var items = await service.GetItemsAsync(OwnerId, InventoryItemCategory.Regular);
+            var items = service.GetItemsAsync(OwnerId, InventoryItemCategory.Regular)
+                .GetAwaiter()
+                .GetResult();
 
             Assert.That(items.Count, Is.EqualTo(1));
             Assert.That(items[0].StackCount, Is.EqualTo(5));
         }
 
         [Test]
-        public async Task RemoveItem_DecrementsAndDeletesEntityAtZero()
+        public void RemoveItem_DecrementsAndDeletesEntityAtZero()
         {
             var service = new InventoryModuleService();
 
-            await service.AddItemAsync(new InventoryItemDelta(OwnerId, "energy", "Energy", 5, InventoryItemCategory.Regular));
-            await service.RemoveItemAsync(new InventoryItemDelta(OwnerId, "energy", "Energy", 2, InventoryItemCategory.Regular));
+            service.AddItemAsync(new InventoryItemDelta(OwnerId, "energy", "Energy", 5, InventoryItemCategory.Regular))
+                .GetAwaiter()
+                .GetResult();
+            service.RemoveItemAsync(new InventoryItemDelta(OwnerId, "energy", "Energy", 2, InventoryItemCategory.Regular))
+                .GetAwaiter()
+                .GetResult();
 
-            var afterPartialRemove = await service.GetItemsAsync(OwnerId, InventoryItemCategory.Regular);
+            var afterPartialRemove = service.GetItemsAsync(OwnerId, InventoryItemCategory.Regular)
+                .GetAwaiter()
+                .GetResult();
             Assert.That(afterPartialRemove.Count, Is.EqualTo(1));
             Assert.That(afterPartialRemove[0].StackCount, Is.EqualTo(3));
 
-            await service.RemoveItemAsync(new InventoryItemDelta(OwnerId, "energy", "Energy", 3, InventoryItemCategory.Regular));
+            service.RemoveItemAsync(new InventoryItemDelta(OwnerId, "energy", "Energy", 3, InventoryItemCategory.Regular))
+                .GetAwaiter()
+                .GetResult();
 
-            var afterFullRemove = await service.GetItemsAsync(OwnerId, InventoryItemCategory.Regular);
+            var afterFullRemove = service.GetItemsAsync(OwnerId, InventoryItemCategory.Regular)
+                .GetAwaiter()
+                .GetResult();
             Assert.That(afterFullRemove.Count, Is.EqualTo(0));
         }
 
         [Test]
-        public async Task QuerySystem_FiltersByCategory_AndPreservesCardPackMetadata()
+        public void QuerySystem_FiltersByCategory_AndPreservesCardPackMetadata()
         {
             var service = new InventoryModuleService();
 
-            await service.AddItemAsync(new InventoryItemDelta(OwnerId, "gold", "Gold", 10, InventoryItemCategory.Regular));
-            await service.AddItemAsync(new InventoryItemDelta(
-                OwnerId,
-                "pack_blue",
-                "CardPack",
-                1,
-                InventoryItemCategory.CardPack,
-                new CardPackMetadata("Blue Pack", 5)));
+            service.AddItemAsync(new InventoryItemDelta(OwnerId, "gold", "Gold", 10, InventoryItemCategory.Regular))
+                .GetAwaiter()
+                .GetResult();
+            service.AddItemAsync(new InventoryItemDelta(
+                    OwnerId,
+                    "pack_blue",
+                    "CardPack",
+                    1,
+                    InventoryItemCategory.CardPack,
+                    new CardPackMetadata("Blue Pack", 5)))
+                .GetAwaiter()
+                .GetResult();
 
-            var regular = await service.GetItemsAsync(OwnerId, InventoryItemCategory.Regular);
-            var packs = await service.GetItemsAsync(OwnerId, InventoryItemCategory.CardPack);
+            var regular = service.GetItemsAsync(OwnerId, InventoryItemCategory.Regular)
+                .GetAwaiter()
+                .GetResult();
+            var packs = service.GetItemsAsync(OwnerId, InventoryItemCategory.CardPack)
+                .GetAwaiter()
+                .GetResult();
 
             Assert.That(regular.Count, Is.EqualTo(1));
             Assert.That(regular[0].ItemId, Is.EqualTo("gold"));
@@ -78,10 +101,12 @@ namespace Inventory.Tests.Editor
             using var cts = new CancellationTokenSource();
             cts.Cancel();
 
-            Assert.ThrowsAsync<OperationCanceledException>(async () =>
-                await service.AddItemAsync(
+            Assert.Throws<OperationCanceledException>(() =>
+                service.AddItemAsync(
                     new InventoryItemDelta(OwnerId, "wood", "Wood", 1, InventoryItemCategory.Regular),
-                    cts.Token));
+                    cts.Token)
+                    .GetAwaiter()
+                    .GetResult());
         }
     }
 }
