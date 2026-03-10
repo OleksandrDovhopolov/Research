@@ -127,6 +127,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _canvasGroup: {fileID: 4502747922392697449}
+  _cardFrameImage:
+  - {fileID: 7365296559044577549}
+  _defaultFrameColor: {r: 1, g: 1, b: 1, a: 1}
+  _premiumFrameColor: {r: 0.94509804, g: 0.83137256, b: 0.3254902, a: 1}
 --- !u!225 &4502747922392697449
 CanvasGroup:
   m_ObjectHideFlags: 0
