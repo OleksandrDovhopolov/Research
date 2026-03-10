@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "com.coffee.ui-particle": "https://github.com/mob-sakai/ParticleEffectForUGUI.git#4.9.0",
+    "com.cysharp.r3": "https://github.com/Cysharp/R3.git?path=src/R3.Unity/Assets/R3.Unity",
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.dovhopolov.cheatmodule": "https://github.com/OleksandrDovhopolov/CheatModule.git",
     "com.dovhopolov.csvloader": "https://github.com/OleksandrDovhopolov/CsvLoader.git",
