@@ -1,0 +1,17 @@
+{
+    "name": "Inventory.Implementation",
+    "rootNamespace": "Inventory.Implementation",
+    "references": [
+        "Inventory.API",
+        "R3"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
