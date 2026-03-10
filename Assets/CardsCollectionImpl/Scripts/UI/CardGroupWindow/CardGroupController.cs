@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
@@ -14,14 +12,14 @@ namespace CardCollectionImpl
     {
         public readonly string GroupType;
         public readonly UIManager UiManager;
-        public readonly ICardCollectionModule CardCollectionModule;
+        public readonly CardCollectionNewCardsDto NewCardsData;
         public readonly EventCardsSaveData EventCardsSaveData;
         public readonly CardCollectionRewardsConfigSO RewardsConfigSo;
         public readonly Action<string> OnGroupChanged;
         
         public CardGroupArgs(
             UIManager uiManager, 
-            ICardCollectionModule cardCollectionModule, 
+            CardCollectionNewCardsDto newCardsData, 
             EventCardsSaveData eventCardsSaveData,
             string groupType,
             CardCollectionRewardsConfigSO rewardsConfigSo,
@@ -29,7 +27,7 @@ namespace CardCollectionImpl
         {
             GroupType = groupType;
             UiManager = uiManager;
-            CardCollectionModule = cardCollectionModule;
+            NewCardsData = newCardsData;
             EventCardsSaveData = eventCardsSaveData;
             RewardsConfigSo = rewardsConfigSo;
             OnGroupChanged = onGroupChanged;
@@ -46,11 +44,9 @@ namespace CardCollectionImpl
         private List<CardGroupsConfig> _allGroups;
         private int _currentGroupIndex;
         private string _currentGroupType;
-        private CancellationTokenSource _resetNewFlagsCts;
         
         protected override void OnShowStart()
         {
-            _resetNewFlagsCts = new CancellationTokenSource();
             _allGroups = CardGroupsConfigStorage.Instance.Data;
             _currentGroupType = Args.GroupType;
             _currentGroupIndex = _allGroups.FindIndex(g => g.GroupType == _currentGroupType);
@@ -60,36 +56,19 @@ namespace CardCollectionImpl
         
         private void ShowCurrentGroup()
         {
-            var ct = _resetNewFlagsCts?.Token ?? CancellationToken.None;
             SetRewardData();
             
-            View.CreateDataViews(_currentGroupType, GroupCardsData);
+            View.CreateDataViews(_currentGroupType, GroupCardsData, Args.NewCardsData);
             
             UpdateGroupViewData();
             UpdateCardSprites();
-            ResetNewFlagsAsync(GroupCardsData, ct).Forget();
+            MarkCurrentGroupAsSeen();
         }
 
         private void SetRewardData()
         {
             var rewardViewData = UIUtils.CreateRewardViewData(Args.RewardsConfigSo, _currentGroupType);
             View.SetRewardData(rewardViewData.Icon, rewardViewData.Amount);
-        }
-        
-        private async UniTask ResetNewFlagsAsync(List<CardProgressData> groupData, CancellationToken ct)
-        {
-            var newCardIds = groupData
-                .Where(cardData => cardData.IsNew && !string.IsNullOrEmpty(cardData.CardId))
-                .Select(cardData => cardData.CardId)
-                .Distinct()
-                .ToArray();
-
-            if (newCardIds.Length == 0)
-            {
-                return;
-            }
-
-            await Args.CardCollectionModule.ResetNewFlagsAsync(newCardIds, ct);
         }
         
         private async UniTask SetCardSprites(List<CardCollectionConfig> cardsData)
@@ -110,10 +89,6 @@ namespace CardCollectionImpl
             View.OnLeftClick -= OnLeftClickHandler;
             View.OnRightClick -= OnRightClickHandler;
             View.DisableAll();
-
-            _resetNewFlagsCts?.Cancel();
-            _resetNewFlagsCts?.Dispose();
-            _resetNewFlagsCts = null;
         }
 
         private void OnLeftClickHandler()
@@ -130,18 +105,21 @@ namespace CardCollectionImpl
         {
             if (View.IsAnimating) return;
 
-            var ct = _resetNewFlagsCts?.Token ?? CancellationToken.None;
-            
             _currentGroupIndex = (_currentGroupIndex + direction + _allGroups.Count) % _allGroups.Count;
             _currentGroupType = _allGroups[_currentGroupIndex].GroupType;
             
             var groupCards = Args.EventCardsSaveData.GetCardsByGroupType(_currentGroupType);
             
-            await View.AnimateSwitchGroup(direction, _currentGroupType, groupCards, UpdateGroupViewData);
+            await View.AnimateSwitchGroup(direction, _currentGroupType, groupCards, Args.NewCardsData, UpdateGroupViewData);
 
             UpdateCardSprites();
+            MarkCurrentGroupAsSeen();
             Args.OnGroupChanged?.Invoke(_currentGroupType);
-            await ResetNewFlagsAsync(groupCards, ct);
+        }
+
+        private void MarkCurrentGroupAsSeen()
+        {
+            Args.NewCardsData.MarkGroupAsSeen(_currentGroupType);
         }
 
         private void UpdateCardSprites()

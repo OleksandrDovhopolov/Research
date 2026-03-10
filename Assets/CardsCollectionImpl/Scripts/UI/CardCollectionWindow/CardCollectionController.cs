@@ -11,7 +11,7 @@ namespace CardCollectionImpl
     public class CardCollectionArgs : WindowArgs
     {
         public readonly UIManager UiManager;
-        public readonly ICardCollectionModule CardCollectionModule;
+        public readonly CardCollectionNewCardsDto NewCardsData;
         public readonly ICardCollectionPointsAccount CardCollectionPointsAccount;
         public readonly EventCardsSaveData EventCardsSaveData;
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
@@ -20,7 +20,7 @@ namespace CardCollectionImpl
         
         public CardCollectionArgs(
             UIManager uiManager,
-            ICardCollectionModule cardCollectionModule,
+            CardCollectionNewCardsDto newCardsData,
             EventCardsSaveData eventCardsSaveData,
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory rewardDefinitionFactory,
@@ -28,7 +28,7 @@ namespace CardCollectionImpl
             CollectionProgressSnapshot  collectionProgressSnapshot)
         {
             UiManager = uiManager;
-            CardCollectionModule = cardCollectionModule;
+            NewCardsData = newCardsData;
             EventCardsSaveData = eventCardsSaveData;
             ExchangeOfferProvider = exchangeOfferProvider;
             RewardDefinitionFactory = rewardDefinitionFactory;
@@ -50,12 +50,12 @@ namespace CardCollectionImpl
             
             if (_groupsCreated)
             {
-                View.UpdateViews(Args.EventCardsSaveData);
+                View.UpdateViews(Args.NewCardsData);
             }
             else
             {
                 View.ShowLoader(true); 
-                View.CreateViews(Args.EventCardsSaveData);
+                View.CreateViews(Args.NewCardsData);
             }
 
             View.SetGroupsProgress(Args.CollectionProgressSnapshot.GroupProgress);
@@ -158,7 +158,7 @@ namespace CardCollectionImpl
             
             var args = new CardGroupArgs(
                 Args.UiManager, 
-                Args.CardCollectionModule, 
+                Args.NewCardsData,
                 Args.EventCardsSaveData, 
                 groupType, 
                 View.RewardsConfigSo,

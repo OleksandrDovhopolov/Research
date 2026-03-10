@@ -50,7 +50,7 @@ namespace CardCollectionImpl
             _rightSwitchButton.onClick.AddListener(() => OnRightClick?.Invoke());
         }
 
-        public void CreateDataViews(string groupType, List<CardProgressData> cardsData)
+        public void CreateDataViews(string groupType, List<CardProgressData> cardsData, CardCollectionNewCardsDto newCardsData)
         {
             var configs = CardCollectionConfigStorage.Instance.Get(groupType);
             
@@ -79,7 +79,7 @@ namespace CardCollectionImpl
                 var cardView = pool.GetNext();
                 cardView.SetConfig(config);
                 cardView.SetCardOpen(data.IsUnlocked);
-                cardView.SetCardNew(data.IsNew);
+                cardView.SetCardNew(newCardsData.IsNew(data.CardId));
                 cardView.UpdateCardFrame();
                 cardView.UpdateCardName();
                 cardView.UpdateCardStars();
@@ -120,7 +120,12 @@ namespace CardCollectionImpl
         /// Slides current group out, rebuilds cards for new group, slides new group in.
         /// direction: -1 = left (show previous group), +1 = right (show next group)
         /// </summary>
-        public async UniTask AnimateSwitchGroup(int direction, string groupType, List<CardProgressData> cardsData, Action onRebuild = null)
+        public async UniTask AnimateSwitchGroup(
+            int direction,
+            string groupType,
+            List<CardProgressData> cardsData,
+            CardCollectionNewCardsDto newCardsData,
+            Action onRebuild = null)
         {
             if (_isAnimating) return;
             _isAnimating = true;
@@ -136,7 +141,7 @@ namespace CardCollectionImpl
 
                 // Phase 2: Rebuild cards and update UI while container is off-screen
                 DisableAll();
-                CreateDataViews(groupType, cardsData);
+                CreateDataViews(groupType, cardsData, newCardsData);
                 onRebuild?.Invoke();
 
                 // Phase 3: Snap container to opposite side (off-screen)

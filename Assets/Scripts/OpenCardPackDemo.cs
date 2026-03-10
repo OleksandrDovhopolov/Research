@@ -22,11 +22,11 @@ namespace core
         
         private void Start()
         {
+            _sixCardButton.onClick.AddListener(() => OpenNewCardWindow(BaseSixCardPackID));
             _twoCardButton.onClick.AddListener(() => OpenNewCardWindow(BaseTwoCardPackID));
             _threeCardButton.onClick.AddListener(() => OpenNewCardWindow(BaseThreeCardPackID));
             _fourCardButton.onClick.AddListener(() => OpenNewCardWindow(BaseFourCardPackID));
             _fiveCardButton.onClick.AddListener(() => OpenNewCardWindow(BaseFiveCardPackID));
-            _sixCardButton.onClick.AddListener(() => OpenNewCardWindow(BaseSixCardPackID));
         }
 
         public void OpenNewCardWindow(string packId)

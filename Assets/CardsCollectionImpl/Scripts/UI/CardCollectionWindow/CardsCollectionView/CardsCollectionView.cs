@@ -10,8 +10,6 @@ namespace CardCollectionImpl
         [SerializeField] private TextMeshProUGUI _cardsGroupName;
         [SerializeField] private Image _cardsGrouopImage;
         [SerializeField] private Button _cardsGrouopButton;
-        [SerializeField] private TextMeshProUGUI _grouoCollectedAmountText;
-        [SerializeField] private Image _collectedSlider;
         
         [Space, Header("Rewards")]
         [SerializeField] private Image _grouoRewardImage;

@@ -13,6 +13,7 @@ namespace CardCollectionImpl
         [SerializeField] private RectTransform _hidedTransform;
         [SerializeField] private RectTransform _showedTransform;
         [SerializeField] private NewCardAnimationConfig _animationConfig;
+        [SerializeField] private float _cardFlipStartDelayStep = 0.08f;
         
         private void OnEnable()
         {
@@ -42,8 +43,11 @@ namespace CardCollectionImpl
         {
             var moveSequence = DOTween.Sequence();
 
-            foreach (var (config, mockView) in _mockDict)
+            foreach (var config in _orderedConfigs)
             {
+                if (!_mockDict.TryGetValue(config, out var mockView))
+                    continue;
+                
                 if (!_viewsDict.TryGetValue(config, out var targetView) || mockView == null || targetView == null)
                     continue;
 
@@ -63,9 +67,13 @@ namespace CardCollectionImpl
         private async UniTask AnimateCardFlipsAsync(CancellationToken ct)
         {
             var tasks = new List<UniTask>();
+            var index = 0;
 
-            foreach (var (config, mockView) in _mockDict)
+            foreach (var config in _orderedConfigs)
             {
+                if (!_mockDict.TryGetValue(config, out var mockView))
+                    continue;
+                
                 if (!_viewsDict.TryGetValue(config, out var targetView) || mockView == null || targetView == null)
                     continue;
 
@@ -74,7 +82,9 @@ namespace CardCollectionImpl
                 targetView.SetAlpha(false);
                 targetView.OnCardAnimationStarted();
 
-                tasks.Add(AnimateSingleCardFlipAsync(mockView, targetView, ct));
+                var startDelay = _cardFlipStartDelayStep * index;
+                tasks.Add(AnimateSingleCardFlipAsync(mockView, targetView, startDelay, ct));
+                index++;
             }
 
             if (tasks.Count > 0)
@@ -83,9 +93,23 @@ namespace CardCollectionImpl
             }
         }
 
-        private async UniTask AnimateSingleCardFlipAsync(EmptyCardView mock, CollectionCardView card, CancellationToken ct)
+        private async UniTask AnimateSingleCardFlipAsync(
+            EmptyCardView mock,
+            CollectionCardView card,
+            float startDelay,
+            CancellationToken ct)
         {
+            if (startDelay > 0f)
+            {
+                await UniTask.Delay((int)(startDelay * 1000f), cancellationToken: ct);
+            }
+
             var sequence = DOTween.Sequence();
+            
+            sequence.AppendCallback(() =>
+            {
+                mock.transform.SetAsLastSibling();
+            });
 
             // Phase 1: mock rotates 0° → 90° (disappears edge-on)
             sequence.Append(

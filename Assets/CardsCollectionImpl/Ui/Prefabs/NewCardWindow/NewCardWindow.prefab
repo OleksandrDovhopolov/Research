@@ -462,6 +462,7 @@ MonoBehaviour:
   _hidedTransform: {fileID: 2588599382006299463}
   _showedTransform: {fileID: 1657560449476593550}
   _animationConfig: {fileID: 11400000, guid: 2549f02b4d426044cb7bf02402bc1a08, type: 2}
+  _cardFlipStartDelayStep: 0.08
   _cardOpenButton: {fileID: 8135786382872504455}
   _canvasGroup: {fileID: 7786454385558642676}
   _newCardsPool:

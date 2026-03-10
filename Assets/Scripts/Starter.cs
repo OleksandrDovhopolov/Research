@@ -155,12 +155,13 @@ namespace core
             
             var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
             
-            _windowPresenter.OpenCardCollectionWindow( 
+            await _windowPresenter.OpenCardCollectionWindow( 
                 _cardCollectionEntryPoint.CardCollectionModule,
                 collectionData,
                 _exchangeOfferProvider,
                 _rewardDefinitionFactory,
-                _cardCollectionEntryPoint.CardCollectionPointsAccount);
+                _cardCollectionEntryPoint.CardCollectionPointsAccount,
+                _destroyCt);
         }
 
         private async UniTask InitResources(CancellationToken ct)

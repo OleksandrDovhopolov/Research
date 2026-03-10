@@ -21,6 +21,7 @@ namespace CardCollectionImpl
         private readonly Dictionary<CardCollectionConfig, CollectionCardView> _viewsDict = new();
         private readonly Dictionary<CardCollectionConfig, EmptyCardView> _mockDict = new();
         private readonly Dictionary<CardCollectionConfig, int> _duplicatePointsDict = new();
+        private readonly List<CardCollectionConfig> _orderedConfigs = new();
         
         private bool _hasDuplicates;
         
@@ -28,13 +29,18 @@ namespace CardCollectionImpl
         {
             _newCardsPool.DisableNonActive();
             _mockCardsPool.DisableNonActive();
+            _orderedConfigs.Clear();
             
             _hasDuplicates = cardsData.Any(c => !c.IsNew);
             
-            var sortedCards = cardsData.OrderBy(c => c.Config.PremiumCard ? 6 : c.Config.Stars).ToList();
+            var sortedCards = cardsData
+                .OrderByDescending(c => c.Config.PremiumCard)
+                .ThenByDescending(c => c.Config.Stars)
+                .ToList();
             
-            foreach (var cardDisplayData in sortedCards)
+            for (var i = 0; i < sortedCards.Count; i++)
             {
+                var cardDisplayData = sortedCards[i];
                 var cardView = _newCardsPool.GetNext();
                 
                 var config = cardDisplayData.Config;
@@ -48,11 +54,15 @@ namespace CardCollectionImpl
                 UIUtils.SetSprite(config, cardView, this.GetCancellationTokenOnDestroy()).Forget();
                 
                 cardView.SetAlpha(false);
+                cardView.transform.SetSiblingIndex(i);
                 _viewsDict[config] = cardView;
                 _duplicatePointsDict[config] = cardDisplayData.DuplicatePoints;
+                _orderedConfigs.Add(config);
                 
                 var emptyCardView = _mockCardsPool.GetNext();
+                emptyCardView.UpdateCardFrame(config.PremiumCard);
                 emptyCardView.transform.rotation = Quaternion.Euler(0, 0, 0);
+                emptyCardView.transform.SetSiblingIndex(sortedCards.Count - 1 - i);
                 _mockDict[config] = emptyCardView;
             }
         }
@@ -83,6 +93,7 @@ namespace CardCollectionImpl
             _viewsDict.Clear();
             _mockDict.Clear();
             _duplicatePointsDict.Clear();
+            _orderedConfigs.Clear();
         }
     }
 }

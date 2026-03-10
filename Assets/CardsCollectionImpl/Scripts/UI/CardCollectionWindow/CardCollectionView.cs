@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
+using TMPro;
 using UIShared;
 using UISystem;
 using UnityEngine;
@@ -24,6 +25,9 @@ namespace CardCollectionImpl
         [SerializeField] private CollectedAmountProgressView _collectedAmountProgressView;
         [SerializeField] private Button _collectionRewardButton;
         [SerializeField] private RectTransform _collectionRewardButtonRect;
+        
+        [Header("Points Container")]
+        [SerializeField] private TextMeshProUGUI _timerText;
         
         private readonly Dictionary<string, CardsCollectionView> _viewsDict = new();
 
@@ -58,7 +62,7 @@ namespace CardCollectionImpl
             OnInfoButtonClicked?.Invoke();
         }
         
-        public void CreateViews(EventCardsSaveData collectionData)
+        public void CreateViews(CardCollectionNewCardsDto newCardsData)
         {
             _cardGroupsPool.DisableNonActive();
 
@@ -72,11 +76,8 @@ namespace CardCollectionImpl
                 
                 var groupType = groupsConfig.GroupType;
                 var groupName = groupsConfig.GroupName;
-                //var totalGroupAmount = collectionData.GetGroupAmount(groupType);
-                //var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
                 
                 groupView.SetData(groupType, groupName);
-                //groupView.UpdateCollectedAmount(collectedGroupAmount, totalGroupAmount);
                 var rewardViewData = UIUtils.CreateRewardViewData(_cardCollectionRewardsConfigSo, groupType);
                 groupView.SetRewardData(rewardViewData.Icon, rewardViewData.Amount);
                 
@@ -84,7 +85,7 @@ namespace CardCollectionImpl
                 
                 _viewsDict.Add(groupsConfig.GroupType, groupView);
                 
-                var newCardsAmount = collectionData.GetNewGroupAmount(groupType);
+                var newCardsAmount = newCardsData.GetNewGroupAmount(groupType);
                 UpdateGroupNewCards(groupType, newCardsAmount);
             }
         }
@@ -111,20 +112,21 @@ namespace CardCollectionImpl
             }
         }
 
-        public void UpdateViews(EventCardsSaveData collectionData)
+        public void UpdateViews(CardCollectionNewCardsDto newCardsData)
         {
             foreach (var groupView in _viewsDict.Values)
             {
                 var groupType = groupView.GroupType;
-                //var totalGroupAmount = collectionData.GetGroupAmount(groupType);
-                //var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
-                //groupView.UpdateCollectedAmount(collectedGroupAmount, totalGroupAmount);
-                
-                var newCardsAmount = collectionData.GetNewGroupAmount(groupType);
+                var newCardsAmount = newCardsData.GetNewGroupAmount(groupType);
                 UpdateGroupNewCards(groupType, newCardsAmount);
             }
         }
 
+        public void SetTimerText(string timerText)
+        {
+            _timerText.text = timerText;
+        }
+        
         public void UpdateGroupNewCards(string groupType, int groupAmount)
         {
             if (_viewsDict.TryGetValue(groupType, out var view))

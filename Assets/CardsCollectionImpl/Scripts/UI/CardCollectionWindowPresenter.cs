@@ -1,4 +1,7 @@
+using System;
+using System.Threading;
 using CardCollection.Core;
+using Cysharp.Threading.Tasks;
 using UISystem;
 
 namespace CardCollectionImpl
@@ -33,22 +36,31 @@ namespace CardCollectionImpl
             _uiManager.Show<NewCardController>(args);
         }
 
-        public void OpenCardCollectionWindow(
+        public async UniTask OpenCardCollectionWindow(
             ICardCollectionModule  cardCollectionModule,
             EventCardsSaveData  eventCardsSaveData,
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory  rewardDefinitionFactory,
-            ICardCollectionPointsAccount cardCollectionPointsAccount)
+            ICardCollectionPointsAccount cardCollectionPointsAccount,
+            CancellationToken ct)
         {
-            var hasPreviousCollectedSnapshot = _collectionProgressSnapshotService.TryGetSnapshot(out CollectionProgressSnapshot previousSnapshot);
+            var newCardsData = CardCollectionNewCardsDto.Create(eventCardsSaveData);
+            var newCardIds = newCardsData.NewCardIds;
+
+            if (newCardIds.Count > 0)
+            {
+                await cardCollectionModule.ResetNewFlagsAsync(newCardIds, ct);
+            }
+
+            _collectionProgressSnapshotService.TryGetSnapshot(out var snapshot);
             var args = new CardCollectionArgs(
                 _uiManager,
-                cardCollectionModule,
+                newCardsData,
                 eventCardsSaveData,
                 exchangeOfferProvider,
                 rewardDefinitionFactory, 
                 cardCollectionPointsAccount,
-                previousSnapshot);
+                snapshot);
             _uiManager.Show<CardCollectionController>(args);
 
             _collectionProgressSnapshotService.SetSnapshot(eventCardsSaveData);
