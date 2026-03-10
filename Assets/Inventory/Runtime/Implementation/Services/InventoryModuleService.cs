@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 using Inventory.API;
 using Inventory.Implementation.Core;
 using R3;
+using UnityEngine;
 
 namespace Inventory.Implementation.Services
 {
@@ -29,6 +30,8 @@ namespace Inventory.Implementation.Services
 
         public async UniTask AddItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default)
         {
+            Debug.LogWarning($"Test ownerId {itemDelta.OwnerId},  itemId {itemDelta.ItemId},   itemType {itemDelta.ItemType}");
+            
             cancellationToken.ThrowIfCancellationRequested();
             var changed = _addItemSystem.Execute(itemDelta);
             if (!changed)

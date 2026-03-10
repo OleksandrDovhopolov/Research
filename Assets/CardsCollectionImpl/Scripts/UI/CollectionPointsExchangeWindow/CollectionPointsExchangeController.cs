@@ -83,6 +83,7 @@ namespace CardCollectionImpl
                 {
                     if (await Args.ExchangeOfferProvider.ReceiveOfferContent(offerPackId, ct))
                     {
+                        ShowInfoWidget("Pack received successfully");
                         Args.OnPointsAmountChangedHandler?.Invoke();
                         CloseWindow();
                     }

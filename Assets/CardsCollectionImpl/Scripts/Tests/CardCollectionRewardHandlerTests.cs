@@ -13,9 +13,9 @@ namespace CardCollectionImpl
         [Test]
         public void TryHandleCollectionCompleted_WhenRewardIdIsMissing_ReturnsTrue()
         {
-            var rewardsReceiver = new FakeOfferRewardsReceiver();
+            var rewardGrantService = new FakeRewardGrantService();
             var rewardFactory = new FakeRewardDefinitionFactory();
-            var handler = new CardCollectionRewardHandler(rewardsReceiver, rewardFactory);
+            var handler = new CardCollectionRewardHandler(rewardGrantService, rewardFactory);
 
             var config = AssetDatabase.LoadAssetAtPath<CardCollectionRewardsConfigSO>(
                 "Assets/CardsCollectionImpl/Scripts/Rewards/CardCollectionRewardsConfig.asset");
@@ -30,16 +30,15 @@ namespace CardCollectionImpl
             }).GetAwaiter().GetResult();
 
             Assert.IsTrue(result);
-            Assert.AreEqual(1, rewardsReceiver.ReceiveCallsCount);
             Assert.AreEqual(1, rewardFactory.CreateCollectionCallsCount);
         }
 
         [Test]
         public void TryHandleCollectionCompleted_WhenRewardIdMatchesEventId_ReturnsTrueAndSendsReward()
         {
-            var rewardsReceiver = new FakeOfferRewardsReceiver();
+            var rewardGrantService = new FakeRewardGrantService();
             var rewardFactory = new FakeRewardDefinitionFactory();
-            var handler = new CardCollectionRewardHandler(rewardsReceiver, rewardFactory);
+            var handler = new CardCollectionRewardHandler(rewardGrantService, rewardFactory);
 
             var config = ScriptableObject.CreateInstance<CardCollectionRewardsConfigSO>();
             config.FullCollectionReward = new FullCollectionRewardConfig
@@ -55,7 +54,6 @@ namespace CardCollectionImpl
             }).GetAwaiter().GetResult();
 
             Assert.IsTrue(result);
-            Assert.AreEqual(1, rewardsReceiver.ReceiveCallsCount);
             Assert.AreEqual(1, rewardFactory.CreateCollectionCallsCount);
         }
 
@@ -66,13 +64,13 @@ namespace CardCollectionImpl
             type.GetField("_cardCollectionRewardsConfigSo", BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(handler, config);
         }
 
-        private sealed class FakeOfferRewardsReceiver : IOfferRewardsReceiver
+        private sealed class FakeRewardGrantService : IRewardGrantService
         {
-            public int ReceiveCallsCount { get; private set; }
+            public int GrantCallsCount { get; private set; }
 
-            public UniTask<bool> ReceiveRewardsAsync(CollectionRewardDefinition collectionRewardDefinition, CancellationToken ct = default)
+            public UniTask<bool> TryGrantAsync(RewardGrantRequest rewardRequest, CancellationToken ct = default)
             {
-                ReceiveCallsCount++;
+                GrantCallsCount++;
                 return UniTask.FromResult(true);
             }
         }

@@ -3,6 +3,7 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
+using Inventory.API;
 using Resources.Core;
 using UISystem;
 using UnityEngine;
@@ -18,7 +19,9 @@ namespace core
         [SerializeField] private Button _button;
         [SerializeField] private Button _cheatButton;
         [SerializeField] private CardCollectionEntryPoint _cardCollectionEntryPoint;
+        [SerializeField] private InventoryEntryPoint _inventoryEntryPoint;
         [SerializeField] private ScriptableObject _exchangePacksConfig;
+        [SerializeField] private string _inventoryOwnerId = "player_1";
         
         [Space, Header("Resources")]
         [SerializeField] private ResourcesView _resourcesView;
@@ -122,9 +125,10 @@ namespace core
             {
                 var cardPackConfigs = await _cardPackProvider.GetCardConfigsAsync(ct);
                 _rewardDefinitionFactory = _compositionRoot.CreateRewardDefinitionFactory(cardPackConfigs);
-                var offerRewardsReceiver = _compositionRoot.CreateOfferRewardsReceiver();
+                IInventoryService inventoryService = _inventoryEntryPoint != null ? _inventoryEntryPoint.InventoryService : null;
+                var rewardGrantService = new GameRewardGrantService(_resourceManager, inventoryService, _inventoryOwnerId);
                 
-                _rewardHandler = _compositionRoot.CreateRewardHandler(offerRewardsReceiver, _rewardDefinitionFactory);
+                _rewardHandler = _compositionRoot.CreateRewardHandler(rewardGrantService, _rewardDefinitionFactory);
                 await _rewardHandler.InitializeAsync(ct);
                 _rewardHandlerInitializationSource.TrySetResult();
             }
