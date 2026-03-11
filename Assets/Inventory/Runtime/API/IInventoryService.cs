@@ -17,7 +17,7 @@ namespace Inventory.API
         //TODO GetItemsAsync should be another interface IInventoryReadService
         UniTask<IReadOnlyList<InventoryItemView>> GetItemsAsync(
             string ownerId,
-            InventoryItemCategory category,
+            string categoryId,
             CancellationToken cancellationToken = default);
     }
 }

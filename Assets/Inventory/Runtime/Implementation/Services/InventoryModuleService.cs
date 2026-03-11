@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Inventory.API;
@@ -32,11 +33,11 @@ namespace Inventory.Implementation.Services
 
         public async UniTask AddItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default)
         {
-            Debug.LogWarning($"Test ownerId {itemDelta.OwnerId},  itemId {itemDelta.ItemId}");
             
             cancellationToken.ThrowIfCancellationRequested();
             await EnsureOwnerLoadedAsync(itemDelta.OwnerId, cancellationToken);
             var changed = _addItemSystem.Execute(itemDelta);
+            Debug.LogWarning($"Test ownerId {itemDelta.OwnerId},  itemId {itemDelta.ItemId}, changed {changed}");
             if (!changed)
             {
                 return;
@@ -58,14 +59,11 @@ namespace Inventory.Implementation.Services
             await PublishAndPersistAsync(itemDelta.OwnerId, cancellationToken);
         }
 
-        public async UniTask<IReadOnlyList<InventoryItemView>> GetItemsAsync(
-            string ownerId,
-            InventoryItemCategory category,
-            CancellationToken cancellationToken = default)
+        public async UniTask<IReadOnlyList<InventoryItemView>> GetItemsAsync(string ownerId, string categoryId, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             await EnsureOwnerLoadedAsync(ownerId, cancellationToken);
-            var items = _querySystem.Execute(ownerId, category);
+            var items = _querySystem.Execute(ownerId, categoryId);
             return items;
         }
 
@@ -80,18 +78,16 @@ namespace Inventory.Implementation.Services
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var regularItems = _querySystem.Execute(ownerId, InventoryItemCategory.Regular);
-            var cardPackItems = _querySystem.Execute(ownerId, InventoryItemCategory.CardPack);
-            var mergedItems = new List<InventoryItemView>(regularItems.Count + cardPackItems.Count);
-            mergedItems.AddRange(regularItems);
-            mergedItems.AddRange(cardPackItems);
+            var allItems = _querySystem.ExecuteAll(ownerId);
+            var itemsByCategory = allItems
+                .GroupBy(item => item.CategoryId)
+                .ToDictionary(group => group.Key, group => (IReadOnlyList<InventoryItemView>)group.ToList());
 
-            await _storage.SaveAsync(ownerId, mergedItems, cancellationToken);
+            await _storage.SaveAsync(ownerId, allItems, cancellationToken);
 
             _inventoryChangedSubject.OnNext(new InventoryChangedEvent(
                 ownerId,
-                regularItems,
-                cardPackItems,
+                itemsByCategory,
                 DateTime.UtcNow));
         }
 
@@ -118,8 +114,7 @@ namespace Inventory.Implementation.Services
                         item.OwnerId,
                         item.ItemId,
                         item.StackCount,
-                        item.Category,
-                        item.CardPackMetadata);
+                        item.CategoryId);
                     _addItemSystem.Execute(delta);
                 }
 

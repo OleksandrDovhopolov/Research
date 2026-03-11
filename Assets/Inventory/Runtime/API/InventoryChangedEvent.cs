@@ -7,19 +7,16 @@ namespace Inventory.API
     {
         public InventoryChangedEvent(
             string ownerId,
-            IReadOnlyList<InventoryItemView> regularItems,
-            IReadOnlyList<InventoryItemView> cardPacks,
+            IReadOnlyDictionary<string, IReadOnlyList<InventoryItemView>> itemsByCategory,
             DateTime changedAtUtc)
         {
             OwnerId = ownerId;
-            RegularItems = regularItems;
-            CardPacks = cardPacks;
+            ItemsByCategory = itemsByCategory;
             ChangedAtUtc = changedAtUtc;
         }
 
         public string OwnerId { get; }
-        public IReadOnlyList<InventoryItemView> RegularItems { get; }
-        public IReadOnlyList<InventoryItemView> CardPacks { get; }
+        public IReadOnlyDictionary<string, IReadOnlyList<InventoryItemView>> ItemsByCategory { get; }
         public DateTime ChangedAtUtc { get; }
     }
 }

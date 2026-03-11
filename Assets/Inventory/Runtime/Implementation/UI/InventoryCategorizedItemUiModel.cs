@@ -1,16 +1,14 @@
-using Inventory.API;
-
 namespace Inventory.Implementation.UI
 {
     public readonly struct InventoryCategorizedItemUiModel
     {
-        public InventoryCategorizedItemUiModel(InventoryItemCategory category, InventoryItemUiModel item)
+        public InventoryCategorizedItemUiModel(string categoryId, InventoryItemUiModel item)
         {
-            Category = category;
+            CategoryId = categoryId;
             Item = item;
         }
 
-        public InventoryItemCategory Category { get; }
+        public string CategoryId { get; }
         public InventoryItemUiModel Item { get; }
     }
 }

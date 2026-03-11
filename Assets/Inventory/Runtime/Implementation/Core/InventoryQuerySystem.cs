@@ -12,9 +12,14 @@ namespace Inventory.Implementation.Core
             _world = world;
         }
 
-        public IReadOnlyList<InventoryItemView> Execute(string ownerId, InventoryItemCategory category)
+        public IReadOnlyList<InventoryItemView> Execute(string ownerId, string categoryId)
         {
-            return _world.QueryByCategory(ownerId, category);
+            return _world.QueryByCategory(ownerId, categoryId);
+        }
+
+        public IReadOnlyList<InventoryItemView> ExecuteAll(string ownerId)
+        {
+            return _world.QueryAll(ownerId);
         }
     }
 }

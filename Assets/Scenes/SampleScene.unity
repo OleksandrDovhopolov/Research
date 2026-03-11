@@ -1885,6 +1885,9 @@ MonoBehaviour:
   _uiManager: {fileID: 120959149}
   _cheatButton: {fileID: 1055907876}
   _ownerId: player_1
+  _categories:
+  - {fileID: 11400000, guid: 4c7c2d7c0096844b09a7607befe04c0a, type: 2}
+  - {fileID: 11400000, guid: 6736985d350f94250948825c05af0156, type: 2}
 --- !u!114 &1055907876
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -18,22 +18,11 @@ namespace Inventory.Implementation
         [Space, Space, Header("Tabs")]
         [SerializeField] private GameObject _tabFocus;
         [SerializeField] private List<Transform> _tabs = new();
-
         
         private CancellationTokenSource _loadSpritesCts;
-        private InventoryItemCategory _currentCategory = InventoryItemCategory.Regular;
-        private readonly Dictionary<InventoryItemCategory, List<InventoryItemUiModel>> _itemsByCategory = new();
-
-        // Temporary hardcoded tab-category mapping by tab index.
-        // Update this mapping later when categories are configured from data/editor.
-        private static readonly List<InventoryItemCategory> TabCategories = new()
-        {
-            InventoryItemCategory.Regular,  // Tab 0
-            InventoryItemCategory.Regular,  // Tab 1
-            InventoryItemCategory.Regular,  // Tab 2
-            InventoryItemCategory.Regular,  // Tab 3
-            InventoryItemCategory.CardPack, // Tab 4
-        };
+        private readonly List<ItemCategory> _tabCategories = new();
+        private string _currentCategoryId = string.Empty;
+        private readonly Dictionary<string, List<InventoryItemUiModel>> _itemsByCategory = new();
 
         private void Start()
         {
@@ -41,6 +30,27 @@ namespace Inventory.Implementation
             {
                 FocusTab(0, false);
             }
+        }
+
+        public void SetTabCategories(IReadOnlyList<ItemCategory> categories)
+        {
+            _tabCategories.Clear();
+            if (categories != null)
+            {
+                foreach (var category in categories)
+                {
+                    if (category == null)
+                    {
+                        continue;
+                    }
+
+                    _tabCategories.Add(category);
+                }
+            }
+
+            _currentCategoryId = _tabCategories.Count > 0
+                ? _tabCategories[0].CategoryId
+                : string.Empty;
         }
 
         public void OnTabClicked(Transform tab)
@@ -56,7 +66,7 @@ namespace Inventory.Implementation
                 return;
             }
 
-            FocusTab(tabIndex, true);
+            FocusTab(tabIndex);
         }
 
         public void FocusTab(int tabIndex, bool shouldRender = true)
@@ -74,7 +84,7 @@ namespace Inventory.Implementation
 
             _tabFocus.transform.SetParent(tab, false);
             _tabFocus.transform.SetAsLastSibling();
-            _currentCategory = ResolveCategory(tabIndex);
+            _currentCategoryId = ResolveCategoryId(tabIndex);
 
             if (shouldRender)
             {
@@ -82,14 +92,14 @@ namespace Inventory.Implementation
             }
         }
 
-        private static InventoryItemCategory ResolveCategory(int tabIndex)
+        private string ResolveCategoryId(int tabIndex)
         {
-            if (tabIndex < 0 || tabIndex >= TabCategories.Count)
+            if (tabIndex < 0 || tabIndex >= _tabCategories.Count)
             {
-                return InventoryItemCategory.Regular;
+                return _tabCategories.Count > 0 ? _tabCategories[0].CategoryId : string.Empty;
             }
 
-            return TabCategories[tabIndex];
+            return _tabCategories[tabIndex].CategoryId;
         }
 
         public void CreateItems(IReadOnlyList<InventoryCategorizedItemUiModel> categorizedItems)
@@ -103,10 +113,10 @@ namespace Inventory.Implementation
             {
                 foreach (var categorizedItem in categorizedItems)
                 {
-                    if (!_itemsByCategory.TryGetValue(categorizedItem.Category, out var items))
+                    if (!_itemsByCategory.TryGetValue(categorizedItem.CategoryId, out var items))
                     {
                         items = new List<InventoryItemUiModel>();
-                        _itemsByCategory[categorizedItem.Category] = items;
+                        _itemsByCategory[categorizedItem.CategoryId] = items;
                     }
 
                     items.Add(categorizedItem.Item);
@@ -120,7 +130,7 @@ namespace Inventory.Implementation
         {
             _cardGroupsPool.DisableAll();
             
-            if (!_itemsByCategory.TryGetValue(_currentCategory, out var data))
+            if (!_itemsByCategory.TryGetValue(_currentCategoryId, out var data))
             {
                 data = new List<InventoryItemUiModel>();
             }

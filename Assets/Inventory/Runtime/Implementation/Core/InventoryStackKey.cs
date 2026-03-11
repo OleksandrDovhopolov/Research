@@ -5,22 +5,22 @@ namespace Inventory.Implementation.Core
 {
     internal readonly struct InventoryStackKey : IEquatable<InventoryStackKey>
     {
-        public InventoryStackKey(string ownerId, string itemId, InventoryItemCategory category)
+        public InventoryStackKey(string ownerId, string itemId, string categoryId)
         {
             OwnerId = ownerId ?? string.Empty;
             ItemId = itemId ?? string.Empty;
-            Category = category;
+            CategoryId = categoryId ?? string.Empty;
         }
 
         public string OwnerId { get; }
         public string ItemId { get; }
-        public InventoryItemCategory Category { get; }
+        public string CategoryId { get; }
 
         public bool Equals(InventoryStackKey other)
         {
             return OwnerId == other.OwnerId
                    && ItemId == other.ItemId
-                   && Category == other.Category;
+                   && CategoryId == other.CategoryId;
         }
 
         public override bool Equals(object obj)
@@ -30,7 +30,7 @@ namespace Inventory.Implementation.Core
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(OwnerId, ItemId, (int)Category);
+            return HashCode.Combine(OwnerId, ItemId, CategoryId);
         }
     }
 }

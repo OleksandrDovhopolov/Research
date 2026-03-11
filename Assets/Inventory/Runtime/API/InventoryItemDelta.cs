@@ -6,20 +6,26 @@ namespace Inventory.API
             string ownerId,
             string itemId,
             int amount,
-            InventoryItemCategory category,
-            CardPackMetadata? cardPackMetadata = null)
+            string categoryId)
         {
             OwnerId = ownerId;
             ItemId = itemId;
             Amount = amount;
-            Category = category;
-            CardPackMetadata = cardPackMetadata;
+            CategoryId = categoryId;
+        }
+
+        public InventoryItemDelta(
+            string ownerId,
+            string itemId,
+            int amount,
+            ItemCategory category)
+            : this(ownerId, itemId, amount, category?.CategoryId ?? string.Empty)
+        {
         }
 
         public string OwnerId { get; }
         public string ItemId { get; }
         public int Amount { get; }
-        public InventoryItemCategory Category { get; }
-        public CardPackMetadata? CardPackMetadata { get; }
+        public string CategoryId { get; }
     }
 }

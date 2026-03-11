@@ -55,7 +55,7 @@ namespace core
                 _inventoryOwnerId,
                 rewardRequest.RewardId,
                 rewardRequest.Amount,
-                InventoryItemCategory.CardPack);
+                InventoryBuiltInCategoryIds.CardPack);
 
             await _inventoryService.AddItemAsync(itemDelta, ct);
             return true;

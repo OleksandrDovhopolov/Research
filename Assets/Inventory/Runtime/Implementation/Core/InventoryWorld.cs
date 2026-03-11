@@ -12,7 +12,6 @@ namespace Inventory.Implementation.Core
         private readonly Dictionary<int, OwnerComponent> _owners = new();
         private readonly Dictionary<int, ItemDataComponent> _items = new();
         private readonly Dictionary<int, StackComponent> _stacks = new();
-        private readonly Dictionary<int, CardPackComponent> _cardPacks = new();
         private readonly Dictionary<InventoryStackKey, int> _stackIndex = new();
 
         public bool AddOrStack(InventoryItemDelta itemDelta)
@@ -23,7 +22,7 @@ namespace Inventory.Implementation.Core
                 return false;
             }
 
-            var stackKey = new InventoryStackKey(itemDelta.OwnerId, itemDelta.ItemId, itemDelta.Category);
+            var stackKey = new InventoryStackKey(itemDelta.OwnerId, itemDelta.ItemId, itemDelta.CategoryId);
             if (_stackIndex.TryGetValue(stackKey, out var existingEntityId))
             {
                 var currentStack = _stacks[existingEntityId];
@@ -34,15 +33,9 @@ namespace Inventory.Implementation.Core
             var entityId = _nextEntityId++;
             _entities.Add(entityId);
             _owners[entityId] = new OwnerComponent(itemDelta.OwnerId);
-            _items[entityId] = new ItemDataComponent(itemDelta.ItemId, itemDelta.Category);
+            _items[entityId] = new ItemDataComponent(itemDelta.ItemId, itemDelta.CategoryId);
             _stacks[entityId] = new StackComponent(itemDelta.Amount);
             _stackIndex[stackKey] = entityId;
-
-            if (itemDelta.Category == InventoryItemCategory.CardPack && itemDelta.CardPackMetadata.HasValue)
-            {
-                var metadata = itemDelta.CardPackMetadata.Value;
-                _cardPacks[entityId] = new CardPackComponent(metadata.PackName, metadata.CardsInside);
-            }
 
             return true;
         }
@@ -55,7 +48,7 @@ namespace Inventory.Implementation.Core
                 return false;
             }
 
-            var stackKey = new InventoryStackKey(itemDelta.OwnerId, itemDelta.ItemId, itemDelta.Category);
+            var stackKey = new InventoryStackKey(itemDelta.OwnerId, itemDelta.ItemId, itemDelta.CategoryId);
             if (!_stackIndex.TryGetValue(stackKey, out var entityId))
             {
                 return false;
@@ -73,46 +66,73 @@ namespace Inventory.Implementation.Core
             _owners.Remove(entityId);
             _items.Remove(entityId);
             _stacks.Remove(entityId);
-            _cardPacks.Remove(entityId);
             _stackIndex.Remove(stackKey);
             return true;
         }
 
-        public IReadOnlyList<InventoryItemView> QueryByCategory(string ownerId, InventoryItemCategory category)
+        public IReadOnlyList<InventoryItemView> QueryByCategory(string ownerId, string categoryId)
         {
             var result = new List<InventoryItemView>();
             foreach (var entityId in _entities)
             {
-                if (!_owners.TryGetValue(entityId, out var owner) || owner.OwnerId != ownerId)
+                if (!TryBuildItemView(entityId, ownerId, out var view))
                 {
                     continue;
                 }
 
-                if (!_items.TryGetValue(entityId, out var itemData) || itemData.Category != category)
+                if (!string.Equals(view.CategoryId, categoryId, StringComparison.Ordinal))
                 {
                     continue;
                 }
 
-                if (!_stacks.TryGetValue(entityId, out var stack))
-                {
-                    continue;
-                }
-
-                CardPackMetadata? metadata = null;
-                if (_cardPacks.TryGetValue(entityId, out var cardPack))
-                {
-                    metadata = new CardPackMetadata(cardPack.PackName, cardPack.CardsInside);
-                }
-
-                result.Add(new InventoryItemView(
-                    owner.OwnerId,
-                    itemData.ItemId,
-                    stack.Count,
-                    itemData.Category,
-                    metadata));
+                result.Add(view);
             }
 
             return result;
+        }
+
+        public IReadOnlyList<InventoryItemView> QueryAll(string ownerId)
+        {
+            var result = new List<InventoryItemView>();
+            foreach (var entityId in _entities)
+            {
+                if (!TryBuildItemView(entityId, ownerId, out var view))
+                {
+                    continue;
+                }
+
+                result.Add(view);
+            }
+
+            return result;
+        }
+
+        private bool TryBuildItemView(int entityId, string ownerId, out InventoryItemView view)
+        {
+            if (!_owners.TryGetValue(entityId, out var owner) || owner.OwnerId != ownerId)
+            {
+                view = default;
+                return false;
+            }
+
+            if (!_items.TryGetValue(entityId, out var itemData))
+            {
+                view = default;
+                return false;
+            }
+
+            if (!_stacks.TryGetValue(entityId, out var stack))
+            {
+                view = default;
+                return false;
+            }
+
+            view = new InventoryItemView(
+                owner.OwnerId,
+                itemData.ItemId,
+                stack.Count,
+                itemData.CategoryId);
+            return true;
         }
 
         private static void ValidateItemDelta(InventoryItemDelta itemDelta)
@@ -125,6 +145,11 @@ namespace Inventory.Implementation.Core
             if (string.IsNullOrWhiteSpace(itemDelta.ItemId))
             {
                 throw new ArgumentException("ItemId is required.", nameof(itemDelta));
+            }
+
+            if (string.IsNullOrWhiteSpace(itemDelta.CategoryId))
+            {
+                throw new ArgumentException("CategoryId is required.", nameof(itemDelta));
             }
         }
     }

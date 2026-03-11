@@ -1,17 +1,15 @@
-using Inventory.API;
-
 namespace Inventory.Implementation.Core
 {
     internal readonly struct ItemDataComponent
     {
-        public ItemDataComponent(string itemId, InventoryItemCategory category)
+        public ItemDataComponent(string itemId, string categoryId)
         {
             ItemId = itemId;
-            Category = category;
+            CategoryId = categoryId;
         }
 
         public string ItemId { get; }
-        public InventoryItemCategory Category { get; }
+        public string CategoryId { get; }
     }
 
     internal readonly struct OwnerComponent
@@ -34,15 +32,4 @@ namespace Inventory.Implementation.Core
         public int Count { get; }
     }
 
-    internal readonly struct CardPackComponent
-    {
-        public CardPackComponent(string packName, int cardsInside)
-        {
-            PackName = packName;
-            CardsInside = cardsInside;
-        }
-
-        public string PackName { get; }
-        public int CardsInside { get; }
-    }
 }

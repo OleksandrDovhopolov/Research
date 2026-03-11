@@ -19,9 +19,9 @@ namespace core
             {
                 const string ownerId = "player_1";
                 const string itemId = "Gold";
-                const InventoryItemCategory category = InventoryItemCategory.Regular;
+                const string categoryId = InventoryBuiltInCategoryIds.Regular;
                 
-                var inventoryItemDelta = new InventoryItemDelta(ownerId, itemId, amount, category);
+                var inventoryItemDelta = new InventoryItemDelta(ownerId, itemId, amount, categoryId);
                 _inventoryService.AddItemAsync(inventoryItemDelta);
             }).WithGroup(InventoryGroup));
             
@@ -29,9 +29,9 @@ namespace core
             {
                 const string ownerId = "player_1";
                 const string itemId = "Gold";
-                const InventoryItemCategory category = InventoryItemCategory.Regular;
+                const string categoryId = InventoryBuiltInCategoryIds.Regular;
                 
-                var inventoryItemDelta = new InventoryItemDelta(ownerId, itemId, amount, category);
+                var inventoryItemDelta = new InventoryItemDelta(ownerId, itemId, amount, categoryId);
                 _inventoryService.RemoveItemAsync(inventoryItemDelta);
             }).WithGroup(InventoryGroup));
         }

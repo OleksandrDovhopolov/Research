@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Inventory.API;
 using Inventory.Implementation.UI;
 using R3;
 using UISystem;
@@ -11,11 +10,16 @@ namespace Inventory.Implementation
     {
         public readonly UIManager UiManager;
         public readonly InventoryTabsPresenter TabsPresenter;
+        public readonly IReadOnlyList<API.ItemCategory> Categories;
 
-        public InventoryArgs(UIManager uiManager, InventoryTabsPresenter tabsPresenter)
+        public InventoryArgs(
+            UIManager uiManager,
+            InventoryTabsPresenter tabsPresenter,
+            IReadOnlyList<API.ItemCategory> categories)
         {
             UiManager =  uiManager;
             TabsPresenter = tabsPresenter;
+            Categories = categories;
         }
     }
     
@@ -23,19 +27,21 @@ namespace Inventory.Implementation
     public class InventoryWindowController : WindowController<InventoryWindowView>
     {
         private InventoryArgs Args => (InventoryArgs) Arguments;
-        private IDisposable _regularItemsSubscription;
-        private IDisposable _cardPacksSubscription;
+        private readonly List<IDisposable> _tabSubscriptions = new();
 
         protected override void OnShowStart()
         {
-            View.CreateItems(BuildCategorizedItemsFromPresenter(Args.TabsPresenter));
-            
-            _regularItemsSubscription = Args.TabsPresenter.RegularItems.Items
-                .Skip(1)
-                .Subscribe(_ => RefreshFromPresenter());
-            _cardPacksSubscription = Args.TabsPresenter.CardPacks.Items
-                .Skip(1)
-                .Subscribe(_ => RefreshFromPresenter());
+            View.SetTabCategories(Args.Categories);
+            View.CreateItems(BuildCategorizedItemsFromPresenter());
+
+            _tabSubscriptions.Clear();
+            foreach (var tab in Args.TabsPresenter.Tabs)
+            {
+                var subscription = tab.Items
+                    .Skip(1)
+                    .Subscribe(_ => RefreshFromPresenter());
+                _tabSubscriptions.Add(subscription);
+            }
         }
 
         protected override void OnShowComplete()
@@ -47,16 +53,12 @@ namespace Inventory.Implementation
         {
             View.Dispose();
             View.CloseClick -= CloseWindow;
-            _regularItemsSubscription?.Dispose();
-            _regularItemsSubscription = null;
-            _cardPacksSubscription?.Dispose();
-            _cardPacksSubscription = null;
+            foreach (var subscription in _tabSubscriptions)
+            {
+                subscription?.Dispose();
+            }
+            _tabSubscriptions.Clear();
             Args.TabsPresenter?.Dispose();
-        }
-        
-        private void CloseWindow()
-        {
-            Args.UiManager.Hide<InventoryWindowController>();
         }
 
         private void RefreshFromPresenter()
@@ -66,32 +68,26 @@ namespace Inventory.Implementation
                 return;
             }
 
-            View.CreateItems(BuildCategorizedItemsFromPresenter(Args.TabsPresenter));
+            View.CreateItems(BuildCategorizedItemsFromPresenter());
         }
 
-        private static IReadOnlyList<InventoryCategorizedItemUiModel> BuildCategorizedItemsFromPresenter(
-            InventoryTabsPresenter presenter)
+        private IReadOnlyList<InventoryCategorizedItemUiModel> BuildCategorizedItemsFromPresenter()
         {
-            if (presenter == null)
+            var mapped = new List<InventoryCategorizedItemUiModel>();
+            foreach (var tab in Args.TabsPresenter.Tabs)
             {
-                return Array.Empty<InventoryCategorizedItemUiModel>();
-            }
-
-            var regularItems = presenter.RegularItems.Items.Value;
-            var cardPackItems = presenter.CardPacks.Items.Value;
-            var mapped = new List<InventoryCategorizedItemUiModel>(regularItems.Count + cardPackItems.Count);
-
-            foreach (var item in regularItems)
-            {
-                mapped.Add(new InventoryCategorizedItemUiModel(InventoryItemCategory.Regular, item));
-            }
-
-            foreach (var item in cardPackItems)
-            {
-                mapped.Add(new InventoryCategorizedItemUiModel(InventoryItemCategory.CardPack, item));
+                foreach (var item in tab.Items.Value)
+                {
+                    mapped.Add(new InventoryCategorizedItemUiModel(tab.Category.CategoryId, item));
+                }
             }
 
             return mapped;
+        }
+        
+        private void CloseWindow()
+        {
+            Args.UiManager.Hide<InventoryWindowController>();
         }
     }
 }

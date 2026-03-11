@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Inventory.API;
@@ -9,92 +10,79 @@ namespace Inventory.Implementation.UI
 {
     public sealed class InventoryTabsPresenter : IDisposable
     {
-        private readonly IInventoryService _inventoryService;
         private readonly string _ownerId;
+        private readonly IInventoryService _inventoryService;
         private IDisposable _inventoryChangedSubscription;
-
-        public InventoryTabsPresenter(IInventoryService inventoryService, string ownerId)
+        private readonly List<InventoryCategoryTabViewModel> _tabs = new();
+        
+        public IReadOnlyList<InventoryCategoryTabViewModel> Tabs => _tabs;
+        
+        public InventoryTabsPresenter(IInventoryService inventoryService, string ownerId, IReadOnlyList<ItemCategory> categories)
         {
             _inventoryService = inventoryService;
             _ownerId = ownerId;
-            RegularItems = new RegularItemsTabViewModel();
-            CardPacks = new CardPacksTabViewModel();
+
+            foreach (var category in categories.Where(category => category != null))
+            {
+                if (_tabs.Find(tab => tab.Category.CategoryId == category.CategoryId) != null)
+                {
+                    continue;
+                }
+
+                var tab = new InventoryCategoryTabViewModel(category);
+                _tabs.Add(tab);
+            }
         }
-
-        public RegularItemsTabViewModel RegularItems { get; }
-        public CardPacksTabViewModel CardPacks { get; }
-
+        
         public async UniTask InitializeAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var regularItems = await _inventoryService.GetItemsAsync(
-                _ownerId,
-                InventoryItemCategory.Regular,
-                cancellationToken);
+            foreach (var tab in _tabs)
+            {
+                var source = await _inventoryService.GetItemsAsync(
+                    _ownerId,
+                    tab.Category.CategoryId,
+                    cancellationToken);
 
-            var cardPacks = await _inventoryService.GetItemsAsync(
-                _ownerId,
-                InventoryItemCategory.CardPack,
-                cancellationToken);
-
-            RegularItems.Items.Value = MapRegularItems(regularItems);
-            CardPacks.Items.Value = MapCardPacks(cardPacks);
+                tab.Items.Value = MapItems(source);
+            }
 
             _inventoryChangedSubscription?.Dispose();
             _inventoryChangedSubscription = _inventoryService.OnInventoryChanged
                 .Where(evt => evt.OwnerId == _ownerId)
                 .Subscribe(evt =>
                 {
-                    RegularItems.Items.Value = MapRegularItems(evt.RegularItems);
-                    CardPacks.Items.Value = MapCardPacks(evt.CardPacks);
+                    foreach (var tab in _tabs)
+                    {
+                        var items = evt.ItemsByCategory.TryGetValue(tab.Category.CategoryId, out var source)
+                            ? source
+                            : Array.Empty<InventoryItemView>();
+                        tab.Items.Value = MapItems(items);
+                    }
                 });
+        }
+
+        private IReadOnlyList<InventoryItemUiModel> MapItems(IReadOnlyList<InventoryItemView> source)
+        {
+            var mapped = new List<InventoryItemUiModel>(source.Count);
+            
+            foreach (var item in source)
+            {
+                var itemUIModel = new InventoryItemUiModel(item.ItemId, "Empty", item.StackCount);
+                mapped.Add(itemUIModel);
+            }
+
+            return mapped;
         }
 
         public void Dispose()
         {
             _inventoryChangedSubscription?.Dispose();
-            RegularItems.Items?.Dispose();
-            CardPacks.Items?.Dispose();
-        }
-
-        private static IReadOnlyList<InventoryItemUiModel> MapRegularItems(
-            IReadOnlyList<InventoryItemView> source)
-        {
-            var mapped = new List<InventoryItemUiModel>(source.Count);
-            foreach (var item in source)
+            foreach (var tab in _tabs)
             {
-                mapped.Add(new InventoryItemUiModel(
-                    item.ItemId,
-                    "Empty",
-                    item.StackCount));
+                tab.Items?.Dispose();
             }
-
-            return mapped;
-        }
-
-        private static IReadOnlyList<InventoryItemUiModel> MapCardPacks(
-            IReadOnlyList<InventoryItemView> source)
-        {
-            var mapped = new List<InventoryItemUiModel>(source.Count);
-            foreach (var item in source)
-            {
-                var subtitle = item.CardPackMetadata.HasValue
-                    ? $"{item.CardPackMetadata.Value.CardsInside} cards"
-                    : string.Empty;
-
-                var title = item.CardPackMetadata.HasValue
-                    ? item.CardPackMetadata.Value.PackName
-                    : "Empty";
-
-                mapped.Add(new InventoryItemUiModel(
-                    item.ItemId,
-                    title,
-                    item.StackCount,
-                    subtitle));
-            }
-
-            return mapped;
         }
     }
 }

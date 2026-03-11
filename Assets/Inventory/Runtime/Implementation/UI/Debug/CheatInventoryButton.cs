@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Inventory.API;
@@ -14,6 +15,7 @@ namespace Inventory.Implementation
         [SerializeField] private UIManager _uiManager;
         [SerializeField] private Button _cheatButton;
         [SerializeField] private string _ownerId = "player_1";
+        [SerializeField] private List<ItemCategory> _categories = new();
 
         private CancellationToken _destroyCt;
         private IInventoryService _inventoryService;
@@ -38,10 +40,10 @@ namespace Inventory.Implementation
                 return;
             }
 
-            var tabsPresenter = new InventoryTabsPresenter(_inventoryService, _ownerId);
+            var tabsPresenter = new InventoryTabsPresenter(_inventoryService, _ownerId, _categories);
             await tabsPresenter.InitializeAsync(ct);
 
-            var args = new InventoryArgs(_uiManager, tabsPresenter);
+            var args = new InventoryArgs(_uiManager, tabsPresenter, _categories);
             _uiManager.Show<InventoryWindowController>(args);
         }
         

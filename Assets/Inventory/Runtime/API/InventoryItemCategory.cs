@@ -1,9 +1,25 @@
+using UnityEngine;
+
 namespace Inventory.API
 {
-    //TODO in next iteration remove this from API. API doesnt know about cardPacks
-    public enum InventoryItemCategory
+    public abstract class ItemCategory : ScriptableObject
     {
-        Regular = 0,
-        CardPack = 1,
+        [SerializeField] private string _categoryId;
+        [SerializeField] private string _displayName;
+
+        public string CategoryId => string.IsNullOrWhiteSpace(_categoryId) ? name : _categoryId;
+        public string DisplayName => string.IsNullOrWhiteSpace(_displayName) ? CategoryId : _displayName;
+
+        protected void SetIdentity(string categoryId, string displayName)
+        {
+            _categoryId = categoryId;
+            _displayName = displayName;
+        }
+    }
+
+    public static class InventoryBuiltInCategoryIds
+    {
+        public const string Regular = "regular";
+        public const string CardPack = "card_pack";
     }
 }
