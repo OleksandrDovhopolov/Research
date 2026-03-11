@@ -16,6 +16,8 @@ namespace Inventory.Implementation.Services
         private readonly InventoryQuerySystem _querySystem;
         private readonly IInventoryStorage _storage;
         private readonly Subject<InventoryChangedEvent> _inventoryChangedSubject = new();
+        private readonly SemaphoreSlim _loadSemaphore = new(1, 1);
+        private readonly HashSet<string> _loadedOwners = new();
 
         public InventoryModuleService(IInventoryStorage storage = null)
         {
@@ -33,6 +35,7 @@ namespace Inventory.Implementation.Services
             Debug.LogWarning($"Test ownerId {itemDelta.OwnerId},  itemId {itemDelta.ItemId},   itemType {itemDelta.ItemType}");
             
             cancellationToken.ThrowIfCancellationRequested();
+            await EnsureOwnerLoadedAsync(itemDelta.OwnerId, cancellationToken);
             var changed = _addItemSystem.Execute(itemDelta);
             if (!changed)
             {
@@ -45,6 +48,7 @@ namespace Inventory.Implementation.Services
         public async UniTask RemoveItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            await EnsureOwnerLoadedAsync(itemDelta.OwnerId, cancellationToken);
             var changed = _removeItemSystem.Execute(itemDelta);
             if (!changed)
             {
@@ -54,20 +58,22 @@ namespace Inventory.Implementation.Services
             await PublishAndPersistAsync(itemDelta.OwnerId, cancellationToken);
         }
 
-        public UniTask<IReadOnlyList<InventoryItemView>> GetItemsAsync(
+        public async UniTask<IReadOnlyList<InventoryItemView>> GetItemsAsync(
             string ownerId,
             InventoryItemCategory category,
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            await EnsureOwnerLoadedAsync(ownerId, cancellationToken);
             var items = _querySystem.Execute(ownerId, category);
-            return UniTask.FromResult(items);
+            return items;
         }
 
         public void Dispose()
         {
             _inventoryChangedSubject?.OnCompleted();
             _inventoryChangedSubject?.Dispose();
+            _loadSemaphore.Dispose();
         }
 
         private async UniTask PublishAndPersistAsync(string ownerId, CancellationToken cancellationToken)
@@ -87,6 +93,43 @@ namespace Inventory.Implementation.Services
                 regularItems,
                 cardPackItems,
                 DateTime.UtcNow));
+        }
+
+        private async UniTask EnsureOwnerLoadedAsync(string ownerId, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (_loadedOwners.Contains(ownerId))
+            {
+                return;
+            }
+
+            await _loadSemaphore.WaitAsync(cancellationToken);
+            try
+            {
+                if (_loadedOwners.Contains(ownerId))
+                {
+                    return;
+                }
+
+                var loadedItems = await _storage.LoadAsync(ownerId, cancellationToken);
+                foreach (var item in loadedItems)
+                {
+                    var delta = new InventoryItemDelta(
+                        item.OwnerId,
+                        item.ItemId,
+                        item.ItemType,
+                        item.StackCount,
+                        item.Category,
+                        item.CardPackMetadata);
+                    _addItemSystem.Execute(delta);
+                }
+
+                _loadedOwners.Add(ownerId);
+            }
+            finally
+            {
+                _loadSemaphore.Release();
+            }
         }
     }
 }
