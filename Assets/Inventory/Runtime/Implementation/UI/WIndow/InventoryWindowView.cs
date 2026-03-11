@@ -13,6 +13,8 @@ namespace Inventory.Implementation
 {
     public class InventoryWindowView : WindowView
     {
+        private const string AllCategoriesTabId = "__all__";
+
         [SerializeField] private UIListPool<InventoryView> _cardGroupsPool;
         
         [Space, Space, Header("Tabs")]
@@ -21,7 +23,7 @@ namespace Inventory.Implementation
         
         private CancellationTokenSource _loadSpritesCts;
         private readonly List<ItemCategory> _tabCategories = new();
-        private string _currentCategoryId = string.Empty;
+        private string _currentCategoryId = AllCategoriesTabId;
         private readonly Dictionary<string, List<InventoryItemUiModel>> _itemsByCategory = new();
 
         private void Start()
@@ -48,9 +50,7 @@ namespace Inventory.Implementation
                 }
             }
 
-            _currentCategoryId = _tabCategories.Count > 0
-                ? _tabCategories[0].CategoryId
-                : string.Empty;
+            _currentCategoryId = AllCategoriesTabId;
         }
 
         public void OnTabClicked(Transform tab)
@@ -94,12 +94,19 @@ namespace Inventory.Implementation
 
         private string ResolveCategoryId(int tabIndex)
         {
-            if (tabIndex < 0 || tabIndex >= _tabCategories.Count)
+            if (tabIndex == 0)
             {
-                return _tabCategories.Count > 0 ? _tabCategories[0].CategoryId : string.Empty;
+                return AllCategoriesTabId;
             }
 
-            return _tabCategories[tabIndex].CategoryId;
+            var categoryIndex = tabIndex - 1;
+            if (categoryIndex < 0 || categoryIndex >= _tabCategories.Count)
+            {
+                Debug.LogWarning($"[InventoryWindowView] Category not found for tab ID {tabIndex}. No items will be shown.");
+                return string.Empty;
+            }
+
+            return _tabCategories[categoryIndex].CategoryId;
         }
 
         public void CreateItems(IReadOnlyList<InventoryCategorizedItemUiModel> categorizedItems)
@@ -129,12 +136,27 @@ namespace Inventory.Implementation
         private void RenderCurrentCategory()
         {
             _cardGroupsPool.DisableAll();
-            
+
+            if (_currentCategoryId == AllCategoriesTabId)
+            {
+                foreach (var categoryItems in _itemsByCategory.Values)
+                {
+                    RenderItems(categoryItems);
+                }
+
+                return;
+            }
+
             if (!_itemsByCategory.TryGetValue(_currentCategoryId, out var data))
             {
-                data = new List<InventoryItemUiModel>();
+                return;
             }
-            
+
+            RenderItems(data);
+        }
+
+        private void RenderItems(IReadOnlyList<InventoryItemUiModel> data)
+        {
             foreach (var item in data)
             {
                 var inventoryView = _cardGroupsPool.GetNext();

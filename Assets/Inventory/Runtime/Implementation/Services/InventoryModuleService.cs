@@ -64,6 +64,7 @@ namespace Inventory.Implementation.Services
             cancellationToken.ThrowIfCancellationRequested();
             await EnsureOwnerLoadedAsync(ownerId, cancellationToken);
             var items = _querySystem.Execute(ownerId, categoryId);
+            WarnOnCategoryIdMismatch(ownerId, categoryId, items);
             return items;
         }
 
@@ -89,6 +90,54 @@ namespace Inventory.Implementation.Services
                 ownerId,
                 itemsByCategory,
                 DateTime.UtcNow));
+        }
+
+        private void WarnOnCategoryIdMismatch(string ownerId, string requestedCategoryId, IReadOnlyList<InventoryItemView> requestedItems)
+        {
+            if (requestedItems.Count > 0 || string.IsNullOrWhiteSpace(requestedCategoryId))
+            {
+                return;
+            }
+
+            var allItems = _querySystem.ExecuteAll(ownerId);
+            if (allItems.Count == 0)
+            {
+                return;
+            }
+
+            var existingCategoryIds = allItems
+                .Select(item => item.CategoryId)
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
+
+            var normalizedRequested = NormalizeCategoryId(requestedCategoryId);
+            var closeMatches = existingCategoryIds
+                .Where(existingId => NormalizeCategoryId(existingId) == normalizedRequested)
+                .ToList();
+
+            if (closeMatches.Count == 0)
+            {
+                return;
+            }
+
+            Debug.LogWarning(
+                $"[InventoryModuleService] Category mismatch detected for owner '{ownerId}'. " +
+                $"Requested categoryId='{requestedCategoryId}', but found similar stored categoryId(s): [{string.Join(", ", closeMatches)}]. " +
+                "Check ItemCategory asset IDs vs constants (example: 'CardPack' vs 'card_pack').");
+        }
+
+        private static string NormalizeCategoryId(string categoryId)
+        {
+            if (string.IsNullOrWhiteSpace(categoryId))
+            {
+                return string.Empty;
+            }
+
+            return new string(categoryId
+                .Where(ch => ch != '_' && ch != '-' && ch != ' ')
+                .Select(char.ToLowerInvariant)
+                .ToArray());
         }
 
         private async UniTask EnsureOwnerLoadedAsync(string ownerId, CancellationToken cancellationToken)
