@@ -66,7 +66,7 @@ namespace Inventory.Implementation.UI
             {
                 mapped.Add(new InventoryItemUiModel(
                     item.ItemId,
-                    item.ItemType,
+                    "Empty",
                     item.StackCount));
             }
 
@@ -85,7 +85,7 @@ namespace Inventory.Implementation.UI
 
                 var title = item.CardPackMetadata.HasValue
                     ? item.CardPackMetadata.Value.PackName
-                    : item.ItemType;
+                    : "Empty";
 
                 mapped.Add(new InventoryItemUiModel(
                     item.ItemId,

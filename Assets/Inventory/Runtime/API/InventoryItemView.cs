@@ -5,14 +5,12 @@ namespace Inventory.API
         public InventoryItemView(
             string ownerId,
             string itemId,
-            string itemType,
             int stackCount,
             InventoryItemCategory category,
             CardPackMetadata? cardPackMetadata = null)
         {
             OwnerId = ownerId;
             ItemId = itemId;
-            ItemType = itemType;
             StackCount = stackCount;
             Category = category;
             CardPackMetadata = cardPackMetadata;
@@ -20,7 +18,6 @@ namespace Inventory.API
 
         public string OwnerId { get; }
         public string ItemId { get; }
-        public string ItemType { get; }
         public int StackCount { get; }
         public InventoryItemCategory Category { get; }
         public CardPackMetadata? CardPackMetadata { get; }

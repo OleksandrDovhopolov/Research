@@ -6,6 +6,9 @@ namespace core
 {
     public sealed class InventoryEntryPoint : MonoBehaviour
     {
+        [SerializeField] private string _ownedId;
+        public string OwnedId => _ownedId;
+
         private IInventoryService _inventoryService;
 
         public IInventoryService InventoryService => GetInitializedService();

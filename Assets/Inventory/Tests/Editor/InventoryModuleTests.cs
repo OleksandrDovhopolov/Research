@@ -15,10 +15,10 @@ namespace Inventory.Tests.Editor
         {
             var service = new InventoryModuleService();
 
-            service.AddItemAsync(new InventoryItemDelta(OwnerId, "wood", "Wood", 2, InventoryItemCategory.Regular))
+            service.AddItemAsync(new InventoryItemDelta(OwnerId, "wood",  2, InventoryItemCategory.Regular))
                 .GetAwaiter()
                 .GetResult();
-            service.AddItemAsync(new InventoryItemDelta(OwnerId, "wood", "Wood", 3, InventoryItemCategory.Regular))
+            service.AddItemAsync(new InventoryItemDelta(OwnerId, "wood",  3, InventoryItemCategory.Regular))
                 .GetAwaiter()
                 .GetResult();
 
@@ -35,10 +35,10 @@ namespace Inventory.Tests.Editor
         {
             var service = new InventoryModuleService();
 
-            service.AddItemAsync(new InventoryItemDelta(OwnerId, "energy", "Energy", 5, InventoryItemCategory.Regular))
+            service.AddItemAsync(new InventoryItemDelta(OwnerId, "energy", 5, InventoryItemCategory.Regular))
                 .GetAwaiter()
                 .GetResult();
-            service.RemoveItemAsync(new InventoryItemDelta(OwnerId, "energy", "Energy", 2, InventoryItemCategory.Regular))
+            service.RemoveItemAsync(new InventoryItemDelta(OwnerId, "energy", 2, InventoryItemCategory.Regular))
                 .GetAwaiter()
                 .GetResult();
 
@@ -48,7 +48,7 @@ namespace Inventory.Tests.Editor
             Assert.That(afterPartialRemove.Count, Is.EqualTo(1));
             Assert.That(afterPartialRemove[0].StackCount, Is.EqualTo(3));
 
-            service.RemoveItemAsync(new InventoryItemDelta(OwnerId, "energy", "Energy", 3, InventoryItemCategory.Regular))
+            service.RemoveItemAsync(new InventoryItemDelta(OwnerId, "energy",  3, InventoryItemCategory.Regular))
                 .GetAwaiter()
                 .GetResult();
 
@@ -63,13 +63,12 @@ namespace Inventory.Tests.Editor
         {
             var service = new InventoryModuleService();
 
-            service.AddItemAsync(new InventoryItemDelta(OwnerId, "gold", "Gold", 10, InventoryItemCategory.Regular))
+            service.AddItemAsync(new InventoryItemDelta(OwnerId, "gold",  10, InventoryItemCategory.Regular))
                 .GetAwaiter()
                 .GetResult();
             service.AddItemAsync(new InventoryItemDelta(
                     OwnerId,
                     "pack_blue",
-                    "CardPack",
                     1,
                     InventoryItemCategory.CardPack,
                     new CardPackMetadata("Blue Pack", 5)))
@@ -103,7 +102,7 @@ namespace Inventory.Tests.Editor
 
             Assert.Throws<OperationCanceledException>(() =>
                 service.AddItemAsync(
-                    new InventoryItemDelta(OwnerId, "wood", "Wood", 1, InventoryItemCategory.Regular),
+                    new InventoryItemDelta(OwnerId, "wood", 1, InventoryItemCategory.Regular),
                     cts.Token)
                     .GetAwaiter()
                     .GetResult());

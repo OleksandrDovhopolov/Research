@@ -34,7 +34,7 @@ namespace Inventory.Implementation.Core
             var entityId = _nextEntityId++;
             _entities.Add(entityId);
             _owners[entityId] = new OwnerComponent(itemDelta.OwnerId);
-            _items[entityId] = new ItemDataComponent(itemDelta.ItemId, itemDelta.ItemType, itemDelta.Category);
+            _items[entityId] = new ItemDataComponent(itemDelta.ItemId, itemDelta.Category);
             _stacks[entityId] = new StackComponent(itemDelta.Amount);
             _stackIndex[stackKey] = entityId;
 
@@ -107,7 +107,6 @@ namespace Inventory.Implementation.Core
                 result.Add(new InventoryItemView(
                     owner.OwnerId,
                     itemData.ItemId,
-                    itemData.ItemType,
                     stack.Count,
                     itemData.Category,
                     metadata));

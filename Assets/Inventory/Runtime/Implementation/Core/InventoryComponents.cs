@@ -4,15 +4,13 @@ namespace Inventory.Implementation.Core
 {
     internal readonly struct ItemDataComponent
     {
-        public ItemDataComponent(string itemId, string itemType, InventoryItemCategory category)
+        public ItemDataComponent(string itemId, InventoryItemCategory category)
         {
             ItemId = itemId;
-            ItemType = itemType;
             Category = category;
         }
 
         public string ItemId { get; }
-        public string ItemType { get; }
         public InventoryItemCategory Category { get; }
     }
 

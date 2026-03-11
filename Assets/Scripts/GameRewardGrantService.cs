@@ -54,7 +54,6 @@ namespace core
             var itemDelta = new InventoryItemDelta(
                 _inventoryOwnerId,
                 rewardRequest.RewardId,
-                nameof(InventoryItemCategory.CardPack),
                 rewardRequest.Amount,
                 InventoryItemCategory.CardPack);
 

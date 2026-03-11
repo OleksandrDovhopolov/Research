@@ -32,7 +32,7 @@ namespace Inventory.Implementation.Services
 
         public async UniTask AddItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default)
         {
-            Debug.LogWarning($"Test ownerId {itemDelta.OwnerId},  itemId {itemDelta.ItemId},   itemType {itemDelta.ItemType}");
+            Debug.LogWarning($"Test ownerId {itemDelta.OwnerId},  itemId {itemDelta.ItemId}");
             
             cancellationToken.ThrowIfCancellationRequested();
             await EnsureOwnerLoadedAsync(itemDelta.OwnerId, cancellationToken);
@@ -117,7 +117,6 @@ namespace Inventory.Implementation.Services
                     var delta = new InventoryItemDelta(
                         item.OwnerId,
                         item.ItemId,
-                        item.ItemType,
                         item.StackCount,
                         item.Category,
                         item.CardPackMetadata);
