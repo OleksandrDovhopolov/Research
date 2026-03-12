@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
-using Inventory.API;
 using Inventory.Implementation.UI;
 using UIShared;
 using UISystem;
@@ -13,173 +14,169 @@ namespace Inventory.Implementation
 {
     public class InventoryWindowView : WindowView
     {
-        private const string AllCategoriesTabId = "__all__";
-
         [SerializeField] private UIListPool<InventoryView> _cardGroupsPool;
         
         [Space, Space, Header("Tabs")]
         [SerializeField] private GameObject _tabFocus;
         [SerializeField] private List<Transform> _tabs = new();
         
-        private CancellationTokenSource _loadSpritesCts;
-        private readonly List<ItemCategory> _tabCategories = new();
-        private string _currentCategoryId = AllCategoriesTabId;
-        private readonly Dictionary<string, List<InventoryItemUiModel>> _itemsByCategory = new();
+        private CancellationTokenSource _windowLifetimeCts;
         
-        private void Start()
-        {
-            if (_tabs.Count > 0)
-            {
-                FocusTab(0, false);
-            }
-        }
-
-        public void SetTabCategories(IReadOnlyList<ItemCategory> categories)
-        {
-            _tabCategories.Clear();
-            if (categories != null)
-            {
-                foreach (var category in categories)
-                {
-                    if (category == null)
-                    {
-                        continue;
-                    }
-
-                    _tabCategories.Add(category);
-                }
-            }
-
-            _currentCategoryId = AllCategoriesTabId;
-        }
+        private readonly Dictionary<string, InventoryView> _viewsByItemId = new();
+        private readonly Dictionary<string, Sprite> _spriteCache = new();
+        private readonly Dictionary<string, Task<Sprite>> _spriteLoadTasks = new();
+        private readonly HashSet<string> _requestedSpriteAddresses = new();
+        private readonly HashSet<string> _visibleItemIds = new();
+        
+        public event Action<int> TabClicked;
         
         public void OnTabClicked(int tabIndex)
         {
-            FocusTab(tabIndex);
+            if (!FocusTabVisual(tabIndex))
+            {
+                return;
+            }
+            
+            TabClicked?.Invoke(tabIndex);
         }
 
-        public void FocusTab(int tabIndex, bool shouldRender = true)
+        public void Render(List<InventoryItemUiModel> items)
+        {
+            if (items == null)
+            {
+                HideAllViews();
+                return;
+            }
+            
+            var token = GetWindowLifetimeToken();
+            _visibleItemIds.Clear();
+            var siblingIndex = 0;
+            foreach (var item in items)
+            {
+                if (!_viewsByItemId.TryGetValue(item.ItemId, out var inventoryView))
+                {
+                    inventoryView = _cardGroupsPool.GetNext();
+                    _viewsByItemId[item.ItemId] = inventoryView;
+                }
+
+                inventoryView.SetData(item);
+                inventoryView.transform.SetSiblingIndex(siblingIndex++);
+                if (!inventoryView.gameObject.activeSelf)
+                {
+                    inventoryView.gameObject.SetActive(true);
+                }
+                
+                _visibleItemIds.Add(item.ItemId);
+                LoadSprite(inventoryView, item.ItemId, token).Forget();
+            }
+
+            foreach (var viewPair in _viewsByItemId.Where(viewPair => !_visibleItemIds.Contains(viewPair.Key)))
+            {
+                viewPair.Value.gameObject.SetActive(false);
+            }
+        }
+
+        public bool FocusTabVisual(int tabIndex)
         {
             if (tabIndex < 0 || tabIndex >= _tabs.Count)
             {
-                return;
+                return false;
             }
 
             var tab = _tabs[tabIndex];
             if (tab == null || _tabFocus == null)
             {
-                return;
+                return false;
             }
 
             _tabFocus.transform.SetParent(tab, false);
             _tabFocus.transform.SetAsLastSibling();
-            _currentCategoryId = ResolveCategoryId(tabIndex);
 
-            if (shouldRender)
-            {
-                RenderCurrentCategory();
-            }
-        }
-
-        private string ResolveCategoryId(int tabIndex)
-        {
-            if (tabIndex == 0)
-            {
-                return AllCategoriesTabId;
-            }
-
-            var categoryIndex = tabIndex - 1;
-            if (categoryIndex < 0 || categoryIndex >= _tabCategories.Count)
-            {
-                Debug.LogWarning($"[InventoryWindowView] Category not found for tab ID {tabIndex}. No items will be shown.");
-                return string.Empty;
-            }
-
-            return _tabCategories[categoryIndex].CategoryId;
-        }
-
-        public void CreateItems(IReadOnlyList<InventoryCategorizedItemUiModel> categorizedItems)
-        {
-            _loadSpritesCts?.Cancel();
-            _loadSpritesCts?.Dispose();
-            _loadSpritesCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
-            
-            _itemsByCategory.Clear();
-            if (categorizedItems != null)
-            {
-                foreach (var categorizedItem in categorizedItems)
-                {
-                    if (!_itemsByCategory.TryGetValue(categorizedItem.CategoryId, out var items))
-                    {
-                        items = new List<InventoryItemUiModel>();
-                        _itemsByCategory[categorizedItem.CategoryId] = items;
-                    }
-
-                    items.Add(categorizedItem.Item);
-                }
-            }
-
-            RenderCurrentCategory();
-        }
-
-        private void RenderCurrentCategory()
-        {
-            _cardGroupsPool.DisableAll();
-
-            if (_currentCategoryId == AllCategoriesTabId)
-            {
-                foreach (var categoryItems in _itemsByCategory.Values)
-                {
-                    RenderItems(categoryItems);
-                }
-
-                return;
-            }
-
-            if (!_itemsByCategory.TryGetValue(_currentCategoryId, out var data))
-            {
-                return;
-            }
-
-            RenderItems(data);
-        }
-
-        private void RenderItems(IReadOnlyList<InventoryItemUiModel> data)
-        {
-            foreach (var item in data)
-            {
-                var inventoryView = _cardGroupsPool.GetNext();
-                inventoryView.SetData(item);
-                LoadContentSpritesSequentially(inventoryView, item.ItemId, _loadSpritesCts.Token).Forget();
-            }
+            return true;
         }
         
-        private async UniTask LoadContentSpritesSequentially(InventoryView itemView, string spriteId, CancellationToken ct)
+        private async UniTask LoadSprite(InventoryView itemView, string spriteId, CancellationToken ct)
         {
+            if (_spriteCache.TryGetValue(spriteId, out var cachedSprite))
+            {
+                if (itemView != null && itemView.ItemId == spriteId)
+                {
+                    itemView.SetSprite(cachedSprite);
+                }
+
+                return;
+            }
+
             try
             {
                 ct.ThrowIfCancellationRequested();
+                _requestedSpriteAddresses.Add(spriteId);
+
+                if (!_spriteLoadTasks.TryGetValue(spriteId, out var loadTask))
+                {
+                    loadTask = ProdAddressablesWrapper.LoadAsync<Sprite>(spriteId);
+                    _spriteLoadTasks[spriteId] = loadTask;
+                }
                 
-                var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteId);
+                var sprite = await loadTask
+                    .AsUniTask()
+                    .AttachExternalCancellation(ct);
                 
-                if (ct.IsCancellationRequested)
+                _spriteCache[spriteId] = sprite;
+                
+                if (itemView == null || itemView.ItemId != spriteId)
+                {
                     return;
-                
-                if (itemView.ItemId != spriteId)
-                    return;
+                }
                 
                 itemView.SetSprite(sprite);
             }
             catch (OperationCanceledException)
             {
             }
+            catch (Exception e)
+            {
+                Debug.LogError($"[InventoryWindowView] Failed to load sprite '{spriteId}'. {e}");
+            }
+            finally
+            {
+                _spriteLoadTasks.Remove(spriteId);
+            }
+        }
+
+        private CancellationToken GetWindowLifetimeToken()
+        {
+            if (_windowLifetimeCts != null)
+            {
+                return _windowLifetimeCts.Token;
+            }
+            
+            _windowLifetimeCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+            return _windowLifetimeCts.Token;
+        }
+
+        private void HideAllViews()
+        {
+            foreach (var inventoryView in _viewsByItemId.Values)
+            {
+                inventoryView.gameObject.SetActive(false);
+            }
         }
         
         public void Dispose()
         {
-            _loadSpritesCts?.Cancel();
-            _loadSpritesCts?.Dispose();
-            _loadSpritesCts = null;
+            _windowLifetimeCts?.Cancel();
+            _windowLifetimeCts?.Dispose();
+            _windowLifetimeCts = null;
+            
+            foreach (var spriteAddress in _requestedSpriteAddresses)
+            {
+                ProdAddressablesWrapper.Release(spriteAddress);
+            }
+
+            _requestedSpriteAddresses.Clear();
+            _spriteCache.Clear();
+            _spriteLoadTasks.Clear();
         }
 
         protected override void OnDestroy()

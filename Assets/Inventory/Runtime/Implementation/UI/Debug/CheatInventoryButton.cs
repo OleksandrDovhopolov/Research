@@ -40,6 +40,12 @@ namespace Inventory.Implementation
                 return;
             }
 
+            if (_categories.Count == 0)
+            {
+                Debug.LogWarning($"Failed to open inventory window. List<ItemCategory> is empty");
+                return;
+            }
+            
             var tabsPresenter = new InventoryTabsPresenter(_inventoryService, _ownerId, _categories);
             await tabsPresenter.InitializeAsync(ct);
 
