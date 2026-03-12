@@ -25,7 +25,7 @@ namespace Inventory.Implementation
         private readonly List<ItemCategory> _tabCategories = new();
         private string _currentCategoryId = AllCategoriesTabId;
         private readonly Dictionary<string, List<InventoryItemUiModel>> _itemsByCategory = new();
-
+        
         private void Start()
         {
             if (_tabs.Count > 0)
@@ -52,20 +52,9 @@ namespace Inventory.Implementation
 
             _currentCategoryId = AllCategoriesTabId;
         }
-
-        public void OnTabClicked(Transform tab)
+        
+        public void OnTabClicked(int tabIndex)
         {
-            if (tab == null)
-            {
-                return;
-            }
-
-            var tabIndex = _tabs.IndexOf(tab);
-            if (tabIndex < 0)
-            {
-                return;
-            }
-
             FocusTab(tabIndex);
         }
 
@@ -170,7 +159,15 @@ namespace Inventory.Implementation
             try
             {
                 ct.ThrowIfCancellationRequested();
+                
                 var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteId);
+                
+                if (ct.IsCancellationRequested)
+                    return;
+                
+                if (itemView.ItemId != spriteId)
+                    return;
+                
                 itemView.SetSprite(sprite);
             }
             catch (OperationCanceledException)

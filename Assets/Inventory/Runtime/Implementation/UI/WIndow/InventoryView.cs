@@ -14,8 +14,12 @@ namespace Inventory.Implementation
         [SerializeField] private Text _stackCountText;
         [SerializeField] private TextMeshProUGUI _stackCountTextPro;
         
+        public string ItemId { get; private set; }
+        
         public void SetData(InventoryItemUiModel model)
         {
+            ItemId = model.ItemId;
+            
             if (_titleText != null)
             {
                 _titleText.text = model.Title;
