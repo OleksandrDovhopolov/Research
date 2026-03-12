@@ -10,6 +10,8 @@ namespace core
 {
     public sealed class GameRewardGrantService : IRewardGrantService
     {
+        public const string CardPack = "card_pack";
+        
         private readonly ResourceManager _resourceManager;
         private readonly IInventoryService _inventoryService;
         private readonly string _inventoryOwnerId;
@@ -55,7 +57,7 @@ namespace core
                 _inventoryOwnerId,
                 rewardRequest.RewardId,
                 rewardRequest.Amount,
-                InventoryBuiltInCategoryIds.CardPack);
+                CardPack);
 
             await _inventoryService.AddItemAsync(itemDelta, ct);
             return true;

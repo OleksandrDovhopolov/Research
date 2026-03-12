@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Inventory.API;
@@ -15,15 +13,16 @@ namespace Inventory.Implementation
         [SerializeField] private UIManager _uiManager;
         [SerializeField] private Button _cheatButton;
         [SerializeField] private string _ownerId = "player_1";
-        [SerializeField] private List<ItemCategory> _categories = new();
 
         private CancellationToken _destroyCt;
         private IInventoryService _inventoryService;
+        private ItemCategoryFactory _itemCategoryFactory;
         
         private void Awake()
         {
             _destroyCt = this.GetCancellationTokenOnDestroy();
             _inventoryService = InventoryCompositionRegistry.Resolve().CreateInventoryService();
+            _itemCategoryFactory = new ItemCategoryFactory();
         }
 
         private void Start()
@@ -39,17 +38,11 @@ namespace Inventory.Implementation
                 Debug.LogWarning($"Failed to open inventory window. IInventoryService is null");
                 return;
             }
-
-            if (_categories.Count == 0)
-            {
-                Debug.LogWarning($"Failed to open inventory window. List<ItemCategory> is empty");
-                return;
-            }
             
-            var tabsPresenter = new InventoryTabsPresenter(_inventoryService, _ownerId, _categories);
+            var tabsPresenter = new InventoryTabsPresenter(_ownerId, _inventoryService, _itemCategoryFactory);
             await tabsPresenter.InitializeAsync(ct);
 
-            var args = new InventoryArgs(_uiManager, tabsPresenter, _categories);
+            var args = new InventoryArgs(_uiManager, tabsPresenter, _itemCategoryFactory.CreateDefaultCategories());
             _uiManager.Show<InventoryWindowController>(args);
         }
         

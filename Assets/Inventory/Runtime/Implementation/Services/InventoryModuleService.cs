@@ -10,6 +10,12 @@ using UnityEngine;
 
 namespace Inventory.Implementation.Services
 {
+    public static class InventoryBuiltInCategoryIds
+    {
+        public const string Regular = "regular";
+        public const string CardPack = "card_pack";
+    }
+    
     public sealed class InventoryModuleService : IInventoryService, IDisposable
     {
         private readonly AddItemSystem _addItemSystem;
@@ -37,7 +43,6 @@ namespace Inventory.Implementation.Services
             cancellationToken.ThrowIfCancellationRequested();
             await EnsureOwnerLoadedAsync(itemDelta.OwnerId, cancellationToken);
             var changed = _addItemSystem.Execute(itemDelta);
-            Debug.LogWarning($"Test ownerId {itemDelta.OwnerId},  itemId {itemDelta.ItemId}, changed {changed}");
             if (!changed)
             {
                 return;
@@ -157,6 +162,7 @@ namespace Inventory.Implementation.Services
                 }
 
                 var loadedItems = await _storage.LoadAsync(ownerId, cancellationToken);
+
                 foreach (var item in loadedItems)
                 {
                     var delta = new InventoryItemDelta(

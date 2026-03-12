@@ -7,6 +7,9 @@ namespace core
     {
         private const string InventoryGroup = "InventoryGroup";
         
+        public const string Regular = "regular";
+        public const string CardPack = "card_pack";
+        
         private readonly IInventoryService _inventoryService;
         
         public InventoryModule(IInventoryService inventoryService)
@@ -19,7 +22,7 @@ namespace core
             {
                 const string ownerId = "player_1";
                 const string itemId = "Gold";
-                const string categoryId = InventoryBuiltInCategoryIds.Regular;
+                const string categoryId = Regular;
                 
                 var inventoryItemDelta = new InventoryItemDelta(ownerId, itemId, amount, categoryId);
                 _inventoryService.AddItemAsync(inventoryItemDelta);
@@ -29,7 +32,7 @@ namespace core
             {
                 const string ownerId = "player_1";
                 const string itemId = "Gold";
-                const string categoryId = InventoryBuiltInCategoryIds.Regular;
+                const string categoryId = Regular;
                 
                 var inventoryItemDelta = new InventoryItemDelta(ownerId, itemId, amount, categoryId);
                 _inventoryService.RemoveItemAsync(inventoryItemDelta);

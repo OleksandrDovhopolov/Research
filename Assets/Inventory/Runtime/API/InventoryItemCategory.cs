@@ -1,25 +1,18 @@
-using UnityEngine;
-
 namespace Inventory.API
 {
-    public abstract class ItemCategory : ScriptableObject
+    public abstract class ItemCategory
     {
-        [SerializeField] private string _categoryId;
-        [SerializeField] private string _displayName;
-
-        public string CategoryId => string.IsNullOrWhiteSpace(_categoryId) ? name : _categoryId;
-        public string DisplayName => string.IsNullOrWhiteSpace(_displayName) ? CategoryId : _displayName;
-
-        protected void SetIdentity(string categoryId, string displayName)
+        protected ItemCategory(string categoryId, string displayName = null)
         {
-            _categoryId = categoryId;
-            _displayName = displayName;
+            CategoryId = string.IsNullOrWhiteSpace(categoryId)
+                ? GetType().Name
+                : categoryId;
+            DisplayName = string.IsNullOrWhiteSpace(displayName)
+                ? CategoryId
+                : displayName;
         }
-    }
 
-    public static class InventoryBuiltInCategoryIds
-    {
-        public const string Regular = "regular";
-        public const string CardPack = "card_pack";
+        public string CategoryId { get; }
+        public string DisplayName { get; }
     }
 }

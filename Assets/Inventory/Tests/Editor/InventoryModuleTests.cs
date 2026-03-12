@@ -1,9 +1,14 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Inventory.API;
+using Inventory.Implementation;
 using Inventory.Implementation.Services;
 using NUnit.Framework;
-using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace Inventory.Tests.Editor
 {
@@ -17,90 +22,83 @@ namespace Inventory.Tests.Editor
         [SetUp]
         public void SetUp()
         {
-            _regularCategory = CreateCategory(InventoryBuiltInCategoryIds.Regular, "Regular");
-            _cardPackCategory = CreateCategory(InventoryBuiltInCategoryIds.CardPack, "Card packs");
-            _alchemyCategory = CreateCategory("alchemy", "Alchemy");
+            _regularCategory = new TestItemCategory(InventoryBuiltInCategoryIds.Regular, "Regular");
+            _cardPackCategory = new TestItemCategory(InventoryBuiltInCategoryIds.CardPack, "Card packs");
+            _alchemyCategory = new TestItemCategory("alchemy", "Alchemy");
         }
 
-        [TearDown]
-        public void TearDown()
+        [UnityTest]
+        public IEnumerator AddItem_StacksByOwnerItemAndCategory()
         {
-            UnityEngine.Object.DestroyImmediate(_regularCategory);
-            UnityEngine.Object.DestroyImmediate(_cardPackCategory);
-            UnityEngine.Object.DestroyImmediate(_alchemyCategory);
-        }
+            var service = CreateService();
 
-        [Test]
-        public void AddItem_StacksByOwnerItemAndCategory()
-        {
-            var service = new InventoryModuleService();
+            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "wood", 2, _regularCategory))
+                .AsTask()
+                .ToCoroutine();
 
-            service.AddItemAsync(new InventoryItemDelta(OwnerId, "wood",  2, _regularCategory))
-                .GetAwaiter()
-                .GetResult();
-            service.AddItemAsync(new InventoryItemDelta(OwnerId, "wood",  3, _regularCategory))
-                .GetAwaiter()
-                .GetResult();
+            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "wood", 3, _regularCategory))
+                .AsTask()
+                .ToCoroutine();
 
-            var items = service.GetItemsAsync(OwnerId, _regularCategory.CategoryId)
-                .GetAwaiter()
-                .GetResult();
+            IReadOnlyList<InventoryItemView> items = null;
+            yield return service.GetItemsAsync(OwnerId, _regularCategory.CategoryId)
+                .ToCoroutine(result => items = result);
 
             Assert.That(items.Count, Is.EqualTo(1));
             Assert.That(items[0].StackCount, Is.EqualTo(5));
         }
 
-        [Test]
-        public void RemoveItem_DecrementsAndDeletesEntityAtZero()
+        [UnityTest]
+        public IEnumerator RemoveItem_DecrementsAndDeletesEntityAtZero()
         {
-            var service = new InventoryModuleService();
+            var service = CreateService();
 
-            service.AddItemAsync(new InventoryItemDelta(OwnerId, "energy", 5, _regularCategory))
-                .GetAwaiter()
-                .GetResult();
-            service.RemoveItemAsync(new InventoryItemDelta(OwnerId, "energy", 2, _regularCategory))
-                .GetAwaiter()
-                .GetResult();
+            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "energy", 5, _regularCategory))
+                .AsTask()
+                .ToCoroutine();
+            yield return service.RemoveItemAsync(new InventoryItemDelta(OwnerId, "energy", 2, _regularCategory))
+                .AsTask()
+                .ToCoroutine();
 
-            var afterPartialRemove = service.GetItemsAsync(OwnerId, _regularCategory.CategoryId)
-                .GetAwaiter()
-                .GetResult();
+            IReadOnlyList<InventoryItemView> afterPartialRemove = null;
+            yield return service.GetItemsAsync(OwnerId, _regularCategory.CategoryId)
+                .ToCoroutine(result => afterPartialRemove = result);
             Assert.That(afterPartialRemove.Count, Is.EqualTo(1));
             Assert.That(afterPartialRemove[0].StackCount, Is.EqualTo(3));
 
-            service.RemoveItemAsync(new InventoryItemDelta(OwnerId, "energy",  3, _regularCategory))
-                .GetAwaiter()
-                .GetResult();
+            yield return service.RemoveItemAsync(new InventoryItemDelta(OwnerId, "energy", 3, _regularCategory))
+                .AsTask()
+                .ToCoroutine();
 
-            var afterFullRemove = service.GetItemsAsync(OwnerId, _regularCategory.CategoryId)
-                .GetAwaiter()
-                .GetResult();
+            IReadOnlyList<InventoryItemView> afterFullRemove = null;
+            yield return service.GetItemsAsync(OwnerId, _regularCategory.CategoryId)
+                .ToCoroutine(result => afterFullRemove = result);
             Assert.That(afterFullRemove.Count, Is.EqualTo(0));
         }
 
-        [Test]
-        public void QuerySystem_FiltersByCategory_AndPreservesCardPackMetadata()
+        [UnityTest]
+        public IEnumerator QuerySystem_FiltersByCategory_AndPreservesCardPackMetadata()
         {
-            var service = new InventoryModuleService();
+            var service = CreateService();
 
-            service.AddItemAsync(new InventoryItemDelta(OwnerId, "gold",  10, _regularCategory))
-                .GetAwaiter()
-                .GetResult();
+            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "gold", 10, _regularCategory))
+                .AsTask()
+                .ToCoroutine();
             
-            service.AddItemAsync(new InventoryItemDelta(
+            yield return service.AddItemAsync(new InventoryItemDelta(
                     OwnerId,
                     "pack_blue",
                     1,
                     _cardPackCategory))
-                .GetAwaiter()
-                .GetResult();
+                .AsTask()
+                .ToCoroutine();
 
-            var regular = service.GetItemsAsync(OwnerId, _regularCategory.CategoryId)
-                .GetAwaiter()
-                .GetResult();
-            var packs = service.GetItemsAsync(OwnerId, _cardPackCategory.CategoryId)
-                .GetAwaiter()
-                .GetResult();
+            IReadOnlyList<InventoryItemView> regular = null;
+            IReadOnlyList<InventoryItemView> packs = null;
+            yield return service.GetItemsAsync(OwnerId, _regularCategory.CategoryId)
+                .ToCoroutine(result => regular = result);
+            yield return service.GetItemsAsync(OwnerId, _cardPackCategory.CategoryId)
+                .ToCoroutine(result => packs = result);
 
             Assert.That(regular.Count, Is.EqualTo(1));
             Assert.That(regular[0].ItemId, Is.EqualTo("gold"));
@@ -109,18 +107,18 @@ namespace Inventory.Tests.Editor
             Assert.That(packs[0].ItemId, Is.EqualTo("pack_blue"));
         }
 
-        [Test]
-        public void AddItem_AllowsNewCategoryWithoutCoreChanges()
+        [UnityTest]
+        public IEnumerator AddItem_AllowsNewCategoryWithoutCoreChanges()
         {
-            var service = new InventoryModuleService();
+            var service = CreateService();
 
-            service.AddItemAsync(new InventoryItemDelta(OwnerId, "dust", 4, _alchemyCategory))
-                .GetAwaiter()
-                .GetResult();
+            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "dust", 4, _alchemyCategory))
+                .AsTask()
+                .ToCoroutine();
 
-            var alchemyItems = service.GetItemsAsync(OwnerId, _alchemyCategory.CategoryId)
-                .GetAwaiter()
-                .GetResult();
+            IReadOnlyList<InventoryItemView> alchemyItems = null;
+            yield return service.GetItemsAsync(OwnerId, _alchemyCategory.CategoryId)
+                .ToCoroutine(result => alchemyItems = result);
 
             Assert.That(alchemyItems.Count, Is.EqualTo(1));
             Assert.That(alchemyItems[0].ItemId, Is.EqualTo("dust"));
@@ -128,34 +126,101 @@ namespace Inventory.Tests.Editor
             Assert.That(alchemyItems[0].CategoryId, Is.EqualTo(_alchemyCategory.CategoryId));
         }
 
-        [Test]
-        public void AddItemAsync_ThrowsWhenCanceled()
+        [UnityTest]
+        public IEnumerator AddItemAsync_ThrowsWhenCanceled()
         {
-            var service = new InventoryModuleService();
+            var service = CreateService();
             using var cts = new CancellationTokenSource();
             cts.Cancel();
 
-            Assert.Throws<OperationCanceledException>(() =>
-                service.AddItemAsync(
-                    new InventoryItemDelta(OwnerId, "wood", 1, _regularCategory),
-                    cts.Token)
+            Assert.That(() => 
+            {
+                service.AddItemAsync(new InventoryItemDelta(OwnerId, "wood", 1, _regularCategory), cts.Token)
                     .GetAwaiter()
-                    .GetResult());
+                    .GetResult();
+            }, Throws.TypeOf<OperationCanceledException>());
+            
+            yield return null;
+        }
+        
+        [Test]
+        public void BuiltInCategories_ExposeExpectedCapabilities()
+        {
+            var simpleCategory = new SimpleItemCategory();
+            var cardsCategory = new CardsItemCategory();
+
+            Assert.That(simpleCategory is IConsumable, Is.True);
+            Assert.That(simpleCategory is IOpenable, Is.False);
+            Assert.That(cardsCategory is IOpenable, Is.True);
+            Assert.That(cardsCategory is IConsumable, Is.False);
         }
 
-        private static TestItemCategory CreateCategory(string categoryId, string displayName)
+        private static InventoryModuleService CreateService()
         {
-            var category = ScriptableObject.CreateInstance<TestItemCategory>();
-            category.Initialize(categoryId, displayName);
-            return category;
+            return new InventoryModuleService(new TestInventoryStorage());
         }
 
         private sealed class TestItemCategory : ItemCategory
         {
-            public void Initialize(string categoryId, string displayName)
+            public TestItemCategory(string categoryId, string displayName)
+                : base(categoryId, displayName)
             {
-                SetIdentity(categoryId, displayName);
             }
+        }
+
+        private sealed class TestInventoryStorage : IInventoryStorage
+        {
+            private readonly Dictionary<string, IReadOnlyList<InventoryItemView>> _storage = new();
+
+            public UniTask<IReadOnlyList<InventoryItemView>> LoadAsync(string ownerId, CancellationToken cancellationToken = default)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (_storage.TryGetValue(ownerId, out var items))
+                {
+                    return UniTask.FromResult(items);
+                }
+
+                return UniTask.FromResult((IReadOnlyList<InventoryItemView>)Array.Empty<InventoryItemView>());
+            }
+
+            public UniTask SaveAsync(string ownerId, IReadOnlyList<InventoryItemView> items, CancellationToken cancellationToken = default)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                _storage[ownerId] = items == null ? Array.Empty<InventoryItemView>() : new List<InventoryItemView>(items);
+                return UniTask.CompletedTask;
+            }
+        }
+    }
+
+    public static class AsyncTestExtensions
+    {
+        public static IEnumerator ToCoroutine(this Task task)
+        {
+            while (!task.IsCompleted)
+            {
+                yield return null;
+            }
+
+            if (task.IsFaulted)
+            {
+                throw task.Exception;
+            }
+        }
+
+        public static IEnumerator ToCoroutine<T>(this UniTask<T> task, Action<T> onResult)
+        {
+            var t = task.AsTask();
+            while (!t.IsCompleted)
+            {
+                yield return null;
+            }
+
+            if (t.IsFaulted)
+            {
+                throw t.Exception;
+            }
+
+            onResult?.Invoke(t.Result);
         }
     }
 }
