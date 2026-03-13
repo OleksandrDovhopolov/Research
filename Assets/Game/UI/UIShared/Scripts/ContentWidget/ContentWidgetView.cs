@@ -34,16 +34,81 @@ namespace UIShared
         [Space, Header("MockSprite")]
         [SerializeField] private Sprite _mockSprite;
         
+        [Space, Header("Prefabs")]
+        [SerializeField] private GameObject _cardsViewPrefab;
+        [SerializeField] private GameObject _inventoryViewPrefab;
+        [SerializeField] private Button _inventoryButton;
+        
         private RectTransform _contentRectTransform;
         private CancellationTokenSource _loadSpritesCts;
+
+        public event Action InventoryButtonClicked;
         
-        public void ShowContentView(ContentWidgetData contentData, RectTransform contentRectTransform)
+        public void ShowContentView(ContentWidgetDataBase contentData, RectTransform contentRectTransform)
         {
             _contentRectTransform = contentRectTransform;
             
             StopAllCoroutines();
 
-            var viewItems = CreateAndGetOfferViews(contentData ?? ContentWidgetData.Empty);
+            switch (contentData)
+            {
+                case InventoryWidgetData inventoryWidgetData:
+                    SetInventoryWidget(inventoryWidgetData);
+                    break;
+                case ContentWidgetData contentWidgetData:
+                    SetContentWidget(contentWidgetData);
+                    break;
+            }
+            
+            /*var isInventoryWidget = contentData is InventoryWidgetData;
+            SwitchWidgetMode(isInventoryWidget);
+            ConfigureInventoryButton(isInventoryWidget);
+            
+            if (isInventoryWidget)
+            {
+                _itemsPool.DisableAll();
+                _loadSpritesCts?.Cancel();
+                _loadSpritesCts?.Dispose();
+                _loadSpritesCts = null;
+                StartCoroutine(HidePopupCoroutine());
+                return;
+            }
+            
+            var widgetData = contentData as ContentWidgetData ?? ContentWidgetData.Empty;
+            var viewItems = CreateAndGetOfferViews(widgetData);
+            
+            if (viewItems <= 0)
+            {
+                
+                Debug.LogWarning($"Failed to open content widget {GetType()}. _itemsPool count == 0");
+                HideContentWidget();
+                return;
+            }
+
+            StartCoroutine(ResizeAndRepositionCoroutine());
+            StartCoroutine(HidePopupCoroutine());*/
+        }
+
+        private void SetInventoryWidget(InventoryWidgetData inventoryWidgetData)
+        {
+            SwitchWidgetMode(true);
+            ConfigureInventoryButton(true);
+            
+            _itemsPool.DisableAll();
+            _loadSpritesCts?.Cancel();
+            _loadSpritesCts?.Dispose();
+            _loadSpritesCts = null;
+            
+            RepositionAboveClickedTransform();
+            StartCoroutine(HidePopupCoroutine());
+        }
+
+        private void SetContentWidget(ContentWidgetData contentWidgetData)
+        {
+            SwitchWidgetMode(false);
+            ConfigureInventoryButton(false);
+            
+            var viewItems = CreateAndGetOfferViews(contentWidgetData ?? ContentWidgetData.Empty);
             
             if (viewItems <= 0)
             {
@@ -55,6 +120,38 @@ namespace UIShared
 
             StartCoroutine(ResizeAndRepositionCoroutine());
             StartCoroutine(HidePopupCoroutine());
+        }
+        
+        private void SwitchWidgetMode(bool isInventoryWidget)
+        {
+            if (_cardsViewPrefab != null)
+            {
+                _cardsViewPrefab.SetActive(!isInventoryWidget);
+            }
+
+            if (_inventoryViewPrefab != null)
+            {
+                _inventoryViewPrefab.SetActive(isInventoryWidget);
+            }
+        }
+
+        private void ConfigureInventoryButton(bool isInventoryWidget)
+        {
+            if (_inventoryButton == null)
+            {
+                return;
+            }
+
+            _inventoryButton.onClick.RemoveListener(OnInventoryButtonClickedHandler);
+            if (isInventoryWidget)
+            {
+                _inventoryButton.onClick.AddListener(OnInventoryButtonClickedHandler);
+            }
+        }
+
+        private void OnInventoryButtonClickedHandler()
+        {
+            InventoryButtonClicked?.Invoke();
         }
         
         private async UniTask LoadContentSpritesSequentially(
@@ -196,8 +293,13 @@ namespace UIShared
             _container.anchoredPosition = anchoredPos;
         }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
+            base.OnDestroy();
+            if (_inventoryButton != null)
+            {
+                _inventoryButton.onClick.RemoveListener(OnInventoryButtonClickedHandler);
+            }
             _loadSpritesCts?.Cancel();
             _loadSpritesCts?.Dispose();
             _loadSpritesCts = null;

@@ -1,6 +1,4 @@
 using System;
-using System.Threading;
-using Cysharp.Threading.Tasks;
 using Inventory.API;
 using Inventory.Implementation.UI;
 using TMPro;
@@ -15,21 +13,25 @@ namespace Inventory.Implementation
         [SerializeField] private Image _image;
         [SerializeField] private TextMeshProUGUI _stackCountTextPro;
         [SerializeField] private Button _openButton;
+        [SerializeField] private RectTransform _rectTransform;
 
-        private CancellationToken _destroyCt;
-        private IOpenable _openable;
+        //private CancellationToken _destroyCt;
+        private InventoryItemUiModel _inventoryItemUiModel;
+
+        public string ItemId => _inventoryItemUiModel.ItemId;
+        public bool IsOpenable => _inventoryItemUiModel.Category is IOpenable;
+        public RectTransform RectTransform => _rectTransform;
+
+        public event Action<InventoryView> OnOpenableViewClicked;
         
-        public string ItemId { get; private set; }
-
-        private void Awake()
+        /*private void Awake()
         {
             _destroyCt = this.GetCancellationTokenOnDestroy();
-        }
+        }*/
         
         public void SetData(InventoryItemUiModel model)
         {
-            ItemId = model.ItemId;
-            _openable = model.Category as IOpenable;
+            _inventoryItemUiModel =  model;
 
             if (_stackCountTextPro != null)
             {
@@ -47,8 +49,6 @@ namespace Inventory.Implementation
 
         public void Cleanup()
         {
-            _openable = null;
-
             if (_image != null)
             {
                 _image.sprite = null;
@@ -71,16 +71,20 @@ namespace Inventory.Implementation
             if (_openButton != null)
             {
                 _openButton.onClick.RemoveAllListeners();
-                if (_openable != null)
+                if (IsOpenable)
                 {
-                    _openButton.onClick.AddListener(() => InvokeOpenAsync(_destroyCt).Forget());
+                    _openButton.onClick.AddListener(() =>
+                    {
+                        OnOpenableViewClicked?.Invoke(this);
+                        //InvokeOpenAsync(_destroyCt).Forget();
+                    });
                 }
             }
         }
 
-        private async UniTaskVoid InvokeOpenAsync(CancellationToken cancellationToken)
+        /*private async UniTaskVoid InvokeOpenAsync(CancellationToken cancellationToken)
         {
-            if (_openable == null)
+            if (IsOpenable)
             {
                 return;
             }
@@ -88,7 +92,7 @@ namespace Inventory.Implementation
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                await _openable.OpenAsync(cancellationToken);
+                OnOpenableViewClicked?.Invoke(_inventoryItemUiModel);
             }
             catch (OperationCanceledException)
             {
@@ -97,7 +101,7 @@ namespace Inventory.Implementation
             {
                 Debug.LogError($"[InventoryView] Failed to open item '{ItemId}'. {exception}");
             }
-        }
+        }*/
 
         private void OnDestroy()
         {

@@ -29,6 +29,8 @@ namespace Inventory.Implementation
         private readonly HashSet<string> _visibleItemIds = new();
         
         public event Action<int> TabClicked;
+        public event Action BackgroundClicked;
+        public event Action<InventoryView> OnOpenableViewClicked;
         
         public void OnTabClicked(int tabIndex)
         {
@@ -38,6 +40,11 @@ namespace Inventory.Implementation
             }
             
             TabClicked?.Invoke(tabIndex);
+        }
+        
+        public void OnBackgroundClicked()
+        {
+            BackgroundClicked?.Invoke();
         }
 
         public void Render(List<InventoryItemUiModel> items)
@@ -59,6 +66,7 @@ namespace Inventory.Implementation
                     _viewsByItemId[item.ItemId] = inventoryView;
                 }
 
+                SubscribeInventoryView(inventoryView);
                 inventoryView.SetData(item);
                 inventoryView.transform.SetSiblingIndex(siblingIndex++);
                 if (!inventoryView.gameObject.activeSelf)
@@ -144,7 +152,7 @@ namespace Inventory.Implementation
             }
         }
 
-        private CancellationToken GetWindowLifetimeToken()
+        internal CancellationToken GetWindowLifetimeToken()
         {
             if (_windowLifetimeCts != null)
             {
@@ -162,12 +170,43 @@ namespace Inventory.Implementation
                 inventoryView.gameObject.SetActive(false);
             }
         }
+
+        private void SubscribeInventoryView(InventoryView inventoryView)
+        {
+            if (inventoryView == null)
+            {
+                return;
+            }
+
+            inventoryView.OnOpenableViewClicked -= OnOpenableViewClickedHandler;
+            inventoryView.OnOpenableViewClicked += OnOpenableViewClickedHandler;
+        }
+
+        private void UnsubscribeInventoryView(InventoryView inventoryView)
+        {
+            if (inventoryView == null)
+            {
+                return;
+            }
+
+            inventoryView.OnOpenableViewClicked -= OnOpenableViewClickedHandler;
+        }
+
+        private void OnOpenableViewClickedHandler(InventoryView inventoryView)
+        {
+            OnOpenableViewClicked?.Invoke(inventoryView);
+        }
         
         public void Dispose()
         {
             _windowLifetimeCts?.Cancel();
             _windowLifetimeCts?.Dispose();
             _windowLifetimeCts = null;
+
+            foreach (var inventoryView in _viewsByItemId.Values)
+            {
+                UnsubscribeInventoryView(inventoryView);
+            }
             
             foreach (var spriteAddress in _requestedSpriteAddresses)
             {

@@ -92,6 +92,7 @@ MonoBehaviour:
   _image: {fileID: 5748660835326378291}
   _stackCountTextPro: {fileID: 5748660833556279657}
   _openButton: {fileID: 8274094695242254040}
+  _rectTransform: {fileID: 1334660948031793930}
 --- !u!1 &5748660833556279663
 GameObject:
   m_ObjectHideFlags: 0

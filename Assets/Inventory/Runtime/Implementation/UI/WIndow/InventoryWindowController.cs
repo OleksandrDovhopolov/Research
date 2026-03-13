@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using Inventory.API;
 using Inventory.Implementation.UI;
 using R3;
+using UIShared;
 using UISystem;
+using UnityEngine;
 
 namespace Inventory.Implementation
 {
@@ -58,13 +63,20 @@ namespace Inventory.Implementation
         protected override void OnShowComplete()
         {
             View.CloseClick += CloseWindow;
+            View.BackgroundClicked += TryHideContentWidget;
+            View.OnOpenableViewClicked += OnOpenableViewClickedHandler;
         }
         
         protected override void OnHideStart(bool isClosed)
         {
+            TryHideContentWidget();
+            
             View.Dispose();
             View.TabClicked -= OnTabClicked;
             View.CloseClick -= CloseWindow;
+            View.BackgroundClicked -= TryHideContentWidget;
+            View.OnOpenableViewClicked -= OnOpenableViewClickedHandler;
+            
             foreach (var subscription in _subscriptions)
             {
                 subscription?.Dispose();
@@ -74,7 +86,9 @@ namespace Inventory.Implementation
             RawItems.Value = Array.Empty<InventoryCategorizedItemUiModel>();
             Args.TabsPresenter?.Dispose();
         }
-
+        
+        #region R3 Filtration
+        
         private void RefreshFromPresenter()
         {
             RawItems.Value = BuildCategorizedItemsFromPresenter();
@@ -96,9 +110,11 @@ namespace Inventory.Implementation
         
         private void OnTabClicked(int tabIndex)
         {
+            TryHideContentWidget();
+            
             SelectedCategoryId.Value = ResolveCategoryId(tabIndex);
         }
-
+        
         private string ResolveCategoryId(int tabIndex)
         {
             if (tabIndex == 0)
@@ -114,7 +130,7 @@ namespace Inventory.Implementation
 
             return Args.Categories[categoryIndex]?.CategoryId ?? string.Empty;
         }
-
+        
         private static List<InventoryItemUiModel> FilterItemsByCategory(
             string selectedCategoryId,
             IReadOnlyList<InventoryCategorizedItemUiModel> rawItems)
@@ -133,6 +149,51 @@ namespace Inventory.Implementation
                 .Where(item => item.CategoryId == selectedCategoryId)
                 .Select(item => item.Item)
                 .ToList();
+        }
+        
+        #endregion
+        
+        #region IOpenable
+        
+        private void OnOpenableViewClickedHandler(InventoryView view)
+        {
+            OpenItemAsync(view, View.GetWindowLifetimeToken()).Forget();
+        }
+        
+        private async UniTaskVoid OpenItemAsync(InventoryView view, CancellationToken cancellationToken)
+        {
+            if (!view.IsOpenable)
+            {
+                Debug.LogWarning($"Category is not IOpenable");
+                return;
+            }
+
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var inventoryData = new InventoryWidgetData();
+                var args = new ContentWidgetArgs(Args.UiManager, inventoryData, view.RectTransform);
+                Args.UiManager.Show<ContentWidgetController>(args);
+                //await openable.OpenAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"[InventoryWindowView] Failed to open item '{view.ItemId}'. {exception}");
+            }
+        }
+
+        #endregion
+        
+        private void TryHideContentWidget()
+        {
+            if (Args.UiManager.IsWindowShown<ContentWidgetController>())
+            {
+                Args.UiManager.Hide<ContentWidgetController>();
+            }
         }
         
         private void CloseWindow()

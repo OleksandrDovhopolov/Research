@@ -3,7 +3,11 @@ using System.Collections.Generic;
 
 namespace UIShared
 {
-    public sealed class ContentWidgetData
+    public abstract class ContentWidgetDataBase
+    {
+    }
+
+    public sealed class ContentWidgetData : ContentWidgetDataBase
     {
         public static readonly ContentWidgetData Empty = new(Array.Empty<string>(), Array.Empty<ContentWidgetResourceData>());
 
@@ -17,6 +21,10 @@ namespace UIShared
             CardPackAddresses = cardPackAddresses ?? Array.Empty<string>();
             Resources = resources ?? Array.Empty<ContentWidgetResourceData>();
         }
+    }
+
+    public sealed class InventoryWidgetData : ContentWidgetDataBase
+    {
     }
 
     public readonly struct ContentWidgetResourceData

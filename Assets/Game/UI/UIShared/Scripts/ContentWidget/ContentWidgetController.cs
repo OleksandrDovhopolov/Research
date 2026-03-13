@@ -6,10 +6,10 @@ namespace UIShared
     public class ContentWidgetArgs : WindowArgs
     {
         public readonly UIManager UiManager;
-        public readonly ContentWidgetData ContentWidgetData;
+        public readonly ContentWidgetDataBase ContentWidgetData;
         public readonly RectTransform RectTransform;
         
-        public ContentWidgetArgs(UIManager uiManager, ContentWidgetData contentWidgetData, RectTransform rectTransform)
+        public ContentWidgetArgs(UIManager uiManager, ContentWidgetDataBase contentWidgetData, RectTransform rectTransform)
         {
             UiManager = uiManager;
             ContentWidgetData = contentWidgetData;
@@ -30,16 +30,22 @@ namespace UIShared
         protected override void OnShowComplete()
         {
             View.CloseClick += CloseWindow;
+            View.InventoryButtonClicked += OnInventoryButtonClickedHandler;
         }
         
         private void CloseWindow()
         {
             Args.UiManager.Hide<ContentWidgetController>();
         }
+
+        private void OnInventoryButtonClickedHandler()
+        {
+        }
         
         protected override void OnHideStart(bool isClosed)
         {
             View.CloseClick -= CloseWindow;
+            View.InventoryButtonClicked -= OnInventoryButtonClickedHandler;
         }
 
         protected override void OnHideComplete(bool isClosed)
