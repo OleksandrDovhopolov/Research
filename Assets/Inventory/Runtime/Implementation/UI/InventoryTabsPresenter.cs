@@ -16,6 +16,7 @@ namespace Inventory.Implementation.UI
         private readonly List<InventoryCategoryTabViewModel> _tabs = new();
         
         public IReadOnlyList<InventoryCategoryTabViewModel> Tabs => _tabs;
+        public string OwnerId => _ownerId;
         
         public InventoryTabsPresenter(
             string ownerId,

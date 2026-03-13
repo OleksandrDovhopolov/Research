@@ -42,7 +42,7 @@ namespace Inventory.Implementation
             var tabsPresenter = new InventoryTabsPresenter(_ownerId, _inventoryService, _itemCategoryFactory);
             await tabsPresenter.InitializeAsync(ct);
 
-            var args = new InventoryArgs(_uiManager, tabsPresenter, _itemCategoryFactory.CreateDefaultCategories());
+            var args = new InventoryArgs(_uiManager, _inventoryService, tabsPresenter, _itemCategoryFactory.CreateDefaultCategories());
             _uiManager.Show<InventoryWindowController>(args);
         }
         

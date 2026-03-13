@@ -116,7 +116,7 @@ MonoBehaviour:
   _mockSprite: {fileID: 21300000, guid: 624915b2e2b8c5d4e93d5bb2abfe531a, type: 3}
   _cardsViewPrefab: {fileID: 8217645899829997863}
   _inventoryViewPrefab: {fileID: 3911402541093964914}
-  _inventoryButton: {fileID: 0}
+  _inventoryButton: {fileID: 78332434949498789}
 --- !u!114 &3069654917836223649
 MonoBehaviour:
   m_ObjectHideFlags: 0

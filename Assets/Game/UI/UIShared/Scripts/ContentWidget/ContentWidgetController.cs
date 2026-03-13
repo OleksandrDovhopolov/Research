@@ -40,6 +40,14 @@ namespace UIShared
 
         private void OnInventoryButtonClickedHandler()
         {
+            if (Args.ContentWidgetData is InventoryWidgetData inventoryWidgetData)
+            {
+                inventoryWidgetData.ButtonPressed?.Invoke(inventoryWidgetData.ItemId);
+            }
+            else
+            {
+                Debug.LogWarning($"OnInventoryButtonClickedHandler failed. ContentWidgetData is not InventoryWidgetData");
+            }
         }
         
         protected override void OnHideStart(bool isClosed)

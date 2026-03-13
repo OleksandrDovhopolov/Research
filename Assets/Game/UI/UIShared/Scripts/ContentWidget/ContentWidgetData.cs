@@ -25,6 +25,14 @@ namespace UIShared
 
     public sealed class InventoryWidgetData : ContentWidgetDataBase
     {
+        public string ItemId;
+        public Action<string> ButtonPressed;
+        
+        public InventoryWidgetData(string itemId, Action<string> action)
+        {
+            ItemId = itemId;
+            ButtonPressed = action;
+        }
     }
 
     public readonly struct ContentWidgetResourceData

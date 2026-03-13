@@ -15,23 +15,16 @@ namespace Inventory.Implementation
         [SerializeField] private Button _openButton;
         [SerializeField] private RectTransform _rectTransform;
 
-        //private CancellationToken _destroyCt;
-        private InventoryItemUiModel _inventoryItemUiModel;
-
-        public string ItemId => _inventoryItemUiModel.ItemId;
-        public bool IsOpenable => _inventoryItemUiModel.Category is IOpenable;
+        public InventoryItemUiModel InventoryItemUiModel { get; private set; }
+        public string ItemId => InventoryItemUiModel.ItemId;
+        public bool IsOpenable => InventoryItemUiModel.Category is IOpenable;
         public RectTransform RectTransform => _rectTransform;
 
         public event Action<InventoryView> OnOpenableViewClicked;
         
-        /*private void Awake()
-        {
-            _destroyCt = this.GetCancellationTokenOnDestroy();
-        }*/
-        
         public void SetData(InventoryItemUiModel model)
         {
-            _inventoryItemUiModel =  model;
+            InventoryItemUiModel =  model;
 
             if (_stackCountTextPro != null)
             {
@@ -68,40 +61,17 @@ namespace Inventory.Implementation
 
         private void RefreshInteractionButtons()
         {
-            if (_openButton != null)
-            {
-                _openButton.onClick.RemoveAllListeners();
-                if (IsOpenable)
-                {
-                    _openButton.onClick.AddListener(() =>
-                    {
-                        OnOpenableViewClicked?.Invoke(this);
-                        //InvokeOpenAsync(_destroyCt).Forget();
-                    });
-                }
-            }
-        }
-
-        /*private async UniTaskVoid InvokeOpenAsync(CancellationToken cancellationToken)
-        {
+            if (_openButton == null) return;
+            
+            _openButton.onClick.RemoveAllListeners();
             if (IsOpenable)
             {
-                return;
+                _openButton.onClick.AddListener(() =>
+                {
+                    OnOpenableViewClicked?.Invoke(this);
+                });
             }
-
-            try
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                OnOpenableViewClicked?.Invoke(_inventoryItemUiModel);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception exception)
-            {
-                Debug.LogError($"[InventoryView] Failed to open item '{ItemId}'. {exception}");
-            }
-        }*/
+        }
 
         private void OnDestroy()
         {

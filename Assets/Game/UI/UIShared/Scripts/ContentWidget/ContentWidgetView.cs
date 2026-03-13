@@ -59,34 +59,6 @@ namespace UIShared
                     SetContentWidget(contentWidgetData);
                     break;
             }
-            
-            /*var isInventoryWidget = contentData is InventoryWidgetData;
-            SwitchWidgetMode(isInventoryWidget);
-            ConfigureInventoryButton(isInventoryWidget);
-            
-            if (isInventoryWidget)
-            {
-                _itemsPool.DisableAll();
-                _loadSpritesCts?.Cancel();
-                _loadSpritesCts?.Dispose();
-                _loadSpritesCts = null;
-                StartCoroutine(HidePopupCoroutine());
-                return;
-            }
-            
-            var widgetData = contentData as ContentWidgetData ?? ContentWidgetData.Empty;
-            var viewItems = CreateAndGetOfferViews(widgetData);
-            
-            if (viewItems <= 0)
-            {
-                
-                Debug.LogWarning($"Failed to open content widget {GetType()}. _itemsPool count == 0");
-                HideContentWidget();
-                return;
-            }
-
-            StartCoroutine(ResizeAndRepositionCoroutine());
-            StartCoroutine(HidePopupCoroutine());*/
         }
 
         private void SetInventoryWidget(InventoryWidgetData inventoryWidgetData)
@@ -139,6 +111,7 @@ namespace UIShared
         {
             if (_inventoryButton == null)
             {
+                Debug.LogWarning($"Debug _inventoryButton is null");
                 return;
             }
 

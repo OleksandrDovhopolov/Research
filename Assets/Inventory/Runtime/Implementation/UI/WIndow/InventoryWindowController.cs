@@ -15,15 +15,18 @@ namespace Inventory.Implementation
     public class InventoryArgs : WindowArgs
     {
         public readonly UIManager UiManager;
+        public readonly IInventoryService InventoryService;
         public readonly InventoryTabsPresenter TabsPresenter;
         public readonly IReadOnlyList<API.ItemCategory> Categories;
 
         public InventoryArgs(
             UIManager uiManager,
+            IInventoryService  inventoryService,
             InventoryTabsPresenter tabsPresenter,
             IReadOnlyList<API.ItemCategory> categories)
         {
             UiManager =  uiManager;
+            InventoryService =  inventoryService;
             TabsPresenter = tabsPresenter;
             Categories = categories;
         }
@@ -155,12 +158,9 @@ namespace Inventory.Implementation
         
         #region IOpenable
         
-        private void OnOpenableViewClickedHandler(InventoryView view)
-        {
-            OpenItemAsync(view, View.GetWindowLifetimeToken()).Forget();
-        }
+        private InventoryView _selectedView;
         
-        private async UniTaskVoid OpenItemAsync(InventoryView view, CancellationToken cancellationToken)
+        private void OnOpenableViewClickedHandler(InventoryView view)
         {
             if (!view.IsOpenable)
             {
@@ -168,14 +168,16 @@ namespace Inventory.Implementation
                 return;
             }
 
+            _selectedView = view;
             try
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                View.GetWindowLifetimeToken().ThrowIfCancellationRequested();
 
-                var inventoryData = new InventoryWidgetData();
+                var inventoryData = new InventoryWidgetData(
+                    view.ItemId,
+                    itemId => OnInventoryButtonClickedHandler(itemId, View.GetWindowLifetimeToken()).Forget());
                 var args = new ContentWidgetArgs(Args.UiManager, inventoryData, view.RectTransform);
                 Args.UiManager.Show<ContentWidgetController>(args);
-                //await openable.OpenAsync(cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -185,7 +187,47 @@ namespace Inventory.Implementation
                 Debug.LogError($"[InventoryWindowView] Failed to open item '{view.ItemId}'. {exception}");
             }
         }
+        
 
+        private async UniTask OnInventoryButtonClickedHandler(string itemId, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            View.ShowLoader(true);
+
+            try
+            {
+                TryHideContentWidget();
+                var itemDelta = BuildInventoryItemDelta(itemId);
+                await Args.InventoryService.RemoveItemAsync(itemDelta, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"[InventoryWindowController] Failed to remove item '{itemId}'. {exception}");
+            }
+            finally
+            {
+                View.ShowLoader(false);
+            }
+        }
+
+        private InventoryItemDelta BuildInventoryItemDelta(string itemId)
+        {
+            var selectedModel = _selectedView?.InventoryItemUiModel;
+            if (selectedModel == null)
+            {
+                throw new InvalidOperationException("Failed to build InventoryItemDelta. Selected view is null.");
+            }
+
+            return new InventoryItemDelta(
+                Args.TabsPresenter.OwnerId,
+                itemId,
+                1,
+                selectedModel.Value.Category);
+        }
+        
         #endregion
         
         private void TryHideContentWidget()

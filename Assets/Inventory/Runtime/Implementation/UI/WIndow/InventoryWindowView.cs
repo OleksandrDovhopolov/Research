@@ -20,6 +20,8 @@ namespace Inventory.Implementation
         [SerializeField] private GameObject _tabFocus;
         [SerializeField] private List<Transform> _tabs = new();
         
+        [SerializeField] private GameObject _loadingAnimationObject;
+        
         private CancellationTokenSource _windowLifetimeCts;
         
         private readonly Dictionary<string, InventoryView> _viewsByItemId = new();
@@ -195,6 +197,11 @@ namespace Inventory.Implementation
         private void OnOpenableViewClickedHandler(InventoryView inventoryView)
         {
             OnOpenableViewClicked?.Invoke(inventoryView);
+        }
+        
+        public void ShowLoader(bool show)
+        {
+            _loadingAnimationObject.gameObject.SetActive(show);
         }
         
         public void Dispose()
