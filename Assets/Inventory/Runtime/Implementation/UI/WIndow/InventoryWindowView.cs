@@ -20,7 +20,11 @@ namespace Inventory.Implementation
         [SerializeField] private GameObject _tabFocus;
         [SerializeField] private List<Transform> _tabs = new();
         
+        [Space, Space, Header("Loading")]
         [SerializeField] private GameObject _loadingAnimationObject;
+        
+        [Space, Space, Header("InventoryContentWidget")]
+        [SerializeField] private InventoryWidgetView _inventoryWidgetView;
         
         private CancellationTokenSource _windowLifetimeCts;
         
@@ -33,7 +37,13 @@ namespace Inventory.Implementation
         public event Action<int> TabClicked;
         public event Action BackgroundClicked;
         public event Action<InventoryView> OnOpenableViewClicked;
-        
+
+        protected override void Awake()
+        {
+            base.Awake();
+            WidgetRegistry.Register<InventoryWidgetData>(_inventoryWidgetView);
+        }
+
         public void OnTabClicked(int tabIndex)
         {
             if (!FocusTabVisual(tabIndex))

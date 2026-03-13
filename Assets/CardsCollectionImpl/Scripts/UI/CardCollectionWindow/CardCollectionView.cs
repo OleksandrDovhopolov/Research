@@ -29,6 +29,9 @@ namespace CardCollectionImpl
         [Header("Points Container")]
         [SerializeField] private TextMeshProUGUI _timerText;
         
+        [Space, Space, Header("CardsContentWidget")]
+        [SerializeField] private CardsOfferWidgetView _inventoryWidgetView;
+        
         private readonly Dictionary<string, CardsCollectionView> _viewsDict = new();
 
         public CardCollectionRewardsConfigSO RewardsConfigSo => _cardCollectionRewardsConfigSo;
@@ -40,6 +43,12 @@ namespace CardCollectionImpl
         
         private bool _groupsCreated;
 
+        protected override void Awake()
+        {
+            base.Awake();
+            WidgetRegistry.Register<ContentWidgetData>(_inventoryWidgetView);
+        }
+        
         private void Start()
         {
             _cardsCollectionPointsView.OnViewClicked += OnPointsViewClickedHandler;

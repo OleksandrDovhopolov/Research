@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UIShared
+namespace CardCollectionImpl
 {
     public class ContentItemView : MonoBehaviour
     {

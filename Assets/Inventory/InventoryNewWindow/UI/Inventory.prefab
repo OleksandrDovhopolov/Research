@@ -3348,6 +3348,7 @@ MonoBehaviour:
   - {fileID: 8277794503078663445}
   - {fileID: 8277794502946913833}
   _loadingAnimationObject: {fileID: 5651363849826237835}
+  _inventoryWidgetView: {fileID: 9023057762824289392, guid: e966c89833d043746a9ef670cd4dede5, type: 3}
 --- !u!114 &3217138036259471590
 MonoBehaviour:
   m_ObjectHideFlags: 0

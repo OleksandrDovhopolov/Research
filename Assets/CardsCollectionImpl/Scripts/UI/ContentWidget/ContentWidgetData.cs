@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
+using UIShared;
 
-namespace UIShared
+namespace CardCollectionImpl
 {
-    public abstract class ContentWidgetDataBase
-    {
-    }
-
     public sealed class ContentWidgetData : ContentWidgetDataBase
     {
         public static readonly ContentWidgetData Empty = new(Array.Empty<string>(), Array.Empty<ContentWidgetResourceData>());
@@ -22,19 +19,7 @@ namespace UIShared
             Resources = resources ?? Array.Empty<ContentWidgetResourceData>();
         }
     }
-
-    public sealed class InventoryWidgetData : ContentWidgetDataBase
-    {
-        public string ItemId;
-        public Action<string> ButtonPressed;
-        
-        public InventoryWidgetData(string itemId, Action<string> action)
-        {
-            ItemId = itemId;
-            ButtonPressed = action;
-        }
-    }
-
+    
     public readonly struct ContentWidgetResourceData
     {
         public readonly string Address;

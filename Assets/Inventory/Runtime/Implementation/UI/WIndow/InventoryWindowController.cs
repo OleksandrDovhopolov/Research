@@ -198,7 +198,9 @@ namespace Inventory.Implementation
             {
                 TryHideContentWidget();
                 var itemDelta = BuildInventoryItemDelta(itemId);
-                await Args.InventoryService.RemoveItemAsync(itemDelta, cancellationToken);
+                //await Args.InventoryService.RemoveItemAsync(itemDelta, cancellationToken);
+                
+                Debug.LogError($"[InventoryWindowView] Failed to open item '{itemDelta.ItemId}'");
             }
             catch (OperationCanceledException)
             {

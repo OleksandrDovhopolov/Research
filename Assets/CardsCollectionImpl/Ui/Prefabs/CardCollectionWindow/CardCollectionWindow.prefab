@@ -351,6 +351,7 @@ MonoBehaviour:
   _collectionRewardButton: {fileID: 5760489675583522895}
   _collectionRewardButtonRect: {fileID: 9103466700667826800}
   _timerText: {fileID: 2614488177551861922}
+  _inventoryWidgetView: {fileID: 2236575293384847307, guid: a2b1ecf91c3c022419aaeebce0ac2584, type: 3}
 --- !u!1 &1536287286893424970
 GameObject:
   m_ObjectHideFlags: 0
