@@ -5,11 +5,53 @@ namespace Inventory.Implementation
 {
     public sealed class InventoryImplementationCompositionRoot : IInventoryCompositionRoot
     {
-        private IInventoryService _inventoryService;
+        private InventoryModuleService _inventoryService;
+        
+        private readonly IInventoryStorage _inventoryStorage;
+        private readonly IItemCategoryRegistry _categoryRegistry;
 
+        public InventoryImplementationCompositionRoot()
+        {
+            _categoryRegistry = new ItemCategoryRegistry();
+            _categoryRegistry.Register(new SimpleItemCategory());
+            
+            _inventoryStorage = new InMemoryInventoryStorage();
+        }
+        
+        public void AddUseHandler(IInventoryItemUseHandler handler) 
+        {
+            CreateOrGetInventoryModuleService().AddUseHandler(handler);
+        }
+
+        public void RemoveUseHandler(IInventoryItemUseHandler handler)
+        {
+            //TODO implement this. if handler do not released and link for all card collection is in memory
+            throw new System.NotImplementedException();
+        }
+
+        public IItemCategoryRegistry GetCategoryRegistry()
+        {
+            return _categoryRegistry;
+        }
+        
         public IInventoryService CreateInventoryService()
         {
-            _inventoryService ??= new InventoryModuleService();
+            return CreateOrGetInventoryModuleService();
+        }
+
+        public IInventoryReadService CreateInventoryReadService()
+        {
+            return CreateOrGetInventoryModuleService();
+        }
+
+        public IInventoryItemUseService CreateInventoryItemUseService()
+        {
+             return CreateOrGetInventoryModuleService();
+        }
+        
+        private InventoryModuleService CreateOrGetInventoryModuleService()
+        {
+            _inventoryService ??= new InventoryModuleService(_inventoryStorage);
             return _inventoryService;
         }
     }

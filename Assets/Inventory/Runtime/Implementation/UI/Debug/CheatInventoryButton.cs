@@ -16,13 +16,19 @@ namespace Inventory.Implementation
 
         private CancellationToken _destroyCt;
         private IInventoryService _inventoryService;
-        private ItemCategoryFactory _itemCategoryFactory;
+        private IInventoryReadService _inventoryReadService;
+        private IInventoryItemUseService _inventoryItemUseService;
+        private IItemCategoryRegistry _itemCategoryRegistry;
         
         private void Awake()
         {
             _destroyCt = this.GetCancellationTokenOnDestroy();
-            _inventoryService = InventoryCompositionRegistry.Resolve().CreateInventoryService();
-            _itemCategoryFactory = new ItemCategoryFactory();
+            var compositionRoot = InventoryCompositionRegistry.Resolve();
+            _inventoryService = compositionRoot.CreateInventoryService();
+            _inventoryReadService = compositionRoot.CreateInventoryReadService();
+            _inventoryItemUseService = compositionRoot.CreateInventoryItemUseService();
+            //_itemCategoryRegistry = new ItemCategoryRegistry();
+            _itemCategoryRegistry = compositionRoot.GetCategoryRegistry();
         }
 
         private void Start()
@@ -33,16 +39,16 @@ namespace Inventory.Implementation
         private async UniTask OpenCheatsPanelAsync(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
-            if (_inventoryService == null)
+            if (_inventoryService == null || _inventoryReadService == null)
             {
-                Debug.LogWarning($"Failed to open inventory window. IInventoryService is null");
+                Debug.LogWarning("Failed to open inventory window. Inventory services are not initialized.");
                 return;
             }
             
-            var tabsPresenter = new InventoryTabsPresenter(_ownerId, _inventoryService, _itemCategoryFactory);
+            var tabsPresenter = new InventoryTabsPresenter(_ownerId, _inventoryService, _inventoryReadService, _itemCategoryRegistry);
             await tabsPresenter.InitializeAsync(ct);
 
-            var args = new InventoryArgs(_uiManager, _inventoryService, tabsPresenter, _itemCategoryFactory.CreateDefaultCategories());
+            var args = new InventoryArgs(_uiManager, _inventoryItemUseService, tabsPresenter, _itemCategoryRegistry.GetAllCategories());
             _uiManager.Show<InventoryWindowController>(args);
         }
         

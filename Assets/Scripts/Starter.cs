@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using CardCollection.Core;
+using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
 using Inventory.API;
@@ -82,8 +83,27 @@ namespace core
             //TODO + bake sprites for groups to prevent loading when window open
             var collectionData = await _cardCollectionEntryPoint.CardCollectionReader.Load(_destroyCt);
             _windowPresenter = _compositionRoot.CreateWindowPresenter(collectionData);
+
+            AddInventoryHandler();
         }
 
+        private void AddInventoryHandler()
+        {
+            var inventoryRoot = InventoryCompositionRegistry.Resolve();
+            if (inventoryRoot == null)
+            {
+                Debug.LogWarning($"Failed to Resolve {nameof(IInventoryCompositionRoot)}.");
+                return;
+            }
+            
+            inventoryRoot.GetCategoryRegistry().Register(new CardsItemCategory());
+            
+            inventoryRoot.AddUseHandler(new CardPackInventoryUseHandler(
+                _windowPresenter,
+                _cardCollectionEntryPoint.CardCollectionModule,
+                _cardCollectionEntryPoint.CardCollectionReader));
+        }
+        
         private async UniTask LoadAddressables(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();

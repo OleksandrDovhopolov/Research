@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using R3;
@@ -12,11 +11,5 @@ namespace Inventory.API
         UniTask AddItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default);
 
         UniTask RemoveItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default);
-
-        //TODO GetItemsAsync should be another interface IInventoryReadService
-        UniTask<IReadOnlyList<InventoryItemView>> GetItemsAsync(
-            string ownerId,
-            string categoryId,
-            CancellationToken cancellationToken = default);
     }
 }

@@ -7,8 +7,9 @@ namespace Inventory.Implementation
 {
     public sealed class SimpleItemCategory : ItemCategory, IConsumable
     {
-        public SimpleItemCategory()
-            : base(InventorySharedConfigs.Regular, "Regular")
+        public const string Regular = "regular";
+        
+        public SimpleItemCategory() : base(Regular, "Regular")
         {
         }
 

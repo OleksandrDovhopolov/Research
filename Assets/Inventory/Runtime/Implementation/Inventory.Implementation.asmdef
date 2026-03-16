@@ -8,7 +8,8 @@
         "UIShared",
         "UISystem",
         "Unity.TextMeshPro",
-        "Infrastructure"
+        "Infrastructure",
+        "NewAssembly"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

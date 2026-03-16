@@ -17,11 +17,10 @@ namespace Inventory.Implementation
 
         public InventoryItemUiModel InventoryItemUiModel { get; private set; }
         public string ItemId => InventoryItemUiModel.ItemId;
-        public bool IsOpenable => InventoryItemUiModel.Category is IOpenable;
         public RectTransform RectTransform => _rectTransform;
         public Sprite Sprite => _image.sprite;
 
-        public event Action<InventoryView> OnOpenableViewClicked;
+        public event Action<InventoryView> OnInventoryViewClicked;
         
         public void SetData(InventoryItemUiModel model)
         {
@@ -67,15 +66,8 @@ namespace Inventory.Implementation
             _openButton.onClick.RemoveAllListeners();
             _openButton.onClick.AddListener(() =>
             {
-                OnOpenableViewClicked?.Invoke(this);
+                OnInventoryViewClicked?.Invoke(this);
             });
-            /*if (IsOpenable)
-            {
-                _openButton.onClick.AddListener(() =>
-                {
-                    OnOpenableViewClicked?.Invoke(this);
-                });
-            }*/
         }
 
         private void OnDestroy()

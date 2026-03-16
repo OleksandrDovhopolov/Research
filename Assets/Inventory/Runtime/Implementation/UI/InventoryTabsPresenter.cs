@@ -11,7 +11,8 @@ namespace Inventory.Implementation.UI
     {
         private readonly string _ownerId;
         private readonly IInventoryService _inventoryService;
-        private readonly ItemCategoryFactory _itemCategoryFactory;
+        private readonly IInventoryReadService _inventoryReadService;
+        private readonly IItemCategoryRegistry _itemCategoryRegistry;
         private IDisposable _inventoryChangedSubscription;
         private readonly List<InventoryCategoryTabViewModel> _tabs = new();
         
@@ -21,13 +22,15 @@ namespace Inventory.Implementation.UI
         public InventoryTabsPresenter(
             string ownerId,
             IInventoryService inventoryService,
-            ItemCategoryFactory itemCategoryFactory)
+            IInventoryReadService inventoryReadService,
+            IItemCategoryRegistry itemCategoryRegistry)
         {
             _ownerId = ownerId;
             _inventoryService = inventoryService;
-            _itemCategoryFactory = itemCategoryFactory;
+            _inventoryReadService = inventoryReadService;
+            _itemCategoryRegistry = itemCategoryRegistry;
 
-            foreach (var category in _itemCategoryFactory.CreateDefaultCategories())
+            foreach (var category in _itemCategoryRegistry.GetAllCategories())
             {
                 if (_tabs.Find(tab => tab.Category.CategoryId == category.CategoryId) != null)
                 {
@@ -45,7 +48,7 @@ namespace Inventory.Implementation.UI
 
             foreach (var tab in _tabs)
             {
-                var source = await _inventoryService.GetItemsAsync(
+                var source = await _inventoryReadService.GetItemsAsync(
                     _ownerId,
                     tab.Category.CategoryId,
                     cancellationToken);
@@ -76,7 +79,7 @@ namespace Inventory.Implementation.UI
             
             foreach (var item in source)
             {
-                var category = _itemCategoryFactory?.GetById(item.CategoryId) ?? fallbackCategory;
+                var category = _itemCategoryRegistry?.GetById(item.CategoryId) ?? fallbackCategory;
                 var itemUIModel = new InventoryItemUiModel(item.ItemId, "Empty", item.StackCount, category);
                 mapped.Add(itemUIModel);
             }

@@ -11,16 +11,11 @@ namespace CardCollectionImpl
         private readonly ExchangePacksConfig _exchangePacksConfig;
         private readonly ICollectionProgressSnapshotService _collectionProgressSnapshotService;
 
-        public CardCollectionImplCompositionRoot(
-            UIManager uiManager,
-            ExchangePacksConfig exchangePacksConfig)
+        public CardCollectionImplCompositionRoot(UIManager uiManager, ExchangePacksConfig exchangePacksConfig)
         {
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
             _exchangePacksConfig = exchangePacksConfig ?? throw new ArgumentNullException(nameof(exchangePacksConfig));
             _collectionProgressSnapshotService = new CollectionProgressSnapshotService();
-            
-            /*_iWindowPresenter ??= new CardCollectionWindowPresenter(
-                _uiManager, _collectionProgressSnapshotService, eventCardsSaveData);*/
         }
 
         public IRewardDefinitionFactory CreateRewardDefinitionFactory(List<CardPackConfig> cardPackConfigs)

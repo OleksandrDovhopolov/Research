@@ -4,18 +4,11 @@ using Inventory.API;
 
 namespace Inventory.Implementation
 {
-    public sealed class ItemCategoryFactory
+    public sealed class ItemCategoryRegistry : IItemCategoryRegistry
     {
-        private readonly Dictionary<string, ItemCategory> _categoriesById =
-            new(StringComparer.Ordinal);
-
-        public ItemCategoryFactory()
-        {
-            Register(new SimpleItemCategory());
-            Register(new CardsItemCategory());
-        }
-
-        public IReadOnlyList<ItemCategory> CreateDefaultCategories()
+        private readonly Dictionary<string, ItemCategory> _categoriesById = new(StringComparer.Ordinal);
+        
+        public IReadOnlyList<ItemCategory> GetAllCategories()
         {
             return new List<ItemCategory>(_categoriesById.Values);
         }

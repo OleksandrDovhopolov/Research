@@ -15,18 +15,18 @@ namespace Inventory.Implementation
     public class InventoryArgs : WindowArgs
     {
         public readonly UIManager UiManager;
-        public readonly IInventoryService InventoryService;
+        public readonly IInventoryItemUseService InventoryItemUseService;
         public readonly InventoryTabsPresenter TabsPresenter;
-        public readonly IReadOnlyList<API.ItemCategory> Categories;
+        public readonly IReadOnlyList<ItemCategory> Categories;
 
         public InventoryArgs(
             UIManager uiManager,
-            IInventoryService  inventoryService,
+            IInventoryItemUseService inventoryItemUseService,
             InventoryTabsPresenter tabsPresenter,
-            IReadOnlyList<API.ItemCategory> categories)
+            IReadOnlyList<ItemCategory> categories)
         {
             UiManager =  uiManager;
-            InventoryService =  inventoryService;
+            InventoryItemUseService =  inventoryItemUseService;
             TabsPresenter = tabsPresenter;
             Categories = categories;
         }
@@ -165,7 +165,7 @@ namespace Inventory.Implementation
             ContentWidgetDataBase data;
             switch (view.InventoryItemUiModel.Category)
             {
-                case IOpenable:
+                case CardsItemCategory cardsItemCategory:
                     data = new InventoryWidgetData(
                         view.ItemId,
                         itemId => OnInventoryButtonClickedHandler(itemId, View.GetWindowLifetimeToken()).Forget());
@@ -179,7 +179,6 @@ namespace Inventory.Implementation
                         {
                             TryHideContentWidget();
                             Debug.LogWarning($"Debug closed content widget");
-                            //OnInventoryButtonClickedHandler(itemId, View.GetWindowLifetimeToken()).Forget();
                         });
                     break;
                 default:
@@ -215,9 +214,10 @@ namespace Inventory.Implementation
             {
                 TryHideContentWidget();
                 var itemDelta = BuildInventoryItemDelta(itemId);
-                //await Args.InventoryService.RemoveItemAsync(itemDelta, cancellationToken);
+                await Args.InventoryItemUseService.ConsumeItemAsync(itemDelta, cancellationToken);
                 
-                Debug.LogError($"[InventoryWindowView] Failed to open item '{itemDelta.ItemId}'");
+                //TODO remove this 
+                Debug.LogError($"[InventoryWindowView] Succeed to open item '{itemDelta.ItemId}'");
             }
             catch (OperationCanceledException)
             {

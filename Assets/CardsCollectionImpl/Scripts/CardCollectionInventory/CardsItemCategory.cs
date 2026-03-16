@@ -1,14 +1,13 @@
-using Inventory.API;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Inventory.API;
 using UnityEngine;
 
-namespace Inventory.Implementation
+namespace CardCollectionImpl
 {
     public sealed class CardsItemCategory : ItemCategory, IOpenable
     {
-        public CardsItemCategory()
-            : base(InventorySharedConfigs.CardPack, "Card packs")
+        public CardsItemCategory() : base(CardsConfig.CardPack, "Card packs")
         {
         }
 

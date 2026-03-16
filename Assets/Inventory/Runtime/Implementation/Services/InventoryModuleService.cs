@@ -16,7 +16,7 @@ namespace Inventory.Implementation.Services
         public const string CardPack = "card_pack";
     }
     
-    public sealed class InventoryModuleService : IInventoryService, IDisposable
+    public sealed class InventoryModuleService : IInventoryService, IInventoryReadService, IInventoryItemUseService, IDisposable
     {
         private readonly AddItemSystem _addItemSystem;
         private readonly RemoveItemSystem _removeItemSystem;
@@ -25,21 +25,31 @@ namespace Inventory.Implementation.Services
         private readonly Subject<InventoryChangedEvent> _inventoryChangedSubject = new();
         private readonly SemaphoreSlim _loadSemaphore = new(1, 1);
         private readonly HashSet<string> _loadedOwners = new();
-
-        public InventoryModuleService(IInventoryStorage storage = null)
+        private readonly List<IInventoryItemUseHandler> _inventoryItemUseHandlers;
+        
+        public Observable<InventoryChangedEvent> OnInventoryChanged => _inventoryChangedSubject;
+        
+        public InventoryModuleService(IInventoryStorage storage)
         {
             var world = new InventoryWorld();
             _addItemSystem = new AddItemSystem(world);
             _removeItemSystem = new RemoveItemSystem(world);
             _querySystem = new InventoryQuerySystem(world);
-            _storage = storage ?? new InMemoryInventoryStorage();
+            _storage = storage;
+
+            _inventoryItemUseHandlers =  new List<IInventoryItemUseHandler>();
         }
-
-        public Observable<InventoryChangedEvent> OnInventoryChanged => _inventoryChangedSubject;
-
+        
+        public void AddUseHandler(IInventoryItemUseHandler handler)
+        {
+            if (handler != null)
+            {
+                _inventoryItemUseHandlers.Add(handler);
+            }
+        }
+        
         public async UniTask AddItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default)
         {
-            
             cancellationToken.ThrowIfCancellationRequested();
             await EnsureOwnerLoadedAsync(itemDelta.OwnerId, cancellationToken);
             var changed = _addItemSystem.Execute(itemDelta);
@@ -58,6 +68,7 @@ namespace Inventory.Implementation.Services
             var changed = _removeItemSystem.Execute(itemDelta);
             if (!changed)
             {
+                Debug.LogWarning($"[InventoryWindowView] Failed to remove item '{itemDelta.ItemId}'");
                 return;
             }
 
@@ -72,14 +83,48 @@ namespace Inventory.Implementation.Services
             WarnOnCategoryIdMismatch(ownerId, categoryId, items);
             return items;
         }
-
-        public void Dispose()
+        
+        public async UniTask ConsumeItemAsync(InventoryItemDelta item, CancellationToken cancellationToken = default)
         {
-            _inventoryChangedSubject?.OnCompleted();
-            _inventoryChangedSubject?.Dispose();
-            _loadSemaphore.Dispose();
+            cancellationToken.ThrowIfCancellationRequested();
+            await EnsureOwnerLoadedAsync(item.OwnerId, cancellationToken);
+
+            var handler = _inventoryItemUseHandlers.FirstOrDefault(x => x.CanHandle(item));
+            if (handler == null)
+            {
+                Debug.LogError($"No handler found for item type: {item.ItemId} with category: {item.CategoryId}");
+                return;
+            }
+
+            if (!HasEnoughItems(item.OwnerId, item))
+            {
+                Debug.LogError($"Not enough items for item type: {item.ItemId} with category: {item.CategoryId}. item.OwnerId {item.OwnerId}");
+                return;
+            }
+
+            await RemoveItemAsync(item, cancellationToken);
+
+            try
+            {
+                await handler.UseAsync(item, item.OwnerId, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                await AddItemAsync(item, cancellationToken);
+                Debug.LogError($"Failed to use item {item.ItemId}. Item restored. Error: {ex.Message}");
+            }
         }
 
+        private bool HasEnoughItems(string ownerId, InventoryItemDelta item)
+        {
+            var items = _querySystem.Execute(ownerId, item.CategoryId);
+            return items.Any(x => x.ItemId == item.ItemId && x.StackCount >= item.Amount);
+        }
+        
         private async UniTask PublishAndPersistAsync(string ownerId, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -97,6 +142,51 @@ namespace Inventory.Implementation.Services
                 DateTime.UtcNow));
         }
 
+        internal async UniTask EnsureOwnerLoadedAsync(string ownerId, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (_loadedOwners.Contains(ownerId))
+            {
+                return;
+            }
+
+            await _loadSemaphore.WaitAsync(cancellationToken);
+            try
+            {
+                if (_loadedOwners.Contains(ownerId))
+                {
+                    return;
+                }
+
+                var loadedItems = await _storage.LoadAsync(ownerId, cancellationToken);
+
+                foreach (var item in loadedItems)
+                {
+                    var delta = new InventoryItemDelta(
+                        item.OwnerId,
+                        item.ItemId,
+                        item.StackCount,
+                        item.CategoryId);
+                    _addItemSystem.Execute(delta);
+                }
+
+                _loadedOwners.Add(ownerId);
+            }
+            finally
+            {
+                _loadSemaphore.Release();
+            }
+        }
+
+        public void Dispose()
+        {
+            _inventoryChangedSubject?.OnCompleted();
+            _inventoryChangedSubject?.Dispose();
+            _loadSemaphore.Dispose();
+        }
+        
+        #region CategoryMismatchHandler
+        
         private void WarnOnCategoryIdMismatch(string ownerId, string requestedCategoryId, IReadOnlyList<InventoryItemView> requestedItems)
         {
             if (requestedItems.Count > 0 || string.IsNullOrWhiteSpace(requestedCategoryId))
@@ -144,41 +234,7 @@ namespace Inventory.Implementation.Services
                 .Select(char.ToLowerInvariant)
                 .ToArray());
         }
-
-        private async UniTask EnsureOwnerLoadedAsync(string ownerId, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            if (_loadedOwners.Contains(ownerId))
-            {
-                return;
-            }
-
-            await _loadSemaphore.WaitAsync(cancellationToken);
-            try
-            {
-                if (_loadedOwners.Contains(ownerId))
-                {
-                    return;
-                }
-
-                var loadedItems = await _storage.LoadAsync(ownerId, cancellationToken);
-
-                foreach (var item in loadedItems)
-                {
-                    var delta = new InventoryItemDelta(
-                        item.OwnerId,
-                        item.ItemId,
-                        item.StackCount,
-                        item.CategoryId);
-                    _addItemSystem.Execute(delta);
-                }
-
-                _loadedOwners.Add(ownerId);
-            }
-            finally
-            {
-                _loadSemaphore.Release();
-            }
-        }
+        
+        #endregion
     }
 }

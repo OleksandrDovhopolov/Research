@@ -192,8 +192,8 @@ namespace Inventory.Implementation
                 return;
             }
 
-            inventoryView.OnOpenableViewClicked -= OnOpenableViewClickedHandler;
-            inventoryView.OnOpenableViewClicked += OnOpenableViewClickedHandler;
+            inventoryView.OnInventoryViewClicked -= OnInventoryViewClickedHandler;
+            inventoryView.OnInventoryViewClicked += OnInventoryViewClickedHandler;
         }
 
         private void UnsubscribeInventoryView(InventoryView inventoryView)
@@ -203,10 +203,10 @@ namespace Inventory.Implementation
                 return;
             }
 
-            inventoryView.OnOpenableViewClicked -= OnOpenableViewClickedHandler;
+            inventoryView.OnInventoryViewClicked -= OnInventoryViewClickedHandler;
         }
 
-        private void OnOpenableViewClickedHandler(InventoryView inventoryView)
+        private void OnInventoryViewClickedHandler(InventoryView inventoryView)
         {
             OnOpenableViewClicked?.Invoke(inventoryView);
         }
