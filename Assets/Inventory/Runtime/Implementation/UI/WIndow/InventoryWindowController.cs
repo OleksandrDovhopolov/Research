@@ -72,6 +72,7 @@ namespace Inventory.Implementation
         
         protected override void OnHideStart(bool isClosed)
         {
+            Debug.LogWarning($"Debug OnHideStart");
             TryHideContentWidget();
             
             View.Dispose();
@@ -89,7 +90,13 @@ namespace Inventory.Implementation
             RawItems.Value = Array.Empty<InventoryCategorizedItemUiModel>();
             Args.TabsPresenter?.Dispose();
         }
-        
+
+        protected override void OnHideComplete(bool isClosed)
+        {
+            base.OnHideComplete(isClosed);
+            Debug.LogWarning($"Debug {GetType().Name} OnHideComplete");
+        }
+
         #region R3 Filtration
         
         private void RefreshFromPresenter()
@@ -215,7 +222,7 @@ namespace Inventory.Implementation
             {
                 TryHideContentWidget();
                 var itemDelta = BuildInventoryItemDelta(itemId);
-                await Args.InventoryItemUseService.ConsumeItemAsync(itemDelta, cancellationToken);
+                await Args.InventoryItemUseService.ConsumeItemAsync(itemDelta, CloseWindow, cancellationToken);
             }
             catch (OperationCanceledException)
             {

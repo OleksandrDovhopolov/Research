@@ -2,6 +2,7 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
+using UnityEngine;
 
 namespace CardCollectionImpl
 {
@@ -29,6 +30,7 @@ namespace CardCollectionImpl
 
         protected override void OnShowStart()
         {
+            Debug.LogWarning($"Debug {GetType().Name} OnShowStart");
             _cts = new CancellationTokenSource();
             GetNewCardsAsync(_cts.Token).Forget();
         }
@@ -47,6 +49,7 @@ namespace CardCollectionImpl
 
         protected override void OnShowComplete()
         {
+            Debug.LogWarning($"Debug {GetType().Name} OnShowComplete");
             View.CloseClick += CloseWindow;
         }
 

@@ -26,7 +26,7 @@ namespace CardCollectionImpl
         }
 
         //TODO should return true / false ? 
-        public void OpenNewCardWindow(string packId, ICardCollectionModule cardCollectionModule, ICardCollectionReader cardCollectionReader)
+        public void OpenNewCardWindow(string packId, ICardCollectionModule cardCollectionModule, ICardCollectionReader cardCollectionReader, bool showAsync = false)
         {
             var pack = cardCollectionModule.GetPackById(packId);
             if (pack == null)
@@ -39,10 +39,19 @@ namespace CardCollectionImpl
         }
 
         //TODO should return true / false ? 
-        public void OpenNewCardWindow(CardPack pack, ICardCollectionModule cardCollectionModule, ICardCollectionReader cardCollectionReader)
+        public void OpenNewCardWindow(CardPack pack, ICardCollectionModule cardCollectionModule, ICardCollectionReader cardCollectionReader, bool showAsync = false)
         {
             var args = new NewCardArgs(pack, _uiManager, cardCollectionModule, cardCollectionReader);
-            _uiManager.Show<NewCardController>(args);
+            //TODO should wait InventoryWindowController
+            //TODO check way to remove showAsync from args
+            if (showAsync)
+            {
+                _uiManager.ShowAsync<NewCardController>(args);
+            }
+            else
+            {
+                _uiManager.Show<NewCardController>(args);
+            }
         }
 
         //TODO should return true / false ? 

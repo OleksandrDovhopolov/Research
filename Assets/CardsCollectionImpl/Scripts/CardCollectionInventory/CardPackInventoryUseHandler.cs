@@ -9,6 +9,8 @@ namespace CardCollectionImpl
 {
     public class CardPackInventoryUseHandler : IInventoryItemUseHandler
     {
+        private const bool NewCardWindowShowAsync = true;
+            
         private readonly IWindowPresenter _windowPresenter;
         private readonly ICardCollectionModule _cardCollectionModule;
         private readonly ICardCollectionReader _cardCollectionReader;
@@ -32,7 +34,7 @@ namespace CardCollectionImpl
         public async UniTask UseAsync(InventoryItemDelta item, string ownerId, CancellationToken ct)
         {
             Debug.LogWarning($"Debug UseAsync {GetType().Name}");
-            _windowPresenter.OpenNewCardWindow(item.ItemId, _cardCollectionModule, _cardCollectionReader);
+            _windowPresenter.OpenNewCardWindow(item.ItemId, _cardCollectionModule, _cardCollectionReader, NewCardWindowShowAsync);
             await UniTask.CompletedTask;
         }
     }
