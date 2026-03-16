@@ -41,17 +41,12 @@ namespace CardCollectionImpl
         //TODO should return true / false ? 
         public void OpenNewCardWindow(CardPack pack, ICardCollectionModule cardCollectionModule, ICardCollectionReader cardCollectionReader, bool showAsync = false)
         {
-            var args = new NewCardArgs(pack, _uiManager, cardCollectionModule, cardCollectionReader);
-            //TODO should wait InventoryWindowController
-            //TODO check way to remove showAsync from args
-            if (showAsync)
-            {
-                _uiManager.ShowAsync<NewCardController>(args);
-            }
-            else
-            {
-                _uiManager.Show<NewCardController>(args);
-            }
+            //TODO UIStack
+            // private IEnumerator ShowCommand(UIShowCommand command) 
+            // if ShowInParallel  = hide and show start the same time 
+            // in this case should be ShowInOrder 
+            var args = new NewCardArgs(pack, _uiManager, cardCollectionModule, cardCollectionReader); 
+            _uiManager.Show<NewCardController>(args);
         }
 
         //TODO should return true / false ? 

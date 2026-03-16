@@ -22,6 +22,7 @@ namespace CardCollectionImpl
         }
     }
 
+    //TODO animation bug when open window. panel for point visible
     [Window("NewCardWindow")]
     public class NewCardController : WindowController<NewCardView>
     {

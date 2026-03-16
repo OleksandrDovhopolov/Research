@@ -84,7 +84,7 @@ namespace Inventory.Implementation.Services
             return items;
         }
         
-        public async UniTask ConsumeItemAsync(InventoryItemDelta item, Action onItemRemoved, CancellationToken cancellationToken = default)
+        public async UniTask ConsumeItemAsync(InventoryItemDelta item, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             await EnsureOwnerLoadedAsync(item.OwnerId, cancellationToken);
@@ -103,8 +103,6 @@ namespace Inventory.Implementation.Services
             }
 
             await RemoveItemAsync(item, cancellationToken);
-
-            onItemRemoved?.Invoke();
             
             try
             {

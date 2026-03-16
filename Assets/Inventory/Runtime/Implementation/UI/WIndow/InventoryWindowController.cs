@@ -45,7 +45,6 @@ namespace Inventory.Implementation
         protected override void OnShowStart()
         {
             View.FocusTabVisual(0);
-            View.TabClicked += OnTabClicked;
 
             var filteredItemsSubscription = Observable
                 .CombineLatest(SelectedCategoryId, RawItems, FilterItemsByCategory)
@@ -65,6 +64,7 @@ namespace Inventory.Implementation
 
         protected override void OnShowComplete()
         {
+            View.TabClicked += OnTabClicked;
             View.CloseClick += CloseWindow;
             View.BackgroundClicked += TryHideContentWidget;
             View.OnOpenableViewClicked += OnOpenableViewClickedHandler;
@@ -72,7 +72,7 @@ namespace Inventory.Implementation
         
         protected override void OnHideStart(bool isClosed)
         {
-            Debug.LogWarning($"Debug OnHideStart");
+            Debug.LogWarning($"Debug OnHideStart isClosed {isClosed}");
             TryHideContentWidget();
             
             View.Dispose();
@@ -88,7 +88,11 @@ namespace Inventory.Implementation
             _subscriptions.Clear();
             SelectedCategoryId.Value = AllCategoriesTabId;
             RawItems.Value = Array.Empty<InventoryCategorizedItemUiModel>();
-            Args.TabsPresenter?.Dispose();
+
+            if (isClosed)
+            {
+                Args.TabsPresenter?.Dispose();
+            }
         }
 
         protected override void OnHideComplete(bool isClosed)
@@ -222,7 +226,7 @@ namespace Inventory.Implementation
             {
                 TryHideContentWidget();
                 var itemDelta = BuildInventoryItemDelta(itemId);
-                await Args.InventoryItemUseService.ConsumeItemAsync(itemDelta, CloseWindow, cancellationToken);
+                await Args.InventoryItemUseService.ConsumeItemAsync(itemDelta, cancellationToken);
             }
             catch (OperationCanceledException)
             {
