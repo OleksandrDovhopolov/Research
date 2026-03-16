@@ -147,12 +147,9 @@ namespace Inventory.Tests.Editor
         public void BuiltInCategories_ExposeExpectedCapabilities()
         {
             var simpleCategory = new SimpleItemCategory();
-            var cardsCategory = new CardsItemCategory();
 
             Assert.That(simpleCategory is IConsumable, Is.True);
             Assert.That(simpleCategory is IOpenable, Is.False);
-            Assert.That(cardsCategory is IOpenable, Is.True);
-            Assert.That(cardsCategory is IConsumable, Is.False);
         }
 
         private static InventoryModuleService CreateService()
@@ -165,6 +162,11 @@ namespace Inventory.Tests.Editor
             public TestItemCategory(string categoryId, string displayName)
                 : base(categoryId, displayName)
             {
+            }
+
+            public override CategoryUiMetadata GetMetadata()
+            {
+                throw new NotImplementedException();
             }
         }
 

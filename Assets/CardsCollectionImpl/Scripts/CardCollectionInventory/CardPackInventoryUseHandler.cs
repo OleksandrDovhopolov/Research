@@ -32,7 +32,7 @@ namespace CardCollectionImpl
         public async UniTask UseAsync(InventoryItemDelta item, string ownerId, CancellationToken ct)
         {
             Debug.LogWarning($"Debug UseAsync {GetType().Name}");
-            //_windowPresenter.OpenNewCardWindow(item.ItemId, _cardCollectionModule, _cardCollectionReader);
+            _windowPresenter.OpenNewCardWindow(item.ItemId, _cardCollectionModule, _cardCollectionReader);
             await UniTask.CompletedTask;
         }
     }

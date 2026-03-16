@@ -1,6 +1,6 @@
-using Inventory.API;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Inventory.API;
 using UnityEngine;
 
 namespace Inventory.Implementation
@@ -18,6 +18,11 @@ namespace Inventory.Implementation
             cancellationToken.ThrowIfCancellationRequested();
             Debug.Log("[Inventory] Consumed item from regular category.");
             return UniTask.CompletedTask;
+        }
+
+        public override CategoryUiMetadata GetMetadata()
+        {
+            return new ResourceWidgetMetadata();
         }
     }
 }

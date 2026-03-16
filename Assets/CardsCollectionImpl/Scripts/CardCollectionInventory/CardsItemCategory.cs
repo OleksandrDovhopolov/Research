@@ -17,5 +17,10 @@ namespace CardCollectionImpl
             Debug.Log("[Inventory] Opened card pack category item.");
             return UniTask.CompletedTask;
         }
+
+        public override CategoryUiMetadata GetMetadata()
+        {
+            return new ActionWidgetMetadata();
+        }
     }
 }

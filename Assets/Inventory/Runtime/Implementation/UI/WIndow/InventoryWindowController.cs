@@ -163,14 +163,15 @@ namespace Inventory.Implementation
         private void OnOpenableViewClickedHandler(InventoryView view)
         {
             ContentWidgetDataBase data;
-            switch (view.InventoryItemUiModel.Category)
+            
+            switch (view.InventoryItemUiModel.Category.GetMetadata())
             {
-                case CardsItemCategory cardsItemCategory:
+                case ActionWidgetMetadata:
                     data = new InventoryWidgetData(
                         view.ItemId,
                         itemId => OnInventoryButtonClickedHandler(itemId, View.GetWindowLifetimeToken()).Forget());
                     break;
-                case SimpleItemCategory sampleCategory:
+                case ResourceWidgetMetadata:
                     data = new InventoryResourceWidgetData(
                         view.ItemId,
                         view.Sprite,
@@ -215,9 +216,6 @@ namespace Inventory.Implementation
                 TryHideContentWidget();
                 var itemDelta = BuildInventoryItemDelta(itemId);
                 await Args.InventoryItemUseService.ConsumeItemAsync(itemDelta, cancellationToken);
-                
-                //TODO remove this 
-                Debug.LogError($"[InventoryWindowView] Succeed to open item '{itemDelta.ItemId}'");
             }
             catch (OperationCanceledException)
             {
