@@ -25,6 +25,7 @@ namespace Inventory.Implementation
         
         [Space, Space, Header("InventoryContentWidget")]
         [SerializeField] private InventoryWidgetView _inventoryWidgetView;
+        [SerializeField] private InventoryResourceWidgetView _inventoryResourceWidgetView;
         
         private CancellationTokenSource _windowLifetimeCts;
         
@@ -42,6 +43,7 @@ namespace Inventory.Implementation
         {
             base.Awake();
             WidgetRegistry.Register<InventoryWidgetData>(_inventoryWidgetView);
+            WidgetRegistry.Register<InventoryResourceWidgetData>(_inventoryResourceWidgetView);
         }
 
         public void OnTabClicked(int tabIndex)

@@ -32,11 +32,11 @@ namespace Inventory.Tests.Editor
         {
             var service = CreateService();
 
-            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "wood", 2, _regularCategory))
+            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "Gems", 2, _regularCategory))
                 .AsTask()
                 .ToCoroutine();
 
-            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "wood", 3, _regularCategory))
+            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "Gems", 3, _regularCategory))
                 .AsTask()
                 .ToCoroutine();
 
@@ -53,10 +53,10 @@ namespace Inventory.Tests.Editor
         {
             var service = CreateService();
 
-            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "energy", 5, _regularCategory))
+            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "Energy", 5, _regularCategory))
                 .AsTask()
                 .ToCoroutine();
-            yield return service.RemoveItemAsync(new InventoryItemDelta(OwnerId, "energy", 2, _regularCategory))
+            yield return service.RemoveItemAsync(new InventoryItemDelta(OwnerId, "Energy", 2, _regularCategory))
                 .AsTask()
                 .ToCoroutine();
 
@@ -66,7 +66,7 @@ namespace Inventory.Tests.Editor
             Assert.That(afterPartialRemove.Count, Is.EqualTo(1));
             Assert.That(afterPartialRemove[0].StackCount, Is.EqualTo(3));
 
-            yield return service.RemoveItemAsync(new InventoryItemDelta(OwnerId, "energy", 3, _regularCategory))
+            yield return service.RemoveItemAsync(new InventoryItemDelta(OwnerId, "Energy", 3, _regularCategory))
                 .AsTask()
                 .ToCoroutine();
 
@@ -81,7 +81,7 @@ namespace Inventory.Tests.Editor
         {
             var service = CreateService();
 
-            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "gold", 10, _regularCategory))
+            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "Gold", 10, _regularCategory))
                 .AsTask()
                 .ToCoroutine();
             
@@ -101,7 +101,7 @@ namespace Inventory.Tests.Editor
                 .ToCoroutine(result => packs = result);
 
             Assert.That(regular.Count, Is.EqualTo(1));
-            Assert.That(regular[0].ItemId, Is.EqualTo("gold"));
+            Assert.That(regular[0].ItemId, Is.EqualTo("Gold"));
 
             Assert.That(packs.Count, Is.EqualTo(1));
             Assert.That(packs[0].ItemId, Is.EqualTo("pack_blue"));
@@ -112,7 +112,7 @@ namespace Inventory.Tests.Editor
         {
             var service = CreateService();
 
-            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "dust", 4, _alchemyCategory))
+            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "Dust", 4, _alchemyCategory))
                 .AsTask()
                 .ToCoroutine();
 
@@ -121,7 +121,7 @@ namespace Inventory.Tests.Editor
                 .ToCoroutine(result => alchemyItems = result);
 
             Assert.That(alchemyItems.Count, Is.EqualTo(1));
-            Assert.That(alchemyItems[0].ItemId, Is.EqualTo("dust"));
+            Assert.That(alchemyItems[0].ItemId, Is.EqualTo("Dust"));
             Assert.That(alchemyItems[0].StackCount, Is.EqualTo(4));
             Assert.That(alchemyItems[0].CategoryId, Is.EqualTo(_alchemyCategory.CategoryId));
         }
@@ -135,7 +135,7 @@ namespace Inventory.Tests.Editor
 
             Assert.That(() => 
             {
-                service.AddItemAsync(new InventoryItemDelta(OwnerId, "wood", 1, _regularCategory), cts.Token)
+                service.AddItemAsync(new InventoryItemDelta(OwnerId, "Gems", 1, _regularCategory), cts.Token)
                     .GetAwaiter()
                     .GetResult();
             }, Throws.TypeOf<OperationCanceledException>());

@@ -19,6 +19,7 @@ namespace Inventory.Implementation
         public string ItemId => InventoryItemUiModel.ItemId;
         public bool IsOpenable => InventoryItemUiModel.Category is IOpenable;
         public RectTransform RectTransform => _rectTransform;
+        public Sprite Sprite => _image.sprite;
 
         public event Action<InventoryView> OnOpenableViewClicked;
         
@@ -64,13 +65,17 @@ namespace Inventory.Implementation
             if (_openButton == null) return;
             
             _openButton.onClick.RemoveAllListeners();
-            if (IsOpenable)
+            _openButton.onClick.AddListener(() =>
+            {
+                OnOpenableViewClicked?.Invoke(this);
+            });
+            /*if (IsOpenable)
             {
                 _openButton.onClick.AddListener(() =>
                 {
                     OnOpenableViewClicked?.Invoke(this);
                 });
-            }
+            }*/
         }
 
         private void OnDestroy()

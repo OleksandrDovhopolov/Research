@@ -162,21 +162,38 @@ namespace Inventory.Implementation
         
         private void OnOpenableViewClickedHandler(InventoryView view)
         {
-            if (!view.IsOpenable)
+            ContentWidgetDataBase data;
+            switch (view.InventoryItemUiModel.Category)
             {
-                Debug.LogWarning($"Category is not IOpenable");
-                return;
+                case IOpenable:
+                    data = new InventoryWidgetData(
+                        view.ItemId,
+                        itemId => OnInventoryButtonClickedHandler(itemId, View.GetWindowLifetimeToken()).Forget());
+                    break;
+                case SimpleItemCategory sampleCategory:
+                    data = new InventoryResourceWidgetData(
+                        view.ItemId,
+                        view.Sprite,
+                        view.InventoryItemUiModel.StackCount,
+                        itemId =>
+                        {
+                            TryHideContentWidget();
+                            Debug.LogWarning($"Debug closed content widget");
+                            //OnInventoryButtonClickedHandler(itemId, View.GetWindowLifetimeToken()).Forget();
+                        });
+                    break;
+                default:
+                    Debug.LogWarning($"Category is not supported");
+                    return;
             }
-
+            
             _selectedView = view;
+            
             try
             {
                 View.GetWindowLifetimeToken().ThrowIfCancellationRequested();
 
-                var inventoryData = new InventoryWidgetData(
-                    view.ItemId,
-                    itemId => OnInventoryButtonClickedHandler(itemId, View.GetWindowLifetimeToken()).Forget());
-                var args = new ContentWidgetArgs(Args.UiManager, inventoryData, view.RectTransform);
+                var args = new ContentWidgetArgs(Args.UiManager, data, view.RectTransform);
                 Args.UiManager.Show<ContentWidgetController>(args);
             }
             catch (OperationCanceledException)
