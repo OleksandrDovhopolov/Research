@@ -26,7 +26,7 @@ namespace CardCollectionImpl
         }
 
         //TODO should return true / false ? 
-        public void OpenNewCardWindow(string packId, ICardCollectionModule cardCollectionModule, ICardCollectionReader cardCollectionReader, bool showAsync = false)
+        public void OpenNewCardWindow(string packId, ICardCollectionModule cardCollectionModule, ICardCollectionReader cardCollectionReader)
         {
             var pack = cardCollectionModule.GetPackById(packId);
             if (pack == null)
@@ -39,7 +39,7 @@ namespace CardCollectionImpl
         }
 
         //TODO should return true / false ? 
-        public void OpenNewCardWindow(CardPack pack, ICardCollectionModule cardCollectionModule, ICardCollectionReader cardCollectionReader, bool showAsync = false)
+        public void OpenNewCardWindow(CardPack pack, ICardCollectionModule cardCollectionModule, ICardCollectionReader cardCollectionReader)
         {
             //TODO UIStack
             // private IEnumerator ShowCommand(UIShowCommand command) 
