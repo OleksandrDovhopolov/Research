@@ -65,8 +65,6 @@ namespace CardCollectionImpl
             if (_isPurchaseInProgress || string.IsNullOrWhiteSpace(offerPackId))
                 return;
             
-            TryHideContentWidget();
-            
             var packPrice = Args.ExchangeOfferProvider.GetOfferPrice(offerPackId);
             if (packPrice <= 0)
             {
