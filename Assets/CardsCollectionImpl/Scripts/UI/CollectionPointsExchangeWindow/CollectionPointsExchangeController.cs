@@ -81,7 +81,6 @@ namespace CardCollectionImpl
                 {
                     if (await Args.ExchangeOfferProvider.ReceiveOfferContent(offerPackId, ct))
                     {
-                        //TODO when ContentWidgetController is open add logic gets here = visual bug on close ContentWidgetController. its blink
                         ShowInfoWidget("Pack received successfully");
                         Args.OnPointsAmountChangedHandler?.Invoke();
                         CloseWindow();
