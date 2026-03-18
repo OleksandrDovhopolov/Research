@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using Newtonsoft.Json;
+using Infrastructure;
 using UnityEngine;
 
 namespace CardCollectionImpl
@@ -14,7 +14,7 @@ namespace CardCollectionImpl
     public class JsonEventCardsStorage : IEventCardsStorage
     {
         private string _rootPath;
-        private readonly SemaphoreSlim _fileSemaphore = new SemaphoreSlim(1, 1);
+        private readonly AtomicJsonFileSaver _jsonFileSaver = new AtomicJsonFileSaver();
         private static readonly Regex InvalidFileNameChars = new Regex($"[{Regex.Escape(new string(Path.GetInvalidFileNameChars()))}]", RegexOptions.Compiled);
         private bool _disposed;
 
@@ -23,21 +23,7 @@ namespace CardCollectionImpl
             ct.ThrowIfCancellationRequested();
 
             _rootPath = Path.Combine(Application.persistentDataPath, "event_cards");
-
-            try
-            {
-                if (!Directory.Exists(_rootPath))
-                {
-                    Directory.CreateDirectory(_rootPath);
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[JsonEventCardsStorage] Failed to initialize directory: {e}");
-                throw;
-            }
-
-            return UniTask.CompletedTask;
+            return _jsonFileSaver.InitializeAsync(_rootPath, ct, "JsonEventCardsStorage");
         }
 
         public async UniTask<EventCardsSaveData> LoadAsync(string eventId, CancellationToken ct = default)
@@ -46,44 +32,22 @@ namespace CardCollectionImpl
 
             var path = GetFilePath(eventId);
 
-            if (!File.Exists(path))
+            var data = await _jsonFileSaver.LoadAsync<EventCardsSaveData>(
+                path,
+                ct,
+                $"JsonEventCardsStorage Load failed for event {eventId}");
+
+            if (data == null)
             {
                 return new EventCardsSaveData { EventId = eventId, Version = 1 };
             }
 
-            await _fileSemaphore.WaitAsync(ct);
-            try
+            if (string.IsNullOrEmpty(data.EventId))
             {
-                ct.ThrowIfCancellationRequested();
-                var json = await File.ReadAllTextAsync(path, ct);
-                var data = JsonConvert.DeserializeObject<EventCardsSaveData>(json);
+                data.EventId = eventId;
+            }
 
-                if (data == null)
-                {
-                    Debug.LogWarning($"[JsonEventCardsStorage] Failed to deserialize data for event {eventId}");
-                    return new EventCardsSaveData { EventId = eventId, Version = 1 };
-                }
-
-                if (string.IsNullOrEmpty(data.EventId))
-                {
-                    data.EventId = eventId;
-                }
-
-                return data;
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[JsonEventCardsStorage] Load failed for event {eventId}: {e}");
-                return new EventCardsSaveData { EventId = eventId, Version = 1 };
-            }
-            finally
-            {
-                _fileSemaphore.Release();
-            }
+            return data;
         }
 
         public async UniTask SaveAsync(EventCardsSaveData data, CancellationToken ct = default)
@@ -97,35 +61,7 @@ namespace CardCollectionImpl
             ValidateEventId(data.EventId);
 
             var path = GetFilePath(data.EventId);
-
-            await _fileSemaphore.WaitAsync(ct);
-            try
-            {
-                ct.ThrowIfCancellationRequested();
-
-                var tempPath = path + ".tmp";
-                var json = JsonConvert.SerializeObject(data, Formatting.Indented);
-                await File.WriteAllTextAsync(tempPath, json, ct);
-                
-                if (File.Exists(path))
-                {
-                    File.Delete(path);
-                }
-                File.Move(tempPath, path);
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[JsonEventCardsStorage] Save failed for event {data.EventId}: {e}");
-                throw;
-            }
-            finally
-            {
-                _fileSemaphore.Release();
-            }
+            await _jsonFileSaver.SaveAsync(path, data, ct, $"JsonEventCardsStorage Save failed for event {data.EventId}");
         }
 
         public async UniTask UnlockCardsAsync(EventCardsSaveData data, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
@@ -171,7 +107,6 @@ namespace CardCollectionImpl
                 return;
             }
 
-            await _fileSemaphore.WaitAsync(ct);
             try
             {
                 var files = Directory.GetFiles(_rootPath, "*.json");
@@ -200,10 +135,6 @@ namespace CardCollectionImpl
             {
                 Debug.LogError($"[JsonEventCardsStorage] ClearCollectionAsync failed: {e}");
             }
-            finally
-            {
-                _fileSemaphore.Release();
-            }
         }
 
         private string GetFilePath(string eventId)
@@ -224,8 +155,6 @@ namespace CardCollectionImpl
         {
             if (_disposed) return;
             _disposed = true;
-            
-            _fileSemaphore.Dispose();
         }
     }
 }

@@ -4,21 +4,18 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UIShared;
-using UISystem;
 
 namespace CardCollectionImpl
 {
     public class ExchangeOfferProvider : IExchangeOfferProvider
     {
-        private readonly UIManager _uiManager;
         private readonly ICardCollectionRewardHandler _cardCollectionRewardHandler;
         
         private readonly Dictionary<string, ExchangePackEntry> _packById;
         
-        public ExchangeOfferProvider(ExchangePacksConfig packsConfig, ICardCollectionRewardHandler cardCollectionRewardHandler, UIManager uiManager)
+        public ExchangeOfferProvider(ExchangePacksConfig packsConfig, ICardCollectionRewardHandler cardCollectionRewardHandler)
         {
             _packById = new Dictionary<string, ExchangePackEntry>();
-            _uiManager = uiManager;
             _cardCollectionRewardHandler = cardCollectionRewardHandler;
 
             if (packsConfig == null || packsConfig.Packs == null)
@@ -52,10 +49,6 @@ namespace CardCollectionImpl
         public async UniTask<bool> ReceiveOfferContent(string offerPackId, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
-
-            const string infoText = "Pack received successfully";
-            var infoArgs = new InfoWidgetArg(_uiManager, infoText);
-            _uiManager.Show<InfoWidgetController>(infoArgs);
             
             return await _cardCollectionRewardHandler.TryHandleBuyPointsOffer(offerPackId, ct);
         }

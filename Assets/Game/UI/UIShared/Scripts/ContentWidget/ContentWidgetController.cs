@@ -6,10 +6,10 @@ namespace UIShared
     public class ContentWidgetArgs : WindowArgs
     {
         public readonly UIManager UiManager;
-        public readonly ContentWidgetData ContentWidgetData;
+        public readonly ContentWidgetDataBase ContentWidgetData;
         public readonly RectTransform RectTransform;
         
-        public ContentWidgetArgs(UIManager uiManager, ContentWidgetData contentWidgetData, RectTransform rectTransform)
+        public ContentWidgetArgs(UIManager uiManager, ContentWidgetDataBase contentWidgetData, RectTransform rectTransform)
         {
             UiManager = uiManager;
             ContentWidgetData = contentWidgetData;
@@ -41,7 +41,7 @@ namespace UIShared
         {
             View.CloseClick -= CloseWindow;
         }
-
+        
         protected override void OnHideComplete(bool isClosed)
         {
         }

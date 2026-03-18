@@ -12,6 +12,7 @@ namespace core
     {
         [SerializeField] private CheatsManager _cheatsManagerPrefab;
         [SerializeField] private CardCollectionEntryPoint _cardCollectionEntryPoint;
+        [SerializeField] private InventoryEntryPoint _inventoryEntryPoint;
         [SerializeField] private ResourcesView _resourcesView;
         
         private CheatsManager _cheatsManager;
@@ -66,6 +67,7 @@ namespace core
             {
                 new DefaultModule(updated, reader, pointsAccount, destroyCt),
                 new SampleModule(_resourcesView.ResourceManager),
+                new InventoryModule(_inventoryEntryPoint.InventoryService),
             };
             
             return cheatsModules;

@@ -5,7 +5,7 @@ namespace CardCollection.Core
 {
     public interface IWindowPresenter
     {
-        bool OpenWindow(string windowId, object args);
+        void OpenNewCardWindow(string packId, ICardCollectionModule cardCollectionModule, ICardCollectionReader cardCollectionReader);
         void OpenNewCardWindow(CardPack pack, ICardCollectionModule cardCollectionModule, ICardCollectionReader cardCollectionReader);
 
         UniTask OpenCardCollectionWindow(

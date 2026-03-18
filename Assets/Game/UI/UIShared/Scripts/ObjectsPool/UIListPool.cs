@@ -55,6 +55,8 @@ namespace UIShared
                elem.transform.SetSiblingIndex(curIndex);
                Pool[curIndex] = elem;
            }
+
+           CleanupElement(elem);
        
            if (!elem.gameObject.activeSelf)
                elem.gameObject.SetActive(true);
@@ -70,6 +72,7 @@ namespace UIShared
             for (var i = LastActiveIndex + 1; i < Pool.Count; i++)
             {
                 if (IsNull(Pool[i])) continue;
+                CleanupElement(Pool[i]);
                 Pool[i].gameObject.SetActive(false);
             }
 
@@ -94,6 +97,14 @@ namespace UIShared
 
         public bool IsEmpty() => !Pool.Any(poolElem => poolElem != null && poolElem.gameObject.activeSelf);
         public int Count() => Pool.Count(poolElem => poolElem != null && poolElem.gameObject.activeSelf);
+        
+        private static void CleanupElement(T element)
+        {
+            if (element is ICleanup cleanup)
+            {
+                cleanup.Cleanup();
+            }
+        }
         
         
         public bool IsNull(Object o) => o == null || !o;

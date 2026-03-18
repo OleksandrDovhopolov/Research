@@ -1,0 +1,23 @@
+{
+    "name": "Inventory.Implementation",
+    "rootNamespace": "Inventory.Implementation",
+    "references": [
+        "Inventory.API",
+        "UniTask",
+        "VContainer",
+        "UIShared",
+        "UISystem",
+        "Unity.TextMeshPro",
+        "Infrastructure",
+        "NewAssembly"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

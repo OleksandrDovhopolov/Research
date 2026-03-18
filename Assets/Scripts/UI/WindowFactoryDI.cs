@@ -21,8 +21,6 @@ namespace core
         
         public override async Task<T> CreateAsync<T>()
         {
-            Debug.LogWarning("Creating Window CreateAsync");
-            
             var windowAttribute = UIExtension.GetWindowAttribute<T>();
 
             var window = await AddressablesWrapper.LoadFromTask<GameObject>(windowAttribute.PrefabAddressableReference);

@@ -1,138 +1,93 @@
-using System;
 using System.Collections;
-using System.Threading;
-using Cysharp.Threading.Tasks;
-using Infrastructure;
+using System;
+using System.Collections.Generic;
 using UISystem;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace UIShared
 {
-    public partial class ContentWidgetView : WindowView 
+    public class ContentWidgetView : WindowView 
     {
-        private readonly struct SpriteLoadRequest
-        {
-            public readonly ContentItemView View;
-            public readonly string Address;
-
-            public SpriteLoadRequest(ContentItemView view, string address)
-            {
-                View = view;
-                Address = address;
-            }
-        }
-
         private const int ContentWidgetHideDelay = 10;
         
-        [SerializeField] private UIListPool<ContentItemView> _itemsPool;
-
         [SerializeField] private RectTransform _container;
-        [SerializeField] private HorizontalLayoutGroup _itemsGroup;
+        [SerializeField] private RectTransform _contentContainer;
         [SerializeField] private float _verticalOffset = 24f;
         
-        [Space, Header("MockSprite")]
-        [SerializeField] private Sprite _mockSprite;
-        
         private RectTransform _contentRectTransform;
-        private CancellationTokenSource _loadSpritesCts;
+        private readonly Dictionary<Type, MonoBehaviour> _cachedViews = new();
+        private MonoBehaviour _activeView;
         
-        public void ShowContentView(ContentWidgetData contentData, RectTransform contentRectTransform)
+        public void ShowContentView(ContentWidgetDataBase contentData, RectTransform contentRectTransform)
         {
-            _contentRectTransform = contentRectTransform;
-            
-            StopAllCoroutines();
-
-            var viewItems = CreateAndGetOfferViews(contentData ?? ContentWidgetData.Empty);
-            
-            if (viewItems <= 0)
+            if (contentData == null)
             {
-                
-                Debug.LogWarning($"Failed to open content widget {GetType()}. _itemsPool count == 0");
+                Debug.LogError("Failed to show content widget. Content data is null.");
                 HideContentWidget();
                 return;
             }
 
-            StartCoroutine(ResizeAndRepositionCoroutine());
-            StartCoroutine(HidePopupCoroutine());
-        }
-        
-        private async UniTask LoadContentSpritesSequentially(
-            SpriteLoadRequest[] packRequests,
-            SpriteLoadRequest[] resourceRequests,
-            CancellationToken ct)
-        {
-            try
-            {
-                await LoadSprites(packRequests, ct);
-                await LoadSprites(resourceRequests, ct);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-        }
+            _contentRectTransform = contentRectTransform;
+            
+            StopAllCoroutines();
+            DeactivateActiveView();
 
-        private static async UniTask LoadSprites(SpriteLoadRequest[] requests, CancellationToken ct)
-        {
-            foreach (var request in requests)
+            var dataType = contentData.GetType();
+            var prefabPrototype = WidgetRegistry.GetPrefab(dataType);
+
+            if (prefabPrototype == null)
             {
-                ct.ThrowIfCancellationRequested();
-                try
-                {
-                    var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(request.Address);
-                    request.View.SetSprite(sprite);
-                }
-                finally
-                {
-                    request.View.SetLoadingActive(false);
-                }
+                Debug.LogError($"Prefab {dataType} not found");
+                return;
             }
+
+            var viewInstance = GetOrCreateViewInstance(dataType, prefabPrototype);
+            if (viewInstance == null)
+            {
+                HideContentWidget();
+                return;
+            }
+
+            if (!viewInstance.TryGetComponent<IContentWidgetView>(out var view))
+            {
+                Debug.LogError($"View instance for {dataType} does not implement {nameof(IContentWidgetView)}");
+                HideContentWidget();
+                return;
+            }
+
+            viewInstance.gameObject.SetActive(true);
+            _activeView = viewInstance;
+
+            if (!view.Setup(contentData))
+            {
+                Debug.LogWarning($"Setup failed for content widget type {dataType}");
+                HideContentWidget();
+                return;
+            }
+
+            RepositionAboveClickedTransform();
+            StartCoroutine(ResizeAndRepositionCoroutine(view.OnViewCreated()));
+            StartCoroutine(HidePopupCoroutine());
         }
         
         private void HideContentWidget()
         {
             InvokeCloseEvent();
         }
-
+        
         private IEnumerator HidePopupCoroutine()
         {
             yield return new WaitForSeconds(ContentWidgetHideDelay);
             HideContentWidget();
         }
         
-        private IEnumerator ResizeAndRepositionCoroutine()
+        private IEnumerator ResizeAndRepositionCoroutine(IEnumerator routine)
         {
-            yield return new WaitForEndOfFrame();
-
-            Canvas.ForceUpdateCanvases();
-            ResizeToLayout();
+            yield return routine;
             RepositionAboveClickedTransform();
             ClampToParentBounds();
         }
-
-        private void ResizeToLayout()
-        {
-            var itemsRect = _itemsGroup != null ? _itemsGroup.transform as RectTransform : null;
-            if (itemsRect == null)
-            {
-                return;
-            }
-
-            LayoutRebuilder.ForceRebuildLayoutImmediate(itemsRect);
-            Canvas.ForceUpdateCanvases();
-
-            var preferredWidth = LayoutUtility.GetPreferredWidth(itemsRect);
-            if (preferredWidth <= 0f)
-            {
-                preferredWidth = itemsRect.rect.width;
-            }
-
-            if (preferredWidth > 0f)
-            {
-                _container.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, preferredWidth);
-            }
-        }
-
+        
         private void RepositionAboveClickedTransform()
         {
             if (_contentRectTransform == null)
@@ -172,7 +127,7 @@ namespace UIShared
                 _container.position = worldTopCenter + _contentRectTransform.up * _verticalOffset;
             }
         }
-
+        
         private void ClampToParentBounds()
         {
             var parentRect = _container.parent as RectTransform;
@@ -196,11 +151,56 @@ namespace UIShared
             _container.anchoredPosition = anchoredPos;
         }
 
-        private void OnDestroy()
+        public void Dispose()
         {
-            _loadSpritesCts?.Cancel();
-            _loadSpritesCts?.Dispose();
-            _loadSpritesCts = null;
+            StopAllCoroutines();
+            _activeView = null;
+
+            foreach (var cachedView in _cachedViews.Values)
+            {
+                if (cachedView != null)
+                {
+                    Destroy(cachedView.gameObject);
+                }
+            }
+
+            _cachedViews.Clear();
+        }
+
+        private MonoBehaviour GetOrCreateViewInstance(Type dataType, IContentWidgetView prefabPrototype)
+        {
+            if (_cachedViews.TryGetValue(dataType, out var cachedView) && cachedView != null)
+            {
+                return cachedView;
+            }
+
+            if (prefabPrototype is not MonoBehaviour prefabBehaviour)
+            {
+                Debug.LogError($"Registered prefab for {dataType} is not a MonoBehaviour.");
+                return null;
+            }
+
+            var instance = Instantiate(prefabBehaviour, _contentContainer);
+            instance.gameObject.SetActive(false);
+            _cachedViews[dataType] = instance;
+            return instance;
+        }
+
+        private void DeactivateActiveView()
+        {
+            if (_activeView == null)
+            {
+                return;
+            }
+
+            _activeView.gameObject.SetActive(false);
+            _activeView = null;
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            Dispose();
         }
     }
 }

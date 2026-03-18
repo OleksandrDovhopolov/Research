@@ -1,0 +1,17 @@
+{
+    "name": "Inventory.API",
+    "rootNamespace": "Inventory.API",
+    "references": [
+        "R3",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
