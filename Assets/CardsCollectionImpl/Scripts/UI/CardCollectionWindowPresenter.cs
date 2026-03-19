@@ -52,17 +52,20 @@ namespace CardCollectionImpl
         //TODO should return true / false ? 
         public async UniTask OpenCardCollectionWindow(
             ICardCollectionModule  cardCollectionModule,
-            EventCardsSaveData  eventCardsSaveData,
+            ICardCollectionReader  cardCollectionReader,
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory  rewardDefinitionFactory,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
             CancellationToken ct)
         {
-            var newCardsData = CardCollectionNewCardsDto.Create(eventCardsSaveData);
+            var collectionData = await cardCollectionReader.Load(ct);
+            
+            var newCardsData = CardCollectionNewCardsDto.Create(collectionData);
             var newCardIds = newCardsData.NewCardIds;
 
             if (newCardIds.Count > 0)
             {
+                //TODO check do i need here await
                 await cardCollectionModule.ResetNewFlagsAsync(newCardIds, ct);
             }
 
@@ -70,14 +73,14 @@ namespace CardCollectionImpl
             var args = new CardCollectionArgs(
                 _uiManager,
                 newCardsData,
-                eventCardsSaveData,
+                collectionData,
                 exchangeOfferProvider,
                 rewardDefinitionFactory, 
                 cardCollectionPointsAccount,
                 snapshot);
             _uiManager.Show<CardCollectionController>(args);
 
-            _collectionProgressSnapshotService.SetSnapshot(eventCardsSaveData);
+            _collectionProgressSnapshotService.SetSnapshot(collectionData);
         }
     }
 }

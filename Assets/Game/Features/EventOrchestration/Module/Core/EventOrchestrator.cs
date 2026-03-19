@@ -22,6 +22,9 @@ namespace EventOrchestration.Core
         private readonly HashSet<string> _transitionInFlight = new();
         private List<ScheduleItem> _schedule = new();
 
+        public event Action<ScheduleItem> OnEventStarted;
+        public event Action<ScheduleItem> OnEventCompleted;
+
         public EventOrchestrator(
             IScheduleProvider scheduleProvider,
             IScheduleValidator scheduleValidator,
@@ -193,6 +196,7 @@ namespace EventOrchestration.Core
                 }
 
                 await TransitionStateAsync(state, EventInstanceState.Active, ct);
+                OnEventStarted?.Invoke(item);
 
                 await ProcessActiveAsync(item, _clock.UtcNow, ct);
             }
@@ -259,6 +263,7 @@ namespace EventOrchestration.Core
             }
 
             await TransitionStateAsync(state, EventInstanceState.Completed, ct);
+            OnEventCompleted?.Invoke(item);
             await _stateStore.SaveAsync(_states, ct);
         }
 

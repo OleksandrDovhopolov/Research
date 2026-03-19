@@ -10,6 +10,7 @@ namespace core
     public sealed class OrchestratorRunner : MonoBehaviour
     {
         [SerializeField] private int _tickIntervalSeconds = 1;
+        [SerializeField] private EventHudButtonPresenter _buttonPresenter;
 
         private CancellationToken _destroyToken;
         private EventOrchestrator _orchestrator;
@@ -27,6 +28,7 @@ namespace core
 
         private void Start()
         {
+            BindHudPresenters(_orchestrator);
             RunAsync(_destroyToken).Forget();
         }
 
@@ -41,6 +43,11 @@ namespace core
                 await _orchestrator.TickAsync(ct);
                 await UniTask.Delay(TimeSpan.FromSeconds(_tickIntervalSeconds), cancellationToken: ct);
             }
+        }
+
+        private void BindHudPresenters(EventOrchestrator orchestrator)
+        {
+            _buttonPresenter.Bind(orchestrator);
         }
     }
 }

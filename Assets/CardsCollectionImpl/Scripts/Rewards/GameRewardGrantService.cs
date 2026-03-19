@@ -6,7 +6,7 @@ using Inventory.API;
 using Resources.Core;
 using UnityEngine;
 
-namespace core
+namespace CardCollectionImpl
 {
     public sealed class GameRewardGrantService : IRewardGrantService
     {

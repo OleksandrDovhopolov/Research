@@ -21,7 +21,8 @@ namespace core
             builder.RegisterInstance(_uiManager);
             builder.Register<JsonResourcesStorage>(Lifetime.Singleton);
             builder.Register<ResourceManager>(Lifetime.Singleton);
-            builder.RegisterCardCollectionOrchestration(_cardCollectionScheduleFile);
+            builder.RegisterInventoryService();
+            builder.RegisterOrchestration(_cardCollectionScheduleFile);
 
             builder.RegisterComponentInHierarchy<Starter>();
             builder.RegisterComponentInHierarchy<OrchestratorRunner>();

@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace CardCollection.Core
 {
+    //TODO should be removed from CardCollection.Core to CardCollectionImpl
     public class JsonCardPackProvider : ICardPackProvider
     {
         private const string CONFIG_FILE_NAME = "card_packs_config";

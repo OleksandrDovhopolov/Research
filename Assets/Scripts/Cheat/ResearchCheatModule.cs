@@ -11,7 +11,6 @@ namespace core
     public class ResearchCheatModule : MonoBehaviour, ICheatsContainer
     {
         [SerializeField] private CheatsManager _cheatsManagerPrefab;
-        [SerializeField] private CardCollectionEntryPoint _cardCollectionEntryPoint;
         [SerializeField] private InventoryEntryPoint _inventoryEntryPoint;
         [SerializeField] private ResourcesView _resourcesView;
         
@@ -41,9 +40,10 @@ namespace core
             _rootPanel.transform.SetParent(_cheatsManager.transform, false);
         }
         
+        //TODO restore cheat when module integration is ready
         private async UniTask InitializeCheatsModules()
         {
-            await _cardCollectionEntryPoint.WaitForInitializationAsync();
+            //await _cardCollectionEntryPoint.WaitForInitializationAsync();
             _cheatsModules = new List<ICheatsModule>(GetCheatModules());
             _cheatsModules.ForEach(module =>
             {
@@ -58,14 +58,14 @@ namespace core
         
         protected virtual List<ICheatsModule> GetCheatModules()
         {
-            var updated = _cardCollectionEntryPoint.CardCollectionUpdater;
-            var reader = _cardCollectionEntryPoint.CardCollectionReader;
-            var pointsAccount = _cardCollectionEntryPoint.CardCollectionPointsAccount;
+            //var updated = _cardCollectionEntryPoint.CardCollectionUpdater;
+            //var reader = _cardCollectionEntryPoint.CardCollectionReader;
+            //var pointsAccount = _cardCollectionEntryPoint.CardCollectionPointsAccount;
             CancellationToken destroyCt = this.GetCancellationTokenOnDestroy();
             
             var cheatsModules = new List<ICheatsModule>
             {
-                new DefaultModule(updated, reader, pointsAccount, destroyCt),
+                //new DefaultModule(updated, reader, pointsAccount, destroyCt),
                 new SampleModule(_resourcesView.ResourceManager),
                 new InventoryModule(_inventoryEntryPoint.InventoryService),
             };

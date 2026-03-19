@@ -8,7 +8,7 @@ namespace core
 {
     public static class EventOrchestrationVContainerBindings
     {
-        public static void RegisterCardCollectionOrchestration(this IContainerBuilder builder, string scheduleJsonFile)
+        public static void RegisterOrchestration(this IContainerBuilder builder, string scheduleJsonFile)
         {
             builder.Register<IScheduleProvider>(_ => new StreamingAssetsScheduleProvider(scheduleJsonFile), Lifetime.Singleton);
             builder.Register<IScheduleValidator, BasicScheduleValidator>(Lifetime.Singleton);
@@ -17,7 +17,6 @@ namespace core
             builder.Register<IStateStore, InMemoryStateStore>(Lifetime.Singleton);
             builder.Register<IOrchestratorTelemetry, UnityDebugTelemetry>(Lifetime.Singleton);
 
-            builder.Register<ICardCollectionRuntime, CardCollectionDebugRuntime>(Lifetime.Singleton);
             builder.Register<IEventModelFactory, CardCollectionEventModelFactory>(Lifetime.Singleton);
             builder.Register<CardCollectionController>(Lifetime.Singleton);
 

@@ -6,8 +6,6 @@ namespace core
 {
     public class OpenCardPackDemo : MonoBehaviour
     {
-        [SerializeField] private CardCollectionEntryPoint _cardCollectionEntryPoint;
-        
         [SerializeField] private Button _twoCardButton;
         [SerializeField] private Button _threeCardButton;
         [SerializeField] private Button _fourCardButton;
@@ -29,9 +27,10 @@ namespace core
             _fiveCardButton.onClick.AddListener(() => OpenNewCardWindow(BaseFiveCardPackID));
         }
 
+        //TODO restore when module integration is ready
         public void OpenNewCardWindow(string packId)
         {
-            var cardCollectionModule = _cardCollectionEntryPoint.CardCollectionModule;
+            /*var cardCollectionModule = _cardCollectionEntryPoint.CardCollectionModule;
             var cardCollectionReader = _cardCollectionEntryPoint.CardCollectionReader;
             
             var pack = cardCollectionModule.GetPackById(packId);
@@ -46,7 +45,7 @@ namespace core
             var compositionRoot = CardCollectionCompositionRegistry.Resolve();
             var windowPresenter = compositionRoot.CreateWindowPresenter();
             
-            windowPresenter.OpenNewCardWindow(pack, cardCollectionModule, cardCollectionReader);
+            windowPresenter.OpenNewCardWindow(pack, cardCollectionModule, cardCollectionReader);*/
         }
         
         private void OnDestroy()

@@ -10,7 +10,7 @@ namespace CardCollection.Core
 
         UniTask OpenCardCollectionWindow(
             ICardCollectionModule cardCollectionModule,
-            EventCardsSaveData eventCardsSaveData,
+            ICardCollectionReader cardCollectionReader,
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory rewardDefinitionFactory,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
