@@ -1,0 +1,35 @@
+[
+  {
+    "Id": "season_cards_001",
+    "EventType": "CardCollection",
+    "StreamId": "card_collection_seasons",
+    "StartTimeUtc": "2026-03-19T10:00:00Z",
+    "EndTimeUtc": "2026-03-19T10:15:00Z",
+    "Priority": 10,
+    "CustomParams": {
+      "eventId": "cards_season_001"
+    }
+  },
+  {
+    "Id": "season_cards_002",
+    "EventType": "CardCollection",
+    "StreamId": "card_collection_seasons",
+    "StartTimeUtc": "2026-03-19T10:15:00Z",
+    "EndTimeUtc": "2026-03-19T10:30:00Z",
+    "Priority": 10,
+    "CustomParams": {
+      "eventId": "cards_season_002"
+    }
+  },
+  {
+    "Id": "season_cards_003",
+    "EventType": "CardCollection",
+    "StreamId": "card_collection_seasons",
+    "StartTimeUtc": "2026-03-19T10:30:00Z",
+    "EndTimeUtc": "2026-03-19T10:45:00Z",
+    "Priority": 10,
+    "CustomParams": {
+      "eventId": "cards_season_003"
+    }
+  }
+]

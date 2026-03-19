@@ -9,6 +9,7 @@ namespace core
     public sealed class GameInstaller : LifetimeScope
     {
         [SerializeField] private UIManager _uiManager;
+        [SerializeField] private string _cardCollectionScheduleFile = "card_collection_schedule.json";
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -20,7 +21,10 @@ namespace core
             builder.RegisterInstance(_uiManager);
             builder.Register<JsonResourcesStorage>(Lifetime.Singleton);
             builder.Register<ResourceManager>(Lifetime.Singleton);
+            builder.RegisterCardCollectionOrchestration(_cardCollectionScheduleFile);
+
             builder.RegisterComponentInHierarchy<Starter>();
+            builder.RegisterComponentInHierarchy<OrchestratorRunner>();
         }
     }
 }
