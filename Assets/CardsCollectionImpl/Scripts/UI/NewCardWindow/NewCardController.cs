@@ -9,14 +9,12 @@ namespace CardCollectionImpl
     public class NewCardArgs : WindowArgs
     {
         public readonly CardPack CardPack;
-        public readonly UIManager UiManager;
         public readonly ICardCollectionModule CollectionModule;
         public readonly ICardCollectionReader CollectionReader;
 
-        public NewCardArgs(CardPack cardPack, UIManager uiManager, ICardCollectionModule collectionModule, ICardCollectionReader collectionReader)
+        public NewCardArgs(CardPack cardPack, ICardCollectionModule collectionModule, ICardCollectionReader collectionReader)
         {
             CardPack = cardPack;
-            UiManager = uiManager;
             CollectionModule = collectionModule;
             CollectionReader = collectionReader;
         }
@@ -30,7 +28,6 @@ namespace CardCollectionImpl
 
         protected override void OnShowStart()
         {
-            Debug.LogWarning($"Debug {GetType().Name} OnShowStart");
             _cts = new CancellationTokenSource();
             GetNewCardsAsync(_cts.Token).Forget();
         }
@@ -49,7 +46,6 @@ namespace CardCollectionImpl
 
         protected override void OnShowComplete()
         {
-            Debug.LogWarning($"Debug {GetType().Name} OnShowComplete");
             View.CloseClick += CloseWindow;
         }
 
@@ -77,7 +73,7 @@ namespace CardCollectionImpl
         {
             View.CloseClick -= CloseWindow;
             await View.PlayCloseSequenceAsync(ct);
-            Args.UiManager.Hide<NewCardController>();
+            UIManager.Hide<NewCardController>();
         }
     }
 }

@@ -46,24 +46,12 @@ namespace CardCollection.Tests
                 throw new NotImplementedException();
             }
 
-            public ICardCollectionRewardHandler CreateRewardHandler(
-                IRewardGrantService rewardGrantService,
-                IRewardDefinitionFactory rewardDefinitionFactory)
-            {
-                throw new NotImplementedException();
-            }
-
             public IExchangeOfferProvider CreateExchangeOfferProvider(ICardCollectionRewardHandler rewardHandler)
             {
                 throw new NotImplementedException();
             }
 
             public CardCollectionModuleConfig CreateModuleConfig(ICardPackProvider cardPackProvider, string eventId)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IWindowPresenter CreateWindowPresenter(EventCardsSaveData eventCardsSaveData = null)
             {
                 throw new NotImplementedException();
             }

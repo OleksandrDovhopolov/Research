@@ -8,12 +8,14 @@ using EventOrchestration.Models;
 using Inventory.API;
 using Resources.Core;
 using UIShared;
+using UISystem;
 using UnityEngine;
 
 namespace EventOrchestration.Controllers
 {
     public sealed class CardCollectionController : BaseLiveOpsController<CardCollectionEventModel>
     {
+        private readonly UIManager _uiManager;
         private readonly IHUDService _hudService;
         private readonly ResourceManager _resourceManager;
         private readonly IInventoryService _inventoryService;
@@ -23,7 +25,6 @@ namespace EventOrchestration.Controllers
 
         private CardCollectionHudPresenter _cardCollectionHudPresenter;
         
-        private IWindowPresenter _windowPresenter;
         private CardCollectionModule _cardCollectionModule;
         private ICardCollectionRewardHandler _rewardHandler; 
         private IExchangeOfferProvider _exchangeOfferProvider;
@@ -31,11 +32,13 @@ namespace EventOrchestration.Controllers
         private CardCollectionInventoryIntegration _cardCollectionInventoryIntegration;
 
         public CardCollectionController(
+            UIManager uiManager, 
             IHUDService hudService,
             ResourceManager resourceManager,
             IInventoryService inventoryService,
             IEventModelFactory modelFactory) : base("CardCollection", modelFactory)
         {
+            _uiManager = uiManager;
             _hudService = hudService;
             _resourceManager = resourceManager;
             _inventoryService = inventoryService;
@@ -83,31 +86,34 @@ namespace EventOrchestration.Controllers
             _cardCollectionModule.OnGroupCompleted += GroupCompletedHandler;
             _cardCollectionModule.OnCollectionCompleted += CollectionCompletedHandler;
             
-            var collectionData = await _cardCollectionModule.Load(ct);
-            _windowPresenter = compositionRoot.CreateWindowPresenter(collectionData);
-            
             BindInventoryCategory();
-            BindEventButton();
+            
+            var collectionData = await _cardCollectionModule.Load(ct);
+            BindHUDPresenter(collectionData);
             
             await UniTask.CompletedTask;
         }
 
         private void BindInventoryCategory()
         {
-            _cardCollectionInventoryIntegration = new CardCollectionInventoryIntegration(_windowPresenter, _cardCollectionModule, _cardCollectionModule);
+            _cardCollectionInventoryIntegration = new CardCollectionInventoryIntegration(_uiManager, _cardCollectionModule, _cardCollectionModule);
             _cardCollectionInventoryIntegration.AttachAsync(_rewardHandlersCts.Token);
         }
         
-        private void BindEventButton()
+        private void BindHUDPresenter(EventCardsSaveData collectionData)
         {
+            var collectionProgressSnapshotService = new CollectionProgressSnapshotService();;
+            collectionProgressSnapshotService.SetSnapshot(collectionData);
+            
             _cardCollectionHudPresenter = new CardCollectionHudPresenter(
+                _uiManager,
                 _hudService,
                 _cardCollectionModule,
                 _cardCollectionModule,
                 _cardCollectionModule,
-                _windowPresenter,
                 _exchangeOfferProvider,
-                _rewardDefinitionFactory);
+                _rewardDefinitionFactory,
+                collectionProgressSnapshotService);
             
             _cardCollectionHudPresenter.Bind(CurrentSchedule, _rewardHandlersCts.Token);
         }

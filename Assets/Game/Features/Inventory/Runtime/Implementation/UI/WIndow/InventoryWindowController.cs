@@ -197,7 +197,7 @@ namespace Inventory.Implementation
             {
                 View.GetWindowLifetimeToken().ThrowIfCancellationRequested();
 
-                var args = new ContentWidgetArgs(Args.UiManager, data, view.RectTransform);
+                var args = new ContentWidgetArgs(data, view.RectTransform);
                 Args.UiManager.Show<ContentWidgetController>(args);
             }
             catch (OperationCanceledException)

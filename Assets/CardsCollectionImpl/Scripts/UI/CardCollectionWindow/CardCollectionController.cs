@@ -10,7 +10,6 @@ namespace CardCollectionImpl
 {
     public class CardCollectionArgs : WindowArgs
     {
-        public readonly UIManager UiManager;
         public readonly CardCollectionNewCardsDto NewCardsData;
         public readonly ICardCollectionPointsAccount CardCollectionPointsAccount;
         public readonly EventCardsSaveData EventCardsSaveData;
@@ -19,7 +18,6 @@ namespace CardCollectionImpl
         public readonly CollectionProgressSnapshot CollectionProgressSnapshot;
         
         public CardCollectionArgs(
-            UIManager uiManager,
             CardCollectionNewCardsDto newCardsData,
             EventCardsSaveData eventCardsSaveData,
             IExchangeOfferProvider exchangeOfferProvider,
@@ -27,7 +25,6 @@ namespace CardCollectionImpl
             ICardCollectionPointsAccount cardCollectionPointsAccount,
             CollectionProgressSnapshot  collectionProgressSnapshot)
         {
-            UiManager = uiManager;
             NewCardsData = newCardsData;
             EventCardsSaveData = eventCardsSaveData;
             ExchangeOfferProvider = exchangeOfferProvider;
@@ -84,8 +81,8 @@ namespace CardCollectionImpl
         {
             var cardCollectionRewardContent = Args.RewardDefinitionFactory.CreateFromCollectionReward();
             var contentWidgetData = cardCollectionRewardContent.ToContentWidgetData();
-            var args = new ContentWidgetArgs(Args.UiManager, contentWidgetData, rectTransform);
-            Args.UiManager.Show<ContentWidgetController>(args);
+            var args = new ContentWidgetArgs(contentWidgetData, rectTransform);
+            UIManager.Show<ContentWidgetController>(args);
         }
         
         private void OnPointsViewClickedHandler()
@@ -93,19 +90,18 @@ namespace CardCollectionImpl
             TryHideContentWidget();
             
             var args = new CollectionPointsExchangeArgs(
-                Args.UiManager,
                 Args.EventCardsSaveData.Points,
                 Args.ExchangeOfferProvider, 
                 Args.RewardDefinitionFactory,
                 Args.CardCollectionPointsAccount,
                 UpdatePointsAmount);
-            Args.UiManager.Show<CollectionPointsExchangeController>(args);
+            UIManager.Show<CollectionPointsExchangeController>(args);
         }
         
         private void OnInfoButtonClickedHandler()
         {
-            var args = new InfoSlidesPageArgs(SlidesType.PiggyBank, Args.UiManager);
-            Args.UiManager.Show<InfoSlidesPageController>(args);
+            var args = new InfoSlidesPageArgs(SlidesType.PiggyBank, UIManager);
+            UIManager.Show<InfoSlidesPageController>(args);
         }
         
         private async UniTask CreateGroupViews()
@@ -132,9 +128,9 @@ namespace CardCollectionImpl
         
         private void TryHideContentWidget()
         {
-            if (Args.UiManager.IsWindowShown<ContentWidgetController>())
+            if (UIManager.IsWindowShown<ContentWidgetController>())
             {
-                Args.UiManager.Hide<ContentWidgetController>();
+                UIManager.Hide<ContentWidgetController>();
             }
         }
         
@@ -156,13 +152,13 @@ namespace CardCollectionImpl
             OnGroupViewChangedHandler(groupType);
             
             var args = new CardGroupArgs(
-                Args.UiManager, 
+                UIManager, 
                 Args.NewCardsData,
                 Args.EventCardsSaveData, 
                 groupType, 
                 View.RewardsConfigSo,
                 OnGroupViewChangedHandler);
-            Args.UiManager.Show<CardGroupController>(args);
+            UIManager.Show<CardGroupController>(args);
         }
 
         private void OnGroupViewChangedHandler(string currentGroupType)
@@ -172,7 +168,7 @@ namespace CardCollectionImpl
         
         private void CloseWindow()
         {
-            Args.UiManager.Hide<CardCollectionController>();
+            UIManager.Hide<CardCollectionController>();
         }
     }
 }

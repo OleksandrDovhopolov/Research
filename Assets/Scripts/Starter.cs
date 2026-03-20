@@ -25,14 +25,16 @@ namespace core
         private ConfigManager _configManager;
         private CancellationToken _destroyCt;
         
+        private IObjectResolver _resolver;
         private ResourceManager _resourceManager;
-
+        
         [Inject]
-        private void Construct(ResourceManager resourceManager)
+        private void Construct(ResourceManager resourceManager, IObjectResolver resolver)
         {
             _resourceManager = resourceManager;
+            _resolver = resolver;
         }
-
+        
         private void Awake()
         {
             Application.targetFrameRate = 60;
@@ -41,7 +43,7 @@ namespace core
 
         private void Start()
         {
-            WindowFactoryBase windowFactoryBase = new WindowFactoryDI(_uiManager);
+            WindowFactoryBase windowFactoryBase = new WindowFactoryDI(_uiManager, _resolver);
             UIManagerEventHandlerBase eventHandler = new UIManagerSignalHandler();
 
             _uiManager.Configurate(windowFactoryBase, eventHandler);

@@ -26,30 +26,6 @@ namespace CardCollectionImpl
         }
 
         //TODO should return true / false ? 
-        public void OpenNewCardWindow(string packId, ICardCollectionModule cardCollectionModule, ICardCollectionReader cardCollectionReader)
-        {
-            var pack = cardCollectionModule.GetPackById(packId);
-            if (pack == null)
-            {
-                Debug.LogError($"Failed to find pack with id {packId}");
-                return;
-            }
-            
-            OpenNewCardWindow(pack, cardCollectionModule, cardCollectionReader);
-        }
-
-        //TODO should return true / false ? 
-        public void OpenNewCardWindow(CardPack pack, ICardCollectionModule cardCollectionModule, ICardCollectionReader cardCollectionReader)
-        {
-            //TODO UIStack
-            // private IEnumerator ShowCommand(UIShowCommand command) 
-            // if ShowInParallel  = hide and show start the same time 
-            // in this case should be ShowInOrder 
-            var args = new NewCardArgs(pack, _uiManager, cardCollectionModule, cardCollectionReader); 
-            _uiManager.Show<NewCardController>(args);
-        }
-
-        //TODO should return true / false ? 
         public async UniTask OpenCardCollectionWindow(
             ICardCollectionModule  cardCollectionModule,
             ICardCollectionReader  cardCollectionReader,
@@ -71,7 +47,6 @@ namespace CardCollectionImpl
 
             _collectionProgressSnapshotService.TryGetSnapshot(out var snapshot);
             var args = new CardCollectionArgs(
-                _uiManager,
                 newCardsData,
                 collectionData,
                 exchangeOfferProvider,

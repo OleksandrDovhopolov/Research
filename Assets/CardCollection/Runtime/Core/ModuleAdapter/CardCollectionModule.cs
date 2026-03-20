@@ -52,7 +52,13 @@ namespace CardCollection.Core
                 return data;
             }
 
-            var initializedData = new EventCardsSaveData { EventId = _context.DefaultEventId };
+            var initializedData = new EventCardsSaveData
+            {
+                EventId = _context.DefaultEventId,
+                // Preserve existing progress fields when cards were not yet expanded.
+                Points = data?.Points ?? 0,
+                Version = data?.Version ?? 1
+            };
             foreach (var cardDefinition in _context.GetCardDefinitions())
             {
                 initializedData.Cards.Add(new CardProgressData

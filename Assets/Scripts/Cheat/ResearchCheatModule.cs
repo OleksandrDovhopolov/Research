@@ -65,7 +65,7 @@ namespace core
             
             var cheatsModules = new List<ICheatsModule>
             {
-                //new DefaultModule(updated, reader, pointsAccount, destroyCt),
+                //new CardCollectionModule(updated, reader, pointsAccount, destroyCt),
                 new SampleModule(_resourcesView.ResourceManager),
                 new InventoryModule(_inventoryEntryPoint.InventoryService),
             };

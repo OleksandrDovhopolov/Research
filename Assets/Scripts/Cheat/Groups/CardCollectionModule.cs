@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace core
 {
-    public class DefaultModule : ICheatsModule
+    public class CardCollectionModule : ICheatsModule
     {
         private const string CardCollectionPointsGroup = "CardCollectionPointsGroup";
         
@@ -16,7 +16,15 @@ namespace core
         private readonly ICardCollectionPointsAccount _cardCollectionPointsAccount;
         private readonly CancellationToken _ct;
         
-        public DefaultModule(
+        private readonly CardCollectionModule _cardCollectionModule;
+            
+        public CardCollectionModule(CardCollectionModule cardCollectionModule, CancellationToken ct)
+        {
+            _cardCollectionModule = cardCollectionModule;
+            _ct = ct;
+        }
+        
+        /*public CardCollectionModule(
             ICardCollectionUpdater collectionUpdater,
             ICardCollectionReader cardCollectionReader,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
@@ -26,7 +34,7 @@ namespace core
             _cardCollectionReader = cardCollectionReader;
             _cardCollectionPointsAccount = cardCollectionPointsAccount;
             _ct = ct;
-        }
+        }*/
         
         public void Initialize(ICheatsContainer cheatsContainer)
         {

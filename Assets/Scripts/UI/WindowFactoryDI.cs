@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Infrastructure;
 using UISystem;
 using UnityEngine;
+using VContainer;
 using Object = UnityEngine.Object;
 
 namespace core
@@ -10,13 +11,14 @@ namespace core
     public class WindowFactoryDI : WindowFactoryBase
     {
         private const string Tag = "[Window Factory]";
-
-
-        private UIManager _uiManager;
         
-        public WindowFactoryDI(UIManager uiManager)
+        private readonly UIManager _uiManager;
+        private readonly IObjectResolver _diContainer;
+        
+        public WindowFactoryDI(UIManager uiManager, IObjectResolver diContainer)
         {
             _uiManager = uiManager;
+            _diContainer = diContainer;
         }
         
         public override async Task<T> CreateAsync<T>()
@@ -51,12 +53,12 @@ namespace core
         protected override T Create<T>(WindowView windowPrefab, WindowAttribute windowAttribute)
         {
             windowPrefab.gameObject.SetActive(false);
-            //var newGo = _placeholderFactory.Create(windowPrefab, _root);
             var newGo = Instantiate(windowPrefab, _root);
             
             windowPrefab.gameObject.SetActive(true);
 
             var controller = Activator.CreateInstance<T>();
+            _diContainer.Inject(controller);
             controller.Configurate(newGo, _uiManager, windowAttribute);
 
             return controller;
