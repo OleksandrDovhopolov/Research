@@ -54,8 +54,17 @@ namespace core
             string streamId = "card_collection_seasons",
             int priority = 10)
         {
-            var start = nowUtc.AddMinutes(2);
-            var end = start.AddMinutes(10);
+            var alignedNowUtc = new DateTimeOffset(
+                nowUtc.Year,
+                nowUtc.Month,
+                nowUtc.Day,
+                nowUtc.Hour,
+                nowUtc.Minute,
+                0,
+                TimeSpan.Zero);
+
+            var start = alignedNowUtc.AddMinutes(1);
+            var end = start.AddMinutes(3);
 
             return new ScheduleItem
             {

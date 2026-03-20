@@ -59,7 +59,6 @@ namespace CardCollectionImpl
             }
 
             View.SetGroupsProgress(Args.CollectionProgressSnapshot.GroupProgress);
-            Debug.LogWarning($"Test ShowStart {Args.CollectionProgressSnapshot.CollectedAmount} / ");
             View.SetCollectedAmountProgressStart(Args.CollectionProgressSnapshot.CollectedAmount, Args.CollectionProgressSnapshot.TotalAmount);
         }
         
@@ -73,7 +72,7 @@ namespace CardCollectionImpl
 
             var collectedAmount = Args.EventCardsSaveData.GetCollectedCardsAmount();
             var totalAmount = Args.EventCardsSaveData.Cards.Count;
-            Debug.LogWarning($"Test OnShowComplete {collectedAmount} / ");
+            
             View.UpdateCollectedAmount(collectedAmount, totalAmount);
             View.UpdateGroupsProgressAnimated(Args.EventCardsSaveData);
             

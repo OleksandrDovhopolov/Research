@@ -25,8 +25,7 @@ namespace Inventory.Implementation
 
         public void RemoveUseHandler(IInventoryItemUseHandler handler)
         {
-            //TODO implement this. if handler do not released and link for all card collection is in memory
-            throw new System.NotImplementedException();
+            CreateOrGetInventoryModuleService().RemoveUseHandler(handler);
         }
 
         public IItemCategoryRegistry GetCategoryRegistry()

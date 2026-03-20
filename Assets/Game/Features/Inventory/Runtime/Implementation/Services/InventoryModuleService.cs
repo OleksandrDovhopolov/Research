@@ -40,11 +40,21 @@ namespace Inventory.Implementation.Services
             _inventoryItemUseHandlers =  new List<IInventoryItemUseHandler>();
         }
         
+        //TODO move to interface ? 
         public void AddUseHandler(IInventoryItemUseHandler handler)
         {
             if (handler != null)
             {
                 _inventoryItemUseHandlers.Add(handler);
+            }
+        }
+        
+        //TODO move to interface ? 
+        public void RemoveUseHandler(IInventoryItemUseHandler handler)
+        {
+            if (handler != null)
+            {
+                _inventoryItemUseHandlers.Remove(handler);
             }
         }
         

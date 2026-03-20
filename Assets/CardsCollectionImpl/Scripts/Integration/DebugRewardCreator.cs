@@ -9,28 +9,25 @@ namespace CardCollectionImpl
 {
     public class DebugRewardCreator
     {
+        //TODO remove this from field
+        private const string InventoryOwnerId = "player_1";
+        
         private ICardCollectionRewardHandler _rewardHandler;
         
         private readonly UniTaskCompletionSource _rewardHandlerInitializationSource = new();
 
-        private string _inventoryOwnerId;
-        private ResourceManager _resourceManager;
-        private IInventoryService _inventoryService;
-        private ICardCollectionCompositionRoot _compositionRoot;
-        private IRewardDefinitionFactory _rewardDefinitionFactory;
+        private readonly ResourceManager _resourceManager;
+        private readonly IInventoryService _inventoryService;
+        private readonly IRewardDefinitionFactory _rewardDefinitionFactory;
         
         public ICardCollectionRewardHandler RewardHandler => _rewardHandler;
         
         public DebugRewardCreator(
             ResourceManager resourceManager, 
             IInventoryService  inventoryService,
-            ICardCollectionCompositionRoot  compositionRoot,
-            IRewardDefinitionFactory  rewardDefinitionFactory,
-            string inventoryOwnerId)
+            IRewardDefinitionFactory  rewardDefinitionFactory)
         {
             _resourceManager =  resourceManager;
-            _inventoryOwnerId =  inventoryOwnerId;
-            _compositionRoot = compositionRoot;
             _inventoryService = inventoryService;
             _rewardDefinitionFactory = rewardDefinitionFactory;
         }
@@ -39,9 +36,9 @@ namespace CardCollectionImpl
         {
             try
             {
-                var rewardGrantService = new GameRewardGrantService(_resourceManager, _inventoryService, _inventoryOwnerId);
+                var rewardGrantService = new GameRewardGrantService(_resourceManager, _inventoryService, InventoryOwnerId);
                 
-                _rewardHandler = _compositionRoot.CreateRewardHandler(rewardGrantService, _rewardDefinitionFactory);
+                _rewardHandler = new CardCollectionRewardHandler(rewardGrantService, _rewardDefinitionFactory);
                 await _rewardHandler.InitializeAsync(ct);
                 _rewardHandlerInitializationSource.TrySetResult();
             }

@@ -7,18 +7,23 @@ using EventOrchestration.Abstractions;
 using EventOrchestration.Models;
 using Inventory.API;
 using Resources.Core;
+using UIShared;
 using UnityEngine;
 
 namespace EventOrchestration.Controllers
 {
     public sealed class CardCollectionController : BaseLiveOpsController<CardCollectionEventModel>
     {
+        private readonly IHUDService _hudService;
         private readonly ResourceManager _resourceManager;
         private readonly IInventoryService _inventoryService;
         private readonly ICardPackProvider _cardPackProvider;
 
         private CancellationTokenSource _rewardHandlersCts;
+
+        private CardCollectionHudPresenter _cardCollectionHudPresenter;
         
+        private IWindowPresenter _windowPresenter;
         private CardCollectionModule _cardCollectionModule;
         private ICardCollectionRewardHandler _rewardHandler; 
         private IExchangeOfferProvider _exchangeOfferProvider;
@@ -26,18 +31,17 @@ namespace EventOrchestration.Controllers
         private CardCollectionInventoryIntegration _cardCollectionInventoryIntegration;
 
         public CardCollectionController(
+            IHUDService hudService,
             ResourceManager resourceManager,
             IInventoryService inventoryService,
             IEventModelFactory modelFactory) : base("CardCollection", modelFactory)
         {
+            _hudService = hudService;
             _resourceManager = resourceManager;
             _inventoryService = inventoryService;
             _cardPackProvider = new JsonCardPackProvider();
         }
         
-        //TODO remove this from field
-        private const string InventoryOwnerId = "player_1";
-
         protected override async UniTask OnStartAsync(CardCollectionEventModel model, EventStateData state, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
@@ -54,9 +58,7 @@ namespace EventOrchestration.Controllers
             var debugRewardCreator = new DebugRewardCreator(
                 _resourceManager, 
                 _inventoryService,
-                compositionRoot,
-                _rewardDefinitionFactory,
-                InventoryOwnerId);
+                _rewardDefinitionFactory);
             
             await debugRewardCreator.InitializeRewardHandlerAsync(ct);
             
@@ -66,6 +68,8 @@ namespace EventOrchestration.Controllers
             
             if (_cardCollectionModule != null)
             {
+                _cardCollectionModule.OnGroupCompleted -= GroupCompletedHandler;
+                _cardCollectionModule.OnCollectionCompleted -= CollectionCompletedHandler;
                 CancelAndDisposeRewardHandlersCts();
                 _cardCollectionModule.Dispose();
                 _cardCollectionModule = null;
@@ -80,15 +84,34 @@ namespace EventOrchestration.Controllers
             _cardCollectionModule.OnCollectionCompleted += CollectionCompletedHandler;
             
             var collectionData = await _cardCollectionModule.Load(ct);
-            var windowPresenter = compositionRoot.CreateWindowPresenter(collectionData);
+            _windowPresenter = compositionRoot.CreateWindowPresenter(collectionData);
             
-            _cardCollectionInventoryIntegration = new CardCollectionInventoryIntegration(windowPresenter, _cardCollectionModule, _cardCollectionModule);
-            _cardCollectionInventoryIntegration.AttachAsync(ct);
+            BindInventoryCategory();
+            BindEventButton();
             
-            Debug.LogWarning($"[CardCollectionRuntime] Start: {model.EventId}, collection={model.CollectionId}");
             await UniTask.CompletedTask;
         }
 
+        private void BindInventoryCategory()
+        {
+            _cardCollectionInventoryIntegration = new CardCollectionInventoryIntegration(_windowPresenter, _cardCollectionModule, _cardCollectionModule);
+            _cardCollectionInventoryIntegration.AttachAsync(_rewardHandlersCts.Token);
+        }
+        
+        private void BindEventButton()
+        {
+            _cardCollectionHudPresenter = new CardCollectionHudPresenter(
+                _hudService,
+                _cardCollectionModule,
+                _cardCollectionModule,
+                _cardCollectionModule,
+                _windowPresenter,
+                _exchangeOfferProvider,
+                _rewardDefinitionFactory);
+            
+            _cardCollectionHudPresenter.Bind(CurrentSchedule, _rewardHandlersCts.Token);
+        }
+        
         protected override UniTask OnUpdateAsync(CardCollectionEventModel model, EventStateData state, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
@@ -97,17 +120,23 @@ namespace EventOrchestration.Controllers
 
         protected override async UniTask OnEndAsync(CardCollectionEventModel model, EventStateData state, CancellationToken ct)
         {
+            //TODO close all card collection windows
+            //TODO show card collection complete window 
+            //TODO remove items from inventory and consume it
+            
             ct.ThrowIfCancellationRequested();
             Debug.LogWarning($"[CardCollectionRuntime] End: {model.EventId}");
             await UniTask.CompletedTask;
-
+            
+            _cardCollectionHudPresenter?.Unbind();
+            
             if (_cardCollectionModule == null)
             {
                 CancelAndDisposeRewardHandlersCts();
                 return;
             }
 
-            _cardCollectionInventoryIntegration?.DetachAsync(ct);
+            _cardCollectionInventoryIntegration?.DetachAsync(_rewardHandlersCts.Token);
 
             _cardCollectionModule.OnGroupCompleted -= GroupCompletedHandler;
             _cardCollectionModule.OnCollectionCompleted -= CollectionCompletedHandler;

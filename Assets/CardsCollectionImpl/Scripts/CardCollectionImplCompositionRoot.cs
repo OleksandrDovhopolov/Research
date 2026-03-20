@@ -23,14 +23,6 @@ namespace CardCollectionImpl
             return new RewardDefinitionFactory(_exchangePacksConfig, cardPackConfigs);
         }
 
-        //TODO should be the same every method call
-        public ICardCollectionRewardHandler CreateRewardHandler(
-            IRewardGrantService rewardGrantService,
-            IRewardDefinitionFactory rewardDefinitionFactory)
-        {
-            return new CardCollectionRewardHandler(rewardGrantService, rewardDefinitionFactory);
-        }
-
         public IExchangeOfferProvider CreateExchangeOfferProvider(ICardCollectionRewardHandler rewardHandler)
         {
             return new ExchangeOfferProvider(_exchangePacksConfig, rewardHandler);

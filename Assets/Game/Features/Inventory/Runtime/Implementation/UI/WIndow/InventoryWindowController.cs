@@ -72,7 +72,6 @@ namespace Inventory.Implementation
         
         protected override void OnHideStart(bool isClosed)
         {
-            Debug.LogWarning($"Debug OnHideStart isClosed {isClosed}");
             TryHideContentWidget();
             
             View.Dispose();
@@ -93,12 +92,6 @@ namespace Inventory.Implementation
             {
                 Args.TabsPresenter?.Dispose();
             }
-        }
-
-        protected override void OnHideComplete(bool isClosed)
-        {
-            base.OnHideComplete(isClosed);
-            Debug.LogWarning($"Debug {GetType().Name} OnHideComplete");
         }
 
         #region R3 Filtration

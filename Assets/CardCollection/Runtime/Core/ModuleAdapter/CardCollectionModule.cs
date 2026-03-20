@@ -34,11 +34,36 @@ namespace CardCollection.Core
         {
             await _context.InitializeAsync(ct);
 
+            var progressData = await EnsureEventDataInitializedAsync(ct);
             var allDefinitions = _context.GetCardDefinitions();
-            var progressData = await _context.LoadAsync(_context.DefaultEventId, ct);
             
             _groupCompletionTracker = new GroupCompletionTracker(allDefinitions, progressData);
             _isCollectionCompleted = _groupCompletionTracker.IsAllGroupsCompleted;
+        }
+        
+        private async UniTask<EventCardsSaveData> EnsureEventDataInitializedAsync(CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            var data = await _context.LoadAsync(_context.DefaultEventId, ct);
+
+            if (data != null && data.Cards != null && data.Cards.Count > 0)
+            {
+                return data;
+            }
+
+            var initializedData = new EventCardsSaveData { EventId = _context.DefaultEventId };
+            foreach (var cardDefinition in _context.GetCardDefinitions())
+            {
+                initializedData.Cards.Add(new CardProgressData
+                {
+                    CardId = cardDefinition.Id,
+                    IsUnlocked = false
+                });
+            }
+
+            await _context.SaveAsync(initializedData, ct);
+            return initializedData;
         }
 
         public List<CardPack> GetAllPacks() => _context.GetAllPacks();
