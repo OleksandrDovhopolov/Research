@@ -48,7 +48,6 @@ namespace CardCollectionImpl
             
             var moduleConfig = CreateModuleConfig(_cardPackProvider, model.CollectionId);
             var module = new CardCollectionModule(moduleConfig);
-            //await module.InitializeAsync(ct);
             
             var rewardDefinitionFactory = await GetOrCreateRewardDefinitionFactory(ct);
             var rewardHandler = InitializeRewardHandlerAsync(rewardDefinitionFactory);
@@ -73,8 +72,6 @@ namespace CardCollectionImpl
             var rewardGrantService = new GameRewardGrantService(_resourceManager, _inventoryService, InventoryOwnerId);
 
             var rewardHandler = new CardCollectionRewardHandler(rewardGrantService, rewardDefinitionFactory);
-            
-            //await rewardHandler.InitializeAsync(ct);
             
             return rewardHandler;
         }
