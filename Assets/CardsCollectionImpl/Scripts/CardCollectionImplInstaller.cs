@@ -21,9 +21,6 @@ namespace CardCollectionImpl
 
             builder.RegisterInstance(_exchangePacksConfig);
             
-            //TODO try remove class and move logic to CardCollectionRuntimeBuilder
-            builder.Register<ICardCollectionCompositionRoot, CardCollectionImplCompositionRoot>(Lifetime.Singleton);
-            
             // Feature storage
             builder.Register<ICardPackProvider, JsonCardPackProvider>(Lifetime.Singleton);
             
@@ -41,9 +38,6 @@ namespace CardCollectionImpl
             
             builder.RegisterBuildCallback(container =>
             {
-                var compositionRoot = container.Resolve<ICardCollectionCompositionRoot>();
-                CardCollectionCompositionRegistry.Register(compositionRoot);
-
                 var eventRegistry = container.Resolve<IEventRegistry>();
                 var controller = container.Resolve<CardCollectionLiveOpsController>();
                 eventRegistry.Register(controller);

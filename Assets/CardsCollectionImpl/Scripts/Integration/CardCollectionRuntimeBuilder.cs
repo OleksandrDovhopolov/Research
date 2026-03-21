@@ -19,19 +19,22 @@ namespace CardCollectionImpl
         private readonly ResourceManager _resourceManager;
         private readonly IInventoryService _inventoryService;
         private readonly ICardPackProvider _cardPackProvider;
+        private readonly ExchangePacksConfig _exchangePacksConfig;
 
         public CardCollectionRuntimeBuilder(
             UIManager uiManager,
             IHUDService hudService,
             ResourceManager resourceManager,
             IInventoryService inventoryService,
-            ICardPackProvider cardPackProvider)
+            ICardPackProvider cardPackProvider,
+            ExchangePacksConfig exchangePacksConfig)
         {
             _uiManager = uiManager;
             _hudService = hudService;
             _resourceManager = resourceManager;
             _inventoryService = inventoryService;
             _cardPackProvider = cardPackProvider;
+            _exchangePacksConfig = exchangePacksConfig;
         }
         
         public async UniTask<CardCollectionSession> BuildAsync(CardCollectionEventModel model, CancellationToken ct)
@@ -43,21 +46,15 @@ namespace CardCollectionImpl
                 throw new ArgumentNullException($"CardCollectionEventModel is null {nameof(model)}");
             }
             
-            var compositionRoot = CardCollectionCompositionRegistry.Resolve();
-            if (compositionRoot == null)
-            {
-                throw new InvalidOperationException("Composition root not found");
-            }
-            
-            var moduleConfig = compositionRoot.CreateModuleConfig(_cardPackProvider, model.CollectionId);
+            var moduleConfig = CreateModuleConfig(_cardPackProvider, model.CollectionId);
             var module = new CardCollectionModule(moduleConfig);
             //await module.InitializeAsync(ct);
             
-            var rewardDefinitionFactory = await GetOrCreateRewardDefinitionFactory(compositionRoot, ct);
+            var rewardDefinitionFactory = await GetOrCreateRewardDefinitionFactory(ct);
             var rewardHandler = InitializeRewardHandlerAsync(rewardDefinitionFactory);
 
             var snapshotService = new CollectionProgressSnapshotService();
-            var windowOpener = CreateCardPackWindowOpener(compositionRoot, module, snapshotService, rewardHandler, rewardDefinitionFactory);
+            var windowOpener = CreateCardPackWindowOpener(module, snapshotService, rewardHandler, rewardDefinitionFactory);
             
             var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
             var inventoryIntegration = new CardCollectionInventoryIntegration(windowOpener);
@@ -83,13 +80,12 @@ namespace CardCollectionImpl
         }
         
         private ICardCollectionWindowOpener CreateCardPackWindowOpener(
-            ICardCollectionCompositionRoot compositionRoot,
             CardCollectionModule module,
             ICollectionProgressSnapshotService snapshotService,
             ICardCollectionRewardHandler rewardHandler,
             IRewardDefinitionFactory rewardDefinitionFactory)
         {
-            var exchangeOfferProvider = compositionRoot.CreateExchangeOfferProvider(rewardHandler);
+            var exchangeOfferProvider = new ExchangeOfferProvider(_exchangePacksConfig, rewardHandler);
             
             var cardCollectionWindowOpener = new CardCollectionWindowOpener(
                 _uiManager, 
@@ -102,14 +98,27 @@ namespace CardCollectionImpl
             
             return cardCollectionWindowOpener;
         }
-
         
-        private async UniTask<IRewardDefinitionFactory> GetOrCreateRewardDefinitionFactory(ICardCollectionCompositionRoot compositionRoot, CancellationToken ct = default)
+        private async UniTask<IRewardDefinitionFactory> GetOrCreateRewardDefinitionFactory(CancellationToken ct = default)
         {
             var configs = await _cardPackProvider.GetCardConfigsAsync(ct);
-
-            var rewardDefinitionFactory = compositionRoot.CreateRewardDefinitionFactory(configs);
+            var rewardDefinitionFactory = new RewardDefinitionFactory(_exchangePacksConfig, configs);
             return rewardDefinitionFactory;
+        }
+        
+        private CardCollectionModuleConfig CreateModuleConfig(ICardPackProvider cardPackProvider, string eventId)
+        {
+            IEventCardsStorage cardsStorage = new JsonEventCardsStorage();
+            ICardDefinitionProvider cardDefinitionProvider = new DefaultCardDefinitionProvider();
+            ICardSelector cardSelector = new ProbabilityBasedCardSelector(PackRulesConfig.CreateDefaultRules());
+
+            return new CardCollectionModuleConfig(
+                cardPackProvider,
+                cardsStorage,
+                cardDefinitionProvider,
+                cardSelector,
+                CardsCollectionPointsCalculator.Instance,
+                eventId);
         }
     }
 }
