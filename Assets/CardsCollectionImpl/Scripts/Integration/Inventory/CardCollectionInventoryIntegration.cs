@@ -1,26 +1,20 @@
 using System;
 using System.Threading;
-using CardCollection.Core;
 using Inventory.API;
-using UISystem;
 using UnityEngine;
 
 namespace CardCollectionImpl
 {
     public sealed class CardCollectionInventoryIntegration
     {
-        private readonly UIManager _uiManager;
-        private readonly ICardCollectionModule _module;
-        private readonly ICardCollectionReader _reader;
+        private readonly ICardCollectionWindowOpener _cardCollectionWindowOpener;
         private bool _attached;
 
         private IInventoryItemUseHandler _inventoryItemUseHandler;
         
-        public CardCollectionInventoryIntegration(UIManager uiManager, ICardCollectionModule module, ICardCollectionReader reader)
+        public CardCollectionInventoryIntegration(ICardCollectionWindowOpener cardCollectionWindowOpener)
         {
-            _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
-            _module = module ?? throw new ArgumentNullException(nameof(module));
-            _reader = reader ?? throw new ArgumentNullException(nameof(reader));
+            _cardCollectionWindowOpener = cardCollectionWindowOpener ?? throw new ArgumentNullException(nameof(cardCollectionWindowOpener));
         }
 
         public void AttachAsync(CancellationToken ct)
@@ -36,7 +30,7 @@ namespace CardCollectionImpl
             }
 
             inventoryRoot.GetCategoryRegistry().Register(new CardsItemCategory());
-            _inventoryItemUseHandler = new CardPackInventoryUseHandler(_uiManager, _module, _reader);
+            _inventoryItemUseHandler = new CardPackInventoryUseHandler(_cardCollectionWindowOpener);
             inventoryRoot.AddUseHandler(_inventoryItemUseHandler);
 
             _attached = true;

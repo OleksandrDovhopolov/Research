@@ -2,8 +2,8 @@
   {
     "Id": "season_cards_001",
     "EventType": "CardCollection",
-    "StartTimeUtc": "2026-03-21T10:14:00Z",
-    "EndTimeUtc": "2026-03-21T10:17:00Z",
+    "StartTimeUtc": "2026-03-21T10:54:00Z",
+    "EndTimeUtc": "2026-03-21T10:57:00Z",
     "Priority": 10,
     "StreamId": "card_collection_seasons",
     "CustomParams": {

@@ -21,9 +21,22 @@ namespace CardCollectionImpl
 
             builder.RegisterInstance(_exchangePacksConfig);
             
+            //TODO try remove class and move logic to CardCollectionRuntimeBuilder
             builder.Register<ICardCollectionCompositionRoot, CardCollectionImplCompositionRoot>(Lifetime.Singleton);
+            
+            // Feature storage
+            builder.Register<ICardPackProvider, JsonCardPackProvider>(Lifetime.Singleton);
+            
+            // Feature session builder
+            builder.Register<ICardCollectionRuntimeBuilder, CardCollectionRuntimeBuilder>(Lifetime.Singleton);
+            
+            // Client code usage facade
             builder.Register<ICardCollectionFeatureFacade, CardCollectionFeatureFacadeFacade>(Lifetime.Singleton);
+            
+            // TODO add describe
             builder.Register<IEventModelFactory, CardCollectionEventModelFactory>(Lifetime.Singleton);
+            
+            // Feature lifeOps controller
             builder.Register<CardCollectionLiveOpsController>(Lifetime.Singleton);
             
             builder.RegisterBuildCallback(container =>
