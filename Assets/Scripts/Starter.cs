@@ -1,6 +1,4 @@
 using System.Threading;
-using CardCollection.Core;
-using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
 using Resources.Core;
@@ -16,7 +14,6 @@ namespace core
         [SerializeField] private UIManager _uiManager;
         [SerializeField] private ResearchCheatModule _researchCheatModule;
         [SerializeField] private Button _cheatButton;
-        [SerializeField] private InventoryEntryPoint _inventoryEntryPoint;
         [SerializeField] private string _inventoryOwnerId = "player_1";
         
         [Space, Header("Resources")]
@@ -52,8 +49,6 @@ namespace core
             
             Init(_destroyCt).Forget();
         }
-
-        private DebugRewardCreator _debugRewardCreator;
         
         private async UniTask Init(CancellationToken ct)
         {

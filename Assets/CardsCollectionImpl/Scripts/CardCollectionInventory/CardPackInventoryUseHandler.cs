@@ -32,30 +32,26 @@ namespace CardCollectionImpl
 
         public async UniTask UseAsync(InventoryItemDelta item, string ownerId, CancellationToken ct)
         {
-            OpenNewCardWindow(item.ItemId, _cardCollectionModule, _cardCollectionReader);
+            OpenNewCardWindow(item.ItemId);
             await UniTask.CompletedTask;
         }
         
-        public void OpenNewCardWindow(string packId, ICardCollectionModule cardCollectionModule, ICardCollectionReader cardCollectionReader)
+        public void OpenNewCardWindow(string packId)
         {
-            var pack = cardCollectionModule.GetPackById(packId);
+            var pack = _cardCollectionModule.GetPackById(packId);
             if (pack == null)
             {
                 Debug.LogError($"Failed to find pack with id {packId}");
                 return;
             }
             
-            OpenNewCardWindow(pack, cardCollectionModule, cardCollectionReader);
+            OpenNewCardWindow(pack);
         }
 
         //TODO should return true / false ? 
-        public void OpenNewCardWindow(CardPack pack, ICardCollectionModule cardCollectionModule, ICardCollectionReader cardCollectionReader)
+        public void OpenNewCardWindow(CardPack pack)
         {
-            //TODO UIStack
-            // private IEnumerator ShowCommand(UIShowCommand command) 
-            // if ShowInParallel  = hide and show start the same time 
-            // in this case should be ShowInOrder 
-            var args = new NewCardArgs(pack, cardCollectionModule, cardCollectionReader); 
+            var args = new NewCardArgs(pack, _cardCollectionModule, _cardCollectionReader); 
             _uiManager.Show<NewCardController>(args);
         }
     }

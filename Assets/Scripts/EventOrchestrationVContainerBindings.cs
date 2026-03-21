@@ -1,5 +1,4 @@
 using EventOrchestration.Abstractions;
-using EventOrchestration.Controllers;
 using EventOrchestration.Core;
 using EventOrchestration.Infrastructure;
 using VContainer;
@@ -16,17 +15,7 @@ namespace core
             builder.Register<IClock, SystemClock>(Lifetime.Singleton);
             builder.Register<IStateStore, InMemoryStateStore>(Lifetime.Singleton);
             builder.Register<IOrchestratorTelemetry, UnityDebugTelemetry>(Lifetime.Singleton);
-
-            builder.Register<IEventModelFactory, CardCollectionEventModelFactory>(Lifetime.Singleton);
-            builder.Register<CardCollectionController>(Lifetime.Singleton);
-
-            builder.Register<IEventRegistry>(resolver =>
-            {
-                var registry = new EventRegistry();
-                var controller = resolver.Resolve<CardCollectionController>();
-                registry.Register(controller);
-                return registry;
-            }, Lifetime.Singleton);
+            builder.Register<IEventRegistry, EventRegistry>(Lifetime.Singleton);
 
             builder.Register<OrchestratorFactory>(Lifetime.Singleton);
             builder.Register<EventOrchestrator>(

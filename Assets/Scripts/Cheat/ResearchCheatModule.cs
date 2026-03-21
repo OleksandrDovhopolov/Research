@@ -3,20 +3,29 @@ using System.Collections.Generic;
 using System.Threading;
 using cheatModule;
 using Cysharp.Threading.Tasks;
+using Inventory.API;
 using Resources.Core;
 using UnityEngine;
+using VContainer;
 
 namespace core
 {
     public class ResearchCheatModule : MonoBehaviour, ICheatsContainer
     {
         [SerializeField] private CheatsManager _cheatsManagerPrefab;
-        [SerializeField] private InventoryEntryPoint _inventoryEntryPoint;
         [SerializeField] private ResourcesView _resourcesView;
         
         private CheatsManager _cheatsManager;
         private CheatPanelItem _rootPanel;
         private List<ICheatsModule> _cheatsModules;
+        
+        private IInventoryService _inventoryService;
+
+        [Inject]
+        private void Construct(IInventoryService inventoryService)
+        {
+            _inventoryService = inventoryService;
+        }
         
         public void Start()
         {
@@ -67,7 +76,7 @@ namespace core
             {
                 //new CardCollectionModule(updated, reader, pointsAccount, destroyCt),
                 new SampleModule(_resourcesView.ResourceManager),
-                new InventoryModule(_inventoryEntryPoint.InventoryService),
+                new InventoryModule(_inventoryService),
             };
             
             return cheatsModules;

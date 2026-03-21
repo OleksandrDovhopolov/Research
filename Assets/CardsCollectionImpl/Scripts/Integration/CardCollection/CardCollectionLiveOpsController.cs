@@ -1,9 +1,9 @@
 using System;
 using System.Threading;
 using CardCollection.Core;
-using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
+using EventOrchestration.Controllers;
 using EventOrchestration.Models;
 using Inventory.API;
 using Resources.Core;
@@ -11,15 +11,16 @@ using UIShared;
 using UISystem;
 using UnityEngine;
 
-namespace EventOrchestration.Controllers
+namespace CardCollectionImpl
 {
-    public sealed class CardCollectionController : BaseLiveOpsController<CardCollectionEventModel>
+    public sealed class CardCollectionLiveOpsController : BaseLiveOpsController<CardCollectionEventModel>
     {
         private readonly UIManager _uiManager;
         private readonly IHUDService _hudService;
         private readonly ResourceManager _resourceManager;
         private readonly IInventoryService _inventoryService;
         private readonly ICardPackProvider _cardPackProvider;
+        private readonly ICardCollectionFeatureFacade _featureFacade;
 
         private CancellationTokenSource _rewardHandlersCts;
 
@@ -31,17 +32,20 @@ namespace EventOrchestration.Controllers
         private IRewardDefinitionFactory _rewardDefinitionFactory;
         private CardCollectionInventoryIntegration _cardCollectionInventoryIntegration;
 
-        public CardCollectionController(
+        public CardCollectionLiveOpsController(
             UIManager uiManager, 
             IHUDService hudService,
             ResourceManager resourceManager,
             IInventoryService inventoryService,
-            IEventModelFactory modelFactory) : base("CardCollection", modelFactory)
+            IEventModelFactory modelFactory,
+            ICardCollectionFeatureFacade featureFacade) : base("CardCollection", modelFactory)
         {
             _uiManager = uiManager;
             _hudService = hudService;
             _resourceManager = resourceManager;
             _inventoryService = inventoryService;
+            _featureFacade = featureFacade;
+            //TODO remove new()
             _cardPackProvider = new JsonCardPackProvider();
         }
         
@@ -91,6 +95,8 @@ namespace EventOrchestration.Controllers
             var collectionData = await _cardCollectionModule.Load(ct);
             BindHUDPresenter(collectionData);
             
+            _featureFacade.SetActiveSession();
+            
             await UniTask.CompletedTask;
         }
 
@@ -130,20 +136,22 @@ namespace EventOrchestration.Controllers
             //TODO show card collection complete window 
             //TODO remove items from inventory and consume it
             
-            ct.ThrowIfCancellationRequested();
-            Debug.LogWarning($"[CardCollectionRuntime] End: {model.EventId}");
             await UniTask.CompletedTask;
             
+            ct.ThrowIfCancellationRequested();
+            Debug.LogWarning($"[CardCollectionRuntime] End: {model.EventId}");
+            
+            _featureFacade.ClearSession();
             _cardCollectionHudPresenter?.Unbind();
+            _cardCollectionInventoryIntegration?.DetachAsync(_rewardHandlersCts.Token);
             
             if (_cardCollectionModule == null)
             {
                 CancelAndDisposeRewardHandlersCts();
                 return;
             }
-
-            _cardCollectionInventoryIntegration?.DetachAsync(_rewardHandlersCts.Token);
-
+            
+            
             _cardCollectionModule.OnGroupCompleted -= GroupCompletedHandler;
             _cardCollectionModule.OnCollectionCompleted -= CollectionCompletedHandler;
             _cardCollectionModule.Dispose();

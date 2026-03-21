@@ -23,16 +23,16 @@ namespace Inventory.Implementation
         private void Awake()
         {
             _destroyCt = this.GetCancellationTokenOnDestroy();
-            var compositionRoot = InventoryCompositionRegistry.Resolve();
-            _inventoryService = compositionRoot.CreateInventoryService();
-            _inventoryReadService = compositionRoot.CreateInventoryReadService();
-            _inventoryItemUseService = compositionRoot.CreateInventoryItemUseService();
-            //_itemCategoryRegistry = new ItemCategoryRegistry();
-            _itemCategoryRegistry = compositionRoot.GetCategoryRegistry();
         }
 
         private void Start()
         {
+            var compositionRoot = InventoryCompositionRegistry.Resolve();
+            _inventoryService = compositionRoot.CreateInventoryService();
+            _inventoryReadService = compositionRoot.CreateInventoryReadService();
+            _inventoryItemUseService = compositionRoot.CreateInventoryItemUseService();
+            _itemCategoryRegistry = compositionRoot.GetCategoryRegistry();
+            
             _cheatButton.onClick.AddListener(() => OpenCheatsPanelAsync(_destroyCt).Forget());
         }
 

@@ -1,11 +1,14 @@
-using CardCollection.Core;
+using CardCollectionImpl;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 namespace core
 {
     public class OpenCardPackDemo : MonoBehaviour
     {
+        private ICardCollectionFeatureFacade _feature;
+        
         [SerializeField] private Button _twoCardButton;
         [SerializeField] private Button _threeCardButton;
         [SerializeField] private Button _fourCardButton;
@@ -17,6 +20,12 @@ namespace core
         private const string BaseFourCardPackID = "Lazurite_Pack";
         private const string BaseFiveCardPackID = "Sapphire_Pack";
         private const string BaseSixCardPackID = "Ruby_Pack";
+        
+        [Inject]
+        private void Construct(ICardCollectionFeatureFacade feature)
+        {
+            _feature = feature;
+        }
         
         private void Start()
         {
@@ -30,22 +39,14 @@ namespace core
         //TODO restore when module integration is ready
         public void OpenNewCardWindow(string packId)
         {
-            /*var cardCollectionModule = _cardCollectionEntryPoint.CardCollectionModule;
-            var cardCollectionReader = _cardCollectionEntryPoint.CardCollectionReader;
-            
-            var pack = cardCollectionModule.GetPackById(packId);
-            if (pack == null)
+            if (_feature.IsActive)
             {
-                Debug.LogError($"Pack not found: {packId}");
-                return;
+                _feature.ShowNewCardWindow(packId, destroyCancellationToken);
             }
-            
-            Debug.LogWarning($"Debug {pack.PackId}, {pack.CardCount}, {pack.PackName}");
-            
-            var compositionRoot = CardCollectionCompositionRegistry.Resolve();
-            var windowPresenter = compositionRoot.CreateWindowPresenter();
-            
-            windowPresenter.OpenNewCardWindow(pack, cardCollectionModule, cardCollectionReader);*/
+            else
+            {
+                Debug.LogWarning($"[CardCollectionRuntime] {GetType().Name}: OpenNewCardWindow called without active feature");
+            }
         }
         
         private void OnDestroy()
