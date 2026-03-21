@@ -16,6 +16,7 @@ namespace CardCollectionImpl
         private readonly ICollectionProgressSnapshotService _collectionProgressSnapshotService;
 
         private CancellationTokenSource _cts;
+        public CardCollectionSessionContext Context { get; }
 
         public CardCollectionSession(
             CardCollectionModule module,
@@ -29,6 +30,7 @@ namespace CardCollectionImpl
             _rewardHandler = rewardHandler;
             _inventoryIntegration = inventoryIntegration;
             _collectionProgressSnapshotService = collectionProgressSnapshotService;
+            Context = new CardCollectionSessionContext(_module, _module, _module);
         }
         
         public async UniTask StartAsync(ScheduleItem scheduleItem, CancellationToken externalCt)

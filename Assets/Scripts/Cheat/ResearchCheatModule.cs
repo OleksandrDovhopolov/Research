@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using CardCollectionImpl;
 using cheatModule;
 using Cysharp.Threading.Tasks;
 using Inventory.API;
@@ -20,11 +21,13 @@ namespace core
         private List<ICheatsModule> _cheatsModules;
         
         private IInventoryService _inventoryService;
+        private ICardCollectionFeatureFacade _cardCollectionFeatureFacade;
 
         [Inject]
-        private void Construct(IInventoryService inventoryService)
+        private void Construct(IInventoryService inventoryService,  ICardCollectionFeatureFacade cardCollectionFeatureFacade)
         {
             _inventoryService = inventoryService;
+            _cardCollectionFeatureFacade = cardCollectionFeatureFacade;
         }
         
         public void Start()
@@ -74,7 +77,7 @@ namespace core
             
             var cheatsModules = new List<ICheatsModule>
             {
-                //new CardCollectionModule(updated, reader, pointsAccount, destroyCt),
+                new CardCollectionModule(_cardCollectionFeatureFacade, destroyCt),
                 new SampleModule(_resourcesView.ResourceManager),
                 new InventoryModule(_inventoryService),
             };

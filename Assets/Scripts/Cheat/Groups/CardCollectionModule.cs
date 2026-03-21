@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Threading;
-using CardCollection.Core;
+using CardCollectionImpl;
 using cheatModule;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -11,46 +11,51 @@ namespace core
     {
         private const string CardCollectionPointsGroup = "CardCollectionPointsGroup";
         
-        private readonly ICardCollectionUpdater _collectionUpdater;
-        private readonly ICardCollectionReader _cardCollectionReader;
-        private readonly ICardCollectionPointsAccount _cardCollectionPointsAccount;
+        private readonly ICardCollectionFeatureFacade _featureFacade;
         private readonly CancellationToken _ct;
         
-        private readonly CardCollectionModule _cardCollectionModule;
-            
-        public CardCollectionModule(CardCollectionModule cardCollectionModule, CancellationToken ct)
+        public CardCollectionModule(ICardCollectionFeatureFacade featureFacade, CancellationToken ct)
         {
-            _cardCollectionModule = cardCollectionModule;
+            _featureFacade = featureFacade;
             _ct = ct;
         }
-        
-        /*public CardCollectionModule(
-            ICardCollectionUpdater collectionUpdater,
-            ICardCollectionReader cardCollectionReader,
-            ICardCollectionPointsAccount cardCollectionPointsAccount,
-            CancellationToken ct)
-        {
-            _collectionUpdater = collectionUpdater;
-            _cardCollectionReader = cardCollectionReader;
-            _cardCollectionPointsAccount = cardCollectionPointsAccount;
-            _ct = ct;
-        }*/
-        
+
         public void Initialize(ICheatsContainer cheatsContainer)
         {
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Save collection", () =>
             {
-                _collectionUpdater.Save(_ct).Forget();
+                if (_featureFacade.TryGetCollectionUpdater(out var updater))
+                {
+                    updater.Save(_ct).Forget();
+                }
+                else
+                {
+                    Debug.LogWarning("[Cheat] CardCollection updater is unavailable.");
+                }
             }));
             
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Load collection", () =>
             {
-                _cardCollectionReader.Load(_ct).Forget();
+                if (_featureFacade.TryGetCollectionReader(out var reader))
+                {
+                    reader.Load(_ct).Forget();
+                }
+                else
+                {
+                    Debug.LogWarning("[Cheat] CardCollection reader is unavailable.");
+                }
             }));
             
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Clear collection", () =>
             {
-                _collectionUpdater.Clear(_ct).Forget();
+                if (_featureFacade.TryGetCollectionUpdater(out var updater))
+                {
+                    updater.Clear(_ct).Forget();
+                }
+                else
+                {
+                    Debug.LogWarning("[Cheat] CardCollection updater is unavailable.");
+                }
             }));
 
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Complete all collection", () =>
@@ -65,17 +70,38 @@ namespace core
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<string>("Open card ID(str)", cardId =>
             {
-                _collectionUpdater.UnlockCard(cardId, _ct).Forget();
+                if (_featureFacade.TryGetCollectionUpdater(out var updater))
+                {
+                    updater.UnlockCard(cardId, _ct).Forget();
+                }
+                else
+                {
+                    Debug.LogWarning("[Cheat] CardCollection updater is unavailable.");
+                }
             }));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Add points(int)", points =>
             {
-                _cardCollectionPointsAccount.TryAddPointsAsync(points, _ct).Forget();
+                if (_featureFacade.TryGetCollectionPointsAccount(out var pointsAccount))
+                {
+                    pointsAccount.TryAddPointsAsync(points, _ct).Forget();
+                }
+                else
+                {
+                    Debug.LogWarning("[Cheat] CardCollection points account is unavailable.");
+                }
             }).WithGroup(CardCollectionPointsGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Remove points(int)", points =>
             {
-                _cardCollectionPointsAccount.TrySpendPointsAsync(points, _ct).Forget();
+                if (_featureFacade.TryGetCollectionPointsAccount(out var pointsAccount))
+                {
+                    pointsAccount.TrySpendPointsAsync(points, _ct).Forget();
+                }
+                else
+                {
+                    Debug.LogWarning("[Cheat] CardCollection points account is unavailable.");
+                }
             }).WithGroup(CardCollectionPointsGroup));
         }
 
@@ -93,7 +119,15 @@ namespace core
             foreach (var cardId in cardIds)
             {
                 ct.ThrowIfCancellationRequested();
-                await _collectionUpdater.UnlockCard(cardId, ct);
+                if (_featureFacade.TryGetCollectionUpdater(out var updater))
+                {
+                    await updater.UnlockCard(cardId, ct);
+                }
+                else
+                {
+                    Debug.LogWarning("[Cheat] CardCollection updater is unavailable.");
+                    return;
+                }
             }
         }
 
@@ -112,14 +146,28 @@ namespace core
             for (var i = 0; i < unlockCount; i++)
             {
                 ct.ThrowIfCancellationRequested();
-                await _collectionUpdater.UnlockCard(cardIds[i], ct);
+                if (_featureFacade.TryGetCollectionUpdater(out var updater))
+                {
+                    await updater.UnlockCard(cardIds[i], ct);
+                }
+                else
+                {
+                    Debug.LogWarning("[Cheat] CardCollection updater is unavailable.");
+                    return;
+                }
             }
         }
 
         private async UniTask<List<string>> GetAllCardIdsAsync(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
-            var data = await _cardCollectionReader.Load(ct);
+            if (!_featureFacade.TryGetCollectionReader(out var reader))
+            {
+                Debug.LogWarning("[Cheat] CardCollection reader is unavailable.");
+                return new List<string>();
+            }
+
+            var data = await reader.Load(ct);
 
             var result = new List<string>();
             var seen = new HashSet<string>();

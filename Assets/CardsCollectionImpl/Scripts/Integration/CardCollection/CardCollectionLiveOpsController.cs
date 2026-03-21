@@ -33,8 +33,7 @@ namespace CardCollectionImpl
             _cardCollectionSession = await _collectionRuntimeBuilder.BuildAsync(model, ct);
             await _cardCollectionSession.StartAsync(CurrentSchedule, ct);
             
-            //TODO put session object inside for data / methods access
-            _featureFacade.SetActiveSession();
+            _featureFacade.SetActiveSession(_cardCollectionSession.Context);
             
             await UniTask.CompletedTask;
         }
