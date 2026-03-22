@@ -6,8 +6,12 @@ namespace core
 {
     public static class InventoryVContainerBindings
     {
+        public const string InventoryOwnerId = "player_1";
+
         public static void RegisterInventoryService(this IContainerBuilder builder)
         {
+            builder.RegisterInstance(InventoryOwnerId);
+
             builder.Register<IInventoryService>(_ =>
             {
                 if (!InventoryCompositionRegistry.IsRegistered)

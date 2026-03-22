@@ -6,6 +6,7 @@ using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
 using Resources.Core;
+using Rewards;
 using UnityEngine;
 
 namespace CardCollectionImpl

@@ -1,7 +1,7 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
-namespace CardCollection.Core
+namespace Rewards
 {
     public interface IRewardGrantService
     {

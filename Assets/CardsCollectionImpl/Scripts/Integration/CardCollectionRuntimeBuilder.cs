@@ -3,8 +3,7 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Models;
-using Inventory.API;
-using Resources.Core;
+using Rewards;
 using UIShared;
 using UISystem;
 
@@ -12,29 +11,24 @@ namespace CardCollectionImpl
 {
     public sealed class CardCollectionRuntimeBuilder : ICardCollectionRuntimeBuilder
     {
-        private const string InventoryOwnerId = "player_1";
-        
         private readonly UIManager _uiManager;
         private readonly IHUDService _hudService;
-        private readonly ResourceManager _resourceManager;
-        private readonly IInventoryService _inventoryService;
         private readonly ICardPackProvider _cardPackProvider;
         private readonly ExchangePacksConfig _exchangePacksConfig;
+        private readonly IRewardGrantService _rewardGrantService;
 
         public CardCollectionRuntimeBuilder(
             UIManager uiManager,
             IHUDService hudService,
-            ResourceManager resourceManager,
-            IInventoryService inventoryService,
             ICardPackProvider cardPackProvider,
-            ExchangePacksConfig exchangePacksConfig)
+            ExchangePacksConfig exchangePacksConfig,
+            IRewardGrantService rewardGrantService)
         {
             _uiManager = uiManager;
             _hudService = hudService;
-            _resourceManager = resourceManager;
-            _inventoryService = inventoryService;
             _cardPackProvider = cardPackProvider;
             _exchangePacksConfig = exchangePacksConfig;
+            _rewardGrantService = rewardGrantService;
         }
         
         public async UniTask<CardCollectionSession> BuildAsync(CardCollectionEventModel model, CancellationToken ct)
@@ -71,10 +65,7 @@ namespace CardCollectionImpl
         
         private ICardCollectionRewardHandler GetRewardHandler(IRewardDefinitionFactory rewardDefinitionFactory)
         {
-            //TODO GameRewardGrantService  move to DI / constructor ? 
-            var rewardGrantService = new GameRewardGrantService(_resourceManager, _inventoryService, InventoryOwnerId);
-
-            var rewardHandler = new CardCollectionRewardHandler(rewardGrantService, rewardDefinitionFactory);
+            var rewardHandler = new CardCollectionRewardHandler(_rewardGrantService, rewardDefinitionFactory);
             
             return rewardHandler;
         }

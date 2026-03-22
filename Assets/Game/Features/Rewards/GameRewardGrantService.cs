@@ -1,12 +1,11 @@
 using System;
 using System.Threading;
-using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Inventory.API;
 using Resources.Core;
 using UnityEngine;
 
-namespace CardCollectionImpl
+namespace Rewards
 {
     public sealed class GameRewardGrantService : IRewardGrantService
     {
@@ -55,7 +54,7 @@ namespace CardCollectionImpl
                 _inventoryOwnerId,
                 rewardRequest.RewardId,
                 rewardRequest.Amount,
-                CardsConfig.CardPack);
+                rewardRequest.Category); // TODO need this Category in DTO ?
 
             await _inventoryService.AddItemAsync(itemDelta, ct);
             return true;

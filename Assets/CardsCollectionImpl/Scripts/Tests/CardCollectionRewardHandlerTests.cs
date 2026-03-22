@@ -3,6 +3,7 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using NUnit.Framework;
+using Rewards;
 using UnityEditor;
 using UnityEngine;
 

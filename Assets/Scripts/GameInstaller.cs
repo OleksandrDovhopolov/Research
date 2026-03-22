@@ -4,6 +4,8 @@ using UISystem;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
+using Rewards;
+using Inventory.API;
 
 namespace core
 {
@@ -30,6 +32,16 @@ namespace core
             builder.Register<JsonResourcesStorage>(Lifetime.Singleton);
             builder.Register<ResourceManager>(Lifetime.Singleton);
             builder.RegisterInventoryService();
+
+            // Rewards.asmdef
+            builder.Register<IRewardGrantService>(resolver =>
+            {
+                var resourceManager = resolver.Resolve<ResourceManager>();
+                var inventoryService = resolver.Resolve<IInventoryService>();
+                var inventoryOwnerId = resolver.Resolve<string>();
+                return new GameRewardGrantService(resourceManager, inventoryService, inventoryOwnerId);
+            }, Lifetime.Singleton);
+
             builder.RegisterOrchestration(_cardCollectionScheduleFile);
 
             builder.RegisterComponentInHierarchy<Starter>();
