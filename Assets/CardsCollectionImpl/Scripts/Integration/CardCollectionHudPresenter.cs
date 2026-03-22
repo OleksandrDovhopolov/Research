@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace CardCollectionImpl
 {
-    public class CardCollectionHudPresenter 
+    public class CardCollectionHudPresenter : IDisposable
     {
         private const string CardCollectionButtonId = "CardCollection";
         
@@ -46,6 +46,11 @@ namespace CardCollectionImpl
         {
             _eventButton = null;
             _hudService.RemoveEventButton(CardCollectionButtonId);
+        }
+
+        public void Dispose()
+        {
+            Unbind();
         }
     }
 }

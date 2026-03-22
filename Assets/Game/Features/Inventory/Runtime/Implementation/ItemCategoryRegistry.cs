@@ -29,5 +29,15 @@ namespace Inventory.Implementation
 
             _categoriesById[category.CategoryId] = category;
         }
+        
+        public void RemoveRegister(ItemCategory category)
+        {
+            if (category == null || string.IsNullOrWhiteSpace(category.CategoryId))
+            {
+                return;
+            }
+            
+            _categoriesById.Remove(category.CategoryId);
+        }
     }
 }

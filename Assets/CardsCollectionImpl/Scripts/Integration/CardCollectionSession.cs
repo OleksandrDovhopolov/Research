@@ -19,18 +19,19 @@ namespace CardCollectionImpl
         public CardCollectionSessionContext Context { get; }
 
         public CardCollectionSession(
+            CardCollectionSessionContext sessionContext,
             CardCollectionModule module,
             CardCollectionHudPresenter hudPresenter,
             ICardCollectionRewardHandler rewardHandler,
             CardCollectionInventoryIntegration inventoryIntegration,
             ICollectionProgressSnapshotService  collectionProgressSnapshotService)
         {
+            Context = sessionContext;
             _module = module;
             _hudPresenter = hudPresenter;
             _rewardHandler = rewardHandler;
             _inventoryIntegration = inventoryIntegration;
             _collectionProgressSnapshotService = collectionProgressSnapshotService;
-            Context = new CardCollectionSessionContext(_module, _module, _module);
         }
         
         public async UniTask StartAsync(ScheduleItem scheduleItem, CancellationToken externalCt)
@@ -47,7 +48,7 @@ namespace CardCollectionImpl
             _module.OnGroupCompleted += OnGroupCompleted;
             _module.OnCollectionCompleted += OnCollectionCompleted;
             
-            _inventoryIntegration.AttachAsync(ct);
+            _inventoryIntegration.Attach();
             _hudPresenter.Bind(scheduleItem, ct);
         }
 
@@ -67,7 +68,7 @@ namespace CardCollectionImpl
             _module.OnCollectionCompleted -= OnCollectionCompleted;
 
             _hudPresenter?.Unbind();
-            _inventoryIntegration?.DetachAsync(_cts.Token);
+            _inventoryIntegration?.Detach();
 
             _module.Dispose();
 
@@ -101,9 +102,26 @@ namespace CardCollectionImpl
 
         public void Dispose()
         {
-            _cts?.Cancel();
-            _cts?.Dispose();
+            try
+            {
+                _cts?.Cancel();
+            }
+            catch { /* ignore */ }
+            finally
+            {
+                _cts?.Dispose();
+                _cts = null;
+            }
 
+            _module.OnGroupCompleted -= OnGroupCompleted;
+            _module.OnCollectionCompleted -= OnCollectionCompleted;
+
+            _hudPresenter?.Unbind();
+            _inventoryIntegration?.Detach();
+            
+            (_rewardHandler as IDisposable)?.Dispose();
+            (_hudPresenter as IDisposable)?.Dispose();
+            
             _module?.Dispose();
         }
     }

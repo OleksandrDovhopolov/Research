@@ -46,19 +46,22 @@ namespace CardCollectionImpl
                 throw new ArgumentNullException($"CardCollectionEventModel is null {nameof(model)}");
             }
             
-            var moduleConfig = CreateModuleConfig(_cardPackProvider, model.CollectionId);
+            var moduleConfig = CreateModuleConfig(model.CollectionId);
             var module = new CardCollectionModule(moduleConfig);
             
-            var rewardDefinitionFactory = await GetOrCreateRewardDefinitionFactory(ct);
-            var rewardHandler = InitializeRewardHandlerAsync(rewardDefinitionFactory);
+            var rewardDefinitionFactory = await GetRewardDefinitionFactory(ct);
+            var rewardHandler = GetRewardHandler(rewardDefinitionFactory);
 
             var snapshotService = new CollectionProgressSnapshotService();
             var windowOpener = CreateCardPackWindowOpener(module, snapshotService, rewardHandler, rewardDefinitionFactory);
             
             var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
             var inventoryIntegration = new CardCollectionInventoryIntegration(windowOpener);
-
+            
+            var context = new CardCollectionSessionContext(module, module, module, windowOpener);
+            
             return new CardCollectionSession(
+                context,
                 module,
                 hudPresenter,
                 rewardHandler,
@@ -66,7 +69,7 @@ namespace CardCollectionImpl
                 snapshotService);
         }
         
-        private ICardCollectionRewardHandler InitializeRewardHandlerAsync(IRewardDefinitionFactory rewardDefinitionFactory)
+        private ICardCollectionRewardHandler GetRewardHandler(IRewardDefinitionFactory rewardDefinitionFactory)
         {
             //TODO GameRewardGrantService  move to DI / constructor ? 
             var rewardGrantService = new GameRewardGrantService(_resourceManager, _inventoryService, InventoryOwnerId);
@@ -96,24 +99,20 @@ namespace CardCollectionImpl
             return cardCollectionWindowOpener;
         }
         
-        private async UniTask<IRewardDefinitionFactory> GetOrCreateRewardDefinitionFactory(CancellationToken ct = default)
+        private async UniTask<IRewardDefinitionFactory> GetRewardDefinitionFactory(CancellationToken ct = default)
         {
             var configs = await _cardPackProvider.GetCardConfigsAsync(ct);
             var rewardDefinitionFactory = new RewardDefinitionFactory(_exchangePacksConfig, configs);
             return rewardDefinitionFactory;
         }
         
-        private CardCollectionModuleConfig CreateModuleConfig(ICardPackProvider cardPackProvider, string eventId)
+        private CardCollectionModuleConfig CreateModuleConfig(string eventId)
         {
-            IEventCardsStorage cardsStorage = new JsonEventCardsStorage();
-            ICardDefinitionProvider cardDefinitionProvider = new DefaultCardDefinitionProvider();
-            ICardSelector cardSelector = new ProbabilityBasedCardSelector(PackRulesConfig.CreateDefaultRules());
-
             return new CardCollectionModuleConfig(
-                cardPackProvider,
-                cardsStorage,
-                cardDefinitionProvider,
-                cardSelector,
+                _cardPackProvider,
+                new JsonEventCardsStorage(),
+                new DefaultCardDefinitionProvider(),
+                new ProbabilityBasedCardSelector(PackRulesConfig.CreateDefaultRules()),
                 CardsCollectionPointsCalculator.Instance,
                 eventId);
         }

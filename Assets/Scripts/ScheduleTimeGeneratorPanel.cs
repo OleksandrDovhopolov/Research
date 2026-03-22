@@ -9,8 +9,12 @@ namespace core
 {
     public sealed class ScheduleTimeGeneratorPanel : MonoBehaviour
     {
+        private const string EventId = "season_cards_";
+        
         [SerializeField] private string _relativeSchedulePathFromAssets = "StreamingAssets/card_collection_schedule.json";
-        [SerializeField] private string _eventId = "season_cards_001";
+        [SerializeField] private int _eventIndex = 1;
+        [SerializeField] private int _minDelay = 1;
+        [SerializeField] private int _minDuration = 3;
         [SerializeField] private string _streamId = "card_collection_seasons";
         [SerializeField] private int _priority = 10;
 
@@ -18,9 +22,10 @@ namespace core
         public void GenerateSingleCardCollectionSchedule()
         {
             var nowUtc = DateTimeOffset.UtcNow;
+            var eventId = BuildEventId();
             var item = CreateSingleCardCollectionEventStartingIn2Minutes(
                 nowUtc,
-                _eventId,
+                eventId,
                 _streamId,
                 _priority);
 
@@ -45,6 +50,7 @@ namespace core
 #if UNITY_EDITOR
             UnityEditor.AssetDatabase.Refresh();
 #endif
+            IncrementEventId();
             Debug.Log($"[ScheduleTimeGeneratorPanel] Schedule generated at '{fullPath}'.");
         }
         
@@ -63,8 +69,8 @@ namespace core
                 0,
                 TimeSpan.Zero);
 
-            var start = alignedNowUtc.AddMinutes(1);
-            var end = start.AddMinutes(3);
+            var start = alignedNowUtc.AddMinutes(_minDelay);
+            var end = start.AddMinutes(_minDuration);
 
             return new ScheduleItem
             {
@@ -76,9 +82,28 @@ namespace core
                 Priority = priority,
                 CustomParams = new Dictionary<string, string>
                 {
-                    { "eventId", "cards_season_001" },
+                    { "eventId", eventId},
                 },
             };
+        }
+
+        private string BuildEventId()
+        {
+            return $"{EventId}{_eventIndex:D3}";
+        }
+
+        private void IncrementEventId()
+        {
+            if (_eventIndex < 1)
+            {
+                _eventIndex = 1;
+            }
+
+            _eventIndex += 1;
+
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(this);
+#endif
         }
     }
 }

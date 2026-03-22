@@ -10,8 +10,6 @@ namespace CardCollectionImpl
 {
     public sealed class GameRewardGrantService : IRewardGrantService
     {
-        public const string CardPack = "card_pack";
-        
         private readonly ResourceManager _resourceManager;
         private readonly IInventoryService _inventoryService;
         private readonly string _inventoryOwnerId;
@@ -57,7 +55,7 @@ namespace CardCollectionImpl
                 _inventoryOwnerId,
                 rewardRequest.RewardId,
                 rewardRequest.Amount,
-                CardPack);
+                CardsConfig.CardPack);
 
             await _inventoryService.AddItemAsync(itemDelta, ct);
             return true;

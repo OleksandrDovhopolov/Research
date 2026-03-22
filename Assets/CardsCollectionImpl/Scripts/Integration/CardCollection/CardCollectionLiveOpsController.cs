@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
@@ -10,7 +11,6 @@ namespace CardCollectionImpl
     public sealed class CardCollectionLiveOpsController : BaseLiveOpsController<CardCollectionEventModel>
     {
         private CardCollectionSession _cardCollectionSession;
-        private CancellationTokenSource _rewardHandlersCts;
         
         private readonly ICardCollectionFeatureFacade _featureFacade;
         private readonly ICardCollectionRuntimeBuilder _collectionRuntimeBuilder;
@@ -26,16 +26,30 @@ namespace CardCollectionImpl
         
         protected override async UniTask OnStartAsync(CardCollectionEventModel model, EventStateData state, CancellationToken ct)
         {
-            ct.ThrowIfCancellationRequested();
-
             Debug.LogWarning($"[CardCollectionRuntime] OnStartAsync: {model.EventId}");
-            
-            _cardCollectionSession = await _collectionRuntimeBuilder.BuildAsync(model, ct);
-            await _cardCollectionSession.StartAsync(CurrentSchedule, ct);
-            
-            _featureFacade.SetActiveSession(_cardCollectionSession.Context);
-            
-            await UniTask.CompletedTask;
+    
+            await CloseSessionInternalAsync();
+
+            CardCollectionSession newSession = null;
+            try
+            {
+                newSession = await _collectionRuntimeBuilder.BuildAsync(model, ct);
+                await newSession.StartAsync(CurrentSchedule, ct);
+
+                _cardCollectionSession = newSession;
+                _featureFacade.SetActiveSession(_cardCollectionSession.Context);
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                Debug.LogError($"[CardCollectionRuntime] Failed to start session: {e}");
+                if (newSession != null) await CloseSessionInternalAsync(newSession);
+                throw;
+            }
+            catch (OperationCanceledException)
+            {
+                if (newSession != null) await CloseSessionInternalAsync(newSession);
+                throw;
+            }
         }
         
         protected override async UniTask OnUpdateAsync(CardCollectionEventModel model, EventStateData state, CancellationToken ct)
@@ -48,19 +62,41 @@ namespace CardCollectionImpl
         protected override async UniTask OnEndAsync(CardCollectionEventModel model, EventStateData state, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
-            
             Debug.LogWarning($"[CardCollectionRuntime] End: {model.EventId}");
-            
-            await _cardCollectionSession.StopAsync(ct);
-            
-            _featureFacade.ClearSession();
+            await CloseSessionInternalAsync();
         }
 
         protected override UniTask OnSettlementAsync(CardCollectionEventModel model, EventStateData state, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
             Debug.LogWarning($"[CardCollectionRuntime] Settle: {model.EventId}");
-            return _cardCollectionSession.SettleAsync(ct);
+            //TODO delete save file and make new with general data
+            return _cardCollectionSession?.SettleAsync(ct) ?? UniTask.CompletedTask;
+        }
+        
+        private async UniTask CloseSessionInternalAsync(CardCollectionSession session = null)
+        {
+            var targetSession = session ?? _cardCollectionSession;
+            if (targetSession == null) return;
+
+            try
+            {
+                await targetSession.StopAsync(CancellationToken.None);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[CardCollectionRuntime] Error during session stop: {e}");
+            }
+            finally
+            {
+                targetSession.Dispose();
+        
+                if (ReferenceEquals(targetSession, _cardCollectionSession))
+                {
+                    _cardCollectionSession = null;
+                    _featureFacade.ClearSession();
+                }
+            }
         }
     }
 }

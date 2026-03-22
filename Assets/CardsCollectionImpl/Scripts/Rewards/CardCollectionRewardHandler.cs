@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace CardCollectionImpl
 {
-    public sealed class CardCollectionRewardHandler : ICardCollectionRewardHandler
+    public sealed class CardCollectionRewardHandler : ICardCollectionRewardHandler, IDisposable
     {
         private const string DefaultRewardsConfigAddress = "CardCollectionRewardsConfig";
 
@@ -94,7 +94,7 @@ namespace CardCollectionImpl
                 return await ReceiveRewardsAsync(collectionRewardModel, ct);
             }
             
-            Debug.LogWarning($"Failed to find CollectionRewardDefinition for group with ID groupCompletedData.GroupId");
+            Debug.LogError($"Failed to find CollectionRewardDefinition for group with ID groupCompletedData.GroupId");
             return false;
         }
 
@@ -159,6 +159,17 @@ namespace CardCollectionImpl
                 CardGroupCompletionReward groupCompletedContent => groupCompletedContent.Resources,
                 _ => null
             };
+        }
+        
+        public void Dispose()
+        {
+            if (_cardCollectionRewardsConfigSo != null)
+            {
+                AddressablesWrapper.Release(_cardCollectionRewardsConfigSo);
+                _cardCollectionRewardsConfigSo = null;
+            }
+
+            _isInitialized = false;
         }
     }
 }

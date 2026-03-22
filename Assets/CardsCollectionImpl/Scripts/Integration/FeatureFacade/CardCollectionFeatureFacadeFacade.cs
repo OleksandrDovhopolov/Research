@@ -2,22 +2,14 @@ using System;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using UISystem;
 using UnityEngine;
 
 namespace CardCollectionImpl
 {
     public class CardCollectionFeatureFacadeFacade : ICardCollectionFeatureFacade, IDisposable
     {
-        private readonly UIManager _uiManager;
-
         public bool IsActive { get; private set; }
         public CardCollectionSessionContext FeatureContext { get; private set; }
-
-        public CardCollectionFeatureFacadeFacade(UIManager uiManager)
-        {
-            _uiManager = uiManager;
-        }
         
         public void SetActiveSession(CardCollectionSessionContext sessionContext)
         {
@@ -72,6 +64,8 @@ namespace CardCollectionImpl
             }
 
             Debug.LogWarning($"[CardCollectionRuntime] ShowNewCardWindow {packId}");
+            
+            FeatureContext.WindowOpener.OpenNewCardWindow(packId);
             return UniTask.CompletedTask;
         }
         

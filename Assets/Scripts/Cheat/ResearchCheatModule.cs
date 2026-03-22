@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using CardCollectionImpl;
 using cheatModule;
 using Cysharp.Threading.Tasks;
@@ -24,7 +23,7 @@ namespace core
         private ICardCollectionFeatureFacade _cardCollectionFeatureFacade;
 
         [Inject]
-        private void Construct(IInventoryService inventoryService,  ICardCollectionFeatureFacade cardCollectionFeatureFacade)
+        private void Construct(IInventoryService inventoryService, ICardCollectionFeatureFacade cardCollectionFeatureFacade)
         {
             _inventoryService = inventoryService;
             _cardCollectionFeatureFacade = cardCollectionFeatureFacade;
@@ -33,7 +32,7 @@ namespace core
         public void Start()
         {
             InitializeRootPanel();
-            InitializeCheatsModules().Forget();
+            InitializeCheatsModules();
         }
         
         private void InitializeRootPanel()
@@ -53,9 +52,8 @@ namespace core
         }
         
         //TODO restore cheat when module integration is ready
-        private async UniTask InitializeCheatsModules()
+        private void InitializeCheatsModules()
         {
-            //await _cardCollectionEntryPoint.WaitForInitializationAsync();
             _cheatsModules = new List<ICheatsModule>(GetCheatModules());
             _cheatsModules.ForEach(module =>
             {
@@ -70,10 +68,7 @@ namespace core
         
         protected virtual List<ICheatsModule> GetCheatModules()
         {
-            //var updated = _cardCollectionEntryPoint.CardCollectionUpdater;
-            //var reader = _cardCollectionEntryPoint.CardCollectionReader;
-            //var pointsAccount = _cardCollectionEntryPoint.CardCollectionPointsAccount;
-            CancellationToken destroyCt = this.GetCancellationTokenOnDestroy();
+            var destroyCt = this.GetCancellationTokenOnDestroy();
             
             var cheatsModules = new List<ICheatsModule>
             {
