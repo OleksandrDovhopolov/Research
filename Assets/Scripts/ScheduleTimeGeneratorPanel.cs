@@ -83,6 +83,7 @@ namespace core
                 CustomParams = new Dictionary<string, string>
                 {
                     { "eventId", eventId},
+                    { "rewardsConfigAddress", eventId},
                 },
             };
         }

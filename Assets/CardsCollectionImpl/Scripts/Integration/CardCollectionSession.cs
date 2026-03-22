@@ -3,6 +3,7 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Models;
+using Infrastructure;
 using UnityEngine;
 
 namespace CardCollectionImpl
@@ -14,6 +15,8 @@ namespace CardCollectionImpl
         private readonly CardCollectionHudPresenter _hudPresenter;
         private readonly CardCollectionInventoryIntegration _inventoryIntegration;
         private readonly ICollectionProgressSnapshotService _collectionProgressSnapshotService;
+        
+        private CardCollectionRewardsConfigSO _rewardsConfig;
 
         private CancellationTokenSource _cts;
         public CardCollectionSessionContext Context { get; }
@@ -23,13 +26,15 @@ namespace CardCollectionImpl
             CardCollectionModule module,
             CardCollectionHudPresenter hudPresenter,
             ICardCollectionRewardHandler rewardHandler,
+            CardCollectionRewardsConfigSO rewardsConfig,
             CardCollectionInventoryIntegration inventoryIntegration,
-            ICollectionProgressSnapshotService  collectionProgressSnapshotService)
+            ICollectionProgressSnapshotService collectionProgressSnapshotService)
         {
             Context = sessionContext;
             _module = module;
             _hudPresenter = hudPresenter;
             _rewardHandler = rewardHandler;
+            _rewardsConfig = rewardsConfig;
             _inventoryIntegration = inventoryIntegration;
             _collectionProgressSnapshotService = collectionProgressSnapshotService;
         }
@@ -39,7 +44,6 @@ namespace CardCollectionImpl
             _cts = CancellationTokenSource.CreateLinkedTokenSource(externalCt);
             var ct = _cts.Token;
 
-            await _rewardHandler.InitializeAsync(externalCt);
             await _module.InitializeAsync(ct);
 
             var collectionData = await _module.Load(ct);
@@ -119,8 +123,13 @@ namespace CardCollectionImpl
             _hudPresenter?.Unbind();
             _inventoryIntegration?.Detach();
             
-            (_rewardHandler as IDisposable)?.Dispose();
             (_hudPresenter as IDisposable)?.Dispose();
+            
+            if (_rewardsConfig != null)
+            {
+                AddressablesWrapper.Release(_rewardsConfig);
+                _rewardsConfig = null;
+            }
             
             _module?.Dispose();
         }

@@ -10,6 +10,7 @@ namespace CardCollectionImpl
 {
     public class RewardDefinitionFactory : IRewardDefinitionFactory
     {
+        //TODO change for Dictionary<string, CardPackConfig>
         private readonly List<CardPackConfig> _cardPackConfigs;
         private readonly Dictionary<string, ExchangePackEntry> _packById;
 
@@ -64,14 +65,14 @@ namespace CardCollectionImpl
             return fullCollectionReward;
         }
         
-        public CollectionRewardDefinition CreateFromOfferReward(string offerPackId, CancellationToken ct = default)
+        public CollectionRewardDefinition CreateFromOfferReward(string offerPackId)
         {
             if (!TryGetPackEntry(offerPackId, out var exchangePackEntry))
             {
                 return new DuplicatePointsChestOffer();
             }
 
-            var cardPacks = GetRewardCardPacks(exchangePackEntry, ct);
+            var cardPacks = GetRewardCardPacks(exchangePackEntry);
             var resources = GetRewardResources(exchangePackEntry);
 
             return new DuplicatePointsChestOffer
@@ -97,6 +98,7 @@ namespace CardCollectionImpl
         {
             if (pack?.RewardEntry is not ExchangePackCardsRewardEntrySO { ResourcesData: { Count: > 0 } } cardsReward)
             {
+                //TODO create once EMPTY list and return it 
                 return new List<GameResource>();
             }
             
@@ -112,7 +114,7 @@ namespace CardCollectionImpl
             return mappedResources.Count > 0 ? mappedResources : new List<GameResource>();
         }
         
-        private List<CardPack> GetRewardCardPacks(ExchangePackEntry pack, CancellationToken ct)
+        private List<CardPack> GetRewardCardPacks(ExchangePackEntry pack)
         {
             if (pack?.RewardEntry?.CardPacks is not { Count: > 0 } || _cardPackConfigs == null)
             {
@@ -122,8 +124,6 @@ namespace CardCollectionImpl
             var result = new List<CardPack>();
             foreach (var cardPackId in pack.RewardEntry.CardPacks)
             {
-                ct.ThrowIfCancellationRequested();
-
                 var config = _cardPackConfigs.FirstOrDefault(cfg =>
                     cfg != null && string.Equals(cfg.packId, cardPackId, StringComparison.Ordinal));
 

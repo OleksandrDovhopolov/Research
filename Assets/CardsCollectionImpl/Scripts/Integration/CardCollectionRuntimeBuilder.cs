@@ -3,6 +3,7 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Models;
+using Infrastructure;
 using Inventory.API;
 using Rewards;
 using UIShared;
@@ -51,7 +52,9 @@ namespace CardCollectionImpl
             var module = new CardCollectionModule(moduleConfig);
             
             var rewardDefinitionFactory = await GetRewardDefinitionFactory(ct);
-            var rewardHandler = GetRewardHandler(rewardDefinitionFactory);
+            
+            var rewardsConfig = await AddressablesWrapper.LoadFromTask<CardCollectionRewardsConfigSO>(model.RewardsConfigAddress);
+            var rewardHandler = GetRewardHandler(rewardsConfig, rewardDefinitionFactory);
 
             var snapshotService = new CollectionProgressSnapshotService();
             var windowOpener = CreateCardPackWindowOpener(module, snapshotService, rewardHandler, rewardDefinitionFactory);
@@ -66,13 +69,14 @@ namespace CardCollectionImpl
                 module,
                 hudPresenter,
                 rewardHandler,
+                rewardsConfig,
                 inventoryIntegration,
                 snapshotService);
         }
         
-        private ICardCollectionRewardHandler GetRewardHandler(IRewardDefinitionFactory rewardDefinitionFactory)
+        private ICardCollectionRewardHandler GetRewardHandler(CardCollectionRewardsConfigSO rewardsConfig, IRewardDefinitionFactory rewardDefinitionFactory)
         {
-            var rewardHandler = new CardCollectionRewardHandler(_rewardGrantService, rewardDefinitionFactory);
+            var rewardHandler = new CardCollectionRewardHandler(rewardsConfig, _rewardGrantService, rewardDefinitionFactory);
             
             return rewardHandler;
         }
