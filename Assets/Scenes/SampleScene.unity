@@ -278,6 +278,7 @@ MonoBehaviour:
   autoInjectGameObjects:
   - {fileID: 1266437338}
   - {fileID: 343525367}
+  - {fileID: 1055907873}
   _exchangePacksConfig: {fileID: 11400000, guid: 65c81ad1becc709499632b874a67d555, type: 2}
 --- !u!4 &67235301
 Transform:

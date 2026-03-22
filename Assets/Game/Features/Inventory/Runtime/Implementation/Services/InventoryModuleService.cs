@@ -16,7 +16,7 @@ namespace Inventory.Implementation.Services
         public const string CardPack = "card_pack";
     }
     
-    public sealed class InventoryModuleService : IInventoryService, IInventoryReadService, IInventoryItemUseService, IDisposable
+    public sealed class InventoryModuleService : IInventoryService, IInventoryReadService, IInventoryItemUseService, IInventoryUseHandlerStorage, IDisposable
     {
         private readonly AddItemSystem _addItemSystem;
         private readonly RemoveItemSystem _removeItemSystem;

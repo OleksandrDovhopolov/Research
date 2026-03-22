@@ -1,54 +1,45 @@
 using System;
-using System.Threading;
 using Inventory.API;
-using UnityEngine;
 
 namespace CardCollectionImpl
 {
     public sealed class CardCollectionInventoryIntegration
     {
+        private readonly IItemCategoryRegistry _itemCategoryRegistry;
+        private readonly IInventoryUseHandlerStorage _handlerStorage;
         private readonly ICardCollectionWindowOpener _cardCollectionWindowOpener;
         
         private bool _attached;
         private ItemCategory _itemCategory;
         private IInventoryItemUseHandler _inventoryItemUseHandler;
         
-        public CardCollectionInventoryIntegration(ICardCollectionWindowOpener cardCollectionWindowOpener)
+        public CardCollectionInventoryIntegration(
+            IItemCategoryRegistry itemCategoryRegistry, 
+            IInventoryUseHandlerStorage handlerStorage,
+            ICardCollectionWindowOpener cardCollectionWindowOpener)
         {
+            _handlerStorage = handlerStorage ?? throw new ArgumentNullException(nameof(handlerStorage));
+            _itemCategoryRegistry = itemCategoryRegistry ?? throw new ArgumentNullException(nameof(itemCategoryRegistry));
             _cardCollectionWindowOpener = cardCollectionWindowOpener ?? throw new ArgumentNullException(nameof(cardCollectionWindowOpener));
         }
 
         public void Attach()
         {
             if (_attached) return;
-
-            var inventoryRoot = InventoryCompositionRegistry.Resolve();
-            if (inventoryRoot == null)
-            {
-                Debug.LogWarning("Failed to Resolve IInventoryCompositionRoot.");
-                return;
-            }
-
+            
             _itemCategory = new CardsItemCategory(CardsConfig.CardPack);
-            inventoryRoot.GetCategoryRegistry().Register(_itemCategory);
+            _itemCategoryRegistry.Register(_itemCategory);
             
             _inventoryItemUseHandler = new CardPackInventoryUseHandler(_cardCollectionWindowOpener);
-            inventoryRoot.AddUseHandler(_inventoryItemUseHandler);
+            _handlerStorage.AddUseHandler(_inventoryItemUseHandler);
 
             _attached = true;
         }
 
         public void Detach()
         {
-            var inventoryRoot = InventoryCompositionRegistry.Resolve();
-            if (inventoryRoot == null)
-            {
-                Debug.LogWarning("Failed to Resolve IInventoryCompositionRoot.");
-                return;
-            }
-            
-            inventoryRoot.GetCategoryRegistry().RemoveRegister(_itemCategory);
-            inventoryRoot.RemoveUseHandler(_inventoryItemUseHandler);
+            _itemCategoryRegistry.RemoveRegister(_itemCategory);
+            _handlerStorage.RemoveUseHandler(_inventoryItemUseHandler);
 
             _inventoryItemUseHandler = null;
             _itemCategory = null;

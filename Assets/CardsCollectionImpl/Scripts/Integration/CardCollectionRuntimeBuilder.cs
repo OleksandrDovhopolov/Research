@@ -3,6 +3,7 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Models;
+using Inventory.API;
 using Rewards;
 using UIShared;
 using UISystem;
@@ -16,19 +17,25 @@ namespace CardCollectionImpl
         private readonly ICardPackProvider _cardPackProvider;
         private readonly ExchangePacksConfig _exchangePacksConfig;
         private readonly IRewardGrantService _rewardGrantService;
+        private readonly IItemCategoryRegistry _itemCategoryRegistry;
+        private readonly IInventoryUseHandlerStorage _inventoryUseHandlerStorage;
 
         public CardCollectionRuntimeBuilder(
             UIManager uiManager,
             IHUDService hudService,
             ICardPackProvider cardPackProvider,
             ExchangePacksConfig exchangePacksConfig,
-            IRewardGrantService rewardGrantService)
+            IRewardGrantService rewardGrantService,
+            IItemCategoryRegistry  itemCategoryRegistry,
+            IInventoryUseHandlerStorage inventoryUseHandlerStorage)
         {
             _uiManager = uiManager;
             _hudService = hudService;
             _cardPackProvider = cardPackProvider;
             _exchangePacksConfig = exchangePacksConfig;
             _rewardGrantService = rewardGrantService;
+            _itemCategoryRegistry = itemCategoryRegistry;
+            _inventoryUseHandlerStorage = inventoryUseHandlerStorage;
         }
         
         public async UniTask<CardCollectionSession> BuildAsync(CardCollectionEventModel model, CancellationToken ct)
@@ -50,7 +57,7 @@ namespace CardCollectionImpl
             var windowOpener = CreateCardPackWindowOpener(module, snapshotService, rewardHandler, rewardDefinitionFactory);
             
             var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
-            var inventoryIntegration = new CardCollectionInventoryIntegration(windowOpener);
+            var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, windowOpener);
             
             var context = new CardCollectionSessionContext(module, module, module, windowOpener);
             

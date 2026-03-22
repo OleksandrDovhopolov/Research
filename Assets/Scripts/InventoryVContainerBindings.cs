@@ -1,5 +1,7 @@
+using System;
 using Inventory.API;
 using Inventory.Implementation;
+using Inventory.Implementation.Services;
 using VContainer;
 
 namespace core
@@ -12,15 +14,21 @@ namespace core
         {
             builder.RegisterInstance(InventoryOwnerId);
 
-            builder.Register<IInventoryService>(_ =>
+            builder.Register<IInventoryStorage, InMemoryInventoryStorage>(Lifetime.Singleton);
+            
+            builder.Register<IItemCategoryRegistry>(_ =>
             {
-                if (!InventoryCompositionRegistry.IsRegistered)
-                {
-                    InventoryCompositionRegistry.Register(new InventoryImplementationCompositionRoot());
-                }
-
-                return InventoryCompositionRegistry.Resolve().CreateInventoryService();
+                var registry = new ItemCategoryRegistry();
+                registry.Register(new SimpleItemCategory());
+                return registry;
             }, Lifetime.Singleton);
+
+            builder.Register<InventoryModuleService>(Lifetime.Singleton)
+                .As<IInventoryService>()
+                .As<IInventoryReadService>()
+                .As<IInventoryItemUseService>()
+                .As<IInventoryUseHandlerStorage>()
+                .As<IDisposable>();
         }
     }
 }

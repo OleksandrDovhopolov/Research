@@ -5,6 +5,7 @@ using Inventory.Implementation.UI;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 namespace Inventory.Implementation
 {
@@ -15,10 +16,24 @@ namespace Inventory.Implementation
         [SerializeField] private string _ownerId = "player_1";
 
         private CancellationToken _destroyCt;
+        
         private IInventoryService _inventoryService;
         private IInventoryReadService _inventoryReadService;
         private IInventoryItemUseService _inventoryItemUseService;
         private IItemCategoryRegistry _itemCategoryRegistry;
+        
+        [Inject]
+        private void Construct(
+            IInventoryService inventoryService,
+            IInventoryReadService  inventoryReadService, 
+            IInventoryItemUseService inventoryItemUseService,
+            IItemCategoryRegistry  itemCategoryRegistry)
+        {
+            _inventoryService = inventoryService;
+            _inventoryReadService = inventoryReadService;
+            _inventoryItemUseService = inventoryItemUseService;
+            _itemCategoryRegistry = itemCategoryRegistry;
+        }
         
         private void Awake()
         {
@@ -27,12 +42,6 @@ namespace Inventory.Implementation
 
         private void Start()
         {
-            var compositionRoot = InventoryCompositionRegistry.Resolve();
-            _inventoryService = compositionRoot.CreateInventoryService();
-            _inventoryReadService = compositionRoot.CreateInventoryReadService();
-            _inventoryItemUseService = compositionRoot.CreateInventoryItemUseService();
-            _itemCategoryRegistry = compositionRoot.GetCategoryRegistry();
-            
             _cheatButton.onClick.AddListener(() => OpenCheatsPanelAsync(_destroyCt).Forget());
         }
 
