@@ -7,6 +7,14 @@ namespace CardCollectionImpl
 {
     public static class CardCollectionDataUtils 
     {
+        public static int GetCollectedCardsAmount(this EventCardsSaveData eventCardsSaveData)
+        {
+            if (eventCardsSaveData?.Cards == null)
+                return 0;
+
+            return eventCardsSaveData.Cards.Count(card => card.IsUnlocked);
+        }
+        
         public static List<CardConfig> GetByGroupType(this IReadOnlyList<CardConfig> data, string groupType)
         {
             var configs = data.Where(config => groupType == config.groupType).ToList();

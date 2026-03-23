@@ -70,6 +70,13 @@ namespace CardCollectionImpl
         {
             OnInfoButtonClicked?.Invoke();
         }
+
+        //TODO remove this
+        private ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
+        public void SetService(ICardCollectionCacheService cardCollectionCacheService)
+        {
+            _cardCollectionCardCollectionCacheService = cardCollectionCacheService;
+        }
         
         public void CreateViews(CardCollectionNewCardsDto newCardsData, IReadOnlyList<CardCollectionGroupConfig> configs)
         {
@@ -113,8 +120,8 @@ namespace CardCollectionImpl
             foreach (var groupView in _viewsDict.Values)
             {
                 var groupType = groupView.GroupType;
-                var totalGroupAmount = collectionData.GetGroupAmount(groupType, cardConfigs);
-                var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType, cardConfigs);
+                var totalGroupAmount = _cardCollectionCardCollectionCacheService.GetGroupAmount(collectionData, groupType);
+                var collectedGroupAmount = _cardCollectionCardCollectionCacheService.GetCollectedGroupAmount(collectionData, groupType);;
                 groupView.UpdateCollectedAmount(collectedGroupAmount, totalGroupAmount);
             }
         }

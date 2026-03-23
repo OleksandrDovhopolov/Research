@@ -144,7 +144,7 @@ namespace CardCollection.Tests
             var storage = new InMemoryEventCardsStorage(CreateSaveData(eventId, points));
             var definitionProvider = new StubCardDefinitionProvider(new List<CardDefinition>());
             var selector = new StubCardSelector();
-            var pointsCalculator = new DefaultCardPointsCalculator();
+            var pointsCalculator = new CardCollectionDuplicatePointsTests.MockCardPointsCalculator();
 
             var config = new CardCollectionModuleConfig(
                 packProvider,

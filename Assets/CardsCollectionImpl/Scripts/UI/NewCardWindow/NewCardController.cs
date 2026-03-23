@@ -11,12 +11,19 @@ namespace CardCollectionImpl
         public readonly CardPack CardPack;
         public readonly ICardCollectionModule CollectionModule;
         public readonly ICardCollectionReader CollectionReader;
+        public readonly ICardCollectionCacheService CardCollectionCacheService;
 
-        public NewCardArgs(CardPack cardPack, ICardCollectionModule collectionModule, ICardCollectionReader collectionReader)
+        public NewCardArgs(
+            CardPack cardPack,
+            ICardCollectionModule collectionModule,
+            ICardCollectionReader collectionReader,
+            ICardCollectionCacheService cardCollectionCacheService)
         {
             CardPack = cardPack;
             CollectionModule = collectionModule;
             CollectionReader = collectionReader;
+            CollectionReader = collectionReader;
+            CardCollectionCacheService = cardCollectionCacheService;
         }
     }
 
@@ -47,7 +54,7 @@ namespace CardCollectionImpl
             
             var cardsIdList = await Args.CollectionModule.OpenPackAndUnlockAsync(Args.CardPack, ct);
             var cardsData = await Args.CollectionModule.GetCardsByIdsAsync(cardsIdList, ct);
-            var displayData = cardsData.ToNewCardDisplayData(_cardsConfigProvider.Data);
+            var displayData = Args.CardCollectionCacheService.ToNewCardDisplayData(cardsData);
             
             View.CreateNewCards(displayData);
         }

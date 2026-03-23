@@ -40,8 +40,10 @@ namespace core
             // Card collection feature storage
             builder.Register<ICardPackProvider, JsonCardPackProvider>(Lifetime.Singleton);
             builder.Register<ICardsConfigProvider, JsonCardsConfigProvider>(Lifetime.Singleton);
-            Debug.LogWarning($"Debug Register ICardsConfigProvider TO JsonCardsConfigProvider");
             builder.Register<ICardGroupsConfigProvider, JsonCardGroupsConfigProvider>(Lifetime.Singleton);
+            // Points calculator
+            builder.Register<ICardCollectionCacheService, CardCollectionCardCollectionCacheService>(Lifetime.Singleton);
+            builder.Register<ICardPointsCalculator, CardsCollectionPointsCalculator>(Lifetime.Singleton);
             
             // Rewards.asmdef
             builder.Register<IRewardGrantService>(resolver =>

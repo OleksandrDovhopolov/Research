@@ -16,6 +16,7 @@ namespace CardCollectionImpl
         private readonly ICardCollectionPointsAccount _pointsAccount;
         private readonly IExchangeOfferProvider _exchangeOfferProvider;
         private readonly IRewardDefinitionFactory _rewardDefinitionFactory;
+        private readonly ICardCollectionCacheService _cardCollectionCacheService;
         private readonly ICollectionProgressSnapshotService _collectionProgressSnapshotService;
 
         public CardCollectionWindowOpener(
@@ -26,6 +27,7 @@ namespace CardCollectionImpl
             ICardsConfigProvider cardsConfigProvider,
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory rewardDefinitionFactory,
+            ICardCollectionCacheService cardCollectionCacheService,
             ICollectionProgressSnapshotService collectionProgressSnapshotService)
         {
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
@@ -35,6 +37,7 @@ namespace CardCollectionImpl
             _cardsConfigProvider = cardsConfigProvider ?? throw new ArgumentNullException(nameof(cardsConfigProvider));
             _exchangeOfferProvider = exchangeOfferProvider ?? throw new ArgumentNullException(nameof(exchangeOfferProvider));
             _rewardDefinitionFactory = rewardDefinitionFactory ?? throw new ArgumentNullException(nameof(rewardDefinitionFactory));
+            _cardCollectionCacheService = cardCollectionCacheService ?? throw new ArgumentNullException(nameof(cardCollectionCacheService));
             _collectionProgressSnapshotService = collectionProgressSnapshotService ?? throw new ArgumentNullException(nameof(collectionProgressSnapshotService));
         }
 
@@ -52,7 +55,7 @@ namespace CardCollectionImpl
 
         public void OpenNewCardWindow(CardPack pack)
         {
-            var args = new NewCardArgs(pack, _module, _reader);
+            var args = new NewCardArgs(pack, _module, _reader, _cardCollectionCacheService);
             _uiManager.Show<NewCardController>(args);
         }
         

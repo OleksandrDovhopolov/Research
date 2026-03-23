@@ -40,6 +40,7 @@ namespace CardCollectionImpl
     {
         private ICardsConfigProvider _cardsConfigProvider;
         private ICardGroupsConfigProvider _cardGroupsConfigProvider;
+        private ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
         
         private CardCollectionArgs Args => (CardCollectionArgs) Arguments;
         private IReadOnlyList<CardCollectionGroupConfig> GroupConfigs => _cardGroupsConfigProvider.Data;
@@ -47,14 +48,20 @@ namespace CardCollectionImpl
         private bool _groupsCreated;
 
         [Inject]
-        public void Install(ICardsConfigProvider cardsConfigProvider, ICardGroupsConfigProvider cardGroupsConfigProvider)
+        public void Install(
+            ICardsConfigProvider cardsConfigProvider, 
+            ICardGroupsConfigProvider cardGroupsConfigProvider,
+            ICardCollectionCacheService cardCollectionCardCollectionCacheService)
         {
             _cardsConfigProvider = cardsConfigProvider; 
             _cardGroupsConfigProvider = cardGroupsConfigProvider;
+            _cardCollectionCardCollectionCacheService = cardCollectionCardCollectionCacheService;
         }
         
         protected override void OnShowStart()
         {
+            View.SetService(_cardCollectionCardCollectionCacheService);
+            
             UpdatePointsAmount();
             
             if (_groupsCreated)

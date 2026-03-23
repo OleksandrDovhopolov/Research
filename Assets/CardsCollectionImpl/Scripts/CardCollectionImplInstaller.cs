@@ -1,3 +1,4 @@
+using CardCollection.Core;
 using EventOrchestration.Abstractions;
 using EventOrchestration.Controllers;
 using UnityEngine;
@@ -26,7 +27,7 @@ namespace CardCollectionImpl
             // Client code usage facade
             builder.Register<ICardCollectionFeatureFacade, CardCollectionFeatureFacadeFacade>(Lifetime.Singleton);
             
-            // TODO add describe
+            // Event model factory
             builder.Register<IEventModelFactory, CardCollectionEventModelFactory>(Lifetime.Singleton);
             
             // Feature lifeOps controller

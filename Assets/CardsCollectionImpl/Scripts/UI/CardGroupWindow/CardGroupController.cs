@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
@@ -35,20 +36,25 @@ namespace CardCollectionImpl
     {
         private ICardsConfigProvider _cardsConfigProvider;
         private ICardGroupsConfigProvider _cardGroupsConfigProvider;
+        private ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
         
         private CardGroupArgs Args => (CardGroupArgs) Arguments;
 
-        private List<CardProgressData> GroupCardsData => Args.EventCardsSaveData.GetCardsByGroupType(_currentGroupType, _cardsConfigProvider.Data);
+        private List<CardProgressData> GroupCardsData => _cardCollectionCardCollectionCacheService.GetCardsByGroupType(Args.EventCardsSaveData, _currentGroupType).ToList();
 
         private IReadOnlyList<CardCollectionGroupConfig> CollectionGroups => _cardGroupsConfigProvider.Data;
         private int _currentGroupIndex;
         private string _currentGroupType;
         
         [Inject]
-        private void Construct(ICardsConfigProvider cardsConfigProvider, ICardGroupsConfigProvider cardGroupsConfigProvider)
+        private void Construct(
+            ICardsConfigProvider cardsConfigProvider,
+            ICardGroupsConfigProvider cardGroupsConfigProvider,
+            ICardCollectionCacheService cardCollectionCardCollectionCacheService)
         {
             _cardsConfigProvider = cardsConfigProvider;
             _cardGroupsConfigProvider = cardGroupsConfigProvider;
+            _cardCollectionCardCollectionCacheService = cardCollectionCardCollectionCacheService;
         }
         
         protected override void OnShowStart()
@@ -145,9 +151,9 @@ namespace CardCollectionImpl
             
             var collectionNumberText = "Set " + (_currentGroupIndex + 1) + "/" + CollectionGroups.Count;
             View.SetCollectionNumber(collectionNumberText);
-            
-            var collectedAmount = Args.EventCardsSaveData.GetCollectedGroupAmount(_currentGroupType, _cardsConfigProvider.Data);
-            var totalAmount = Args.EventCardsSaveData.GetGroupAmount(_currentGroupType, _cardsConfigProvider.Data);
+
+            var collectedAmount =  _cardCollectionCardCollectionCacheService.GetCollectedGroupAmount(Args.EventCardsSaveData, _currentGroupType);;
+            var totalAmount = _cardCollectionCardCollectionCacheService.GetGroupAmount(Args.EventCardsSaveData, _currentGroupType);
             View.UpdateCollectedAmount(collectedAmount, totalAmount);
         }
         

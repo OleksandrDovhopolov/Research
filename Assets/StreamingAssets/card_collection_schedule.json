@@ -1,14 +1,14 @@
 [
   {
-    "Id": "season_cards_019",
+    "Id": "season_cards_020",
     "EventType": "CardCollection",
-    "StartTimeUtc": "2026-03-23T15:04:00Z",
-    "EndTimeUtc": "2026-03-23T15:14:00Z",
+    "StartTimeUtc": "2026-03-23T18:53:00Z",
+    "EndTimeUtc": "2026-03-23T19:03:00Z",
     "Priority": 10,
     "StreamId": "card_collection_seasons",
     "CustomParams": {
-      "eventId": "season_cards_019",
-      "rewardsConfigAddress": "season_cards_019"
+      "eventId": "season_cards_020",
+      "rewardsConfigAddress": "season_cards_020"
     }
   }
 ]

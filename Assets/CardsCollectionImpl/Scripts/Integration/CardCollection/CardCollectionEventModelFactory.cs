@@ -12,7 +12,6 @@ namespace EventOrchestration.Controllers
     {
         private const string CollectionIdKey = "eventId";
         private const string RewardsConfigAddressKey = "rewardsConfigAddress";
-        
         private const string DefaultRewardsConfigAddress = "CardCollectionRewardsConfig";
 
         public UniTask<BaseGameEventModel> CreateAsync(ScheduleItem item, CancellationToken ct)

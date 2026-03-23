@@ -8,12 +8,12 @@ namespace CardCollectionImpl
         private bool _hasSnapshot;
         private CollectionProgressSnapshot _snapshot;
 
-        private readonly IReadOnlyList<CardConfig> _cardCollectionConfigs;
+        private readonly ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
         private readonly IReadOnlyList<CardCollectionGroupConfig> _cardCollectionGroupConfigs;
         
-        public CollectionProgressSnapshotService(IReadOnlyList<CardConfig> cardConfigs, IReadOnlyList<CardCollectionGroupConfig> groupsConfig)
+        public CollectionProgressSnapshotService(ICardCollectionCacheService cardCollectionCacheService, IReadOnlyList<CardCollectionGroupConfig> groupsConfig)
         {
-            _cardCollectionConfigs = cardConfigs;
+            _cardCollectionCardCollectionCacheService = cardCollectionCacheService;
             _cardCollectionGroupConfigs = groupsConfig;
         }
         
@@ -41,18 +41,13 @@ namespace CardCollectionImpl
         private List<CollectionProgressSnapshot.GroupProgressSnapshot> BuildGroupProgress(EventCardsSaveData collectionData)
         {
             var result = new List<CollectionProgressSnapshot.GroupProgressSnapshot>();
-            var groups = _cardCollectionGroupConfigs;
-            if (groups == null)
-            {
-                return result;
-            }
 
-            foreach (var groupsConfig in groups)
+            foreach (var groupsConfig in _cardCollectionGroupConfigs)
             {
                 var groupType = groupsConfig.groupType;
                 var groupName = groupsConfig.groupName;
-                var totalGroupAmount = collectionData.GetGroupAmount(groupType, _cardCollectionConfigs);
-                var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType, _cardCollectionConfigs);
+                var totalGroupAmount = _cardCollectionCardCollectionCacheService.GetGroupAmount(collectionData, groupType);
+                var collectedGroupAmount = _cardCollectionCardCollectionCacheService.GetCollectedGroupAmount(collectionData, groupType);
 
                 result.Add(new CollectionProgressSnapshot.GroupProgressSnapshot(
                     groupType,

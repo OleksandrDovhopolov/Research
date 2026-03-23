@@ -19,7 +19,6 @@ namespace CardCollection.Core
         private readonly IDuplicateCardPointsCalculator _duplicateCardPointsCalculator;
 
         public string EventId { get; }
-        public ICardPointsCalculator CardPointsCalculator { get; }
 
         public CardCollectionContext(CardCollectionModuleConfig config)
         {
@@ -31,7 +30,6 @@ namespace CardCollection.Core
             _config = config;
 
             EventId = _config.EventId;
-            CardPointsCalculator = _config.CardPointsCalculator;
             _cardPackService = new CardPackService(_config.PackProvider);
             _cardProgressService = new CardProgressService(_config.EventCardsStorage);
             _cardRandomizer = new PackBasedCardsRandomizer(_config.CardSelector, _config.CardDefinitionProvider);

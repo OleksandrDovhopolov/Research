@@ -26,6 +26,8 @@ namespace CardCollectionImpl
         private readonly IItemCategoryRegistry _itemCategoryRegistry;
         private readonly IInventoryUseHandlerStorage _inventoryUseHandlerStorage;
 
+        private readonly ICardPointsCalculator _cardPointsCalculator;
+        private readonly ICardCollectionCacheService _cardCollectionCacheService;
         private readonly ICardPackProvider _cardPackProvider;
         private readonly ICardsConfigProvider _cardsConfigProvider;
         private readonly ICardGroupsConfigProvider _cardGroupsConfigProvider;
@@ -34,22 +36,26 @@ namespace CardCollectionImpl
             UIManager uiManager,
             IHUDService hudService,
             ICardPackProvider cardPackProvider,
+            ICardPointsCalculator pointsCalculator,
             ICardsConfigProvider cardsConfigProvider,
             ICardGroupsConfigProvider cardGroupsConfigProvider,
             ExchangePacksConfig exchangePacksConfig,
             IRewardGrantService rewardGrantService,
             IItemCategoryRegistry  itemCategoryRegistry,
+            ICardCollectionCacheService  cardCollectionCacheService,
             IInventoryUseHandlerStorage inventoryUseHandlerStorage)
         {
             _uiManager = uiManager;
             _hudService = hudService;
             _cardPackProvider = cardPackProvider;
+            _cardPointsCalculator = pointsCalculator;
             _cardsConfigProvider = cardsConfigProvider;
             _cardGroupsConfigProvider = cardGroupsConfigProvider;
             _exchangePacksConfig = exchangePacksConfig;
             _rewardGrantService = rewardGrantService;
             _itemCategoryRegistry = itemCategoryRegistry;
             _inventoryUseHandlerStorage = inventoryUseHandlerStorage;
+            _cardCollectionCacheService = cardCollectionCacheService;
         }
         
         public async UniTask<CardCollectionSession> BuildAsync(CardCollectionEventModel model, CancellationToken ct)
@@ -75,6 +81,8 @@ namespace CardCollectionImpl
                 Groups = _cardGroupsConfigProvider.Data
             };
 
+            _cardCollectionCacheService.Initialize(staticData.Cards);
+            
             var moduleConfig = CreateModuleConfig(staticData, model.CollectionId);
             var module = new CardCollectionModule(moduleConfig);
             
@@ -83,7 +91,7 @@ namespace CardCollectionImpl
             var rewardsConfig = await AddressablesWrapper.LoadFromTask<CardCollectionRewardsConfigSO>(model.RewardsConfigAddress);
             var rewardHandler = GetRewardHandler(rewardsConfig, rewardDefinitionFactory);
 
-            var snapshotService = new CollectionProgressSnapshotService(staticData.Cards, staticData.Groups);
+            var snapshotService = new CollectionProgressSnapshotService(_cardCollectionCacheService, staticData.Groups);
             var windowOpener = CreateCardPackWindowOpener(module, snapshotService, rewardHandler, rewardDefinitionFactory);
             
             var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
@@ -124,6 +132,7 @@ namespace CardCollectionImpl
                 _cardsConfigProvider,
                 exchangeOfferProvider,
                 rewardDefinitionFactory,
+                _cardCollectionCacheService,
                 snapshotService);
             
             return cardCollectionWindowOpener;
@@ -142,7 +151,7 @@ namespace CardCollectionImpl
                 new JsonEventCardsStorage(),
                 new DefaultCardDefinitionProvider(staticData.Cards),
                 new ProbabilityBasedCardSelector(PackRulesConfig.CreateDefaultRules()),
-                CardsCollectionPointsCalculator.Instance,
+                _cardPointsCalculator,
                 eventId);
         }
     }
