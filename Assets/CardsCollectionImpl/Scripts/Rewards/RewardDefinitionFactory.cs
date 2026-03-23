@@ -10,20 +10,22 @@ namespace CardCollectionImpl
 {
     public class RewardDefinitionFactory : IRewardDefinitionFactory
     {
-        //TODO change for Dictionary<string, CardPackConfig>
-        private readonly List<CardPackConfig> _cardPackConfigs;
+        private readonly Dictionary<string, CardPackConfig> _cardPackConfigsById;
         private readonly Dictionary<string, ExchangePackEntry> _packById;
 
         public RewardDefinitionFactory(ExchangePacksConfig exchangePacksConfig, List<CardPackConfig> cardPackConfigs)
         {
-            _cardPackConfigs = cardPackConfigs;
-            _packById = new Dictionary<string, ExchangePackEntry>();
+            _cardPackConfigsById = cardPackConfigs
+                .Where(c => c != null && !string.IsNullOrEmpty(c.packId))
+                .ToDictionary(c => c.packId, c => c);
+            
             
             if (exchangePacksConfig == null || exchangePacksConfig.Packs == null)
             {
                 return;
             }
 
+            _packById = new Dictionary<string, ExchangePackEntry>();
             foreach (var pack in exchangePacksConfig.Packs)
             {
                 if (pack == null || string.IsNullOrWhiteSpace(pack.Id))
@@ -116,7 +118,7 @@ namespace CardCollectionImpl
         
         private List<CardPack> GetRewardCardPacks(ExchangePackEntry pack)
         {
-            if (pack?.RewardEntry?.CardPacks is not { Count: > 0 } || _cardPackConfigs == null)
+            if (pack?.RewardEntry?.CardPacks is not { Count: > 0 } || _cardPackConfigsById.Count == 0)
             {
                 return new List<CardPack>();
             }
@@ -124,10 +126,7 @@ namespace CardCollectionImpl
             var result = new List<CardPack>();
             foreach (var cardPackId in pack.RewardEntry.CardPacks)
             {
-                var config = _cardPackConfigs.FirstOrDefault(cfg =>
-                    cfg != null && string.Equals(cfg.packId, cardPackId, StringComparison.Ordinal));
-
-                if (config == null)
+                if (!_cardPackConfigsById.TryGetValue(cardPackId, out var config))
                 {
                     Debug.LogWarning($"Failed to find CardPackConfig with ID {cardPackId}");
                     continue;

@@ -1,11 +1,19 @@
 using System.Collections.Generic;
-using CardCollection.Core;
+using System.Linq;
 using Resources.Core;
+using Rewards;
 
 namespace CardCollectionImpl
 {
     public class CardGroupCompletionReward : CollectionRewardDefinition
     {
-        public List<GameResource> Resources = new();
+        public List<GameResource> Resources { get; } = new();
+
+        public override IEnumerable<RewardGrantRequest> ToRequests()
+        {
+            return Resources
+                .Where(r => r.Amount > 0)
+                .Select(r => new RewardGrantRequest(r.Type.ToString(), r.Amount));
+        }
     }
 }

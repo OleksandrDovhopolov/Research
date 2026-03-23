@@ -1,9 +1,7 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using Resources.Core;
 using Rewards;
 using UnityEngine;
 
@@ -67,10 +65,9 @@ namespace CardCollectionImpl
             if (rewardDefinition == null || _rewardGrantService == null) 
                 return false;
             
-            var requests = PrepareRequests(rewardDefinition);
+            var requests = rewardDefinition.ToRequests();
             
-            if (requests.Count == 0) return true;
-            
+            var allSuccess = true;
             foreach (var request in requests)
             {
                 ct.ThrowIfCancellationRequested();
@@ -79,43 +76,11 @@ namespace CardCollectionImpl
                 if (!success)
                 {
                     Debug.LogError($"[Rewards] Failed to grant reward: {request.RewardId}");
-                    return false; 
+                    allSuccess =  false; 
                 }
             }
 
-            return true;
-        }
-
-        private List<RewardGrantRequest> PrepareRequests(CollectionRewardDefinition rewardDefinition)
-        {
-            var requests = new List<RewardGrantRequest>();
-
-            var resources = GetResources(rewardDefinition);
-            if (resources != null)
-            {
-                requests.AddRange(resources.Where(r => r is { Amount: > 0 })
-                    .Select(r => new RewardGrantRequest(r.Type.ToString(), r.Amount)));
-            }
-
-            if (rewardDefinition.CardPack != null)
-            {
-                requests.AddRange(rewardDefinition.CardPack.Where(p => !string.IsNullOrWhiteSpace(p?.PackId))
-                    .Select(p => new RewardGrantRequest(p.PackId, 1)));
-            }
-
-            return requests;
-        }
-        
-        private static IReadOnlyCollection<GameResource> GetResources(CollectionRewardDefinition collectionRewardDefinition)
-        {
-            //TODO add virtual method in CollectionRewardDefinition
-            return collectionRewardDefinition switch
-            {
-                DuplicatePointsChestOffer baseOfferContent => baseOfferContent.Resources,
-                FullCollectionReward collectionRewardContent => collectionRewardContent.Resources,
-                CardGroupCompletionReward groupCompletedContent => groupCompletedContent.Resources,
-                _ => null
-            };
+            return allSuccess;
         }
     }
 }
