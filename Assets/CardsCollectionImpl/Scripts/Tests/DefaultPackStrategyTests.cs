@@ -17,9 +17,6 @@ namespace CardCollectionImpl
                 packId = packId,
                 packName = packId,
                 cardCount = cardCount,
-                softCurrencyCost = 0,
-                hardCurrencyCost = 0,
-                availableCardRarities = new List<string>()
             });
         }
 

@@ -107,6 +107,9 @@ namespace CardCollection.Core
 
         public void Dispose()
         {
+            //TODO add clearCache to ICardGroupsConfigProvider
+            //TODO add clearCache to ICardsConfigProvider
+            _config.PackProvider.ClearCache();
             _cardPackService.Dispose();
             _cardProgressService.Dispose();
         }

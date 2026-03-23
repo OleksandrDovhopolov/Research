@@ -20,7 +20,6 @@ namespace Infrastructure
 
         public override UniTask LoadConfigData(ConfigManager configManager)
         {
-            
             var configJson = Resources.Load<TextAsset>("CONFIG_FILE_NAME");
             var data = configManager.GetParsedJsonData<CardCollectionConfig>(DefaultConfigFileName);
 

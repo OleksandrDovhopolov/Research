@@ -107,6 +107,10 @@ namespace CardCollection.Tests
                 return GetTestPacks();
             }
 
+            public void ClearCache()
+            {
+            }
+
             public List<CardPackConfig> GetTestPacks()
             {
                 return new List<CardPackConfig>
@@ -116,27 +120,18 @@ namespace CardCollection.Tests
                         packId = "pack_2",
                         packName = "Test Pack 2",
                         cardCount = 2,
-                        softCurrencyCost = 100,
-                        hardCurrencyCost = 0,
-                        availableCardRarities = new List<string> { "common", "rare" }
                     },
                     new CardPackConfig
                     {
                         packId = "pack_3",
                         packName = "Test Pack 3",
                         cardCount = 3,
-                        softCurrencyCost = 200,
-                        hardCurrencyCost = 0,
-                        availableCardRarities = new List<string> { "common", "rare", "epic" }
                     },
                     new CardPackConfig
                     {
                         packId = "pack_limited",
                         packName = "Limited Pack",
                         cardCount = 5,
-                        softCurrencyCost = 0,
-                        hardCurrencyCost = 99,
-                        availableCardRarities = new List<string> { "epic", "legendary" }
                     }
                 };
             }

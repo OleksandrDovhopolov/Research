@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
@@ -38,6 +39,7 @@ namespace CardCollectionImpl
     public class CardCollectionController :  WindowController<CardCollectionView>
     {
         private CardCollectionArgs Args => (CardCollectionArgs) Arguments;
+        private List<CardGroupsConfig> GroupConfigs => CardGroupsConfigStorage.Instance?.Data;
         
         private bool _groupsCreated;
         
@@ -52,7 +54,7 @@ namespace CardCollectionImpl
             else
             {
                 View.ShowLoader(true); 
-                View.CreateViews(Args.NewCardsData);
+                View.CreateViews(Args.NewCardsData, GroupConfigs);
             }
 
             View.SetGroupsProgress(Args.CollectionProgressSnapshot.GroupProgress);
@@ -108,7 +110,7 @@ namespace CardCollectionImpl
         {
             try
             {
-                await View.CreateGroupViews(CardGroupsConfigStorage.Instance.Data);
+                await View.CreateGroupViews(GroupConfigs);
                 _groupsCreated = true;
             }
             catch (Exception e)

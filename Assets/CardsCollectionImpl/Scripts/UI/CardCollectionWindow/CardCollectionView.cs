@@ -71,13 +71,11 @@ namespace CardCollectionImpl
             OnInfoButtonClicked?.Invoke();
         }
         
-        public void CreateViews(CardCollectionNewCardsDto newCardsData)
+        public void CreateViews(CardCollectionNewCardsDto newCardsData, List<CardGroupsConfig> configs)
         {
             _cardGroupsPool.DisableNonActive();
 
             _viewsDict.Clear();
-
-            var configs = CardGroupsConfigStorage.Instance.Data;
             
             foreach (var groupsConfig in configs)
             {

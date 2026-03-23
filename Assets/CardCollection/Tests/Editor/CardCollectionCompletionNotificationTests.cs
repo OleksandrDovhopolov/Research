@@ -160,6 +160,10 @@ namespace CardCollection.Tests
                 ct.ThrowIfCancellationRequested();
                 return UniTask.FromResult(EmptyPacks);
             }
+
+            public void ClearCache()
+            {
+            }
         }
 
         private sealed class StubCardDefinitionProvider : ICardDefinitionProvider

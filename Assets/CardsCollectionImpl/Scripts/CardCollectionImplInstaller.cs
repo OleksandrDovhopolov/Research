@@ -23,6 +23,8 @@ namespace CardCollectionImpl
             
             // Feature storage
             builder.Register<ICardPackProvider, JsonCardPackProvider>(Lifetime.Singleton);
+            builder.Register<ICardGroupsConfigProvider, JsonCardGroupsConfigProvider>(Lifetime.Singleton);
+            builder.Register<ICardsConfigProvider, JsonCardsConfigProvider>(Lifetime.Singleton);
             
             // Feature session builder
             builder.Register<ICardCollectionRuntimeBuilder, CardCollectionRuntimeBuilder>(Lifetime.Singleton);

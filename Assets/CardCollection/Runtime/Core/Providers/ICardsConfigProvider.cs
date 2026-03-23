@@ -4,9 +4,9 @@ using Cysharp.Threading.Tasks;
 
 namespace CardCollection.Core
 {
-    public interface ICardPackProvider
+    public interface ICardsConfigProvider
     {
-        UniTask<List<CardPackConfig>> GetCardConfigsAsync(CancellationToken ct = default);
+        UniTask<List<CardConfig>> GetCardGroupsConfigsAsync(string eventId, CancellationToken ct = default);
         void ClearCache();
     }
 }

@@ -180,9 +180,6 @@ namespace CardCollection.Tests
                         packId = packId,
                         packName = "Test Pack",
                         cardCount = 1,
-                        softCurrencyCost = 0,
-                        hardCurrencyCost = 0,
-                        availableCardRarities = new List<string>()
                     }
                 };
             }
@@ -191,6 +188,10 @@ namespace CardCollection.Tests
             {
                 ct.ThrowIfCancellationRequested();
                 return UniTask.FromResult(_packs);
+            }
+
+            public void ClearCache()
+            {
             }
         }
 
