@@ -107,6 +107,13 @@ namespace CardCollection.Tests
                 return GetTestPacks();
             }
 
+            public List<CardPackConfig> Data { get; }
+
+            public UniTask<List<CardPackConfig>> LoadAsync(string fileName, CancellationToken ct)
+            {
+                throw new System.NotImplementedException();
+            }
+
             public void ClearCache()
             {
             }

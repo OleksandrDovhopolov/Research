@@ -12,7 +12,7 @@ namespace CardCollectionImpl
         private readonly Dictionary<string, CardPackConfig> _cardPackConfigsById;
         private readonly Dictionary<string, ExchangePackEntry> _packById;
 
-        public RewardDefinitionFactory(ExchangePacksConfig exchangePacksConfig, List<CardPackConfig> cardPackConfigs)
+        public RewardDefinitionFactory(ExchangePacksConfig exchangePacksConfig, IReadOnlyList<CardPackConfig> cardPackConfigs)
         {
             _cardPackConfigsById = cardPackConfigs
                 .Where(c => c != null && !string.IsNullOrEmpty(c.packId))

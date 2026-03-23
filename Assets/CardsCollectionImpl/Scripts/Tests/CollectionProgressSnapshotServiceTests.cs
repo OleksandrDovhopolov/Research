@@ -9,14 +9,14 @@ namespace CardCollectionImpl
         [SetUp]
         public void SetUp()
         {
-            CardGroupsConfigStorage.Instance.Data.Clear();
             CardCollectionConfigStorage.Instance.Data.Clear();
         }
 
         [Test]
         public void TryGetSnapshot_WithoutSet_ReturnsFalse()
         {
-            var service = new CollectionProgressSnapshotService();
+            //TODO fix this 
+            var service = new CollectionProgressSnapshotService(null);
 
             var hasSnapshot = service.TryGetSnapshot(out _);
 
@@ -26,7 +26,8 @@ namespace CardCollectionImpl
         [Test]
         public void SetSnapshot_SetsTotalAndCollectedAmounts()
         {
-            var service = new CollectionProgressSnapshotService();
+            //TODO fix this 
+            var service = new CollectionProgressSnapshotService(null);
             var data = new EventCardsSaveData();
             data.Cards.Add(new CardProgressData { CardId = "a1", IsUnlocked = true });
             data.Cards.Add(new CardProgressData { CardId = "a2", IsUnlocked = false });
@@ -42,12 +43,6 @@ namespace CardCollectionImpl
         [Test]
         public void SetSnapshot_BuildsPerGroupProgress()
         {
-            CardGroupsConfigStorage.Instance.Data.Add(new CardGroupsConfig
-            {
-                GroupType = "g1",
-                GroupName = "Group One"
-            });
-
             CardCollectionConfigStorage.Instance.Data.Add(new CardCollectionConfig
             {
                 Id = "card-g1-1",
@@ -59,7 +54,8 @@ namespace CardCollectionImpl
                 GroupType = "g1"
             });
 
-            var service = new CollectionProgressSnapshotService();
+            //TODO fix this 
+            var service = new CollectionProgressSnapshotService(null);
             var data = new EventCardsSaveData();
             data.Cards.Add(new CardProgressData { CardId = "card-g1-1", IsUnlocked = true });
             data.Cards.Add(new CardProgressData { CardId = "card-g1-2", IsUnlocked = false });

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using CardCollection.Core;
-using Infrastructure;
 
 namespace CardCollectionImpl
 {
@@ -9,6 +8,13 @@ namespace CardCollectionImpl
         private bool _hasSnapshot;
         private CollectionProgressSnapshot _snapshot;
 
+        private readonly IReadOnlyList<CardCollectionGroupConfig> _cardCollectionGroupConfigs;
+        
+        public CollectionProgressSnapshotService(IReadOnlyList<CardCollectionGroupConfig> groupsConfig)
+        {
+            _cardCollectionGroupConfigs = groupsConfig;
+        }
+        
         public bool TryGetSnapshot(out CollectionProgressSnapshot snapshot)
         {
             snapshot = _snapshot;
@@ -30,10 +36,10 @@ namespace CardCollectionImpl
             _hasSnapshot = true;
         }
 
-        private static List<CollectionProgressSnapshot.GroupProgressSnapshot> BuildGroupProgress(EventCardsSaveData collectionData)
+        private List<CollectionProgressSnapshot.GroupProgressSnapshot> BuildGroupProgress(EventCardsSaveData collectionData)
         {
             var result = new List<CollectionProgressSnapshot.GroupProgressSnapshot>();
-            var groups = CardGroupsConfigStorage.Instance?.Data;
+            var groups = _cardCollectionGroupConfigs;
             if (groups == null)
             {
                 return result;
@@ -41,8 +47,8 @@ namespace CardCollectionImpl
 
             foreach (var groupsConfig in groups)
             {
-                var groupType = groupsConfig.GroupType;
-                var groupName = groupsConfig.GroupName;
+                var groupType = groupsConfig.groupType;
+                var groupName = groupsConfig.groupName;
                 var totalGroupAmount = collectionData.GetGroupAmount(groupType);
                 var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
 

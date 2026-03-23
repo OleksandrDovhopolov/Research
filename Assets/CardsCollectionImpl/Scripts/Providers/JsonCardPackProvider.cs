@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using CardCollection.Core;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace CardCollectionImpl
@@ -22,16 +20,6 @@ namespace CardCollectionImpl
         protected override List<CardPackConfig> ParseJson(string json)
         {
             return JsonUtility.FromJson<Wrapper>(json).packs;
-        }
-        
-        public UniTask<List<CardPackConfig>> GetCardConfigsAsync(CancellationToken ct)
-        {
-            return GetDataAsync(ct);
-        }
-
-        public void ClearCache()
-        {
-            Dispose();
         }
     }
 }

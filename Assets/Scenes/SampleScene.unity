@@ -931,7 +931,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _relativeSchedulePathFromAssets: StreamingAssets/card_collection_schedule.json
-  _eventIndex: 6
+  _eventIndex: 7
   _minDelay: 1
   _minDuration: 1
   _streamId: card_collection_seasons

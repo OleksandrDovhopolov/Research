@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using Infrastructure;
 using UIShared;
 using UISystem;
 using UnityEngine;
@@ -18,13 +17,17 @@ namespace CardCollectionImpl
         public readonly IRewardDefinitionFactory RewardDefinitionFactory;
         public readonly CollectionProgressSnapshot CollectionProgressSnapshot;
         
+        public readonly ICardGroupsConfigProvider CardGroupsConfigProvider;
+        
+        
         public CardCollectionArgs(
             CardCollectionNewCardsDto newCardsData,
             EventCardsSaveData eventCardsSaveData,
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory rewardDefinitionFactory,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
-            CollectionProgressSnapshot  collectionProgressSnapshot)
+            CollectionProgressSnapshot  collectionProgressSnapshot,
+            ICardGroupsConfigProvider cardGroupsConfigProvider)
         {
             NewCardsData = newCardsData;
             EventCardsSaveData = eventCardsSaveData;
@@ -32,6 +35,7 @@ namespace CardCollectionImpl
             RewardDefinitionFactory = rewardDefinitionFactory;
             CardCollectionPointsAccount = cardCollectionPointsAccount;
             CollectionProgressSnapshot = collectionProgressSnapshot;
+            CardGroupsConfigProvider = cardGroupsConfigProvider;
         }
     }
     
@@ -39,7 +43,7 @@ namespace CardCollectionImpl
     public class CardCollectionController :  WindowController<CardCollectionView>
     {
         private CardCollectionArgs Args => (CardCollectionArgs) Arguments;
-        private List<CardGroupsConfig> GroupConfigs => CardGroupsConfigStorage.Instance?.Data;
+        private List<CardCollectionGroupConfig> GroupConfigs => Args.CardGroupsConfigProvider.Data;
         
         private bool _groupsCreated;
         
@@ -159,7 +163,8 @@ namespace CardCollectionImpl
                 Args.EventCardsSaveData, 
                 groupType, 
                 View.RewardsConfigSo,
-                OnGroupViewChangedHandler);
+                OnGroupViewChangedHandler,
+                GroupConfigs);
             UIManager.Show<CardGroupController>(args);
         }
 

@@ -16,6 +16,7 @@ namespace CardCollectionImpl
         public readonly EventCardsSaveData EventCardsSaveData;
         public readonly CardCollectionRewardsConfigSO RewardsConfigSo;
         public readonly Action<string> OnGroupChanged;
+        public readonly List<CardCollectionGroupConfig> GroupConfigs;
         
         public CardGroupArgs(
             UIManager uiManager, 
@@ -23,7 +24,8 @@ namespace CardCollectionImpl
             EventCardsSaveData eventCardsSaveData,
             string groupType,
             CardCollectionRewardsConfigSO rewardsConfigSo,
-            Action<string> onGroupChanged)
+            Action<string> onGroupChanged,
+            List<CardCollectionGroupConfig> groupConfigs)
         {
             GroupType = groupType;
             UiManager = uiManager;
@@ -31,6 +33,7 @@ namespace CardCollectionImpl
             EventCardsSaveData = eventCardsSaveData;
             RewardsConfigSo = rewardsConfigSo;
             OnGroupChanged = onGroupChanged;
+            GroupConfigs = groupConfigs;
         }
     }
     
@@ -40,16 +43,15 @@ namespace CardCollectionImpl
         private CardGroupArgs Args => (CardGroupArgs) Arguments;
 
         private List<CardProgressData> GroupCardsData => Args.EventCardsSaveData.GetCardsByGroupType(_currentGroupType);
-        
-        private List<CardGroupsConfig> _allGroups;
+
+        private List<CardCollectionGroupConfig> CollectionGroups => Args.GroupConfigs;
         private int _currentGroupIndex;
         private string _currentGroupType;
         
         protected override void OnShowStart()
         {
-            _allGroups = CardGroupsConfigStorage.Instance.Data;
             _currentGroupType = Args.GroupType;
-            _currentGroupIndex = _allGroups.FindIndex(g => g.GroupType == _currentGroupType);
+            _currentGroupIndex = CollectionGroups.FindIndex(g => g.groupType == _currentGroupType);
             
             ShowCurrentGroup();
         }
@@ -105,8 +107,8 @@ namespace CardCollectionImpl
         {
             if (View.IsAnimating) return;
 
-            _currentGroupIndex = (_currentGroupIndex + direction + _allGroups.Count) % _allGroups.Count;
-            _currentGroupType = _allGroups[_currentGroupIndex].GroupType;
+            _currentGroupIndex = (_currentGroupIndex + direction + CollectionGroups.Count) % CollectionGroups.Count;
+            _currentGroupType = CollectionGroups[_currentGroupIndex].groupType;
             
             var groupCards = Args.EventCardsSaveData.GetCardsByGroupType(_currentGroupType);
             
@@ -132,7 +134,7 @@ namespace CardCollectionImpl
         {
             SetRewardData();
             
-            var collectionNumberText = "Set " + (_currentGroupIndex + 1) + "/" + _allGroups.Count;
+            var collectionNumberText = "Set " + (_currentGroupIndex + 1) + "/" + CollectionGroups.Count;
             View.SetCollectionNumber(collectionNumberText);
             
             var collectedAmount = Args.EventCardsSaveData.GetCollectedGroupAmount(_currentGroupType);

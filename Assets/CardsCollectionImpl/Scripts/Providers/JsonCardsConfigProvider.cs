@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using CardCollection.Core;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace CardCollectionImpl
@@ -23,15 +21,5 @@ namespace CardCollectionImpl
         }
 
         protected override List<CardConfig> CreateDefault() => new();
-
-        public UniTask<List<CardConfig>> GetCardGroupsConfigsAsync(string eventId, CancellationToken ct = default)
-        {
-            return GetDataAsync(ct);
-        }
-
-        public void ClearCache()
-        {
-            Dispose();
-        }
     }
 }

@@ -15,6 +15,7 @@ namespace CardCollectionImpl
         private readonly ICardCollectionPointsAccount _pointsAccount;
         private readonly IExchangeOfferProvider _exchangeOfferProvider;
         private readonly IRewardDefinitionFactory _rewardDefinitionFactory;
+        private readonly ICardGroupsConfigProvider _cardGroupsConfigProvider;
         private readonly ICollectionProgressSnapshotService _collectionProgressSnapshotService;
 
         public CardCollectionWindowOpener(
@@ -24,6 +25,7 @@ namespace CardCollectionImpl
             ICardCollectionPointsAccount pointsAccount,
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory rewardDefinitionFactory,
+            ICardGroupsConfigProvider cardGroupsConfigProvider,
             ICollectionProgressSnapshotService collectionProgressSnapshotService)
         {
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
@@ -32,6 +34,7 @@ namespace CardCollectionImpl
             _pointsAccount = pointsAccount ?? throw new ArgumentNullException(nameof(pointsAccount));
             _exchangeOfferProvider = exchangeOfferProvider ?? throw new ArgumentNullException(nameof(exchangeOfferProvider));
             _rewardDefinitionFactory = rewardDefinitionFactory ?? throw new ArgumentNullException(nameof(rewardDefinitionFactory));
+            _cardGroupsConfigProvider = cardGroupsConfigProvider ?? throw new ArgumentNullException(nameof(cardGroupsConfigProvider));
             _collectionProgressSnapshotService = collectionProgressSnapshotService ?? throw new ArgumentNullException(nameof(collectionProgressSnapshotService));
         }
 
@@ -73,7 +76,8 @@ namespace CardCollectionImpl
                 _exchangeOfferProvider,
                 _rewardDefinitionFactory, 
                 _pointsAccount,
-                snapshot);
+                snapshot,
+                _cardGroupsConfigProvider);
             _uiManager.Show<CardCollectionController>(args);
 
             _collectionProgressSnapshotService.SetSnapshot(collectionData);

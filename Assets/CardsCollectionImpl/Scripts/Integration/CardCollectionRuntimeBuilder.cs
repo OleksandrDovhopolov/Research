@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
@@ -13,18 +14,27 @@ namespace CardCollectionImpl
 {
     public sealed class CardCollectionRuntimeBuilder : ICardCollectionRuntimeBuilder
     {
+        //TODO move this to CardCollectionEventModel Params
+        private const string CardGroupsConfigFileName = "cardGroups";
+        private const string CardsConfigFileName = "cardCollection";
+        
         private readonly UIManager _uiManager;
         private readonly IHUDService _hudService;
-        private readonly ICardPackProvider _cardPackProvider;
         private readonly ExchangePacksConfig _exchangePacksConfig;
         private readonly IRewardGrantService _rewardGrantService;
         private readonly IItemCategoryRegistry _itemCategoryRegistry;
         private readonly IInventoryUseHandlerStorage _inventoryUseHandlerStorage;
 
+        private readonly ICardPackProvider _cardPackProvider;
+        private readonly ICardsConfigProvider _cardsConfigProvider;
+        private readonly ICardGroupsConfigProvider _cardGroupsConfigProvider;
+        
         public CardCollectionRuntimeBuilder(
             UIManager uiManager,
             IHUDService hudService,
             ICardPackProvider cardPackProvider,
+            ICardsConfigProvider cardsConfigProvider,
+            ICardGroupsConfigProvider cardGroupsConfigProvider,
             ExchangePacksConfig exchangePacksConfig,
             IRewardGrantService rewardGrantService,
             IItemCategoryRegistry  itemCategoryRegistry,
@@ -33,6 +43,8 @@ namespace CardCollectionImpl
             _uiManager = uiManager;
             _hudService = hudService;
             _cardPackProvider = cardPackProvider;
+            _cardsConfigProvider = cardsConfigProvider;
+            _cardGroupsConfigProvider = cardGroupsConfigProvider;
             _exchangePacksConfig = exchangePacksConfig;
             _rewardGrantService = rewardGrantService;
             _itemCategoryRegistry = itemCategoryRegistry;
@@ -50,13 +62,27 @@ namespace CardCollectionImpl
             
             var moduleConfig = CreateModuleConfig(model.CollectionId);
             var module = new CardCollectionModule(moduleConfig);
+
+            //TODO make list -> IReadOnlyList
+            await UniTask.WhenAll(
+                _cardPackProvider.LoadAsync(string.Empty, ct),
+                _cardsConfigProvider.LoadAsync(CardsConfigFileName, ct),
+                _cardGroupsConfigProvider.LoadAsync(CardGroupsConfigFileName, ct)
+            );
             
-            var rewardDefinitionFactory = await GetRewardDefinitionFactory(ct);
+            var staticData = new CardCollectionStaticData 
+            {
+                Packs = _cardPackProvider.Data,
+                Cards = _cardsConfigProvider.Data,
+                Groups = _cardGroupsConfigProvider.Data
+            };
+            
+            var rewardDefinitionFactory = GetRewardDefinitionFactory(staticData.Packs);
             
             var rewardsConfig = await AddressablesWrapper.LoadFromTask<CardCollectionRewardsConfigSO>(model.RewardsConfigAddress);
             var rewardHandler = GetRewardHandler(rewardsConfig, rewardDefinitionFactory);
 
-            var snapshotService = new CollectionProgressSnapshotService();
+            var snapshotService = new CollectionProgressSnapshotService(staticData.Groups);
             var windowOpener = CreateCardPackWindowOpener(module, snapshotService, rewardHandler, rewardDefinitionFactory);
             
             var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
@@ -96,15 +122,15 @@ namespace CardCollectionImpl
                 module,
                 exchangeOfferProvider,
                 rewardDefinitionFactory,
+                _cardGroupsConfigProvider,
                 snapshotService);
             
             return cardCollectionWindowOpener;
         }
         
-        private async UniTask<IRewardDefinitionFactory> GetRewardDefinitionFactory(CancellationToken ct = default)
+        private IRewardDefinitionFactory GetRewardDefinitionFactory(IReadOnlyList<CardPackConfig> packsConfig)
         {
-            var configs = await _cardPackProvider.GetCardConfigsAsync(ct);
-            var rewardDefinitionFactory = new RewardDefinitionFactory(_exchangePacksConfig, configs);
+            var rewardDefinitionFactory = new RewardDefinitionFactory(_exchangePacksConfig, packsConfig);
             return rewardDefinitionFactory;
         }
         
@@ -118,5 +144,13 @@ namespace CardCollectionImpl
                 CardsCollectionPointsCalculator.Instance,
                 eventId);
         }
+    }
+    
+    public class CardCollectionStaticData
+    {
+        public IReadOnlyList<CardPackConfig> Packs { get; set; }
+        public IReadOnlyList<CardConfig> Cards { get; set; }
+        public IReadOnlyList<CardCollectionGroupConfig> Groups { get; set; }
+        //init - error - the predefined type 'System.Runtime.CompilerServices.IsExternalInit' must be defined or imported in order to declare init-only setter
     }
 }

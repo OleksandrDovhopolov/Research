@@ -1,18 +1,23 @@
 using System;
 using System.Threading;
+using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace CardCollectionImpl
 {
-    public abstract class BaseJsonProvider<T>
+    public abstract class BaseJsonProvider<T> : IStaticDataProvider<T>
     {
         protected abstract string ConfigFileName { get; }
         
         private T _cachedData;
         private bool _isInitialized;
-
-        public async UniTask<T> GetDataAsync(CancellationToken ct = default)
+        
+        public T Data => _isInitialized 
+            ? _cachedData 
+            : throw new InvalidOperationException($"[{GetType().Name}] Data not loaded!");
+        
+        public async UniTask<T> LoadAsync(string fileName, CancellationToken ct = default)
         {
             if (_isInitialized && _cachedData != null) 
                 return _cachedData;
@@ -61,6 +66,11 @@ namespace CardCollectionImpl
         protected abstract T ParseJson(string json);
         protected abstract T CreateDefault();
 
+        public void ClearCache()
+        {
+            Dispose();
+        }
+        
         protected void Dispose()
         {
             _cachedData = default;

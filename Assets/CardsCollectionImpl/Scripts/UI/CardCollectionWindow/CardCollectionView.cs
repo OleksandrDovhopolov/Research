@@ -71,7 +71,7 @@ namespace CardCollectionImpl
             OnInfoButtonClicked?.Invoke();
         }
         
-        public void CreateViews(CardCollectionNewCardsDto newCardsData, List<CardGroupsConfig> configs)
+        public void CreateViews(CardCollectionNewCardsDto newCardsData, List<CardCollectionGroupConfig> configs)
         {
             _cardGroupsPool.DisableNonActive();
 
@@ -81,8 +81,8 @@ namespace CardCollectionImpl
             {
                 var groupView = _cardGroupsPool.GetNext();
                 
-                var groupType = groupsConfig.GroupType;
-                var groupName = groupsConfig.GroupName;
+                var groupType = groupsConfig.groupType;
+                var groupName = groupsConfig.groupName;
                 
                 groupView.SetData(groupType, groupName);
                 var rewardViewData = UIUtils.CreateRewardViewData(_cardCollectionRewardsConfigSo, groupType);
@@ -90,7 +90,7 @@ namespace CardCollectionImpl
                 
                 groupView.OnButtonPressed += OnButtonPressedHandler;
                 
-                _viewsDict.Add(groupsConfig.GroupType, groupView);
+                _viewsDict.Add(groupsConfig.groupType, groupView);
                 
                 var newCardsAmount = newCardsData.GetNewGroupAmount(groupType);
                 UpdateGroupNewCards(groupType, newCardsAmount);
@@ -142,14 +142,14 @@ namespace CardCollectionImpl
             }
         }
         
-        public async UniTask CreateGroupViews(List<CardGroupsConfig> groupsData)
+        public async UniTask CreateGroupViews(List<CardCollectionGroupConfig> groupsData)
         {
             await UIUtils.LoadAndSetSpritesAsync(
                 groupsData,
-                config => config.GroupIcon,
-                config => _viewsDict.TryGetValue(config.GroupType, out var view) ? view : null,
+                config => config.groupIcon,
+                config => _viewsDict.TryGetValue(config.groupType, out var view) ? view : null,
                 (view, sprite) => view.SetSprite(sprite),
-                config => config.GroupIcon);
+                config => config.groupIcon);
         }
         
         public void UpdateCollectedAmount(int collectedAmount, int totalAmount)
