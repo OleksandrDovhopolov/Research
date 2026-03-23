@@ -16,7 +16,7 @@ namespace CardCollectionImpl
         public void TryGetSnapshot_WithoutSet_ReturnsFalse()
         {
             //TODO fix this 
-            var service = new CollectionProgressSnapshotService(null);
+            var service = new CollectionProgressSnapshotService(null,null);
 
             var hasSnapshot = service.TryGetSnapshot(out _);
 
@@ -27,7 +27,7 @@ namespace CardCollectionImpl
         public void SetSnapshot_SetsTotalAndCollectedAmounts()
         {
             //TODO fix this 
-            var service = new CollectionProgressSnapshotService(null);
+            var service = new CollectionProgressSnapshotService(null, null);
             var data = new EventCardsSaveData();
             data.Cards.Add(new CardProgressData { CardId = "a1", IsUnlocked = true });
             data.Cards.Add(new CardProgressData { CardId = "a2", IsUnlocked = false });
@@ -55,7 +55,7 @@ namespace CardCollectionImpl
             });
 
             //TODO fix this 
-            var service = new CollectionProgressSnapshotService(null);
+            var service = new CollectionProgressSnapshotService(null, null);
             var data = new EventCardsSaveData();
             data.Cards.Add(new CardProgressData { CardId = "card-g1-1", IsUnlocked = true });
             data.Cards.Add(new CardProgressData { CardId = "card-g1-2", IsUnlocked = false });

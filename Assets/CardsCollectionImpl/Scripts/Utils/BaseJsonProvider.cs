@@ -8,8 +8,6 @@ namespace CardCollectionImpl
 {
     public abstract class BaseJsonProvider<T> : IStaticDataProvider<T>
     {
-        protected abstract string ConfigFileName { get; }
-        
         private T _cachedData;
         private bool _isInitialized;
         
@@ -24,7 +22,7 @@ namespace CardCollectionImpl
 
             ct.ThrowIfCancellationRequested();
 
-            string jsonText = await LoadRawJsonAsync(ct);
+            string jsonText = await LoadRawJsonAsync(fileName, ct);
 
             if (string.IsNullOrEmpty(jsonText))
             {
@@ -37,11 +35,11 @@ namespace CardCollectionImpl
             {
                 _cachedData = ParseJson(jsonText);
                 _isInitialized = true;
-                Debug.Log($"[{GetType().Name}] Loaded data from {ConfigFileName}");
+                Debug.Log($"[{GetType().Name}] Loaded data from {fileName}");
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[{GetType().Name}] Error parsing {ConfigFileName}: {ex.Message}");
+                Debug.LogError($"[{GetType().Name}] Error parsing {fileName}: {ex.Message}");
                 _cachedData = CreateDefault();
                 _isInitialized = true;
             }
@@ -49,15 +47,15 @@ namespace CardCollectionImpl
             return _cachedData;
         }
 
-        protected virtual async UniTask<string> LoadRawJsonAsync(CancellationToken ct)
+        protected virtual async UniTask<string> LoadRawJsonAsync(string fileName, CancellationToken ct)
         {
-            var request = Resources.LoadAsync<TextAsset>(ConfigFileName);
+            var request = Resources.LoadAsync<TextAsset>(fileName);
             await request.WithCancellation(ct);
             
             var textAsset = request.asset as TextAsset;
             if (textAsset == null)
             {
-                Debug.LogError($"Config not found in Resources: {ConfigFileName}");
+                Debug.LogError($"Config not found in Resources: {fileName}");
                 return null;
             }
             return textAsset.text;

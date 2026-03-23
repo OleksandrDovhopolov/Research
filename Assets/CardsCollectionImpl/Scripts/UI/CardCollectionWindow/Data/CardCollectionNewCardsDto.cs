@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using CardCollection.Core;
-using Infrastructure;
 
 namespace CardCollectionImpl
 {
@@ -8,15 +7,18 @@ namespace CardCollectionImpl
     {
         private readonly HashSet<string> _newCardIds;
         private readonly Dictionary<string, int> _newCardsByGroupType;
+        private readonly IReadOnlyList<CardConfig> _cardConfigs;
         
         public IReadOnlyCollection<string> NewCardIds => _newCardIds;
         
         private CardCollectionNewCardsDto(
             HashSet<string> newCardIds,
-            Dictionary<string, int> newCardsByGroupType)
+            Dictionary<string, int> newCardsByGroupType,
+            IReadOnlyList<CardConfig> data)
         {
             _newCardIds = newCardIds ?? new HashSet<string>();
             _newCardsByGroupType = newCardsByGroupType ?? new Dictionary<string, int>();
+            _cardConfigs = data ?? new List<CardConfig>();
         }
 
         public bool IsNew(string cardId)
@@ -41,34 +43,34 @@ namespace CardCollectionImpl
                 return;
             }
 
-            var groupConfigs = CardCollectionConfigStorage.Instance.Get(groupType);
+            var groupConfigs = _cardConfigs.GetByGroupType(groupType);
             foreach (var config in groupConfigs)
             {
-                if (!string.IsNullOrEmpty(config?.Id))
+                if (!string.IsNullOrEmpty(config?.id))
                 {
-                    _newCardIds.Remove(config.Id);
+                    _newCardIds.Remove(config.id);
                 }
             }
 
             _newCardsByGroupType[groupType] = 0;
         }
 
-        public static CardCollectionNewCardsDto Create(EventCardsSaveData eventCardsSaveData)
+        public static CardCollectionNewCardsDto Create(EventCardsSaveData eventCardsSaveData, IReadOnlyList<CardConfig> data)
         {
             var newCardIds = new HashSet<string>();
             var newCardsByGroupType = new Dictionary<string, int>();
 
             if (eventCardsSaveData?.Cards == null || eventCardsSaveData.Cards.Count == 0)
             {
-                return new CardCollectionNewCardsDto(newCardIds, newCardsByGroupType);
+                return new CardCollectionNewCardsDto(newCardIds, newCardsByGroupType, data);
             }
 
             var groupTypeByCardId = new Dictionary<string, string>();
-            foreach (var config in CardCollectionConfigStorage.Instance.Data)
+            foreach (var config in data)
             {
-                if (!string.IsNullOrEmpty(config?.Id) && !string.IsNullOrEmpty(config.GroupType))
+                if (!string.IsNullOrEmpty(config?.id) && !string.IsNullOrEmpty(config.groupType))
                 {
-                    groupTypeByCardId[config.Id] = config.GroupType;
+                    groupTypeByCardId[config.id] = config.groupType;
                 }
             }
 
@@ -93,7 +95,7 @@ namespace CardCollectionImpl
                 newCardsByGroupType[groupType] = currentAmount + 1;
             }
 
-            return new CardCollectionNewCardsDto(newCardIds, newCardsByGroupType);
+            return new CardCollectionNewCardsDto(newCardIds, newCardsByGroupType, data);
         }
     }
 }

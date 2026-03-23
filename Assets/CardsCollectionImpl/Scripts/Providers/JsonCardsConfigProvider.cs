@@ -13,8 +13,6 @@ namespace CardCollectionImpl
             public List<CardConfig> cards;
         }
         
-        protected override string ConfigFileName => "cardCollection";
-        
         protected override List<CardConfig> ParseJson(string json)
         {
             return JsonUtility.FromJson<Wrapper>(json).cards;

@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 using UIShared;
 using UISystem;
 using UnityEngine;
+using VContainer;
 
 namespace CardCollectionImpl
 {
@@ -17,17 +18,13 @@ namespace CardCollectionImpl
         public readonly IRewardDefinitionFactory RewardDefinitionFactory;
         public readonly CollectionProgressSnapshot CollectionProgressSnapshot;
         
-        public readonly ICardGroupsConfigProvider CardGroupsConfigProvider;
-        
-        
         public CardCollectionArgs(
             CardCollectionNewCardsDto newCardsData,
             EventCardsSaveData eventCardsSaveData,
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory rewardDefinitionFactory,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
-            CollectionProgressSnapshot  collectionProgressSnapshot,
-            ICardGroupsConfigProvider cardGroupsConfigProvider)
+            CollectionProgressSnapshot  collectionProgressSnapshot)
         {
             NewCardsData = newCardsData;
             EventCardsSaveData = eventCardsSaveData;
@@ -35,17 +32,26 @@ namespace CardCollectionImpl
             RewardDefinitionFactory = rewardDefinitionFactory;
             CardCollectionPointsAccount = cardCollectionPointsAccount;
             CollectionProgressSnapshot = collectionProgressSnapshot;
-            CardGroupsConfigProvider = cardGroupsConfigProvider;
         }
     }
     
     [Window("CardCollectionWindow")]
-    public class CardCollectionController :  WindowController<CardCollectionView>
+    public class CardCollectionController : WindowController<CardCollectionView>
     {
+        private ICardsConfigProvider _cardsConfigProvider;
+        private ICardGroupsConfigProvider _cardGroupsConfigProvider;
+        
         private CardCollectionArgs Args => (CardCollectionArgs) Arguments;
-        private List<CardCollectionGroupConfig> GroupConfigs => Args.CardGroupsConfigProvider.Data;
+        private IReadOnlyList<CardCollectionGroupConfig> GroupConfigs => _cardGroupsConfigProvider.Data;
         
         private bool _groupsCreated;
+        
+        [Inject]
+        private void Construct(ICardsConfigProvider cardsConfigProvider, ICardGroupsConfigProvider cardGroupsConfigProvider)
+        {
+            _cardsConfigProvider = cardsConfigProvider;
+            _cardGroupsConfigProvider = cardGroupsConfigProvider;
+        }
         
         protected override void OnShowStart()
         {
@@ -77,7 +83,7 @@ namespace CardCollectionImpl
             var totalAmount = Args.EventCardsSaveData.Cards.Count;
             
             View.UpdateCollectedAmount(collectedAmount, totalAmount);
-            View.UpdateGroupsProgressAnimated(Args.EventCardsSaveData);
+            View.UpdateGroupsProgressAnimated(Args.EventCardsSaveData, _cardsConfigProvider.Data);
             
             if (_groupsCreated) return;
             CreateGroupViews().Forget();
@@ -158,13 +164,11 @@ namespace CardCollectionImpl
             OnGroupViewChangedHandler(groupType);
             
             var args = new CardGroupArgs(
-                UIManager, 
                 Args.NewCardsData,
                 Args.EventCardsSaveData, 
                 groupType, 
                 View.RewardsConfigSo,
-                OnGroupViewChangedHandler,
-                GroupConfigs);
+                OnGroupViewChangedHandler);
             UIManager.Show<CardGroupController>(args);
         }
 

@@ -71,7 +71,7 @@ namespace CardCollectionImpl
             OnInfoButtonClicked?.Invoke();
         }
         
-        public void CreateViews(CardCollectionNewCardsDto newCardsData, List<CardCollectionGroupConfig> configs)
+        public void CreateViews(CardCollectionNewCardsDto newCardsData, IReadOnlyList<CardCollectionGroupConfig> configs)
         {
             _cardGroupsPool.DisableNonActive();
 
@@ -108,13 +108,13 @@ namespace CardCollectionImpl
             }
         }
 
-        public void UpdateGroupsProgressAnimated(EventCardsSaveData collectionData)
+        public void UpdateGroupsProgressAnimated(EventCardsSaveData collectionData, IReadOnlyList<CardConfig> cardConfigs)
         {
             foreach (var groupView in _viewsDict.Values)
             {
                 var groupType = groupView.GroupType;
-                var totalGroupAmount = collectionData.GetGroupAmount(groupType);
-                var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
+                var totalGroupAmount = collectionData.GetGroupAmount(groupType, cardConfigs);
+                var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType, cardConfigs);
                 groupView.UpdateCollectedAmount(collectedGroupAmount, totalGroupAmount);
             }
         }
@@ -142,7 +142,7 @@ namespace CardCollectionImpl
             }
         }
         
-        public async UniTask CreateGroupViews(List<CardCollectionGroupConfig> groupsData)
+        public async UniTask CreateGroupViews(IReadOnlyList<CardCollectionGroupConfig> groupsData)
         {
             await UIUtils.LoadAndSetSpritesAsync(
                 groupsData,

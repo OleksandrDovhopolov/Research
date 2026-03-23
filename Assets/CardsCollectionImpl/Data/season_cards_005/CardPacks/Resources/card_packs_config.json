@@ -3,42 +3,27 @@
     {
       "packId": "Bronze_Pack",
       "packName": "Bronze Pack",
-      "cardCount": 2,
-      "softCurrencyCost": 100,
-      "hardCurrencyCost": 0,
-      "availableCardRarities": ["common", "rare"]
+      "cardCount": 2
     },
     {
       "packId": "Emerald_Pack",
       "packName": "Emerald Pack",
-      "cardCount": 3,
-      "softCurrencyCost": 200,
-      "hardCurrencyCost": 0,
-      "availableCardRarities": ["common", "rare"]
+      "cardCount": 3
     },
     {
       "packId": "Lazurite_Pack",
       "packName": "Lazurite Pack",
-      "cardCount": 4,
-      "softCurrencyCost": 350,
-      "hardCurrencyCost": 0,
-      "availableCardRarities": ["common", "rare", "epic"]
+      "cardCount": 4
     },
     {
       "packId": "Sapphire_Pack",
       "packName": "Sapphire Pack",
-      "cardCount": 6,
-      "softCurrencyCost": 0,
-      "hardCurrencyCost": 99,
-      "availableCardRarities": ["rare", "epic", "legendary"]
+      "cardCount": 6
     },
     {
       "packId": "Ruby_Pack",
       "packName": "Ruby Pack",
-      "cardCount": 7,
-      "softCurrencyCost": 0,
-      "hardCurrencyCost": 199,
-      "availableCardRarities": ["epic", "legendary"]
+      "cardCount": 7
     }
   ]
 }

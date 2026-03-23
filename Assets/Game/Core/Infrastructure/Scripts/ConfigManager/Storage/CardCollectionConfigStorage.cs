@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
-using UnityEngine;
 
 namespace Infrastructure
 {
@@ -20,7 +19,6 @@ namespace Infrastructure
 
         public override UniTask LoadConfigData(ConfigManager configManager)
         {
-            var configJson = Resources.Load<TextAsset>("CONFIG_FILE_NAME");
             var data = configManager.GetParsedJsonData<CardCollectionConfig>(DefaultConfigFileName);
 
             foreach (var config in data)
@@ -46,17 +44,6 @@ namespace Infrastructure
             }
             
             return configs;
-        }
-        
-        public List<CardCollectionConfig> GetByIds(List<string> cardIds)
-        {
-            if (cardIds == null || cardIds.Count == 0)
-            {
-                return new List<CardCollectionConfig>();
-            }
-
-            var result = Data.Where(config => cardIds.Contains(config.Id)).ToList();
-            return result;
         }
     }
 }

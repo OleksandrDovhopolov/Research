@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CardCollection.Core;
 using DG.Tweening;
 using Infrastructure;
 using TMPro;
@@ -33,7 +34,7 @@ namespace CardCollectionImpl
         [SerializeField] private Color _defaultFrameColor;
         [SerializeField] private Color _premiumFrameColor;
 
-        private CardCollectionConfig _cardCollectionConfig;
+        private CardConfig _cardCollectionConfig;
         public bool IsOpen { get; private set; }
         public bool IsNew { get; private set; }
         public int Stars { get; private set; }
@@ -65,7 +66,7 @@ namespace CardCollectionImpl
             OnCardPressed?.Invoke(this);
         }
         
-        public void SetConfig(CardCollectionConfig config)
+        public void SetConfig(CardConfig config)
         {
             _cardCollectionConfig = config;
         }
@@ -78,13 +79,13 @@ namespace CardCollectionImpl
                 
         public void UpdateCardName()
         {
-            _closedCardName.text = _cardCollectionConfig.CardName;
-            _openCardName.text = _cardCollectionConfig.CardName;
+            _closedCardName.text = _cardCollectionConfig.cardName;
+            _openCardName.text = _cardCollectionConfig.cardName;
         }
 
         public void UpdateCardFrame()
         {
-            var frameColor = _cardCollectionConfig.PremiumCard ? _premiumFrameColor : _defaultFrameColor;
+            var frameColor = _cardCollectionConfig.premiumCard ? _premiumFrameColor : _defaultFrameColor;
             foreach (var image in _cardFrameImage)
             {
                 image.color = frameColor;
@@ -93,7 +94,7 @@ namespace CardCollectionImpl
         
         public void UpdateCardStars()
         {
-            Stars = Mathf.Clamp(_cardCollectionConfig.Stars, 1, 5);
+            Stars = Mathf.Clamp(_cardCollectionConfig.stars, 1, 5);
             
             star1.SetActive(false);
             star2.SetActive(false);

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using CardCollection.Core;
-using Infrastructure;
 
 namespace CardCollectionImpl
 {
@@ -9,6 +8,13 @@ namespace CardCollectionImpl
         private List<CardDefinition> _cache;
         private Dictionary<string, CardDefinition> _cacheById;
 
+        private readonly IReadOnlyCollection<CardConfig> _data;
+        
+        public DefaultCardDefinitionProvider(IReadOnlyList<CardConfig> data)
+        {
+            _data = data;
+        }
+        
         public List<CardDefinition> GetCardDefinitions()
         {
             EnsureCacheBuilt();
@@ -25,20 +31,19 @@ namespace CardCollectionImpl
         {
             if (_cache != null && _cacheById != null) return;
 
-            var configs = CardCollectionConfigStorage.Instance.Data;
-            var result = new List<CardDefinition>(configs.Count);
-            var byId = new Dictionary<string, CardDefinition>(configs.Count);
+            var result = new List<CardDefinition>(_data.Count);
+            var byId = new Dictionary<string, CardDefinition>(_data.Count);
 
-            foreach (var config in configs)
+            foreach (var config in _data)
             {
                 var definition = new CardDefinition
                 {
-                    Id = config.Id,
-                    CardName = config.CardName,
-                    GroupType = config.GroupType,
-                    Stars = config.Stars,
-                    PremiumCard = config.PremiumCard,
-                    Icon = config.Icon
+                    Id = config.id,
+                    CardName = config.cardName,
+                    GroupType = config.groupType,
+                    Stars = config.stars,
+                    PremiumCard = config.premiumCard,
+                    Icon = config.icon
                 };
 
                 result.Add(definition);

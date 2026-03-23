@@ -1,3 +1,4 @@
+using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
 using UnityEngine;
@@ -15,7 +16,7 @@ namespace CardCollectionImpl
         
         private CollectionCardView _clickedCardView;
         
-        public void OnCardPressedHandler(CollectionCardView cardView, CardCollectionConfig config)
+        public void OnCardPressedHandler(CollectionCardView cardView, CardConfig config)
         {
             _clickedCardView = cardView;
             
@@ -39,7 +40,7 @@ namespace CardCollectionImpl
 
             async UniTask SetSprite()
             {
-                var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(config.Icon);
+                var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(config.icon);
                 _selectedCardView.SetCardImage(sprite);
             }
         }

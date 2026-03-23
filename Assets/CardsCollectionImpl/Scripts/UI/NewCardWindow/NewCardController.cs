@@ -2,6 +2,7 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
+using VContainer;
 
 namespace CardCollectionImpl
 {
@@ -22,9 +23,17 @@ namespace CardCollectionImpl
     [Window("NewCardWindow")]
     public class NewCardController : WindowController<NewCardView>
     {
+        private ICardsConfigProvider _cardsConfigProvider;
+        
         private NewCardArgs Args => (NewCardArgs)Arguments;
         private CancellationTokenSource _cts;
 
+        [Inject]
+        private void Construct(ICardsConfigProvider cardsConfigProvider)
+        {
+            _cardsConfigProvider = cardsConfigProvider;
+        }
+        
         protected override void OnShowStart()
         {
             _cts = new CancellationTokenSource();
@@ -38,7 +47,7 @@ namespace CardCollectionImpl
             
             var cardsIdList = await Args.CollectionModule.OpenPackAndUnlockAsync(Args.CardPack, ct);
             var cardsData = await Args.CollectionModule.GetCardsByIdsAsync(cardsIdList, ct);
-            var displayData = cardsData.ToNewCardDisplayData();
+            var displayData = cardsData.ToNewCardDisplayData(_cardsConfigProvider.Data);
             
             View.CreateNewCards(displayData);
         }

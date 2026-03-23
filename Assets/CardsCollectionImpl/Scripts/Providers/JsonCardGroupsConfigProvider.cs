@@ -12,8 +12,6 @@ namespace CardCollectionImpl
         {
             public List<CardCollectionGroupConfig> groups;
         }
-        
-        protected override string ConfigFileName => "cardGroups";
 
         protected override List<CardCollectionGroupConfig> CreateDefault() => new();
         

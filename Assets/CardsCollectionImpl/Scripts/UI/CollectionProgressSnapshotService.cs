@@ -8,10 +8,12 @@ namespace CardCollectionImpl
         private bool _hasSnapshot;
         private CollectionProgressSnapshot _snapshot;
 
+        private readonly IReadOnlyList<CardConfig> _cardCollectionConfigs;
         private readonly IReadOnlyList<CardCollectionGroupConfig> _cardCollectionGroupConfigs;
         
-        public CollectionProgressSnapshotService(IReadOnlyList<CardCollectionGroupConfig> groupsConfig)
+        public CollectionProgressSnapshotService(IReadOnlyList<CardConfig> cardConfigs, IReadOnlyList<CardCollectionGroupConfig> groupsConfig)
         {
+            _cardCollectionConfigs = cardConfigs;
             _cardCollectionGroupConfigs = groupsConfig;
         }
         
@@ -49,8 +51,8 @@ namespace CardCollectionImpl
             {
                 var groupType = groupsConfig.groupType;
                 var groupName = groupsConfig.groupName;
-                var totalGroupAmount = collectionData.GetGroupAmount(groupType);
-                var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
+                var totalGroupAmount = collectionData.GetGroupAmount(groupType, _cardCollectionConfigs);
+                var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType, _cardCollectionConfigs);
 
                 result.Add(new CollectionProgressSnapshot.GroupProgressSnapshot(
                     groupType,

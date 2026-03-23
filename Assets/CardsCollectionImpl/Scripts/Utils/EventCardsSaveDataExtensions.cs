@@ -12,7 +12,7 @@ namespace CardCollectionImpl
         
         private static readonly ConditionalWeakTable<EventCardsSaveData, Dictionary<string, List<CardProgressData>>> _cardsCache = new();
 
-        private static HashSet<string> GetGroupCardIds(string groupType)
+        /*private static HashSet<string> GetGroupCardIds(string groupType)
         {
             if (_groupCardIdsCache.TryGetValue(groupType, out var cachedIds))
                 return cachedIds;
@@ -21,9 +21,20 @@ namespace CardCollectionImpl
             var groupCardIds = new HashSet<string>(groupCardsConfig.Select(config => config.Id));
             _groupCardIdsCache[groupType] = groupCardIds;
             return groupCardIds;
+        }*/
+        
+        private static HashSet<string> GetGroupCardIds(IReadOnlyList<CardConfig> data, string groupType)
+        {
+            if (_groupCardIdsCache.TryGetValue(groupType, out var cachedIds))
+                return cachedIds;
+
+            var groupCardsConfig = data.GetByGroupType(groupType);
+            var groupCardIds = new HashSet<string>(groupCardsConfig.Select(config => config.id));
+            _groupCardIdsCache[groupType] = groupCardIds;
+            return groupCardIds;
         }
 
-        public static List<CardProgressData> GetCardsByGroupType(this EventCardsSaveData eventCardsSaveData, string groupType)
+        public static List<CardProgressData> GetCardsByGroupType(this EventCardsSaveData eventCardsSaveData, string groupType, IReadOnlyList<CardConfig> data)
         {
             if (eventCardsSaveData?.Cards == null)
                 return new List<CardProgressData>();
@@ -37,19 +48,19 @@ namespace CardCollectionImpl
             if (instanceCache.TryGetValue(groupType, out var cachedCards))
                 return cachedCards;
 
-            var groupCardIds = GetGroupCardIds(groupType);
+            var groupCardIds = GetGroupCardIds(data, groupType);
             var filteredCards = eventCardsSaveData.Cards.Where(card => groupCardIds.Contains(card.CardId)).ToList();
             instanceCache[groupType] = filteredCards;
             
             return filteredCards;
         }
 
-        public static int GetCollectedGroupAmount(this EventCardsSaveData eventCardsSaveData, string groupType)
+        public static int GetCollectedGroupAmount(this EventCardsSaveData eventCardsSaveData, string groupType, IReadOnlyList<CardConfig> data)
         {
             if (eventCardsSaveData?.Cards == null)
                 return 0;
 
-            var groupCards = eventCardsSaveData.GetCardsByGroupType(groupType);
+            var groupCards = eventCardsSaveData.GetCardsByGroupType(groupType, data);
             return groupCards.Count(card => card.IsUnlocked);
         }
         
@@ -61,25 +72,16 @@ namespace CardCollectionImpl
             return eventCardsSaveData.Cards.Count(card => card.IsUnlocked);
         }
         
-        public static int GetGroupAmount(this EventCardsSaveData eventCardsSaveData, string groupType)
+        public static int GetGroupAmount(this EventCardsSaveData eventCardsSaveData, string groupType, IReadOnlyList<CardConfig> data)
         {
             if (eventCardsSaveData?.Cards == null)
                 return 0;
 
-            var groupCards = eventCardsSaveData.GetCardsByGroupType(groupType);
+            var groupCards = eventCardsSaveData.GetCardsByGroupType(groupType, data);
             return groupCards.Count;
         }
         
-        public static int GetNewGroupAmount(this EventCardsSaveData data, string groupType)
-        {
-            if (data?.Cards == null)
-                return 0;
-
-            var groupCards = data.GetCardsByGroupType(groupType);
-            return groupCards.Count(card => card.IsUnlocked && card.IsNew);
-        }
-        
-        public static List<NewCardDisplayData> ToNewCardDisplayData(this List<CardProgressData> cardsData)
+        public static List<NewCardDisplayData> ToNewCardDisplayData(this List<CardProgressData> cardsData, IReadOnlyList<CardConfig> cardsConfig)
         {
             if (cardsData == null || cardsData.Count == 0)
                 return new List<NewCardDisplayData>();
@@ -88,8 +90,8 @@ namespace CardCollectionImpl
             
             foreach (var cardData in cardsData)
             {
-                var config = CardCollectionConfigStorage.Instance.GetById(cardData.CardId);
-                var points = CardsCollectionPointsCalculator.Instance.GetPoints(config.Stars, config.PremiumCard);
+                var config = cardsConfig.GetById(cardData.CardId);
+                var points = CardsCollectionPointsCalculator.Instance.GetPoints(config.stars, config.premiumCard);
                 result.Add(new NewCardDisplayData(config, cardData.IsUnlocked, cardData.IsNew, points));
             }
             

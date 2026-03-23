@@ -12,10 +12,10 @@ namespace CardCollectionImpl
         private readonly UIManager _uiManager;
         private readonly ICardCollectionModule _module;
         private readonly ICardCollectionReader _reader;
+        private readonly ICardsConfigProvider _cardsConfigProvider;
         private readonly ICardCollectionPointsAccount _pointsAccount;
         private readonly IExchangeOfferProvider _exchangeOfferProvider;
         private readonly IRewardDefinitionFactory _rewardDefinitionFactory;
-        private readonly ICardGroupsConfigProvider _cardGroupsConfigProvider;
         private readonly ICollectionProgressSnapshotService _collectionProgressSnapshotService;
 
         public CardCollectionWindowOpener(
@@ -23,18 +23,18 @@ namespace CardCollectionImpl
             ICardCollectionModule module,
             ICardCollectionReader reader,
             ICardCollectionPointsAccount pointsAccount,
+            ICardsConfigProvider cardsConfigProvider,
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory rewardDefinitionFactory,
-            ICardGroupsConfigProvider cardGroupsConfigProvider,
             ICollectionProgressSnapshotService collectionProgressSnapshotService)
         {
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
             _module = module ?? throw new ArgumentNullException(nameof(module));
             _reader = reader ?? throw new ArgumentNullException(nameof(reader));
             _pointsAccount = pointsAccount ?? throw new ArgumentNullException(nameof(pointsAccount));
+            _cardsConfigProvider = cardsConfigProvider ?? throw new ArgumentNullException(nameof(cardsConfigProvider));
             _exchangeOfferProvider = exchangeOfferProvider ?? throw new ArgumentNullException(nameof(exchangeOfferProvider));
             _rewardDefinitionFactory = rewardDefinitionFactory ?? throw new ArgumentNullException(nameof(rewardDefinitionFactory));
-            _cardGroupsConfigProvider = cardGroupsConfigProvider ?? throw new ArgumentNullException(nameof(cardGroupsConfigProvider));
             _collectionProgressSnapshotService = collectionProgressSnapshotService ?? throw new ArgumentNullException(nameof(collectionProgressSnapshotService));
         }
 
@@ -60,7 +60,7 @@ namespace CardCollectionImpl
         {
             var collectionData = await _reader.Load(ct);
             
-            var newCardsData = CardCollectionNewCardsDto.Create(collectionData);
+            var newCardsData = CardCollectionNewCardsDto.Create(collectionData, _cardsConfigProvider.Data);
             var newCardIds = newCardsData.NewCardIds;
 
             if (newCardIds.Count > 0)
@@ -76,8 +76,7 @@ namespace CardCollectionImpl
                 _exchangeOfferProvider,
                 _rewardDefinitionFactory, 
                 _pointsAccount,
-                snapshot,
-                _cardGroupsConfigProvider);
+                snapshot);
             _uiManager.Show<CardCollectionController>(args);
 
             _collectionProgressSnapshotService.SetSnapshot(collectionData);

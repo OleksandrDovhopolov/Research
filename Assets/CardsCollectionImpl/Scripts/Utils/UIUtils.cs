@@ -46,7 +46,7 @@ namespace CardCollectionImpl
         }
 
         public static async UniTask LoadAndSetSpritesAsync<TConfig, TView>(
-            List<TConfig> configs,
+            IReadOnlyList<TConfig> configs,
             Func<TConfig, string> getSpriteAddress,
             Func<TConfig, TView> getView,
             Action<TView, Sprite> setSprite,
@@ -73,9 +73,9 @@ namespace CardCollectionImpl
             await UniTask.WaitForSeconds(0.5f);
         }
         
-        public static async UniTask SetSprite(CardCollectionConfig config, CollectionCardView view, CancellationToken cancellationToken = default)
+        public static async UniTask SetSprite(CardConfig config, CollectionCardView view, CancellationToken cancellationToken = default)
         {
-            var task = ProdAddressablesWrapper.LoadAsync<Sprite>(config.Icon);
+            var task = ProdAddressablesWrapper.LoadAsync<Sprite>(config.icon);
             var sprite = await task.AsUniTask().AttachExternalCancellation(cancellationToken);
             view.SetCardImage(sprite);
         }

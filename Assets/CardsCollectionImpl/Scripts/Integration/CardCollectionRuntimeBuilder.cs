@@ -17,6 +17,7 @@ namespace CardCollectionImpl
         //TODO move this to CardCollectionEventModel Params
         private const string CardGroupsConfigFileName = "cardGroups";
         private const string CardsConfigFileName = "cardCollection";
+        private const string PacksConfigFileName = "card_packs_config";
         
         private readonly UIManager _uiManager;
         private readonly IHUDService _hudService;
@@ -60,12 +61,9 @@ namespace CardCollectionImpl
                 throw new ArgumentNullException($"CardCollectionEventModel is null {nameof(model)}");
             }
             
-            var moduleConfig = CreateModuleConfig(model.CollectionId);
-            var module = new CardCollectionModule(moduleConfig);
-
             //TODO make list -> IReadOnlyList
             await UniTask.WhenAll(
-                _cardPackProvider.LoadAsync(string.Empty, ct),
+                _cardPackProvider.LoadAsync(PacksConfigFileName, ct),
                 _cardsConfigProvider.LoadAsync(CardsConfigFileName, ct),
                 _cardGroupsConfigProvider.LoadAsync(CardGroupsConfigFileName, ct)
             );
@@ -76,13 +74,16 @@ namespace CardCollectionImpl
                 Cards = _cardsConfigProvider.Data,
                 Groups = _cardGroupsConfigProvider.Data
             };
+
+            var moduleConfig = CreateModuleConfig(staticData, model.CollectionId);
+            var module = new CardCollectionModule(moduleConfig);
             
             var rewardDefinitionFactory = GetRewardDefinitionFactory(staticData.Packs);
             
             var rewardsConfig = await AddressablesWrapper.LoadFromTask<CardCollectionRewardsConfigSO>(model.RewardsConfigAddress);
             var rewardHandler = GetRewardHandler(rewardsConfig, rewardDefinitionFactory);
 
-            var snapshotService = new CollectionProgressSnapshotService(staticData.Groups);
+            var snapshotService = new CollectionProgressSnapshotService(staticData.Cards, staticData.Groups);
             var windowOpener = CreateCardPackWindowOpener(module, snapshotService, rewardHandler, rewardDefinitionFactory);
             
             var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
@@ -120,9 +121,9 @@ namespace CardCollectionImpl
                 module, 
                 module, 
                 module,
+                _cardsConfigProvider,
                 exchangeOfferProvider,
                 rewardDefinitionFactory,
-                _cardGroupsConfigProvider,
                 snapshotService);
             
             return cardCollectionWindowOpener;
@@ -134,12 +135,12 @@ namespace CardCollectionImpl
             return rewardDefinitionFactory;
         }
         
-        private CardCollectionModuleConfig CreateModuleConfig(string eventId)
+        private CardCollectionModuleConfig CreateModuleConfig(CardCollectionStaticData staticData, string eventId)
         {
             return new CardCollectionModuleConfig(
                 _cardPackProvider,
                 new JsonEventCardsStorage(),
-                new DefaultCardDefinitionProvider(),
+                new DefaultCardDefinitionProvider(staticData.Cards),
                 new ProbabilityBasedCardSelector(PackRulesConfig.CreateDefaultRules()),
                 CardsCollectionPointsCalculator.Instance,
                 eventId);
@@ -151,6 +152,5 @@ namespace CardCollectionImpl
         public IReadOnlyList<CardPackConfig> Packs { get; set; }
         public IReadOnlyList<CardConfig> Cards { get; set; }
         public IReadOnlyList<CardCollectionGroupConfig> Groups { get; set; }
-        //init - error - the predefined type 'System.Runtime.CompilerServices.IsExternalInit' must be defined or imported in order to declare init-only setter
     }
 }

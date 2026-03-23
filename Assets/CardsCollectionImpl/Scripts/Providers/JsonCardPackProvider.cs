@@ -12,8 +12,6 @@ namespace CardCollectionImpl
         {
             public List<CardPackConfig> packs;
         }
-        
-        protected override string ConfigFileName => "card_packs_config";
 
         protected override List<CardPackConfig> CreateDefault() => new();
 
