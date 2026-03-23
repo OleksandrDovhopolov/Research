@@ -45,11 +45,11 @@ namespace CardCollectionImpl
         private IReadOnlyList<CardCollectionGroupConfig> GroupConfigs => _cardGroupsConfigProvider.Data;
         
         private bool _groupsCreated;
-        
+
         [Inject]
-        private void Construct(ICardsConfigProvider cardsConfigProvider, ICardGroupsConfigProvider cardGroupsConfigProvider)
+        public void Install(ICardsConfigProvider cardsConfigProvider, ICardGroupsConfigProvider cardGroupsConfigProvider)
         {
-            _cardsConfigProvider = cardsConfigProvider;
+            _cardsConfigProvider = cardsConfigProvider; 
             _cardGroupsConfigProvider = cardGroupsConfigProvider;
         }
         

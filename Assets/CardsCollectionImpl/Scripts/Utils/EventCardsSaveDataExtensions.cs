@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CardCollection.Core;
-using Infrastructure;
 
 namespace CardCollectionImpl
 {
@@ -11,17 +10,6 @@ namespace CardCollectionImpl
         private static readonly Dictionary<string, HashSet<string>> _groupCardIdsCache = new();
         
         private static readonly ConditionalWeakTable<EventCardsSaveData, Dictionary<string, List<CardProgressData>>> _cardsCache = new();
-
-        /*private static HashSet<string> GetGroupCardIds(string groupType)
-        {
-            if (_groupCardIdsCache.TryGetValue(groupType, out var cachedIds))
-                return cachedIds;
-
-            var groupCardsConfig = CardCollectionConfigStorage.Instance.Get(groupType);
-            var groupCardIds = new HashSet<string>(groupCardsConfig.Select(config => config.Id));
-            _groupCardIdsCache[groupType] = groupCardIds;
-            return groupCardIds;
-        }*/
         
         private static HashSet<string> GetGroupCardIds(IReadOnlyList<CardConfig> data, string groupType)
         {

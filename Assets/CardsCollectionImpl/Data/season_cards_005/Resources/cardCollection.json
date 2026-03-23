@@ -1,4 +1,5 @@
-[
+{
+	"cards": [
 	{
 		"id": "1",
 		"cardName": "Seeds",
@@ -1200,3 +1201,4 @@
 		"icon": "Element10"
 	}
 ]
+}

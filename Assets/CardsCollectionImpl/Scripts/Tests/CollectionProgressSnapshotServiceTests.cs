@@ -9,7 +9,6 @@ namespace CardCollectionImpl
         [SetUp]
         public void SetUp()
         {
-            CardCollectionConfigStorage.Instance.Data.Clear();
         }
 
         [Test]
@@ -43,17 +42,6 @@ namespace CardCollectionImpl
         [Test]
         public void SetSnapshot_BuildsPerGroupProgress()
         {
-            CardCollectionConfigStorage.Instance.Data.Add(new CardCollectionConfig
-            {
-                Id = "card-g1-1",
-                GroupType = "g1"
-            });
-            CardCollectionConfigStorage.Instance.Data.Add(new CardCollectionConfig
-            {
-                Id = "card-g1-2",
-                GroupType = "g1"
-            });
-
             //TODO fix this 
             var service = new CollectionProgressSnapshotService(null, null);
             var data = new EventCardsSaveData();

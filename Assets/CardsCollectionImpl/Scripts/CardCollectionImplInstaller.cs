@@ -1,4 +1,3 @@
-using CardCollection.Core;
 using EventOrchestration.Abstractions;
 using EventOrchestration.Controllers;
 using UnityEngine;
@@ -20,11 +19,6 @@ namespace CardCollectionImpl
             }
 
             builder.RegisterInstance(_exchangePacksConfig);
-            
-            // Feature storage
-            builder.Register<ICardPackProvider, JsonCardPackProvider>(Lifetime.Singleton);
-            builder.Register<ICardsConfigProvider, JsonCardsConfigProvider>(Lifetime.Singleton);
-            builder.Register<ICardGroupsConfigProvider, JsonCardGroupsConfigProvider>(Lifetime.Singleton);
             
             // Feature session builder
             builder.Register<ICardCollectionRuntimeBuilder, CardCollectionRuntimeBuilder>(Lifetime.Singleton);

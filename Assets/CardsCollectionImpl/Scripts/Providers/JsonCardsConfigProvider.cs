@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CardCollection.Core;
-using UnityEngine;
+using Newtonsoft.Json;
 
 namespace CardCollectionImpl
 {
@@ -15,7 +15,7 @@ namespace CardCollectionImpl
         
         protected override List<CardConfig> ParseJson(string json)
         {
-            return JsonUtility.FromJson<Wrapper>(json).cards;
+            return JsonConvert.DeserializeObject<Wrapper>(json).cards;
         }
 
         protected override List<CardConfig> CreateDefault() => new();

@@ -1,3 +1,5 @@
+using CardCollection.Core;
+using CardCollectionImpl;
 using CoreResources;
 using Inventory.API;
 using Rewards;
@@ -33,6 +35,14 @@ namespace core
             builder.Register<ResourceManager>(Lifetime.Singleton);
             builder.RegisterInventoryService();
 
+            //TODO this should be in CardCollectionImplInstaller. but CardCollectionController crashes because cant resolve 
+            // dependencies from CardCollectionImplInstaller. Bug in WindowFactoryDI -  var controller = _diContainer.Resolve<T>();
+            // Card collection feature storage
+            builder.Register<ICardPackProvider, JsonCardPackProvider>(Lifetime.Singleton);
+            builder.Register<ICardsConfigProvider, JsonCardsConfigProvider>(Lifetime.Singleton);
+            Debug.LogWarning($"Debug Register ICardsConfigProvider TO JsonCardsConfigProvider");
+            builder.Register<ICardGroupsConfigProvider, JsonCardGroupsConfigProvider>(Lifetime.Singleton);
+            
             // Rewards.asmdef
             builder.Register<IRewardGrantService>(resolver =>
             {

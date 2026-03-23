@@ -1,4 +1,5 @@
-[
+{
+ "groups": [
 	{
 		"ID": "1",
 		"groupType": "farming",
@@ -89,4 +90,5 @@
 		"groupName": "Town hall",
 		"groupIcon": "icon_wood"
 	}
-]
+	]
+}

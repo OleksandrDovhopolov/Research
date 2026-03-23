@@ -2,10 +2,6 @@ using System;
 
 namespace CardCollection.Core
 {
-    /// <summary>
-    /// Configuration object used to wire external implementations into the card collection module.
-    /// A host project provides concrete providers/selectors/storage here.
-    /// </summary>
     public sealed class CardCollectionModuleConfig
     {
         public ICardPackProvider PackProvider { get; }
