@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using CardCollectionImpl;
 using cheatModule;
+using CoreResources;
 using Cysharp.Threading.Tasks;
 using Inventory.API;
-using Resources.Core;
 using UnityEngine;
 using VContainer;
 

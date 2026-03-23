@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
+using CardCollection.Core;
 using Cysharp.Threading.Tasks;
+using Newtonsoft.Json;
 using UnityEngine;
 
-namespace CardCollection.Core
+namespace CardCollectionImpl
 {
     //TODO should be removed from CardCollection.Core to CardCollectionImpl
     public class JsonCardPackProvider : ICardPackProvider

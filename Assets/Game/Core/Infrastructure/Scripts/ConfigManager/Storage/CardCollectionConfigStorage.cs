@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace Infrastructure
 {
@@ -19,6 +20,8 @@ namespace Infrastructure
 
         public override UniTask LoadConfigData(ConfigManager configManager)
         {
+            
+            var configJson = Resources.Load<TextAsset>("CONFIG_FILE_NAME");
             var data = configManager.GetParsedJsonData<CardCollectionConfig>(DefaultConfigFileName);
 
             foreach (var config in data)

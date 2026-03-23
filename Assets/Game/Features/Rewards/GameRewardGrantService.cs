@@ -1,8 +1,8 @@
 using System;
 using System.Threading;
+using CoreResources;
 using Cysharp.Threading.Tasks;
 using Inventory.API;
-using Resources.Core;
 using UnityEngine;
 
 namespace Rewards

@@ -1,7 +1,7 @@
 using System.Threading;
+using CoreResources;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
-using Resources.Core;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;

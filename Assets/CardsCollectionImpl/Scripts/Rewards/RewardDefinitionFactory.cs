@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using CardCollection.Core;
-using Resources.Core;
+using CoreResources;
 using UnityEngine;
 
 namespace CardCollectionImpl

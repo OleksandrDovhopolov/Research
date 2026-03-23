@@ -1,11 +1,11 @@
-using Resources.Core;
+using CoreResources;
+using Inventory.API;
+using Rewards;
 using UIShared;
 using UISystem;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
-using Rewards;
-using Inventory.API;
 
 namespace core
 {

@@ -5,7 +5,7 @@ using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace Resources.Core
+namespace CoreResources
 {
     public class JsonResourcesStorage : IDisposable
     {

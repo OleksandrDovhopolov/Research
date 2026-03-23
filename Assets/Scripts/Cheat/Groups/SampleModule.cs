@@ -1,5 +1,5 @@
 using cheatModule;
-using Resources.Core;
+using CoreResources;
 using UnityEngine;
 
 namespace core

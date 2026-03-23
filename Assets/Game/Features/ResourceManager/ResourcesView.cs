@@ -3,7 +3,7 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Resources.Core
+namespace CoreResources
 {
     public class ResourcesView : MonoBehaviour
     {

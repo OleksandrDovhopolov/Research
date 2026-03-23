@@ -66,13 +66,6 @@ namespace CardCollectionImpl
             Assert.AreEqual(1, rewardFactory.CreateCollectionCallsCount);
         }
 
-        private static void SetInitializedConfig(CardCollectionRewardHandler handler, CardCollectionRewardsConfigSO config)
-        {
-            var type = typeof(CardCollectionRewardHandler);
-            type.GetField("_isInitialized", BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(handler, true);
-            type.GetField("_cardCollectionRewardsConfigSo", BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(handler, config);
-        }
-
         private sealed class FakeRewardGrantService : IRewardGrantService
         {
             public int GrantCallsCount { get; private set; }
