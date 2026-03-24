@@ -178,11 +178,12 @@ namespace CardCollection.Tests
                 return UniTask.FromResult(_packs);
             }
 
-            public List<CardPackConfig> Data { get; }
+            public List<CardPackConfig> Data => _packs;
 
             public UniTask<List<CardPackConfig>> LoadAsync(string fileName, CancellationToken ct)
             {
-                throw new System.NotImplementedException();
+                ct.ThrowIfCancellationRequested();
+                return UniTask.FromResult(_packs);
             }
 
             public void ClearCache()

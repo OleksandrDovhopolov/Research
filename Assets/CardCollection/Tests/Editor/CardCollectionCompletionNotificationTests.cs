@@ -161,11 +161,12 @@ namespace CardCollection.Tests
                 return UniTask.FromResult(EmptyPacks);
             }
 
-            public List<CardPackConfig> Data { get; }
+            public List<CardPackConfig> Data => EmptyPacks;
 
             public UniTask<List<CardPackConfig>> LoadAsync(string fileName, CancellationToken ct)
             {
-                throw new System.NotImplementedException();
+                ct.ThrowIfCancellationRequested();
+                return UniTask.FromResult(EmptyPacks);
             }
 
             public void ClearCache()

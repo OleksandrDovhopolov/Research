@@ -102,16 +102,25 @@ namespace CardCollection.Tests
 
         private class MockCardPackProvider : ICardPackProvider
         {
-            public async UniTask<List<CardPackConfig>> GetCardConfigsAsync(CancellationToken ct = default)
+            private readonly List<CardPackConfig> _packs;
+
+            public MockCardPackProvider()
             {
-                return GetTestPacks();
+                _packs = BuildTestPacks();
             }
 
-            public List<CardPackConfig> Data { get; }
+            public UniTask<List<CardPackConfig>> GetCardConfigsAsync(CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+                return UniTask.FromResult(_packs);
+            }
+
+            public List<CardPackConfig> Data => _packs;
 
             public UniTask<List<CardPackConfig>> LoadAsync(string fileName, CancellationToken ct)
             {
-                throw new System.NotImplementedException();
+                ct.ThrowIfCancellationRequested();
+                return UniTask.FromResult(_packs);
             }
 
             public void ClearCache()
@@ -119,6 +128,11 @@ namespace CardCollection.Tests
             }
 
             public List<CardPackConfig> GetTestPacks()
+            {
+                return new List<CardPackConfig>(_packs);
+            }
+
+            private static List<CardPackConfig> BuildTestPacks()
             {
                 return new List<CardPackConfig>
                 {
