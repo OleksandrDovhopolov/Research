@@ -62,13 +62,23 @@ namespace CardCollectionImpl
             {
                 throw new ArgumentNullException($"CardCollectionEventModel is null {nameof(model)}");
             }
-            
-            await UniTask.WhenAll(
-                _cardPackProvider.LoadAsync(model.CardPacksFileName, ct),
-                _cardsConfigProvider.LoadAsync(model.CardCollectionFileName, ct),
-                _cardGroupsConfigProvider.LoadAsync(model.GroupsFileName, ct)
-            );
-            
+
+            try
+            {
+                //TODO migrate from resources load to addressabless and update this method
+                ValidateResources(model.CardPacksFileName, model.CardCollectionFileName, model.GroupsFileName);
+                
+                await UniTask.WhenAll(
+                    _cardPackProvider.LoadAsync(model.CardPacksFileName, ct),
+                    _cardsConfigProvider.LoadAsync(model.CardCollectionFileName, ct),
+                    _cardGroupsConfigProvider.LoadAsync(model.GroupsFileName, ct)
+                );
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+
             var staticData = new CardCollectionStaticData 
             {
                 Packs = _cardPackProvider.Data,
@@ -161,6 +171,22 @@ namespace CardCollectionImpl
                 new ProbabilityBasedCardSelector(PackRulesConfig.CreateDefaultRules()),
                 _cardPointsCalculator,
                 eventId);
+        }
+        
+        private void ValidateResources(params string[] paths)
+        {
+            foreach (var path in paths)
+            {
+                var asset = Resources.Load<TextAsset>(path);
+                if (asset == null)
+                {
+                    throw new System.IO.FileNotFoundException(
+                        $"[ConfigError] Файл не найден в Resources: {path}. " +
+                        "Убедитесь, что файл существует и вы НЕ указали расширение (.json)");
+                }
+        
+                Resources.UnloadAsset(asset);
+            }
         }
     }
     

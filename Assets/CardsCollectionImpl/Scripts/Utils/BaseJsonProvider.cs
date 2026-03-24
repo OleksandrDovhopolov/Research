@@ -39,6 +39,7 @@ namespace CardCollectionImpl
             }
             catch (Exception ex)
             {
+                //TODO remove CreateDefault and _isInitialized. only throw error 
                 Debug.LogError($"[{GetType().Name}] Error parsing {fileName}: {ex.Message}");
                 _cachedData = CreateDefault();
                 _isInitialized = true;
