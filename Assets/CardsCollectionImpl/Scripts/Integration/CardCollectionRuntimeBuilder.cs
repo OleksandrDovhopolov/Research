@@ -67,7 +67,6 @@ namespace CardCollectionImpl
                 throw new ArgumentNullException($"CardCollectionEventModel is null {nameof(model)}");
             }
             
-            //TODO make list -> IReadOnlyList
             await UniTask.WhenAll(
                 _cardPackProvider.LoadAsync(PacksConfigFileName, ct),
                 _cardsConfigProvider.LoadAsync(CardsConfigFileName, ct),

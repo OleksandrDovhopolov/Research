@@ -28,7 +28,7 @@ namespace CardCollectionImpl
         {
             Debug.LogWarning($"[CardCollectionRuntime] OnStartAsync: {model.EventId}");
     
-            await CloseSessionInternalAsync();
+            await CloseSessionInternalAsync(ct : ct);
 
             CardCollectionSession newSession = null;
             try
@@ -36,18 +36,20 @@ namespace CardCollectionImpl
                 newSession = await _collectionRuntimeBuilder.BuildAsync(model, ct);
                 await newSession.StartAsync(CurrentSchedule, ct);
 
+                ct.ThrowIfCancellationRequested();
+                
                 _cardCollectionSession = newSession;
                 _featureFacade.SetActiveSession(_cardCollectionSession.Context);
             }
             catch (Exception e) when (e is not OperationCanceledException)
             {
                 Debug.LogError($"[CardCollectionRuntime] Failed to start session: {e}");
-                if (newSession != null) await CloseSessionInternalAsync(newSession);
+                if (newSession != null) await CloseSessionInternalAsync(newSession, ct);
                 throw;
             }
             catch (OperationCanceledException)
             {
-                if (newSession != null) await CloseSessionInternalAsync(newSession);
+                if (newSession != null) await CloseSessionInternalAsync(newSession, ct);
                 throw;
             }
         }
@@ -55,6 +57,9 @@ namespace CardCollectionImpl
         protected override async UniTask OnUpdateAsync(CardCollectionEventModel model, EventStateData state, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
+            
+            if (_cardCollectionSession == null)
+                return;
             Debug.LogWarning($"[CardCollectionRuntime] OnUpdateAsync: {model.EventId}");
             await _cardCollectionSession.UpdateAsync(ct);
         }
@@ -63,7 +68,7 @@ namespace CardCollectionImpl
         {
             ct.ThrowIfCancellationRequested();
             Debug.LogWarning($"[CardCollectionRuntime] End: {model.EventId}");
-            await CloseSessionInternalAsync();
+            await CloseSessionInternalAsync(ct : ct);
         }
 
         protected override UniTask OnSettlementAsync(CardCollectionEventModel model, EventStateData state, CancellationToken ct)
@@ -74,14 +79,14 @@ namespace CardCollectionImpl
             return _cardCollectionSession?.SettleAsync(ct) ?? UniTask.CompletedTask;
         }
         
-        private async UniTask CloseSessionInternalAsync(CardCollectionSession session = null)
+        private async UniTask CloseSessionInternalAsync(CardCollectionSession session = null, CancellationToken ct = default)
         {
             var targetSession = session ?? _cardCollectionSession;
             if (targetSession == null) return;
 
             try
             {
-                await targetSession.StopAsync(CancellationToken.None);
+                await targetSession.StopAsync(ct);
             }
             catch (Exception e)
             {
