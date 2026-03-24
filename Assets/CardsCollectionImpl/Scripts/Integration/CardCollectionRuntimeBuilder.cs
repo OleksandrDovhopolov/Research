@@ -83,36 +83,50 @@ namespace CardCollectionImpl
             _cardCollectionCacheService.Initialize(staticData.Cards);
             
             var moduleConfig = CreateModuleConfig(staticData, model.CollectionId);
-            var module = new CardCollectionModule(moduleConfig);
+            CardCollectionModule module = null;
+            CardCollectionRewardsConfigSO rewardsConfig = null;
             
-            var rewardDefinitionFactory = GetRewardDefinitionFactory(staticData.Packs);
-            
-            var rewardsConfig = await AddressablesWrapper.LoadFromTask<CardCollectionRewardsConfigSO>(model.RewardsConfigAddress);
-            var rewardHandler = GetRewardHandler(rewardsConfig, rewardDefinitionFactory);
+            try
+            {
+                module = new CardCollectionModule(moduleConfig);
+                var rewardDefinitionFactory = new RewardDefinitionFactory(_exchangePacksConfig, staticData.Packs);
 
-            var snapshotService = new CollectionProgressSnapshotService(_cardCollectionCacheService, staticData.Groups);
-            var windowOpener = CreateCardPackWindowOpener(module, snapshotService, rewardHandler, rewardDefinitionFactory);
-            
-            var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
-            var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, windowOpener);
-            
-            var context = new CardCollectionSessionContext(module, module, module, windowOpener);
-            
-            return new CardCollectionSession(
-                context,
-                module,
-                hudPresenter,
-                rewardHandler,
-                rewardsConfig,
-                inventoryIntegration,
-                snapshotService);
-        }
-        
-        private ICardCollectionRewardHandler GetRewardHandler(CardCollectionRewardsConfigSO rewardsConfig, IRewardDefinitionFactory rewardDefinitionFactory)
-        {
-            var rewardHandler = new CardCollectionRewardHandler(rewardsConfig, _rewardGrantService, rewardDefinitionFactory);
-            
-            return rewardHandler;
+                ct.ThrowIfCancellationRequested();
+                rewardsConfig = await AddressablesWrapper
+                    .LoadFromTask<CardCollectionRewardsConfigSO>(model.RewardsConfigAddress)
+                    .AsUniTask()
+                    .AttachExternalCancellation(ct);
+                ct.ThrowIfCancellationRequested();
+
+                var rewardHandler = new CardCollectionRewardHandler(rewardsConfig, _rewardGrantService, rewardDefinitionFactory);;
+                
+                var snapshotService = new CollectionProgressSnapshotService(_cardCollectionCacheService, staticData.Groups);
+                var windowOpener = CreateCardPackWindowOpener(module, snapshotService, rewardHandler, rewardDefinitionFactory);
+
+                var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
+                var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, windowOpener);
+                var context = new CardCollectionSessionContext(module, module, module, windowOpener);
+
+                // Ownership handoff: returned session owns module/rewardsConfig and releases them in teardown.
+                return new CardCollectionSession(
+                    context,
+                    module,
+                    hudPresenter,
+                    rewardHandler,
+                    rewardsConfig,
+                    inventoryIntegration,
+                    snapshotService);
+            }
+            catch
+            {
+                if (rewardsConfig != null)
+                {
+                    AddressablesWrapper.Release(rewardsConfig);
+                }
+
+                module?.Dispose();
+                throw;
+            }
         }
         
         private ICardCollectionWindowOpener CreateCardPackWindowOpener(
@@ -135,12 +149,6 @@ namespace CardCollectionImpl
                 snapshotService);
             
             return cardCollectionWindowOpener;
-        }
-        
-        private IRewardDefinitionFactory GetRewardDefinitionFactory(IReadOnlyList<CardPackConfig> packsConfig)
-        {
-            var rewardDefinitionFactory = new RewardDefinitionFactory(_exchangePacksConfig, packsConfig);
-            return rewardDefinitionFactory;
         }
         
         private CardCollectionModuleConfig CreateModuleConfig(CardCollectionStaticData staticData, string eventId)

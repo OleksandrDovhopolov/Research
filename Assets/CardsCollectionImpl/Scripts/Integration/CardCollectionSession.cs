@@ -69,7 +69,7 @@ namespace CardCollectionImpl
             }
             catch
             {
-                await SafeStopInternal();
+                SafeStopInternal(ct);
                 throw;
             }
         }
@@ -83,12 +83,14 @@ namespace CardCollectionImpl
             return UniTask.CompletedTask;
         }
 
-        public async UniTask StopAsync(CancellationToken externalCt)
+        public UniTask StopAsync(CancellationToken externalCt)
         {
             if (!_isStarted || _isDisposed)
-                return;
+                return UniTask.CompletedTask;
 
-            await SafeStopInternal();
+            externalCt.ThrowIfCancellationRequested();
+            SafeStopInternal(externalCt);
+            return UniTask.CompletedTask;
         }
 
         public UniTask SettleAsync(CancellationToken ct)
@@ -99,11 +101,12 @@ namespace CardCollectionImpl
             return UniTask.CompletedTask;
         }
         
-        private async UniTask SafeStopInternal()
+        private void SafeStopInternal(CancellationToken ct)
         {
             if (!_isStarted)
                 return;
 
+            ct.ThrowIfCancellationRequested();
             _isStarted = false;
 
             try
@@ -135,6 +138,7 @@ namespace CardCollectionImpl
 
             try
             {
+                ct.ThrowIfCancellationRequested();
                 _module?.Dispose();
             }
             catch (Exception e)
@@ -149,8 +153,6 @@ namespace CardCollectionImpl
             catch { /* ignore */ }
 
             _cts = null;
-
-            await UniTask.CompletedTask;
         }
 
         private void OnGroupCompleted(CardGroupCompletedData data)
@@ -182,8 +184,7 @@ namespace CardCollectionImpl
                 .TryHandleCollectionCompleted(data, ct)
                 .Forget();
         }
-
-
+        
         public void Dispose()
         {
             if (_isDisposed)
@@ -193,7 +194,7 @@ namespace CardCollectionImpl
 
             try
             {
-                SafeStopInternal().Forget();
+                SafeStopInternal(CancellationToken.None);
             }
             catch { /* ignore */ }
 
