@@ -10,6 +10,7 @@ namespace CardCollectionImpl
         order = 0)]
     public class CardCollectionRewardsConfigSO : ScriptableObject
     {
+        public TextAsset GroupsJson;
         public CollectionCompletionRewardConfig[] GroupRewards;
         public FullCollectionRewardConfig FullCollectionReward;
     }

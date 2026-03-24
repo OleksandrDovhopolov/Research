@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cec0cc30c2c12eb4f8ff87aaeade6ccf, type: 3}
+  m_Name: season_rewards_002
+  m_EditorClassIdentifier: 
+  GroupsJson: {fileID: 4900000, guid: 87734e1c7d1144a81b621f28d2e3ec2b, type: 3}
+  GroupRewards:
+  - GroupId: farming
+    Icon: {fileID: 0}
+    RewardId: 
+    Amount: 0
+  - GroupId: worksite
+    Icon: {fileID: 0}
+    RewardId: 
+    Amount: 0
+  - GroupId: railroads
+    Icon: {fileID: 0}
+    RewardId: 
+    Amount: 0
+  - GroupId: factories
+    Icon: {fileID: 0}
+    RewardId: 
+    Amount: 0
+  - GroupId: next door
+    Icon: {fileID: 0}
+    RewardId: 
+    Amount: 0
+  - GroupId: delivery
+    Icon: {fileID: 0}
+    RewardId: 
+    Amount: 0
+  - GroupId: mining
+    Icon: {fileID: 0}
+    RewardId: 
+    Amount: 0
+  - GroupId: picnic
+    Icon: {fileID: 0}
+    RewardId: 
+    Amount: 0
+  - GroupId: farm store
+    Icon: {fileID: 0}
+    RewardId: 
+    Amount: 0
+  - GroupId: animals
+    Icon: {fileID: 0}
+    RewardId: 
+    Amount: 0
+  - GroupId: museum
+    Icon: {fileID: 0}
+    RewardId: 
+    Amount: 0
+  - GroupId: cafe
+    Icon: {fileID: 0}
+    RewardId: 
+    Amount: 0
+  - GroupId: big city
+    Icon: {fileID: 0}
+    RewardId: 
+    Amount: 0
+  - GroupId: park
+    Icon: {fileID: 0}
+    RewardId: 
+    Amount: 0
+  - GroupId: town hall
+    Icon: {fileID: 0}
+    RewardId: 
+    Amount: 0
+  FullCollectionReward:
+    Icon: {fileID: 21300000, guid: 1415239eee3bca44e8244422f0afa642, type: 3}
+    RewardId: season_rewards_002

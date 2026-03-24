@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cec0cc30c2c12eb4f8ff87aaeade6ccf, type: 3}
   m_Name: season_rewards_001
   m_EditorClassIdentifier: 
+  GroupsJson: {fileID: 4900000, guid: ce4eb55603ffd5a44a21ecffac813e10, type: 3}
   GroupRewards:
   - GroupId: farming
     Icon: {fileID: 21300000, guid: baddc6138b88d4615bbd843bb59d70c0, type: 3}
