@@ -47,7 +47,7 @@ namespace CardCollectionImpl
             return _cachedData;
         }
 
-        protected virtual async UniTask<string> LoadRawJsonAsync(string fileName, CancellationToken ct)
+        private async UniTask<string> LoadRawJsonAsync(string fileName, CancellationToken ct)
         {
             var request = Resources.LoadAsync<TextAsset>(fileName);
             await request.WithCancellation(ct);
@@ -69,7 +69,7 @@ namespace CardCollectionImpl
             Dispose();
         }
         
-        protected void Dispose()
+        private void Dispose()
         {
             _cachedData = default;
             _isInitialized = false;

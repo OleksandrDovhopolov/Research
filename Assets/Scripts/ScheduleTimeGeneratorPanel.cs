@@ -9,7 +9,10 @@ namespace core
 {
     public sealed class ScheduleTimeGeneratorPanel : MonoBehaviour
     {
-        private const string EventId = "season_cards_";
+        private const string EventIdPrefix = "season_cards_";
+        private const string RewardsPrefix = "season_rewards_";
+        private const string GroupsPrefix = "season_groups_";
+        private const string PacksPrefix = "season_packs_";
         
         [SerializeField] private string _relativeSchedulePathFromAssets = "StreamingAssets/card_collection_schedule.json";
         [SerializeField] private int _eventIndex = 1;
@@ -83,14 +86,22 @@ namespace core
                 CustomParams = new Dictionary<string, string>
                 {
                     { "eventId", eventId},
-                    { "rewardsConfigAddress", eventId},
+                    { "rewardsConfigAddress", BuildAddress(RewardsPrefix)},
+                    { "cardsCollectionAddress", eventId},
+                    { "cardGroupsAddress", BuildAddress(GroupsPrefix)},
+                    { "cardPacksAddress", "shared_card_packs_config"},
                 },
             };
         }
 
         private string BuildEventId()
         {
-            return $"{EventId}{_eventIndex:D3}";
+            return BuildAddress(EventIdPrefix);
+        }
+
+        private string BuildAddress(string prefix)
+        {
+            return $"{prefix}{_eventIndex:D3}";
         }
 
         private void IncrementEventId()

@@ -9,6 +9,7 @@ using Inventory.API;
 using Rewards;
 using UIShared;
 using UISystem;
+using UnityEngine;
 
 namespace CardCollectionImpl
 {
@@ -86,6 +87,7 @@ namespace CardCollectionImpl
                 module = new CardCollectionModule(moduleConfig);
                 var rewardDefinitionFactory = new RewardDefinitionFactory(_exchangePacksConfig, staticData.Packs);
 
+                //TODO move all files load in 1 the same logic. eg ICardsConfigProvider / ICardsConfigProvider /etc
                 ct.ThrowIfCancellationRequested();
                 rewardsConfig = await AddressablesWrapper
                     .LoadFromTask<CardCollectionRewardsConfigSO>(model.RewardsConfigAddress)
@@ -93,6 +95,11 @@ namespace CardCollectionImpl
                     .AttachExternalCancellation(ct);
                 ct.ThrowIfCancellationRequested();
 
+                if (rewardsConfig == null)
+                {
+                    Debug.LogError($"RewardsConfig not found with ID {model.RewardsConfigAddress}!");
+                }
+                
                 var rewardHandler = new CardCollectionRewardHandler(rewardsConfig, _rewardGrantService, rewardDefinitionFactory);
                 
                 var snapshotService = new CollectionProgressSnapshotService(_cardCollectionCacheService, staticData.Groups);
@@ -102,7 +109,6 @@ namespace CardCollectionImpl
                 var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, windowOpener);
                 var context = new CardCollectionSessionContext(module, module, module, windowOpener);
 
-                // Ownership handoff: returned session owns module/rewardsConfig and releases them in teardown.
                 return new CardCollectionSession(
                     context,
                     module,
