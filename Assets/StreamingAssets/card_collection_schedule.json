@@ -7,8 +7,11 @@
     "Priority": 10,
     "StreamId": "card_collection_seasons",
     "CustomParams": {
-      "eventId": "season_cards_020",
-      "rewardsConfigAddress": "season_cards_020"
+      "eventId": "season_cards_001",
+      "rewardsConfigAddress": "season_rewards_001",
+      "cardsCollectionAddress": "season_cards_001",
+      "cardGroupsAddress": "season_groups_001",
+      "cardPacksAddress": "season_packs_001"
     }
   }
 ]

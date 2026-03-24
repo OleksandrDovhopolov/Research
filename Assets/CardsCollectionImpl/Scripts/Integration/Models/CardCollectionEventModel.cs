@@ -4,5 +4,8 @@ namespace EventOrchestration.Models
     {
         public string CollectionId { get; set; }
         public string RewardsConfigAddress { get; set; }
+        public string CardCollectionFileName { get; set; }
+        public string GroupsFileName { get; set; }
+        public string CardPacksFileName { get; set; }
     }
 }

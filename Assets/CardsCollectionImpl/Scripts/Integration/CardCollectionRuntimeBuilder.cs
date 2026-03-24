@@ -14,11 +14,6 @@ namespace CardCollectionImpl
 {
     public sealed class CardCollectionRuntimeBuilder : ICardCollectionRuntimeBuilder
     {
-        //TODO move this to CardCollectionEventModel Params
-        private const string CardGroupsConfigFileName = "cardGroups";
-        private const string CardsConfigFileName = "cardCollection";
-        private const string PacksConfigFileName = "card_packs_config";
-        
         private readonly UIManager _uiManager;
         private readonly IHUDService _hudService;
         private readonly ExchangePacksConfig _exchangePacksConfig;
@@ -68,9 +63,9 @@ namespace CardCollectionImpl
             }
             
             await UniTask.WhenAll(
-                _cardPackProvider.LoadAsync(PacksConfigFileName, ct),
-                _cardsConfigProvider.LoadAsync(CardsConfigFileName, ct),
-                _cardGroupsConfigProvider.LoadAsync(CardGroupsConfigFileName, ct)
+                _cardPackProvider.LoadAsync(model.CardPacksFileName, ct),
+                _cardsConfigProvider.LoadAsync(model.CardCollectionFileName, ct),
+                _cardGroupsConfigProvider.LoadAsync(model.GroupsFileName, ct)
             );
             
             var staticData = new CardCollectionStaticData 
@@ -98,7 +93,7 @@ namespace CardCollectionImpl
                     .AttachExternalCancellation(ct);
                 ct.ThrowIfCancellationRequested();
 
-                var rewardHandler = new CardCollectionRewardHandler(rewardsConfig, _rewardGrantService, rewardDefinitionFactory);;
+                var rewardHandler = new CardCollectionRewardHandler(rewardsConfig, _rewardGrantService, rewardDefinitionFactory);
                 
                 var snapshotService = new CollectionProgressSnapshotService(_cardCollectionCacheService, staticData.Groups);
                 var windowOpener = CreateCardPackWindowOpener(module, snapshotService, rewardHandler, rewardDefinitionFactory);
