@@ -45,13 +45,16 @@ namespace core
             builder.Register<ICardCollectionCacheService, CardCollectionCardCollectionCacheService>(Lifetime.Singleton);
             builder.Register<ICardPointsCalculator, CardsCollectionPointsCalculator>(Lifetime.Singleton);
             
+            builder.RegisterComponentInHierarchy<AnimateCurrency>();
+            
             // Rewards.asmdef
             builder.Register<IRewardGrantService>(resolver =>
             {
                 var resourceManager = resolver.Resolve<ResourceManager>();
                 var inventoryService = resolver.Resolve<IInventoryService>();
+                var animateCurrency = resolver.Resolve<AnimateCurrency>();
                 var inventoryOwnerId = resolver.Resolve<string>();
-                return new GameRewardGrantService(resourceManager, inventoryService, inventoryOwnerId);
+                return new GameRewardGrantService(animateCurrency, resourceManager, inventoryService, inventoryOwnerId);
             }, Lifetime.Singleton);
 
             builder.RegisterOrchestration(_cardCollectionScheduleFile);

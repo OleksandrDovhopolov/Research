@@ -5,6 +5,7 @@ using cheatModule;
 using CoreResources;
 using Cysharp.Threading.Tasks;
 using Inventory.API;
+using UIShared;
 using UnityEngine;
 using VContainer;
 
@@ -13,19 +14,24 @@ namespace core
     public class ResearchCheatModule : MonoBehaviour, ICheatsContainer
     {
         [SerializeField] private CheatsManager _cheatsManagerPrefab;
-        [SerializeField] private ResourcesView _resourcesView;
+        [SerializeField] private AnimateCurrency _animateCurrency;
         
         private CheatsManager _cheatsManager;
         private CheatPanelItem _rootPanel;
         private List<ICheatsModule> _cheatsModules;
         
+        private ResourceManager _resourceManager;
         private IInventoryService _inventoryService;
         private ICardCollectionFeatureFacade _cardCollectionFeatureFacade;
 
         [Inject]
-        private void Construct(IInventoryService inventoryService, ICardCollectionFeatureFacade cardCollectionFeatureFacade)
+        private void Construct(
+            ResourceManager resourceManager,
+            IInventoryService inventoryService, 
+            ICardCollectionFeatureFacade cardCollectionFeatureFacade)
         {
             _inventoryService = inventoryService;
+            _resourceManager = resourceManager;
             _cardCollectionFeatureFacade = cardCollectionFeatureFacade;
         }
         
@@ -73,7 +79,7 @@ namespace core
             var cheatsModules = new List<ICheatsModule>
             {
                 new CardCollectionModule(_cardCollectionFeatureFacade, destroyCt),
-                new SampleModule(_resourcesView.ResourceManager),
+                new SampleModule(_resourceManager, _animateCurrency),
                 new InventoryModule(_inventoryService),
             };
             

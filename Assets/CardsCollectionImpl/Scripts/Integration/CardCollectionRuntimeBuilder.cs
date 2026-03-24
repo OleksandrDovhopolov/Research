@@ -120,6 +120,7 @@ namespace CardCollectionImpl
                 var context = new CardCollectionSessionContext(module, module, module, windowOpener);
 
                 return new CardCollectionSession(
+                    _uiManager,
                     context,
                     module,
                     hudPresenter,

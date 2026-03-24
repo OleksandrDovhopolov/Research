@@ -1,5 +1,6 @@
 using cheatModule;
 using CoreResources;
+using UIShared;
 using UnityEngine;
 
 namespace core
@@ -9,15 +10,19 @@ namespace core
         private const string SampleGroup = "Sample";
         
         private readonly ResourceManager _resourceManager;
+        private readonly AnimateCurrency _animateCurrency;
         
-        public SampleModule(ResourceManager resourceManager)
+        public SampleModule(ResourceManager resourceManager, AnimateCurrency animateCurrency)
         {
             _resourceManager = resourceManager;
+            _animateCurrency = animateCurrency;
+            
+            Debug.LogWarning($"Debug SampleModule {_animateCurrency == null}, {_resourceManager == null}");
         }
 
         public void Initialize(ICheatsContainer cheatsContainer)
         {
-            cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Sample Module", () =>
+            /*cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Sample Module", () =>
             {
                 Debug.LogWarning($"Sample Module");
             }).WithGroup(SampleGroup));
@@ -34,13 +39,18 @@ namespace core
             cheatsContainer.AddItem<CheatInputItemWithLabel>(item => item.OnInputChange<float>("test", val =>
             {
                 Debug.LogWarning($"Sample wi label val => {val}");
-            }).WithLabel("Sample").WithGroup(SampleGroup));
+            }).WithLabel("Sample").WithGroup(SampleGroup));*/
             
             
             //--------------------- Resources ------------------------ //
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Add gold", amount =>
             {
+                
+                var screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
+                var animationArgs = new ArgAnimateCurrency(screenCenter, ResourceType.Gold,  amount);
+                Debug.LogWarning($"Debug _animateCurrency {_animateCurrency == null}, {_resourceManager == null}");
+                _animateCurrency.Animate(animationArgs);
                 _resourceManager.Add(ResourceType.Gold, amount);
             }).WithGroup(SampleGroup));
             
@@ -51,6 +61,9 @@ namespace core
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Add energy", amount =>
             {
+                var screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
+                var animationArgs = new ArgAnimateCurrency(screenCenter, ResourceType.Energy,  amount);
+                _animateCurrency.Animate(animationArgs);
                 _resourceManager.Add(ResourceType.Energy, amount);
             }).WithGroup(SampleGroup));
             
@@ -62,6 +75,9 @@ namespace core
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Add gems", amount =>
             {
                 _resourceManager.Add(ResourceType.Gems, amount);
+                var screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
+                var animationArgs = new ArgAnimateCurrency(screenCenter, ResourceType.Gems,  amount);
+                _animateCurrency.Animate(animationArgs);
             }).WithGroup(SampleGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Remove gems", amount =>

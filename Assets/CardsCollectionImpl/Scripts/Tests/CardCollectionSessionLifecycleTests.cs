@@ -45,6 +45,7 @@ namespace CardCollectionImpl
         private static CardCollectionSession CreateSession()
         {
             return new CardCollectionSession(
+                uiManager: null,
                 context: null,
                 module: null,
                 hudPresenter: null,

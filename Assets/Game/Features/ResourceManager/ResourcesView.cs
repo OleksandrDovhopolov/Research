@@ -14,7 +14,7 @@ namespace CoreResources
 
         private readonly Dictionary<ResourceType, Tween> _tweenByType = new();
 
-        public ResourceManager ResourceManager { get; private set; }
+        private ResourceManager ResourceManager { get; set; }
 
         public void InitView(ResourceManager resourceManager)
         {

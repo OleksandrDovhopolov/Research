@@ -4,12 +4,14 @@ using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Models;
 using Infrastructure;
+using UISystem;
 using UnityEngine;
 
 namespace CardCollectionImpl
 {
     public sealed class CardCollectionSession : IDisposable
     {
+        private readonly UIManager _uiManager;
         private readonly CardCollectionModule _module;
         private readonly ICardCollectionRewardHandler _rewardHandler;
         private readonly CardCollectionHudPresenter _hudPresenter;
@@ -25,6 +27,7 @@ namespace CardCollectionImpl
         public CardCollectionSessionContext Context { get; }
 
         public CardCollectionSession(
+            UIManager uiManager,
             CardCollectionSessionContext context,
             CardCollectionModule module,
             CardCollectionHudPresenter hudPresenter,
@@ -35,6 +38,7 @@ namespace CardCollectionImpl
         {
             Context = context;
             _module = module;
+            _uiManager = uiManager;
             _hudPresenter = hudPresenter;
             _rewardHandler = rewardHandler;
             _rewardsConfig = rewardsConfig;
@@ -89,10 +93,31 @@ namespace CardCollectionImpl
                 return UniTask.CompletedTask;
 
             externalCt.ThrowIfCancellationRequested();
+            HideEventWindows();
             SafeStopInternal(externalCt);
             return UniTask.CompletedTask;
         }
 
+        private void HideEventWindows()
+        {
+            //TODO find better way
+            if (_uiManager.IsWindowShown<CardCollectionController>())
+            {
+                _uiManager.Hide<CardCollectionController>();
+            }
+            
+            if (_uiManager.IsWindowShown<NewCardController>())
+            {
+                _uiManager.Hide<NewCardController>();
+            }
+            
+            //TODO uncomment this when new window created
+            /*if (_uiManager.IsWindowShown<CardGroupRewardController>())
+            {
+                _uiManager.Hide<CardGroupRewardController>();
+            }*/
+        }
+        
         public UniTask SettleAsync(CancellationToken ct)
         {
             if (_isDisposed)
@@ -106,6 +131,13 @@ namespace CardCollectionImpl
             if (!_isStarted)
                 return;
 
+            /*
+             TODO check this hint
+             * One Small Bug in your SafeStopInternal:You have ct.ThrowIfCancellationRequested(); inside your cleanup logic.
+             * Warning: Usually, you should not throw inside a cleanup/internal stop method.
+             * If the externalCt is cancelled, you might skip _hudPresenter.Unbind() or _inventoryIntegration.Detach(),
+             * leaving "ghost" event listeners active in your game.
+             */
             ct.ThrowIfCancellationRequested();
             _isStarted = false;
 
