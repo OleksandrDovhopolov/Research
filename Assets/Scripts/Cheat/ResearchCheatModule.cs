@@ -22,16 +22,19 @@ namespace core
         
         private ResourceManager _resourceManager;
         private IInventoryService _inventoryService;
+        private OrchestratorRunner _orchestratorRunner;
         private ICardCollectionFeatureFacade _cardCollectionFeatureFacade;
 
         [Inject]
         private void Construct(
             ResourceManager resourceManager,
             IInventoryService inventoryService, 
+            OrchestratorRunner orchestratorRunner,
             ICardCollectionFeatureFacade cardCollectionFeatureFacade)
         {
             _inventoryService = inventoryService;
             _resourceManager = resourceManager;
+            _orchestratorRunner = orchestratorRunner;
             _cardCollectionFeatureFacade = cardCollectionFeatureFacade;
         }
         
@@ -78,7 +81,7 @@ namespace core
             
             var cheatsModules = new List<ICheatsModule>
             {
-                new CardCollectionModule(_cardCollectionFeatureFacade, destroyCt),
+                new CardCollectionModule(_cardCollectionFeatureFacade, _orchestratorRunner, destroyCt),
                 new SampleModule(_resourceManager, _animateCurrency),
                 new InventoryModule(_inventoryService),
             };

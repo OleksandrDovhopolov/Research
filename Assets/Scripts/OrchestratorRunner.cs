@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Core;
+using EventOrchestration.Models;
 using UnityEngine;
 using VContainer;
 
@@ -41,6 +42,18 @@ namespace core
                 await _orchestrator.TickAsync(ct);
                 await UniTask.Delay(TimeSpan.FromSeconds(_tickIntervalSeconds), cancellationToken: ct);
             }
+        }
+
+        public void AddDebugCardCollectionEventNextMinute(ScheduleItem scheduleItem)
+        {
+            AddDebugCardCollectionEventNextMinuteAsync(scheduleItem, _destroyToken).Forget();
+        }
+
+        public async UniTask AddDebugCardCollectionEventNextMinuteAsync(ScheduleItem scheduleItem, CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            await _orchestrator.AddScheduleItemForDebugAsync(scheduleItem, ct);
         }
     }
 }

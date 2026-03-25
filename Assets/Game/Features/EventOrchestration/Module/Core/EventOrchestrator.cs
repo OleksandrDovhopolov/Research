@@ -97,6 +97,43 @@ namespace EventOrchestration.Core
             }
         }
 
+        public async UniTask AddScheduleItemForDebugAsync(ScheduleItem item, CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
+
+            var updatedSchedule = _schedule.ToList();
+            updatedSchedule.Add(item);
+
+            var validationErrors = await _scheduleValidator.ValidateAsync(updatedSchedule, ct);
+            if (validationErrors.Count > 0)
+            {
+                throw new InvalidOperationException("Schedule validation failed: " + string.Join("; ", validationErrors));
+            }
+
+            _schedule = updatedSchedule
+                .OrderBy(x => x.StreamId)
+                .ThenByDescending(x => x.Priority)
+                .ThenBy(x => x.StartTimeUtc)
+                .ToList();
+
+            if (!_states.ContainsKey(item.Id))
+            {
+                _states[item.Id] = new EventStateData
+                {
+                    ScheduleItemId = item.Id,
+                    State = EventInstanceState.Pending,
+                    Version = 1,
+                    UpdatedAtUtc = _clock.UtcNow,
+                };
+            }
+
+            await _stateStore.SaveAsync(_states, ct);
+        }
+
         private async UniTask ProcessStreamAsync(IEnumerable<ScheduleItem> streamItems, DateTimeOffset now, CancellationToken ct)
         {
             var items = streamItems as IList<ScheduleItem> ?? streamItems.ToList();
