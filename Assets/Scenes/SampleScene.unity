@@ -940,7 +940,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _relativeSchedulePathFromAssets: StreamingAssets/card_collection_schedule.json
-  _eventIndex: 2
+  _eventIndex: 3
   _minDelay: 1
   _minDuration: 1
   _streamId: card_collection_seasons
@@ -990,7 +990,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _cheatsManagerPrefab: {fileID: 8348622371714148914, guid: 58a4af7a00355ac4085007f9cd0e5698, type: 3}
-  _resourcesView: {fileID: 1395416288}
   _animateCurrency: {fileID: 1650684270}
 --- !u!4 &343525369
 Transform:
@@ -2852,7 +2851,6 @@ MonoBehaviour:
     prefab: {fileID: 8357532721075047589, guid: 87bb85f085615d246ba5b212f530d24f, type: 3}
     parent: {fileID: 1650684269}
   _animationSettings: {fileID: 11400000, guid: c1df1e6a480d59a419cda3c4663d3d19, type: 2}
-  _mockSprite: {fileID: 21300000, guid: d37846b1ca5494942a3b7328b7b99a42, type: 3}
 --- !u!1 &1675742006
 GameObject:
   m_ObjectHideFlags: 0

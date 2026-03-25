@@ -16,8 +16,6 @@ namespace core
         {
             _resourceManager = resourceManager;
             _animateCurrency = animateCurrency;
-            
-            Debug.LogWarning($"Debug SampleModule {_animateCurrency == null}, {_resourceManager == null}");
         }
 
         public void Initialize(ICheatsContainer cheatsContainer)
@@ -49,7 +47,6 @@ namespace core
                 
                 var screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
                 var animationArgs = new ArgAnimateCurrency(screenCenter, ResourceType.Gold,  amount);
-                Debug.LogWarning($"Debug _animateCurrency {_animateCurrency == null}, {_resourceManager == null}");
                 _animateCurrency.Animate(animationArgs);
                 _resourceManager.Add(ResourceType.Gold, amount);
             }).WithGroup(SampleGroup));

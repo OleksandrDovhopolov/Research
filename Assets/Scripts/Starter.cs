@@ -29,7 +29,6 @@ namespace core
         private void Construct(ResourceManager resourceManager, IObjectResolver resolver)
         {
             _resourceManager = resourceManager;
-            Debug.LogWarning($"Debug _resourceManager {_resourceManager == null}");
             _resolver = resolver;
         }
         

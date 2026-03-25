@@ -73,7 +73,6 @@ namespace UIShared
             if (elementIndex < 0) return;
             if (!element.gameObject.activeSelf) return;
 
-            // Keep active elements contiguous [0..LastActiveIndex] by moving the last active element into the returned slot.
             if (elementIndex <= LastActiveIndex)
             {
                 var lastIndex = LastActiveIndex;
