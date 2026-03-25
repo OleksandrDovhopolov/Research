@@ -6,7 +6,7 @@
 		"groupType": "farming",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "Element11"
 	},
 	{
 		"id": "2",
@@ -14,7 +14,7 @@
 		"groupType": "farming",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "Element12"
 	},
 	{
 		"id": "3",
@@ -86,7 +86,7 @@
 		"groupType": "worksite",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "Element11"
 	},
 	{
 		"id": "12",
@@ -94,7 +94,7 @@
 		"groupType": "worksite",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "Element12"
 	},
 	{
 		"id": "13",
@@ -166,7 +166,7 @@
 		"groupType": "railroads",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "Element11"
 	},
 	{
 		"id": "22",
@@ -174,7 +174,7 @@
 		"groupType": "railroads",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "Element12"
 	},
 	{
 		"id": "23",
@@ -246,7 +246,7 @@
 		"groupType": "factories",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "Element11"
 	},
 	{
 		"id": "32",
@@ -254,7 +254,7 @@
 		"groupType": "factories",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "Element12"
 	},
 	{
 		"id": "33",
@@ -326,7 +326,7 @@
 		"groupType": "next door",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "Element11"
 	},
 	{
 		"id": "42",
@@ -334,7 +334,7 @@
 		"groupType": "next door",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "Element12"
 	},
 	{
 		"id": "43",
@@ -406,7 +406,7 @@
 		"groupType": "delivery",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "Element11"
 	},
 	{
 		"id": "52",
@@ -414,7 +414,7 @@
 		"groupType": "delivery",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "Element12"
 	},
 	{
 		"id": "53",
@@ -486,7 +486,7 @@
 		"groupType": "mining",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "Element11"
 	},
 	{
 		"id": "62",
@@ -494,7 +494,7 @@
 		"groupType": "mining",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "Element12"
 	},
 	{
 		"id": "63",
@@ -566,7 +566,7 @@
 		"groupType": "picnic",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "Element11"
 	},
 	{
 		"id": "72",
@@ -574,7 +574,7 @@
 		"groupType": "picnic",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "Element12"
 	},
 	{
 		"id": "73",
@@ -646,7 +646,7 @@
 		"groupType": "farm store",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "Element11"
 	},
 	{
 		"id": "82",
@@ -654,7 +654,7 @@
 		"groupType": "farm store",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "Element12"
 	},
 	{
 		"id": "83",
@@ -726,7 +726,7 @@
 		"groupType": "animals",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "Element11"
 	},
 	{
 		"id": "92",
@@ -734,7 +734,7 @@
 		"groupType": "animals",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "Element12"
 	},
 	{
 		"id": "93",
@@ -806,7 +806,7 @@
 		"groupType": "museum",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "Element11"
 	},
 	{
 		"id": "102",
@@ -814,7 +814,7 @@
 		"groupType": "museum",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "Element12"
 	},
 	{
 		"id": "103",
@@ -886,7 +886,7 @@
 		"groupType": "cafe",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "Element11"
 	},
 	{
 		"id": "112",
@@ -894,7 +894,7 @@
 		"groupType": "cafe",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "Element12"
 	},
 	{
 		"id": "113",
@@ -966,7 +966,7 @@
 		"groupType": "big city",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "Element11"
 	},
 	{
 		"id": "122",
@@ -974,7 +974,7 @@
 		"groupType": "big city",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "Element12"
 	},
 	{
 		"id": "123",
@@ -1046,7 +1046,7 @@
 		"groupType": "park",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "Element11"
 	},
 	{
 		"id": "132",
@@ -1054,7 +1054,7 @@
 		"groupType": "park",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "Element12"
 	},
 	{
 		"id": "133",
@@ -1126,7 +1126,7 @@
 		"groupType": "town hall",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "Element11"
 	},
 	{
 		"id": "142",
@@ -1134,7 +1134,7 @@
 		"groupType": "town hall",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "Element12"
 	},
 	{
 		"id": "143",
