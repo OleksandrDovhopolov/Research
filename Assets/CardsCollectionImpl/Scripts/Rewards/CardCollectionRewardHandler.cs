@@ -65,6 +65,9 @@ namespace CardCollectionImpl
             if (rewardDefinition == null || _rewardGrantService == null) 
                 return false;
             
+            //TODO unsafe to create categories via strings in CollectionRewardDefinition childs  ?
+            //categories should be the same as in inventory
+            
             var requests = rewardDefinition.ToRequests();
             
             var allSuccess = true;

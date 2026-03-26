@@ -2,7 +2,7 @@ namespace Rewards
 {
     public readonly struct RewardGrantRequest
     {
-        public RewardGrantRequest(string rewardId, int amount, string category = "")
+        public RewardGrantRequest(string rewardId, int amount, string category)
         {
             RewardId = rewardId;
             Amount = amount;

@@ -29,6 +29,7 @@ namespace Inventory.Implementation
             IInventoryItemUseService inventoryItemUseService,
             IItemCategoryRegistry  itemCategoryRegistry)
         {
+            Debug.LogWarning($"[VContainer] Construct {GetType().Name}");
             _inventoryService = inventoryService;
             _inventoryReadService = inventoryReadService;
             _inventoryItemUseService = inventoryItemUseService;
@@ -48,9 +49,15 @@ namespace Inventory.Implementation
         private async UniTask OpenCheatsPanelAsync(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
-            if (_inventoryService == null || _inventoryReadService == null)
+            if (_inventoryService == null)
             {
-                Debug.LogWarning("Failed to open inventory window. Inventory services are not initialized.");
+                Debug.LogWarning("Failed to open inventory window. IInventoryService are not initialized.");
+                return;
+            }
+            
+            if (_inventoryReadService == null)
+            {
+                Debug.LogWarning("Failed to open inventory window. IInventoryReadService are not initialized.");
                 return;
             }
             

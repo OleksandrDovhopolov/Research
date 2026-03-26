@@ -24,6 +24,8 @@ namespace core
         [Inject]
         private void Construct(ICardCollectionFeatureFacade feature)
         {
+            
+            Debug.LogWarning($"[VContainer] Construct {GetType().Name}");
             _feature = feature;
         }
         

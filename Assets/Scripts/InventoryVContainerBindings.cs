@@ -2,6 +2,7 @@ using System;
 using Inventory.API;
 using Inventory.Implementation;
 using Inventory.Implementation.Services;
+using UnityEngine;
 using VContainer;
 
 namespace core
@@ -12,6 +13,7 @@ namespace core
 
         public static void RegisterInventoryService(this IContainerBuilder builder)
         {
+            Debug.LogWarning($"[VContainer] Construct InventoryVContainerBindings");
             builder.RegisterInstance(InventoryOwnerId);
 
             builder.Register<IInventoryStorage, InMemoryInventoryStorage>(Lifetime.Singleton);
@@ -32,3 +34,18 @@ namespace core
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
