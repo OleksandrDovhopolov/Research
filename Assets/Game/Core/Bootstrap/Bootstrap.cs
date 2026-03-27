@@ -1,4 +1,5 @@
 using System.Threading;
+using core;
 using CoreResources;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
@@ -7,12 +8,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
 
-namespace core
+namespace Game.Bootstrap
 {
-    public class Starter : MonoBehaviour
+    public class Bootstrap : MonoBehaviour
     {
         [SerializeField] private UIManager _uiManager;
-        //[SerializeField] private ResearchCheatModule _researchCheatModule;
+        [SerializeField] private ResearchCheatModule _researchCheatModule;
         [SerializeField] private Button _cheatButton;
         [SerializeField] private string _inventoryOwnerId = "player_1";
         
@@ -101,7 +102,7 @@ namespace core
 
         private void OpenCheatsPanel()
         {
-            //_researchCheatModule.OpenCheatPanel();
+            _researchCheatModule.OpenCheatPanel();
         }
 
         private void OnDestroy()
