@@ -7,6 +7,7 @@ using EventOrchestration.Abstractions;
 using EventOrchestration.Models;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace core
 {
@@ -22,15 +23,35 @@ namespace core
 
         public async UniTask<IReadOnlyList<ScheduleItem>> LoadAsync(CancellationToken ct)
         {
-            ct.ThrowIfCancellationRequested();
-
+            string json;
             var fullPath = Path.Combine(Application.streamingAssetsPath, _relativeFilePath);
-            if (!File.Exists(fullPath))
+
+            // На Android используем UnityWebRequest, на остальных платформах можно оставить File IO
+            if (Application.platform == RuntimePlatform.Android)
             {
-                throw new FileNotFoundException($"Schedule file not found: {fullPath}");
+                using (var request = UnityWebRequest.Get(fullPath))
+                {
+                    await request.SendWebRequest().WithCancellation(ct);
+
+                    if (request.result != UnityWebRequest.Result.Success)
+                    {
+                        throw new FileNotFoundException($"Schedule file not found via WebRequest: {fullPath}. Error: {request.error}");
+                    }
+
+                    json = request.downloadHandler.text;
+                }
+            }
+            else
+            {
+                // Стандартный путь для PC/Editor/iOS
+                if (!File.Exists(fullPath))
+                {
+                    throw new FileNotFoundException($"Schedule file not found: {fullPath}");
+                }
+
+                json = await File.ReadAllTextAsync(fullPath, ct);
             }
 
-            var json = await File.ReadAllTextAsync(fullPath, ct);
             ct.ThrowIfCancellationRequested();
 
             var items = JsonConvert.DeserializeObject<List<ScheduleItem>>(json);

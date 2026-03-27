@@ -41,6 +41,7 @@ namespace Game.Bootstrap
 
         private void Start()
         {
+            Debug.LogWarning($"[Debug] Start {GetType().Name}");
             WindowFactoryBase windowFactoryBase = new WindowFactoryDI(_uiManager, _resolver);
             UIManagerEventHandlerBase eventHandler = new UIManagerSignalHandler();
 
