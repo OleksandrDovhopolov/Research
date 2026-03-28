@@ -4,6 +4,7 @@ using System.Threading;
 using CardCollectionImpl;
 using cheatModule;
 using Cysharp.Threading.Tasks;
+using EventOrchestration;
 using EventOrchestration.Models;
 using UnityEngine;
 
@@ -126,7 +127,7 @@ namespace core
                 now.Hour,
                 now.Minute,
                 0,
-                TimeSpan.Zero).AddMinutes(1);
+                TimeSpan.Zero);//.AddMinutes(1);
             var endAt = startAt.AddMinutes(3);
             var eventId = $"season_cards_debug_{startAt:yyyyMMdd_HHmm}";
 

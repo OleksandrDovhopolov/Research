@@ -1,6 +1,7 @@
 using CardCollectionImpl;
 using core;
 using CoreResources;
+using EventOrchestration;
 using Inventory.API;
 using Rewards;
 using UIShared;
@@ -15,6 +16,7 @@ namespace Game.Bootstrap
     {
         [SerializeField] private UIManager _uiManager;
         [SerializeField] private HUDService _hudService;
+        [SerializeField] private GlobalTimerService _globalTimerService;
         [SerializeField] private ExchangePacksConfig _exchangePacksConfig;
         [SerializeField] private string _cardCollectionScheduleFile = "card_collection_schedule.json";
 
@@ -30,6 +32,11 @@ namespace Game.Bootstrap
             {
                 throw new MissingReferenceException($"{nameof(HUDService)} is not assigned on {nameof(GameInstaller)}.");
             }
+
+            if (_globalTimerService == null)
+            {
+                throw new MissingReferenceException($"{nameof(GlobalTimerService)} is not assigned on {nameof(GameInstaller)}.");
+            }
             
             if (_exchangePacksConfig == null)
             {
@@ -38,6 +45,7 @@ namespace Game.Bootstrap
 
             builder.RegisterInstance(_uiManager);
             builder.RegisterInstance<IHUDService>(_hudService);
+            builder.RegisterInstance<IGlobalTimerService>(_globalTimerService);
             builder.Register<JsonResourcesStorage>(Lifetime.Singleton);
             builder.Register<ResourceManager>(Lifetime.Singleton);
             builder.RegisterInventoryService();
@@ -59,7 +67,13 @@ namespace Game.Bootstrap
 
             builder.RegisterComponentInHierarchy<Bootstrap>();
             builder.RegisterComponentInHierarchy<OrchestratorRunner>();
-            
+
+            // builder.RegisterBuildCallback(resolver =>
+            // {
+            //     resolver.InjectGameObject(_hudService.gameObject);
+            //     resolver.InjectGameObject(_globalTimerService.gameObject);
+            // });
+
             Debug.LogWarning($"[Debug] GameInstaller Complete ");
         }
     }

@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
+using VContainer;
+using VContainer.Unity;
 
 namespace UIShared
 {
@@ -9,7 +11,14 @@ namespace UIShared
         [SerializeField] private Transform _eventsContainer;
 
         private readonly Dictionary<string, EventButton> _activeButtons = new();
-        
+        private IObjectResolver _resolver;
+
+        [Inject]
+        private void Construct(IObjectResolver resolver)
+        {
+            _resolver = resolver;
+        }
+
         public IEventButton SpawnEventButton(string eventId)
         {
             if (_activeButtons.TryGetValue(eventId, out var button))
@@ -17,7 +26,15 @@ namespace UIShared
                 return button.GetComponent<IEventButton>();
             }
 
+            var wasPrefabActive = _buttonPrefab.activeSelf;
+            _buttonPrefab.SetActive(false);
+
             var btnObj = Instantiate(_buttonPrefab, _eventsContainer);
+            _buttonPrefab.SetActive(wasPrefabActive);
+
+            _resolver.InjectGameObject(btnObj);
+            btnObj.SetActive(wasPrefabActive);
+
             var eventButton = btnObj.GetComponent<EventButton>();
             _activeButtons.Add(eventId, eventButton);
 
@@ -26,7 +43,8 @@ namespace UIShared
 
         public void RemoveEventButton(string eventId)
         {
-            if (_activeButtons.TryGetValue(eventId, out var eventButton)) {
+            if (_activeButtons.TryGetValue(eventId, out var eventButton))
+            {
                 Destroy(eventButton.gameObject);
                 _activeButtons.Remove(eventId);
             }

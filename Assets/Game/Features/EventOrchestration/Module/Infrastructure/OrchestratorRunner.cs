@@ -6,7 +6,7 @@ using EventOrchestration.Models;
 using UnityEngine;
 using VContainer;
 
-namespace core
+namespace EventOrchestration
 {
     public sealed class OrchestratorRunner : MonoBehaviour
     {

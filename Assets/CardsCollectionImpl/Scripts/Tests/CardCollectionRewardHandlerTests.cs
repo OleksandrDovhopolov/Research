@@ -23,7 +23,7 @@ namespace CardCollectionImpl
             
             //TODO moving file to different folders would cause fail
             var config = AssetDatabase.LoadAssetAtPath<CardCollectionRewardsConfigSO>(
-                "Assets/CardsCollectionImpl/Data/CardCollectionRewardsConfig.asset");
+                "Assets/CardsCollectionImpl/Data/Shared/CardCollectionRewardsConfig.asset");
             
             Assert.IsNotNull(config, "CardCollectionRewardsConfig asset not found at expected path.");
             
