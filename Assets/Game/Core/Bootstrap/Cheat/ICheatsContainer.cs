@@ -1,7 +1,7 @@
 using System;
 using cheatModule;
 
-namespace core
+namespace Game.Cheat
 {
     public interface ICheatsContainer
     {

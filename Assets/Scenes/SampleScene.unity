@@ -1972,55 +1972,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1266437338
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1266437340}
-  - component: {fileID: 1266437339}
-  m_Layer: 0
-  m_Name: OpenCardPackDemo
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1266437339
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1266437338}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f73be4dd324961b4ba956bb9925b2115, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _twoCardButton: {fileID: 443067275}
-  _threeCardButton: {fileID: 578928282}
-  _fourCardButton: {fileID: 629191631}
-  _fiveCardButton: {fileID: 57162553}
-  _sixCardButton: {fileID: 1487937977}
---- !u!4 &1266437340
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1266437338}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1287502112 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6065141952986530511, guid: 400ea445297394f4d9ef534260f2f5ee, type: 3}
@@ -2321,7 +2272,7 @@ MonoBehaviour:
   autoRun: 1
   autoInjectGameObjects:
   - {fileID: 1055907873}
-  - {fileID: 1266437338}
+  - {fileID: 0}
   - {fileID: 343525367}
   - {fileID: 1180951366}
   - {fileID: 430775084}
@@ -3487,7 +3438,6 @@ SceneRoots:
   - {fileID: 1037090431}
   - {fileID: 120959147}
   - {fileID: 343525369}
-  - {fileID: 1266437340}
   - {fileID: 659670573}
   - {fileID: 1180951368}
   - {fileID: 309088065}

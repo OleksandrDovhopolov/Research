@@ -8,11 +8,12 @@ using EventOrchestration;
 using EventOrchestration.Models;
 using UnityEngine;
 
-namespace core
+namespace Game.Cheat
 {
-    public class CardCollectionModule : ICheatsModule
+    public class CardCollectionCheatModule : ICheatsModule
     {
-        private const string CardCollectionPointsGroup = "CardCollectionPointsGroup";
+        private const string CardCollectionGroup = "CardCollection";
+        private const string CardCollectionPointGroup = "CardCollectionPoints";
         
         private readonly CancellationToken _ct;
         private readonly OrchestratorRunner _orchestratorRunner;
@@ -20,7 +21,7 @@ namespace core
 
         private int _eventCounter = 0;
         
-        public CardCollectionModule(ICardCollectionFeatureFacade featureFacade, OrchestratorRunner orchestratorRunner, CancellationToken ct)
+        public CardCollectionCheatModule(ICardCollectionFeatureFacade featureFacade, OrchestratorRunner orchestratorRunner, CancellationToken ct)
         {
             _ct = ct;
             _featureFacade = featureFacade;
@@ -36,54 +37,17 @@ namespace core
                 
                 _orchestratorRunner.AddDebugCardCollectionEventNextMinute(first);
                 _orchestratorRunner.AddDebugCardCollectionEventNextMinute(second);
-                
-            }));
-            
-            /*cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Save collection", () =>
-            {
-                if (_featureFacade.TryGetCollectionUpdater(out var updater))
-                {
-                    updater.Save(_ct).Forget();
-                }
-                else
-                {
-                    Debug.LogWarning("[Cheat] CardCollection updater is unavailable.");
-                }
-            }));
-            
-            cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Load collection", () =>
-            {
-                if (_featureFacade.TryGetCollectionReader(out var reader))
-                {
-                    reader.Load(_ct).Forget();
-                }
-                else
-                {
-                    Debug.LogWarning("[Cheat] CardCollection reader is unavailable.");
-                }
-            }));
-            
-            cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Clear collection", () =>
-            {
-                if (_featureFacade.TryGetCollectionUpdater(out var updater))
-                {
-                    updater.Clear(_ct).Forget();
-                }
-                else
-                {
-                    Debug.LogWarning("[Cheat] CardCollection updater is unavailable.");
-                }
-            }));*/
+            }).WithGroup(CardCollectionGroup));
 
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Complete all collection", () =>
             {
                 CompleteAllCollectionAsync(_ct).Forget();
-            }));
+            }).WithGroup(CardCollectionGroup));
 
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Unlock all cards - 1", () =>
             {
                 UnlockAllMinusOneCardAsync(_ct).Forget();
-            }));
+            }).WithGroup(CardCollectionGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<string>("Open card ID(str)", cardId =>
             {
@@ -95,7 +59,7 @@ namespace core
                 {
                     Debug.LogWarning("[Cheat] CardCollection updater is unavailable.");
                 }
-            }));
+            }).WithGroup(CardCollectionGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Add points(int)", points =>
             {
@@ -107,7 +71,7 @@ namespace core
                 {
                     Debug.LogWarning("[Cheat] CardCollection points account is unavailable.");
                 }
-            }).WithGroup(CardCollectionPointsGroup));
+            }).WithGroup(CardCollectionPointGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Remove points(int)", points =>
             {
@@ -119,11 +83,9 @@ namespace core
                 {
                     Debug.LogWarning("[Cheat] CardCollection points account is unavailable.");
                 }
-            }).WithGroup(CardCollectionPointsGroup));
+            }).WithGroup(CardCollectionPointGroup));
         }
-
         
-
         private ScheduleItem CreateDebugCardCollectionScheduleItemForNextMinute(int minutedDelay = 1, int duration = 3)
         {
             var now = DateTimeOffset.UtcNow;

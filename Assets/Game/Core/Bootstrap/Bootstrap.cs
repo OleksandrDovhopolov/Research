@@ -2,6 +2,7 @@ using System.Threading;
 using core;
 using CoreResources;
 using Cysharp.Threading.Tasks;
+using Game.Cheat;
 using Infrastructure;
 using UISystem;
 using UnityEngine;

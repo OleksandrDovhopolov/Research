@@ -12,7 +12,7 @@ using UnityEngine.TestTools;
 
 namespace Inventory.Tests.Editor
 {
-    public sealed class InventoryModuleTests
+    public sealed class InventoryCheatModuleTests
     {
         private const string OwnerId = "player_1";
         private TestItemCategory _regularCategory;

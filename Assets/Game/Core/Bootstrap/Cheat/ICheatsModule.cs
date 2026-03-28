@@ -1,4 +1,4 @@
-namespace core
+namespace Game.Cheat
 {
     public interface ICheatsModule
     {

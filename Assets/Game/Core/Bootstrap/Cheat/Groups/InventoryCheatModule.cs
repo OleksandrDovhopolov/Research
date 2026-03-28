@@ -1,9 +1,9 @@
 using cheatModule;
 using Inventory.API;
 
-namespace core
+namespace Game.Cheat
 {
-    public class InventoryModule : ICheatsModule
+    public class InventoryCheatModule : ICheatsModule
     {
         private const string InventoryGroup = "InventoryGroup";
         
@@ -12,7 +12,7 @@ namespace core
         
         private readonly IInventoryService _inventoryService;
         
-        public InventoryModule(IInventoryService inventoryService)
+        public InventoryCheatModule(IInventoryService inventoryService)
         {
             _inventoryService = inventoryService;
         }

@@ -3,16 +3,16 @@ using CoreResources;
 using UIShared;
 using UnityEngine;
 
-namespace core
+namespace Game.Cheat
 {
-    public class SampleModule : ICheatsModule
+    public class ResourcesCheatModule : ICheatsModule
     {
-        private const string SampleGroup = "Sample";
+        private const string SampleGroup = "Resources";
         
         private readonly ResourceManager _resourceManager;
         private readonly AnimateCurrency _animateCurrency;
         
-        public SampleModule(ResourceManager resourceManager, AnimateCurrency animateCurrency)
+        public ResourcesCheatModule(ResourceManager resourceManager, AnimateCurrency animateCurrency)
         {
             _resourceManager = resourceManager;
             _animateCurrency = animateCurrency;
@@ -20,31 +20,8 @@ namespace core
 
         public void Initialize(ICheatsContainer cheatsContainer)
         {
-            /*cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Sample Module", () =>
-            {
-                Debug.LogWarning($"Sample Module");
-            }).WithGroup(SampleGroup));
-            
-            var sampleList = new[] { "1m", "10m", "30m", "1h", "2h", "3h", "4h", "5h", "8h", "12h", "24h", "7d" };
-            cheatsContainer.AddItem<CheatDropdownButtonItem>(item => item
-                .SetOptions(sampleList)
-                .OnClick("Test items", () =>
-                {
-                    var name = sampleList[item.CurIndex];
-                    Debug.LogWarning($"Sample dropdown {name}");
-                }).WithGroup(SampleGroup));
-            
-            cheatsContainer.AddItem<CheatInputItemWithLabel>(item => item.OnInputChange<float>("test", val =>
-            {
-                Debug.LogWarning($"Sample wi label val => {val}");
-            }).WithLabel("Sample").WithGroup(SampleGroup));*/
-            
-            
-            //--------------------- Resources ------------------------ //
-            
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Add gold", amount =>
             {
-                
                 var screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
                 var animationArgs = new ArgAnimateCurrency(screenCenter, ResourceType.Gold,  amount);
                 _animateCurrency.Animate(animationArgs);
@@ -81,8 +58,6 @@ namespace core
             {
                 _resourceManager.Remove(ResourceType.Gems, amount);
             }).WithGroup(SampleGroup));
-            
-            //--------------------- Resources ------------------------ //
         }
     }
 }
