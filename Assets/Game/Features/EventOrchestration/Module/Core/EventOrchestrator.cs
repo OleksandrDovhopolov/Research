@@ -13,7 +13,6 @@ namespace EventOrchestration.Core
         private readonly IScheduleProvider _scheduleProvider;
         private readonly IScheduleValidator _scheduleValidator;
         private readonly IEventRegistry _eventRegistry;
-        private readonly IConditionProvider _conditionProvider;
         private readonly IClock _clock;
         private readonly IStateStore _stateStore;
         private readonly IOrchestratorTelemetry _telemetry;
@@ -30,7 +29,6 @@ namespace EventOrchestration.Core
             IScheduleProvider scheduleProvider,
             IScheduleValidator scheduleValidator,
             IEventRegistry eventRegistry,
-            IConditionProvider conditionProvider,
             IClock clock,
             IStateStore stateStore,
             IOrchestratorTelemetry telemetry)
@@ -38,7 +36,6 @@ namespace EventOrchestration.Core
             _scheduleProvider = scheduleProvider ?? throw new ArgumentNullException(nameof(scheduleProvider));
             _scheduleValidator = scheduleValidator ?? throw new ArgumentNullException(nameof(scheduleValidator));
             _eventRegistry = eventRegistry ?? throw new ArgumentNullException(nameof(eventRegistry));
-            _conditionProvider = conditionProvider ?? throw new ArgumentNullException(nameof(conditionProvider));
             _clock = clock ?? throw new ArgumentNullException(nameof(clock));
             _stateStore = stateStore ?? throw new ArgumentNullException(nameof(stateStore));
             _telemetry = telemetry ?? throw new ArgumentNullException(nameof(telemetry));
@@ -154,7 +151,7 @@ namespace EventOrchestration.Core
                     return;
                 }
 
-                var candidate = await FindStartCandidateAsync(items, now, ct);
+                var candidate = FindStartCandidateAsync(items, now);
                 if (candidate == null)
                 {
                     return;
@@ -189,11 +186,10 @@ namespace EventOrchestration.Core
 
         private static readonly TimeSpan StartSkew = TimeSpan.FromSeconds(0);
         
-        private async UniTask<ScheduleItem> FindStartCandidateAsync(IList<ScheduleItem> streamItems, DateTimeOffset now, CancellationToken ct)
+        private ScheduleItem FindStartCandidateAsync(IList<ScheduleItem> streamItems, DateTimeOffset now)
         {
             for (var i = 0; i < streamItems.Count; i++)
             {
-                ct.ThrowIfCancellationRequested();
                 var item = streamItems[i];
                 var state = _states[item.Id].State;
                 if (state != EventInstanceState.Pending)
@@ -203,11 +199,7 @@ namespace EventOrchestration.Core
                 if (startGate > now || now >= item.EndTimeUtc)
                     continue;
 
-                var canStart = await _conditionProvider.CanStartAsync(item, ct);
-                if (canStart)
-                    return item;
-
-                await _telemetry.TrackStartRejectedAsync(item.Id, "conditions_not_met", ct);
+                return item;
             }
 
             return null;
@@ -270,10 +262,9 @@ namespace EventOrchestration.Core
                     await controller.OnUpdate(ct);
                 }
 
-                var forceEnd = await _conditionProvider.ShouldForceEndAsync(item, ct);
                 var shouldEndByTime = now >= item.EndTimeUtc;
 
-                if (forceEnd || shouldEndByTime)
+                if (shouldEndByTime)
                 {
                     await EndAndSettleAsync(item, controller, ct);
                 }

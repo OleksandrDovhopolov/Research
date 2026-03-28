@@ -8,7 +8,6 @@ namespace core
         private readonly IScheduleProvider _scheduleProvider;
         private readonly IScheduleValidator _scheduleValidator;
         private readonly IEventRegistry _eventRegistry;
-        private readonly IConditionProvider _conditionProvider;
         private readonly IClock _clock;
         private readonly IStateStore _stateStore;
         private readonly IOrchestratorTelemetry _telemetry;
@@ -17,7 +16,6 @@ namespace core
             IScheduleProvider scheduleProvider,
             IScheduleValidator scheduleValidator,
             IEventRegistry eventRegistry,
-            IConditionProvider conditionProvider,
             IClock clock,
             IStateStore stateStore,
             IOrchestratorTelemetry telemetry)
@@ -25,7 +23,6 @@ namespace core
             _scheduleProvider = scheduleProvider;
             _scheduleValidator = scheduleValidator;
             _eventRegistry = eventRegistry;
-            _conditionProvider = conditionProvider;
             _clock = clock;
             _stateStore = stateStore;
             _telemetry = telemetry;
@@ -37,7 +34,6 @@ namespace core
                 _scheduleProvider,
                 _scheduleValidator,
                 _eventRegistry,
-                _conditionProvider,
                 _clock,
                 _stateStore,
                 _telemetry);

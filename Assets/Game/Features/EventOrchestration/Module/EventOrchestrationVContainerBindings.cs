@@ -11,7 +11,6 @@ namespace core
         {
             builder.Register<IScheduleProvider>(_ => new StreamingAssetsScheduleProvider(scheduleJsonFile), Lifetime.Singleton);
             builder.Register<IScheduleValidator, BasicScheduleValidator>(Lifetime.Singleton);
-            builder.Register<IConditionProvider, AllowAllConditionProvider>(Lifetime.Singleton);
             builder.Register<IClock, SystemClock>(Lifetime.Singleton);
             builder.Register<IStateStore, InMemoryStateStore>(Lifetime.Singleton);
             builder.Register<IOrchestratorTelemetry, UnityDebugTelemetry>(Lifetime.Singleton);
