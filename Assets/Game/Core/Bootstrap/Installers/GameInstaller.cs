@@ -68,12 +68,6 @@ namespace Game.Bootstrap
             builder.RegisterComponentInHierarchy<Bootstrap>();
             builder.RegisterComponentInHierarchy<OrchestratorRunner>();
 
-            // builder.RegisterBuildCallback(resolver =>
-            // {
-            //     resolver.InjectGameObject(_hudService.gameObject);
-            //     resolver.InjectGameObject(_globalTimerService.gameObject);
-            // });
-
             Debug.LogWarning($"[Debug] GameInstaller Complete ");
         }
     }

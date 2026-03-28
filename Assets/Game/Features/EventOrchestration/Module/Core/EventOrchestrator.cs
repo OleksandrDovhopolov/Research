@@ -22,6 +22,7 @@ namespace EventOrchestration.Core
         private readonly HashSet<string> _transitionInFlight = new();
         private List<ScheduleItem> _schedule = new();
 
+        public event Action<ScheduleItem> OnEventCreated;
         public event Action<ScheduleItem> OnEventStarted;
         public event Action<ScheduleItem> OnEventCompleted;
 
@@ -79,6 +80,8 @@ namespace EventOrchestration.Core
                     Version = 1,
                     UpdatedAtUtc = _clock.UtcNow,
                 };
+
+                OnEventCreated?.Invoke(item);
             }
 
             await _stateStore.SaveAsync(_states, ct);

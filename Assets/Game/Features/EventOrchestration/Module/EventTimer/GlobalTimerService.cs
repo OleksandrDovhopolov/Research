@@ -28,18 +28,28 @@ namespace EventOrchestration
         {
             _destroyCt = this.GetCancellationTokenOnDestroy();
         }
-        public void Register(string eventId, DateTimeOffset endTimeUtc)
+        
+        public void Register(string eventId, DateTimeOffset timeUtc)
         {
             if (string.IsNullOrEmpty(eventId))
                 throw new ArgumentException("Event id cannot be null or empty.", nameof(eventId));
+
+            if (_events.ContainsKey(eventId))
+            {
+                Debug.LogWarning($"[Debug] eventId {eventId}  is already registered.");
+                _events[eventId] = timeUtc;
+                return;
+            }
+            
             var wasEmpty = _events.Count == 0;
-            _events[eventId] = endTimeUtc;
+            _events[eventId] = timeUtc;
             if (wasEmpty && !_heartbeatActive)
             {
                 _heartbeatActive = true;
                 RunHeartbeatAsync(_destroyCt).Forget();
             }
         }
+        
         public void Unregister(string eventId)
         {
             if (string.IsNullOrEmpty(eventId))

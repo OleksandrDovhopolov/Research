@@ -17,6 +17,8 @@ namespace core
         private readonly CancellationToken _ct;
         private readonly OrchestratorRunner _orchestratorRunner;
         private readonly ICardCollectionFeatureFacade _featureFacade;
+
+        private int _eventCounter = 0;
         
         public CardCollectionModule(ICardCollectionFeatureFacade featureFacade, OrchestratorRunner orchestratorRunner, CancellationToken ct)
         {
@@ -129,7 +131,7 @@ namespace core
                 0,
                 TimeSpan.Zero);//.AddMinutes(1);
             var endAt = startAt.AddMinutes(3);
-            var eventId = $"season_cards_debug_{startAt:yyyyMMdd_HHmm}";
+            var eventId = $"season_cards_debug_{_eventCounter++}";
 
             return new ScheduleItem
             {
@@ -142,9 +144,9 @@ namespace core
                 CustomParams = new Dictionary<string, string>
                 {
                     ["eventId"] = eventId,
-                    ["rewardsConfigAddress"] = "season_rewards_002",
-                    ["cardsCollectionAddress"] = "season_cards_002",
-                    ["cardGroupsAddress"] = "season_groups_002",
+                    ["rewardsConfigAddress"] = "season_rewards_001",
+                    ["cardsCollectionAddress"] = "season_cards_001",
+                    ["cardGroupsAddress"] = "season_groups_001",
                     ["cardPacksAddress"] = "shared_card_packs_config",
                 },
             };
