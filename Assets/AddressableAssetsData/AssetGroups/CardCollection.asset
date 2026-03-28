@@ -132,13 +132,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 815efc91fda3c0043abbe08b12a9c143
-    m_Address: Element14
+  - m_GUID: 81778c00af18b4d418964944cd4fe5f4
+    m_Address: icon_equip_sword
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 81778c00af18b4d418964944cd4fe5f4
-    m_Address: icon_equip_sword
+  - m_GUID: 85bd7851c2bd916448a6a37cda369db6
+    m_Address: season_rewards_001
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -162,16 +162,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d942f60b27a51334ba7cde6a00b47358
-    m_Address: Element13
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: dba26a068ace5534bbce5c51238deeac
-    m_Address: Element12
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e381751f8714dd64ea531084c886ba95
     m_Address: icon_scroll
     m_ReadOnly: 0
@@ -179,11 +169,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: eb4c20978dc59dd49b3370d8bb1d1f46
     m_Address: icon_pouch
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f60336817574ec74f970aa1b1c5527b4
-    m_Address: Element11
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -144,7 +144,7 @@ namespace CardCollection.Tests
             var storage = new InMemoryEventCardsStorage(CreateSaveData(eventId, points));
             var definitionProvider = new StubCardDefinitionProvider(new List<CardDefinition>());
             var selector = new StubCardSelector();
-            var pointsCalculator = new DefaultCardPointsCalculator();
+            var pointsCalculator = new CardCollectionDuplicatePointsTests.MockCardPointsCalculator();
 
             var config = new CardCollectionModuleConfig(
                 packProvider,
@@ -180,9 +180,6 @@ namespace CardCollection.Tests
                         packId = packId,
                         packName = "Test Pack",
                         cardCount = 1,
-                        softCurrencyCost = 0,
-                        hardCurrencyCost = 0,
-                        availableCardRarities = new List<string>()
                     }
                 };
             }
@@ -191,6 +188,18 @@ namespace CardCollection.Tests
             {
                 ct.ThrowIfCancellationRequested();
                 return UniTask.FromResult(_packs);
+            }
+
+            public List<CardPackConfig> Data => _packs;
+
+            public UniTask<List<CardPackConfig>> LoadAsync(string fileName, CancellationToken ct)
+            {
+                ct.ThrowIfCancellationRequested();
+                return UniTask.FromResult(_packs);
+            }
+
+            public void ClearCache()
+            {
             }
         }
 

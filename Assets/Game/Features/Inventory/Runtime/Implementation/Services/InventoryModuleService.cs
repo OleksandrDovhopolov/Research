@@ -16,7 +16,7 @@ namespace Inventory.Implementation.Services
         public const string CardPack = "card_pack";
     }
     
-    public sealed class InventoryModuleService : IInventoryService, IInventoryReadService, IInventoryItemUseService, IDisposable
+    public sealed class InventoryModuleService : IInventoryService, IInventoryReadService, IInventoryItemUseService, IInventoryUseHandlerStorage, IDisposable
     {
         private readonly AddItemSystem _addItemSystem;
         private readonly RemoveItemSystem _removeItemSystem;
@@ -40,11 +40,21 @@ namespace Inventory.Implementation.Services
             _inventoryItemUseHandlers =  new List<IInventoryItemUseHandler>();
         }
         
+        //TODO move to interface ? 
         public void AddUseHandler(IInventoryItemUseHandler handler)
         {
             if (handler != null)
             {
                 _inventoryItemUseHandlers.Add(handler);
+            }
+        }
+        
+        //TODO move to interface ? 
+        public void RemoveUseHandler(IInventoryItemUseHandler handler)
+        {
+            if (handler != null)
+            {
+                _inventoryItemUseHandlers.Remove(handler);
             }
         }
         

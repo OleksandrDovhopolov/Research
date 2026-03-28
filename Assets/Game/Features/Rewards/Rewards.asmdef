@@ -1,0 +1,19 @@
+{
+    "name": "Rewards",
+    "rootNamespace": "",
+    "references": [
+        "GUID:0c9a3bc3d6a5a4a7db1f089ece85cc6b",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:de82476feb08fd341a3985b3bcfaf67e",
+        "GUID:c8767cc5ccaa93945b5cc4d90f99ba37"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

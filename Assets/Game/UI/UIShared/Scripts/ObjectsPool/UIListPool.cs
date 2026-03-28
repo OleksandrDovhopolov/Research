@@ -65,6 +65,34 @@ namespace UIShared
            return elem;
        }
 
+        public void Return(T element)
+        {
+            if (element == null || IsNull(element) || Pool == null || Pool.Count == 0) return;
+
+            var elementIndex = Pool.IndexOf(element);
+            if (elementIndex < 0) return;
+            if (!element.gameObject.activeSelf) return;
+
+            if (elementIndex <= LastActiveIndex)
+            {
+                var lastIndex = LastActiveIndex;
+                var lastActiveElement = Pool[lastIndex];
+
+                if (elementIndex != lastIndex && lastActiveElement != null && !IsNull(lastActiveElement))
+                {
+                    Pool[elementIndex] = lastActiveElement;
+                    lastActiveElement.transform.SetSiblingIndex(elementIndex);
+                    Pool[lastIndex] = element;
+                    element.transform.SetSiblingIndex(lastIndex);
+                }
+
+                LastActiveIndex--;
+            }
+
+            CleanupElement(element);
+            element.gameObject.SetActive(false);
+        }
+
         public override void DisableNonActive()
         {
             if (Pool == null) return;

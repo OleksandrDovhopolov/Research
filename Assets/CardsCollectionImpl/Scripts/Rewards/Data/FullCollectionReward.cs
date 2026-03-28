@@ -1,11 +1,21 @@
 using System.Collections.Generic;
-using CardCollection.Core;
-using Resources.Core;
+using System.Linq;
+using CoreResources;
+using Rewards;
 
 namespace CardCollectionImpl
 {
     public class FullCollectionReward : CollectionRewardDefinition
     {
+        public const string Regular = "regular";
+        
         public List<GameResource> Resources = new();
+        
+        public override IEnumerable<RewardGrantRequest> ToRequests()
+        {
+            return Resources
+                .Where(r => r.Amount > 0)
+                .Select(r => new RewardGrantRequest(r.Type.ToString(), r.Amount, Regular));
+        }
     }
 }

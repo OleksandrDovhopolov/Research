@@ -5,13 +5,11 @@ namespace UIShared
 {
     public class ContentWidgetArgs : WindowArgs
     {
-        public readonly UIManager UiManager;
         public readonly ContentWidgetDataBase ContentWidgetData;
         public readonly RectTransform RectTransform;
         
-        public ContentWidgetArgs(UIManager uiManager, ContentWidgetDataBase contentWidgetData, RectTransform rectTransform)
+        public ContentWidgetArgs(ContentWidgetDataBase contentWidgetData, RectTransform rectTransform)
         {
-            UiManager = uiManager;
             ContentWidgetData = contentWidgetData;
             RectTransform = rectTransform;
         }
@@ -34,7 +32,7 @@ namespace UIShared
         
         private void CloseWindow()
         {
-            Args.UiManager.Hide<ContentWidgetController>();
+            UIManager.Hide<ContentWidgetController>();
         }
         
         protected override void OnHideStart(bool isClosed)

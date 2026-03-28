@@ -36,7 +36,9 @@ namespace CardCollectionImpl
         [SerializeField] private Image _grouoRewardImage;
         [SerializeField] private TextMeshProUGUI _groupRewardAmountText;
 
-        private readonly Dictionary<CardCollectionConfig, CollectionCardView> _viewsDict = new();
+        private readonly Dictionary<CardConfig, CollectionCardView> _viewsDict = new();
+        
+        private IReadOnlyList<CardConfig> _cardConfigs;
         
         private bool _isAnimating;
         
@@ -50,9 +52,14 @@ namespace CardCollectionImpl
             _rightSwitchButton.onClick.AddListener(() => OnRightClick?.Invoke());
         }
 
+        public void SetCardConfigs(IReadOnlyList<CardConfig>  cardConfigs)
+        {
+            _cardConfigs = cardConfigs;
+        }
+        
         public void CreateDataViews(string groupType, List<CardProgressData> cardsData, CardCollectionNewCardsDto newCardsData)
         {
-            var configs = CardCollectionConfigStorage.Instance.Get(groupType);
+            var configs = _cardConfigs.GetByGroupType(groupType);
             
             _upperCardsPool.DisableNonActive();
             _bottomCardsPool.DisableNonActive();
@@ -68,7 +75,7 @@ namespace CardCollectionImpl
                 }
                 
                 var data = cardsData[i];
-                var config = configs.Find(config => config.Id == data.CardId);
+                var config = configs.Find(config => config.id == data.CardId);
                 if (config == null)
                 {
                     Debug.LogError($"Debug. GroupId {groupType}. failed to Find config.ID ==  data.CardId {data.CardId}");
@@ -106,14 +113,14 @@ namespace CardCollectionImpl
             _groupRewardAmountText.text = amount.ToString();
         }
         
-        public async UniTask SetSprites(List<CardCollectionConfig> cardsData)
+        public async UniTask SetSprites(List<CardConfig> cardsData)
         {
             await UIUtils.LoadAndSetSpritesAsync(
                 cardsData,
-                config => config.Icon,
+                config => config.icon,
                 config => _viewsDict.TryGetValue(config, out var view) ? view : null,
                 (view, sprite) => view.SetCardImage(sprite),
-                config => config.CardName);
+                config => config.cardName);
         }
 
         /// <summary>
@@ -141,6 +148,7 @@ namespace CardCollectionImpl
 
                 // Phase 2: Rebuild cards and update UI while container is off-screen
                 DisableAll();
+                
                 CreateDataViews(groupType, cardsData, newCardsData);
                 onRebuild?.Invoke();
 
@@ -161,7 +169,7 @@ namespace CardCollectionImpl
 
         private void OnCardPressedHandler(CollectionCardView cardView)
         {
-            CardCollectionConfig config = null;
+            CardConfig config = null;
             foreach (var pair in _viewsDict)
             {
                 if (ReferenceEquals(pair.Value, cardView))

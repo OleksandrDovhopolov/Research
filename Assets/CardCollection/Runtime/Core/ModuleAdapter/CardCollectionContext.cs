@@ -18,8 +18,7 @@ namespace CardCollection.Core
         private readonly CardProgressService _cardProgressService;
         private readonly IDuplicateCardPointsCalculator _duplicateCardPointsCalculator;
 
-        public string DefaultEventId { get; }
-        public ICardPointsCalculator CardPointsCalculator { get; }
+        public string EventId { get; }
 
         public CardCollectionContext(CardCollectionModuleConfig config)
         {
@@ -30,8 +29,7 @@ namespace CardCollection.Core
 
             _config = config;
 
-            DefaultEventId = _config.DefaultEventId;
-            CardPointsCalculator = _config.CardPointsCalculator;
+            EventId = _config.EventId;
             _cardPackService = new CardPackService(_config.PackProvider);
             _cardProgressService = new CardProgressService(_config.EventCardsStorage);
             _cardRandomizer = new PackBasedCardsRandomizer(_config.CardSelector, _config.CardDefinitionProvider);
@@ -42,7 +40,7 @@ namespace CardCollection.Core
         {
             await _cardPackService.InitializeAsync(ct);
             await _cardProgressService.InitializeAsync(ct);
-            await _cardProgressService.LoadAsync(DefaultEventId, ct);
+            await _cardProgressService.LoadAsync(EventId, ct);
         }
 
         // ── CardPackService delegation ──
@@ -107,6 +105,9 @@ namespace CardCollection.Core
 
         public void Dispose()
         {
+            //TODO add clearCache to ICardGroupsConfigProvider
+            //TODO add clearCache to ICardsConfigProvider
+            _config.PackProvider.ClearCache();
             _cardPackService.Dispose();
             _cardProgressService.Dispose();
         }

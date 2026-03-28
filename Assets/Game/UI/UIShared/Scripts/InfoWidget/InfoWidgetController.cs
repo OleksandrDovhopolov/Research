@@ -5,11 +5,9 @@ namespace UIShared
     public class InfoWidgetArg : WindowArgs
     {
         public readonly string Text;
-        public readonly UIManager UiManager;
         
-        public InfoWidgetArg(UIManager uiManager, string text)
+        public InfoWidgetArg(string text)
         {
-            UiManager = uiManager;
             Text = text;
         }
     }
@@ -36,7 +34,7 @@ namespace UIShared
 
         private void CloseWidget()
         {
-            Args.UiManager.Hide<InfoWidgetController>();
+            UIManager.Hide<InfoWidgetController>();
         }
     }
 }

@@ -27,13 +27,13 @@ namespace CardCollection.Core
 
     public sealed class DuplicateCardPointsCalculator : IDuplicateCardPointsCalculator
     {
+        private readonly ICardPointsCalculator _pointsCalculator;
         private readonly ICardDefinitionProvider _cardDefinitionProvider;
-        private readonly ICardPointsCalculator _cardPointsCalculator;
 
-        public DuplicateCardPointsCalculator(ICardDefinitionProvider cardDefinitionProvider, ICardPointsCalculator cardPointsCalculator)
+        public DuplicateCardPointsCalculator(ICardDefinitionProvider cardDefinitionProvider, ICardPointsCalculator pointsCalculator)
         {
+            _pointsCalculator = pointsCalculator ?? throw new ArgumentNullException(nameof(pointsCalculator));
             _cardDefinitionProvider = cardDefinitionProvider ?? throw new ArgumentNullException(nameof(cardDefinitionProvider));
-            _cardPointsCalculator = cardPointsCalculator ?? throw new ArgumentNullException(nameof(cardPointsCalculator));
         }
 
         public DuplicateCardPointsCalculation Calculate(
@@ -85,7 +85,7 @@ namespace CardCollection.Core
                     continue;
                 }
 
-                var pointsForCard = _cardPointsCalculator.GetPoints(cardDefinition.Stars, cardDefinition.PremiumCard);
+                var pointsForCard = _pointsCalculator.GetPoints(cardDefinition.Stars, cardDefinition.PremiumCard);
                 if (pointsForCard <= 0)
                 {
                     continue;

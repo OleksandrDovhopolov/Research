@@ -10,6 +10,8 @@ namespace CardCollection.Core
     /// </summary>
     public interface ICardCollectionModule
     {
+        string EventId { get; }
+
         UniTask InitializeAsync(CancellationToken ct = default);
 
         // Packs

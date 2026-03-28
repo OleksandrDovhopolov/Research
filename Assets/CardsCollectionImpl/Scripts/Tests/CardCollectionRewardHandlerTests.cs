@@ -3,6 +3,7 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using NUnit.Framework;
+using Rewards;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,23 +11,30 @@ namespace CardCollectionImpl
 {
     public class CardCollectionRewardHandlerTests
     {
+        /*
+         * bad test quality
+         * TODO fix this test
+         */
         [Test]
         public void TryHandleCollectionCompleted_WhenRewardIdIsMissing_ReturnsTrue()
         {
             var rewardGrantService = new FakeRewardGrantService();
             var rewardFactory = new FakeRewardDefinitionFactory();
-            var handler = new CardCollectionRewardHandler(rewardGrantService, rewardFactory);
-
+            
+            //TODO moving file to different folders would cause fail
             var config = AssetDatabase.LoadAssetAtPath<CardCollectionRewardsConfigSO>(
-                "Assets/CardsCollectionImpl/Scripts/Rewards/CardCollectionRewardsConfig.asset");
+                "Assets/CardsCollectionImpl/Data/Shared/CardCollectionRewardsConfig.asset");
             
             Assert.IsNotNull(config, "CardCollectionRewardsConfig asset not found at expected path.");
             
-            SetInitializedConfig(handler, config);
+            var handler = new CardCollectionRewardHandler(config, rewardGrantService, rewardFactory);
+            
+            //SetInitializedConfig(handler, config);
 
+            //TODO EventId should be the same as in file CardCollectionRewardsConfig
             var result = handler.TryHandleCollectionCompleted(new CardCollectionCompletedData
             {
-                EventId = "test"
+                EventId = "season_cards_001"
             }).GetAwaiter().GetResult();
 
             Assert.IsTrue(result);
@@ -38,15 +46,16 @@ namespace CardCollectionImpl
         {
             var rewardGrantService = new FakeRewardGrantService();
             var rewardFactory = new FakeRewardDefinitionFactory();
-            var handler = new CardCollectionRewardHandler(rewardGrantService, rewardFactory);
-
+            
             var config = ScriptableObject.CreateInstance<CardCollectionRewardsConfigSO>();
             config.FullCollectionReward = new FullCollectionRewardConfig
             {
                 RewardId = "event-1",
             };
-
-            SetInitializedConfig(handler, config);
+            
+            var handler = new CardCollectionRewardHandler(config, rewardGrantService, rewardFactory);
+            
+            //SetInitializedConfig(handler, config);
 
             var result = handler.TryHandleCollectionCompleted(new CardCollectionCompletedData
             {
@@ -55,13 +64,6 @@ namespace CardCollectionImpl
 
             Assert.IsTrue(result);
             Assert.AreEqual(1, rewardFactory.CreateCollectionCallsCount);
-        }
-
-        private static void SetInitializedConfig(CardCollectionRewardHandler handler, CardCollectionRewardsConfigSO config)
-        {
-            var type = typeof(CardCollectionRewardHandler);
-            type.GetField("_isInitialized", BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(handler, true);
-            type.GetField("_cardCollectionRewardsConfigSo", BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(handler, config);
         }
 
         private sealed class FakeRewardGrantService : IRewardGrantService
@@ -90,7 +92,7 @@ namespace CardCollectionImpl
                 return new FullCollectionReward();
             }
 
-            public CollectionRewardDefinition CreateFromOfferReward(string offerPackId, CancellationToken ct = default)
+            public CollectionRewardDefinition CreateFromOfferReward(string offerPackId)
             {
                 CreateCollectionCallsCount++;
                 return new DuplicatePointsChestOffer();

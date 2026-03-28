@@ -1,11 +1,8 @@
 using System.Collections.Generic;
-using System.Threading;
-using Cysharp.Threading.Tasks;
 
 namespace CardCollection.Core
 {
-    public interface ICardPackProvider
+    public interface ICardPackProvider : IStaticDataProvider<List<CardPackConfig>>
     {
-        UniTask<List<CardPackConfig>> GetCardConfigsAsync(CancellationToken ct = default);
     }
 }

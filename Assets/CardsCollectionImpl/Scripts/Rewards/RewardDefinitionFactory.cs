@@ -1,28 +1,30 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using CardCollection.Core;
-using Resources.Core;
+using CoreResources;
 using UnityEngine;
 
 namespace CardCollectionImpl
 {
     public class RewardDefinitionFactory : IRewardDefinitionFactory
     {
-        private readonly List<CardPackConfig> _cardPackConfigs;
+        private readonly Dictionary<string, CardPackConfig> _cardPackConfigsById;
         private readonly Dictionary<string, ExchangePackEntry> _packById;
 
-        public RewardDefinitionFactory(ExchangePacksConfig exchangePacksConfig, List<CardPackConfig> cardPackConfigs)
+        public RewardDefinitionFactory(ExchangePacksConfig exchangePacksConfig, IReadOnlyList<CardPackConfig> cardPackConfigs)
         {
-            _cardPackConfigs = cardPackConfigs;
-            _packById = new Dictionary<string, ExchangePackEntry>();
+            _cardPackConfigsById = cardPackConfigs
+                .Where(c => c != null && !string.IsNullOrEmpty(c.packId))
+                .ToDictionary(c => c.packId, c => c);
+            
             
             if (exchangePacksConfig == null || exchangePacksConfig.Packs == null)
             {
                 return;
             }
 
+            _packById = new Dictionary<string, ExchangePackEntry>();
             foreach (var pack in exchangePacksConfig.Packs)
             {
                 if (pack == null || string.IsNullOrWhiteSpace(pack.Id))
@@ -64,14 +66,14 @@ namespace CardCollectionImpl
             return fullCollectionReward;
         }
         
-        public CollectionRewardDefinition CreateFromOfferReward(string offerPackId, CancellationToken ct = default)
+        public CollectionRewardDefinition CreateFromOfferReward(string offerPackId)
         {
             if (!TryGetPackEntry(offerPackId, out var exchangePackEntry))
             {
                 return new DuplicatePointsChestOffer();
             }
 
-            var cardPacks = GetRewardCardPacks(exchangePackEntry, ct);
+            var cardPacks = GetRewardCardPacks(exchangePackEntry);
             var resources = GetRewardResources(exchangePackEntry);
 
             return new DuplicatePointsChestOffer
@@ -97,6 +99,7 @@ namespace CardCollectionImpl
         {
             if (pack?.RewardEntry is not ExchangePackCardsRewardEntrySO { ResourcesData: { Count: > 0 } } cardsReward)
             {
+                //TODO create once EMPTY list and return it 
                 return new List<GameResource>();
             }
             
@@ -112,9 +115,9 @@ namespace CardCollectionImpl
             return mappedResources.Count > 0 ? mappedResources : new List<GameResource>();
         }
         
-        private List<CardPack> GetRewardCardPacks(ExchangePackEntry pack, CancellationToken ct)
+        private List<CardPack> GetRewardCardPacks(ExchangePackEntry pack)
         {
-            if (pack?.RewardEntry?.CardPacks is not { Count: > 0 } || _cardPackConfigs == null)
+            if (pack?.RewardEntry?.CardPacks is not { Count: > 0 } || _cardPackConfigsById.Count == 0)
             {
                 return new List<CardPack>();
             }
@@ -122,12 +125,7 @@ namespace CardCollectionImpl
             var result = new List<CardPack>();
             foreach (var cardPackId in pack.RewardEntry.CardPacks)
             {
-                ct.ThrowIfCancellationRequested();
-
-                var config = _cardPackConfigs.FirstOrDefault(cfg =>
-                    cfg != null && string.Equals(cfg.packId, cardPackId, StringComparison.Ordinal));
-
-                if (config == null)
+                if (!_cardPackConfigsById.TryGetValue(cardPackId, out var config))
                 {
                     Debug.LogWarning($"Failed to find CardPackConfig with ID {cardPackId}");
                     continue;

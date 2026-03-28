@@ -57,6 +57,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ca7c4a09d84b61c4d8846565a8ed01b7
+    m_Address: season_rewards_002
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: c7236b2e70f2a9f4eb9a1c78df452a70, type: 2}
   m_SchemaSet:

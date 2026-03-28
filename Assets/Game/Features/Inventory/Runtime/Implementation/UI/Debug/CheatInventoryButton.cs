@@ -5,6 +5,7 @@ using Inventory.Implementation.UI;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 namespace Inventory.Implementation
 {
@@ -15,20 +16,29 @@ namespace Inventory.Implementation
         [SerializeField] private string _ownerId = "player_1";
 
         private CancellationToken _destroyCt;
+        
         private IInventoryService _inventoryService;
         private IInventoryReadService _inventoryReadService;
         private IInventoryItemUseService _inventoryItemUseService;
         private IItemCategoryRegistry _itemCategoryRegistry;
         
+        [Inject]
+        private void Construct(
+            IInventoryService inventoryService,
+            IInventoryReadService  inventoryReadService, 
+            IInventoryItemUseService inventoryItemUseService,
+            IItemCategoryRegistry  itemCategoryRegistry)
+        {
+            Debug.LogWarning($"[VContainer] Construct {GetType().Name}");
+            _inventoryService = inventoryService;
+            _inventoryReadService = inventoryReadService;
+            _inventoryItemUseService = inventoryItemUseService;
+            _itemCategoryRegistry = itemCategoryRegistry;
+        }
+        
         private void Awake()
         {
             _destroyCt = this.GetCancellationTokenOnDestroy();
-            var compositionRoot = InventoryCompositionRegistry.Resolve();
-            _inventoryService = compositionRoot.CreateInventoryService();
-            _inventoryReadService = compositionRoot.CreateInventoryReadService();
-            _inventoryItemUseService = compositionRoot.CreateInventoryItemUseService();
-            //_itemCategoryRegistry = new ItemCategoryRegistry();
-            _itemCategoryRegistry = compositionRoot.GetCategoryRegistry();
         }
 
         private void Start()
@@ -39,9 +49,15 @@ namespace Inventory.Implementation
         private async UniTask OpenCheatsPanelAsync(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
-            if (_inventoryService == null || _inventoryReadService == null)
+            if (_inventoryService == null)
             {
-                Debug.LogWarning("Failed to open inventory window. Inventory services are not initialized.");
+                Debug.LogWarning("Failed to open inventory window. IInventoryService are not initialized.");
+                return;
+            }
+            
+            if (_inventoryReadService == null)
+            {
+                Debug.LogWarning("Failed to open inventory window. IInventoryReadService are not initialized.");
                 return;
             }
             

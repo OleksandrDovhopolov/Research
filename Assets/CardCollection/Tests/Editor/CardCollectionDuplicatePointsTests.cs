@@ -104,7 +104,7 @@ namespace CardCollection.Tests
             var storage = new InMemoryEventCardsStorage(initialData);
             var definitionProvider = new StubCardDefinitionProvider(cardDefinitions);
             var selector = new StubCardSelector(openedCardIds);
-            var pointsCalculator = new DefaultCardPointsCalculator();
+            var pointsCalculator = new MockCardPointsCalculator();
 
             var config = new CardCollectionModuleConfig(
                 packProvider,
@@ -168,9 +168,6 @@ namespace CardCollection.Tests
                         packId = packId,
                         packName = "Test Pack",
                         cardCount = cardCount,
-                        softCurrencyCost = 0,
-                        hardCurrencyCost = 0,
-                        availableCardRarities = new List<string>()
                     }
                 };
             }
@@ -179,6 +176,18 @@ namespace CardCollection.Tests
             {
                 ct.ThrowIfCancellationRequested();
                 return UniTask.FromResult(_packs);
+            }
+
+            public List<CardPackConfig> Data => _packs;
+
+            public UniTask<List<CardPackConfig>> LoadAsync(string fileName, CancellationToken ct)
+            {
+                ct.ThrowIfCancellationRequested();
+                return UniTask.FromResult(_packs);
+            }
+
+            public void ClearCache()
+            {
             }
         }
 
@@ -320,6 +329,25 @@ namespace CardCollection.Tests
                         IsUnlocked = card.IsUnlocked,
                         IsNew = card.IsNew
                     }).ToList()
+                };
+            }
+        }
+        
+        public sealed class MockCardPointsCalculator : ICardPointsCalculator
+        {
+            public int GetPoints(int stars, bool isPremium)
+            {
+                if (isPremium)
+                    return 10;
+
+                return stars switch
+                {
+                    1 => 1,
+                    2 => 2,
+                    3 => 3,
+                    4 => 5,
+                    5 => 10,
+                    _ => 0
                 };
             }
         }

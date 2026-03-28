@@ -1,4 +1,5 @@
 using System;
+using CardCollection.Core;
 using Infrastructure;
 
 namespace CardCollectionImpl
@@ -6,12 +7,12 @@ namespace CardCollectionImpl
     [Serializable]
     public class NewCardDisplayData
     {
-        public CardCollectionConfig Config { get; }
+        public CardConfig Config { get; }
         public bool IsUnlocked { get; }
         public bool IsNew { get; }
         public int DuplicatePoints { get; }
         
-        public NewCardDisplayData(CardCollectionConfig config, bool isUnlocked, bool isNew, int duplicatePoints = 0)
+        public NewCardDisplayData(CardConfig config, bool isUnlocked, bool isNew, int duplicatePoints = 0)
         {
             Config = config;
             IsUnlocked = isUnlocked;

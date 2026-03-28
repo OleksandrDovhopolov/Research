@@ -7,7 +7,7 @@ namespace CardCollectionImpl
 {
     public sealed class CardsItemCategory : ItemCategory, IOpenable
     {
-        public CardsItemCategory() : base(CardsConfig.CardPack, "Card packs")
+        public CardsItemCategory(string categoryId) : base(categoryId, "Card packs")
         {
         }
 

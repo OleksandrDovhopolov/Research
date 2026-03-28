@@ -1,51 +1,75 @@
 using System;
+using System.Collections.Generic;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using Infrastructure;
 using UIShared;
 using UISystem;
 using UnityEngine;
+using VContainer;
 
 namespace CardCollectionImpl
 {
     public class CardCollectionArgs : WindowArgs
     {
-        public readonly UIManager UiManager;
         public readonly CardCollectionNewCardsDto NewCardsData;
         public readonly ICardCollectionPointsAccount CardCollectionPointsAccount;
         public readonly EventCardsSaveData EventCardsSaveData;
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
         public readonly IRewardDefinitionFactory RewardDefinitionFactory;
         public readonly CollectionProgressSnapshot CollectionProgressSnapshot;
-        
+        public readonly string ScheduleItemEventId;
+
         public CardCollectionArgs(
-            UIManager uiManager,
             CardCollectionNewCardsDto newCardsData,
             EventCardsSaveData eventCardsSaveData,
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory rewardDefinitionFactory,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
-            CollectionProgressSnapshot  collectionProgressSnapshot)
+            CollectionProgressSnapshot collectionProgressSnapshot,
+            string scheduleItemEventId = null)
         {
-            UiManager = uiManager;
             NewCardsData = newCardsData;
             EventCardsSaveData = eventCardsSaveData;
             ExchangeOfferProvider = exchangeOfferProvider;
             RewardDefinitionFactory = rewardDefinitionFactory;
             CardCollectionPointsAccount = cardCollectionPointsAccount;
             CollectionProgressSnapshot = collectionProgressSnapshot;
+            ScheduleItemEventId = scheduleItemEventId;
         }
     }
     
     [Window("CardCollectionWindow")]
-    public class CardCollectionController :  WindowController<CardCollectionView>
+    public class CardCollectionController : WindowController<CardCollectionView>
     {
+        private ICardsConfigProvider _cardsConfigProvider;
+        private ICardGroupsConfigProvider _cardGroupsConfigProvider;
+        private ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
+        private IGlobalTimerService _globalTimerService;
+        
         private CardCollectionArgs Args => (CardCollectionArgs) Arguments;
+        private IReadOnlyList<CardCollectionGroupConfig> GroupConfigs => _cardGroupsConfigProvider.Data;
         
         private bool _groupsCreated;
+
+        [Inject]
+        public void Install(
+            ICardsConfigProvider cardsConfigProvider,
+            ICardGroupsConfigProvider cardGroupsConfigProvider,
+            ICardCollectionCacheService cardCollectionCardCollectionCacheService,
+            IGlobalTimerService globalTimerService)
+        {
+            _cardsConfigProvider = cardsConfigProvider;
+            _cardGroupsConfigProvider = cardGroupsConfigProvider;
+            _cardCollectionCardCollectionCacheService = cardCollectionCardCollectionCacheService;
+            _globalTimerService = globalTimerService;
+        }
         
         protected override void OnShowStart()
         {
+            View.SetService(_cardCollectionCardCollectionCacheService);
+
+            View.BindEventTimerDisplay(_globalTimerService, Args.ScheduleItemEventId);
+
             UpdatePointsAmount();
             
             if (_groupsCreated)
@@ -55,11 +79,10 @@ namespace CardCollectionImpl
             else
             {
                 View.ShowLoader(true); 
-                View.CreateViews(Args.NewCardsData);
+                View.CreateViews(Args.NewCardsData, GroupConfigs);
             }
 
             View.SetGroupsProgress(Args.CollectionProgressSnapshot.GroupProgress);
-            Debug.LogWarning($"Test ShowStart {Args.CollectionProgressSnapshot.CollectedAmount} / ");
             View.SetCollectedAmountProgressStart(Args.CollectionProgressSnapshot.CollectedAmount, Args.CollectionProgressSnapshot.TotalAmount);
         }
         
@@ -73,9 +96,9 @@ namespace CardCollectionImpl
 
             var collectedAmount = Args.EventCardsSaveData.GetCollectedCardsAmount();
             var totalAmount = Args.EventCardsSaveData.Cards.Count;
-            Debug.LogWarning($"Test OnShowComplete {collectedAmount} / ");
+            
             View.UpdateCollectedAmount(collectedAmount, totalAmount);
-            View.UpdateGroupsProgressAnimated(Args.EventCardsSaveData);
+            View.UpdateGroupsProgressAnimated(Args.EventCardsSaveData, _cardsConfigProvider.Data);
             
             if (_groupsCreated) return;
             CreateGroupViews().Forget();
@@ -85,8 +108,8 @@ namespace CardCollectionImpl
         {
             var cardCollectionRewardContent = Args.RewardDefinitionFactory.CreateFromCollectionReward();
             var contentWidgetData = cardCollectionRewardContent.ToContentWidgetData();
-            var args = new ContentWidgetArgs(Args.UiManager, contentWidgetData, rectTransform);
-            Args.UiManager.Show<ContentWidgetController>(args);
+            var args = new ContentWidgetArgs(contentWidgetData, rectTransform);
+            UIManager.Show<ContentWidgetController>(args);
         }
         
         private void OnPointsViewClickedHandler()
@@ -94,26 +117,25 @@ namespace CardCollectionImpl
             TryHideContentWidget();
             
             var args = new CollectionPointsExchangeArgs(
-                Args.UiManager,
                 Args.EventCardsSaveData.Points,
                 Args.ExchangeOfferProvider, 
                 Args.RewardDefinitionFactory,
                 Args.CardCollectionPointsAccount,
                 UpdatePointsAmount);
-            Args.UiManager.Show<CollectionPointsExchangeController>(args);
+            UIManager.Show<CollectionPointsExchangeController>(args);
         }
         
         private void OnInfoButtonClickedHandler()
         {
-            var args = new InfoSlidesPageArgs(SlidesType.PiggyBank, Args.UiManager);
-            Args.UiManager.Show<InfoSlidesPageController>(args);
+            var args = new InfoSlidesPageArgs(SlidesType.PiggyBank, UIManager);
+            UIManager.Show<InfoSlidesPageController>(args);
         }
         
         private async UniTask CreateGroupViews()
         {
             try
             {
-                await View.CreateGroupViews(CardGroupsConfigStorage.Instance.Data);
+                await View.CreateGroupViews(GroupConfigs);
                 _groupsCreated = true;
             }
             catch (Exception e)
@@ -133,16 +155,18 @@ namespace CardCollectionImpl
         
         private void TryHideContentWidget()
         {
-            if (Args.UiManager.IsWindowShown<ContentWidgetController>())
+            if (UIManager.IsWindowShown<ContentWidgetController>())
             {
-                Args.UiManager.Hide<ContentWidgetController>();
+                UIManager.Hide<ContentWidgetController>();
             }
         }
         
         protected override void OnHideStart(bool isClosed)
         {
             TryHideContentWidget();
-            
+
+            View.UnbindEventTimerDisplay();
+
             View.CloseClick -= CloseWindow;
             View.OnPointsViewClicked -= OnPointsViewClickedHandler;
             View.OnInfoButtonClicked -= OnInfoButtonClickedHandler;
@@ -157,13 +181,12 @@ namespace CardCollectionImpl
             OnGroupViewChangedHandler(groupType);
             
             var args = new CardGroupArgs(
-                Args.UiManager, 
                 Args.NewCardsData,
                 Args.EventCardsSaveData, 
                 groupType, 
                 View.RewardsConfigSo,
                 OnGroupViewChangedHandler);
-            Args.UiManager.Show<CardGroupController>(args);
+            UIManager.Show<CardGroupController>(args);
         }
 
         private void OnGroupViewChangedHandler(string currentGroupType)
@@ -173,7 +196,7 @@ namespace CardCollectionImpl
         
         private void CloseWindow()
         {
-            Args.UiManager.Hide<CardCollectionController>();
+            UIManager.Hide<CardCollectionController>();
         }
     }
 }

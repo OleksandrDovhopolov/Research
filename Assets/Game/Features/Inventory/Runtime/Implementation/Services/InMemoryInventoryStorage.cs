@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace Inventory.Implementation.Services
 {
-    internal sealed class InMemoryInventoryStorage : IInventoryStorage
+    public sealed class InMemoryInventoryStorage : IInventoryStorage
     {
         private readonly Dictionary<string, List<InventoryItemView>> _storage = new();
         private readonly AtomicJsonFileSaver _jsonFileSaver = new();

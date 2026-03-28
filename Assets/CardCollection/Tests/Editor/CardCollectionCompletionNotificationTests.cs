@@ -114,7 +114,7 @@ namespace CardCollection.Tests
                 new InMemoryEventCardsStorage(initialData),
                 new StubCardDefinitionProvider(definitions),
                 new StubCardSelector(),
-                new DefaultCardPointsCalculator(),
+                new CardCollectionDuplicatePointsTests.MockCardPointsCalculator(),
                 eventId);
 
             return new CardCollectionModule(config);
@@ -159,6 +159,18 @@ namespace CardCollection.Tests
             {
                 ct.ThrowIfCancellationRequested();
                 return UniTask.FromResult(EmptyPacks);
+            }
+
+            public List<CardPackConfig> Data => EmptyPacks;
+
+            public UniTask<List<CardPackConfig>> LoadAsync(string fileName, CancellationToken ct)
+            {
+                ct.ThrowIfCancellationRequested();
+                return UniTask.FromResult(EmptyPacks);
+            }
+
+            public void ClearCache()
+            {
             }
         }
 
@@ -271,27 +283,27 @@ namespace CardCollection.Tests
             public void Dispose()
             {
             }
-
-            private static EventCardsSaveData Clone(EventCardsSaveData source)
+        }
+        
+        private static EventCardsSaveData Clone(EventCardsSaveData source)
+        {
+            if (source == null)
             {
-                if (source == null)
-                {
-                    return null;
-                }
-
-                return new EventCardsSaveData
-                {
-                    EventId = source.EventId,
-                    Version = source.Version,
-                    Points = source.Points,
-                    Cards = source.Cards.Select(card => new CardProgressData
-                    {
-                        CardId = card.CardId,
-                        IsUnlocked = card.IsUnlocked,
-                        IsNew = card.IsNew
-                    }).ToList()
-                };
+                return null;
             }
+
+            return new EventCardsSaveData
+            {
+                EventId = source.EventId,
+                Version = source.Version,
+                Points = source.Points,
+                Cards = source.Cards.Select(card => new CardProgressData
+                {
+                    CardId = card.CardId,
+                    IsUnlocked = card.IsUnlocked,
+                    IsNew = card.IsNew
+                }).ToList()
+            };
         }
     }
 }

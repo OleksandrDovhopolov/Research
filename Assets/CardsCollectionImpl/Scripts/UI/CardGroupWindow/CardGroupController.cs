@@ -1,24 +1,22 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using Infrastructure;
 using UISystem;
-using UnityEngine;
+using VContainer;
 
 namespace CardCollectionImpl
 {
     public class CardGroupArgs : WindowArgs
     {
         public readonly string GroupType;
-        public readonly UIManager UiManager;
         public readonly CardCollectionNewCardsDto NewCardsData;
         public readonly EventCardsSaveData EventCardsSaveData;
         public readonly CardCollectionRewardsConfigSO RewardsConfigSo;
         public readonly Action<string> OnGroupChanged;
         
         public CardGroupArgs(
-            UIManager uiManager, 
             CardCollectionNewCardsDto newCardsData, 
             EventCardsSaveData eventCardsSaveData,
             string groupType,
@@ -26,7 +24,6 @@ namespace CardCollectionImpl
             Action<string> onGroupChanged)
         {
             GroupType = groupType;
-            UiManager = uiManager;
             NewCardsData = newCardsData;
             EventCardsSaveData = eventCardsSaveData;
             RewardsConfigSo = rewardsConfigSo;
@@ -37,20 +34,42 @@ namespace CardCollectionImpl
     [Window("CardGroupWindow", WindowType.Popup)]
     public class CardGroupController :  WindowController<CardGroupView>
     {
+        private ICardsConfigProvider _cardsConfigProvider;
+        private ICardGroupsConfigProvider _cardGroupsConfigProvider;
+        private ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
+        
         private CardGroupArgs Args => (CardGroupArgs) Arguments;
 
-        private List<CardProgressData> GroupCardsData => Args.EventCardsSaveData.GetCardsByGroupType(_currentGroupType);
-        
-        private List<CardGroupsConfig> _allGroups;
+        private List<CardProgressData> GroupCardsData => _cardCollectionCardCollectionCacheService.GetCardsByGroupType(Args.EventCardsSaveData, _currentGroupType).ToList();
+
+        private IReadOnlyList<CardCollectionGroupConfig> CollectionGroups => _cardGroupsConfigProvider.Data;
         private int _currentGroupIndex;
         private string _currentGroupType;
         
+        [Inject]
+        private void Construct(
+            ICardsConfigProvider cardsConfigProvider,
+            ICardGroupsConfigProvider cardGroupsConfigProvider,
+            ICardCollectionCacheService cardCollectionCardCollectionCacheService)
+        {
+            _cardsConfigProvider = cardsConfigProvider;
+            _cardGroupsConfigProvider = cardGroupsConfigProvider;
+            _cardCollectionCardCollectionCacheService = cardCollectionCardCollectionCacheService;
+        }
+        
         protected override void OnShowStart()
         {
-            _allGroups = CardGroupsConfigStorage.Instance.Data;
             _currentGroupType = Args.GroupType;
-            _currentGroupIndex = _allGroups.FindIndex(g => g.GroupType == _currentGroupType);
             
+            _currentGroupIndex = -1;
+            for (var i = 0; i < CollectionGroups.Count; i++)
+            {
+                if (CollectionGroups[i].groupType != _currentGroupType) continue;
+                _currentGroupIndex = i;
+                break;
+            }
+
+            View.SetCardConfigs(_cardsConfigProvider.Data);
             ShowCurrentGroup();
         }
         
@@ -71,7 +90,7 @@ namespace CardCollectionImpl
             View.SetRewardData(rewardViewData.Icon, rewardViewData.Amount);
         }
         
-        private async UniTask SetCardSprites(List<CardCollectionConfig> cardsData)
+        private async UniTask SetCardSprites(List<CardConfig> cardsData)
         {
             await View.SetSprites(cardsData);
         }
@@ -105,12 +124,10 @@ namespace CardCollectionImpl
         {
             if (View.IsAnimating) return;
 
-            _currentGroupIndex = (_currentGroupIndex + direction + _allGroups.Count) % _allGroups.Count;
-            _currentGroupType = _allGroups[_currentGroupIndex].GroupType;
+            _currentGroupIndex = (_currentGroupIndex + direction + CollectionGroups.Count) % CollectionGroups.Count;
+            _currentGroupType = CollectionGroups[_currentGroupIndex].groupType;
             
-            var groupCards = Args.EventCardsSaveData.GetCardsByGroupType(_currentGroupType);
-            
-            await View.AnimateSwitchGroup(direction, _currentGroupType, groupCards, Args.NewCardsData, UpdateGroupViewData);
+            await View.AnimateSwitchGroup(direction, _currentGroupType, GroupCardsData, Args.NewCardsData, UpdateGroupViewData);
 
             UpdateCardSprites();
             MarkCurrentGroupAsSeen();
@@ -124,7 +141,7 @@ namespace CardCollectionImpl
 
         private void UpdateCardSprites()
         {
-            var configs = CardCollectionConfigStorage.Instance.Get(_currentGroupType);
+            var configs = _cardsConfigProvider.Data.GetByGroupType(_currentGroupType);
             SetCardSprites(configs).Forget();
         }
         
@@ -132,11 +149,11 @@ namespace CardCollectionImpl
         {
             SetRewardData();
             
-            var collectionNumberText = "Set " + (_currentGroupIndex + 1) + "/" + _allGroups.Count;
+            var collectionNumberText = "Set " + (_currentGroupIndex + 1) + "/" + CollectionGroups.Count;
             View.SetCollectionNumber(collectionNumberText);
-            
-            var collectedAmount = Args.EventCardsSaveData.GetCollectedGroupAmount(_currentGroupType);
-            var totalAmount = Args.EventCardsSaveData.GetGroupAmount(_currentGroupType);
+
+            var collectedAmount =  _cardCollectionCardCollectionCacheService.GetCollectedGroupAmount(Args.EventCardsSaveData, _currentGroupType);;
+            var totalAmount = _cardCollectionCardCollectionCacheService.GetGroupAmount(Args.EventCardsSaveData, _currentGroupType);
             View.UpdateCollectedAmount(collectedAmount, totalAmount);
         }
         
@@ -147,7 +164,7 @@ namespace CardCollectionImpl
 
         private void CloseWindow()
         {
-            Args.UiManager.Hide<CardGroupController>();
+            UIManager.Hide<CardGroupController>();
         }
     }
 }

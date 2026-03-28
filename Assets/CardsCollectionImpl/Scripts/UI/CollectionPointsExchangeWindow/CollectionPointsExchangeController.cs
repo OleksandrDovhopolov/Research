@@ -10,7 +10,6 @@ namespace CardCollectionImpl
 {
     public class CollectionPointsExchangeArgs : WindowArgs
     {
-        public readonly UIManager UiManager;
         public readonly int PointsAmount;
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
         public readonly ICardCollectionPointsAccount CardCollectionPointsAccount;
@@ -18,14 +17,12 @@ namespace CardCollectionImpl
         public readonly IRewardDefinitionFactory OfferDefinitionFactory;
         
         public CollectionPointsExchangeArgs(
-            UIManager uiManager,
             int pointsAmount,
             IExchangeOfferProvider exchangeOfferProvider, 
             IRewardDefinitionFactory offerDefinitionFactory,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
             Action onPointsAmountChangedHandler = null)
         {
-            UiManager = uiManager;
             PointsAmount = pointsAmount;
             ExchangeOfferProvider = exchangeOfferProvider;
             OfferDefinitionFactory = offerDefinitionFactory;
@@ -104,8 +101,8 @@ namespace CardCollectionImpl
         
         private void ShowInfoWidget(string infoText)
         {
-            var infoArgs = new InfoWidgetArg(Args.UiManager, infoText);
-            Args.UiManager.Show<InfoWidgetController>(infoArgs);
+            var infoArgs = new InfoWidgetArg(infoText);
+            UIManager.Show<InfoWidgetController>(infoArgs);
         }
 
         private void OnInfoOfferClickedHandler(string packName, RectTransform rectTransform)
@@ -114,8 +111,8 @@ namespace CardCollectionImpl
 
             var packContent = Args.OfferDefinitionFactory.CreateFromOfferReward(packName);
             var contentWidgetData = packContent.ToContentWidgetData();
-            var args = new ContentWidgetArgs(Args.UiManager, contentWidgetData, rectTransform);
-            Args.UiManager.Show<ContentWidgetController>(args);
+            var args = new ContentWidgetArgs(contentWidgetData, rectTransform);
+            UIManager.Show<ContentWidgetController>(args);
         }
         
         protected override void OnHideStart(bool isClosed)
@@ -133,9 +130,9 @@ namespace CardCollectionImpl
 
         private void TryHideContentWidget()
         {
-            if (Args.UiManager.IsWindowShown<ContentWidgetController>())
+            if (UIManager.IsWindowShown<ContentWidgetController>())
             {
-                Args.UiManager.Hide<ContentWidgetController>();
+                UIManager.Hide<ContentWidgetController>();
             }
         }
         
@@ -146,7 +143,7 @@ namespace CardCollectionImpl
 
         private void CloseWindow()
         {
-            Args.UiManager.Hide<CollectionPointsExchangeController>();
+            UIManager.Hide<CollectionPointsExchangeController>();
         }
     }
 }

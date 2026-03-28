@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CardCollection.Core;
-using Resources.Core;
-using UIShared;
+using CoreResources;
 
 namespace CardCollectionImpl
 {
@@ -16,11 +14,16 @@ namespace CardCollectionImpl
                 return ContentWidgetData.Empty;
             }
 
-            var cardPackAddresses = rewardDefinition.CardPack?
-                .Where(pack => pack != null && !string.IsNullOrWhiteSpace(pack.PackId))
-                .Select(pack => pack.PackId)
-                .ToArray() ?? Array.Empty<string>();
+            IReadOnlyList<string> cardPackAddresses = new List<string>();
 
+            if (rewardDefinition is DuplicatePointsChestOffer cardModel)
+            {
+                cardPackAddresses = cardModel.CardPack?
+                    .Where(pack => pack != null && !string.IsNullOrWhiteSpace(pack.PackId))
+                    .Select(pack => pack.PackId)
+                    .ToArray() ?? Array.Empty<string>();
+            }
+            
             var resources = GetResources(rewardDefinition)?
                 .Where(resource => resource != null && !string.IsNullOrWhiteSpace(resource.Type.ToString()))
                 .Select(resource => new ContentWidgetResourceData(resource.Type.ToString(), Math.Max(1, resource.Amount)))

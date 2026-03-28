@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
 using UIShared;
@@ -18,10 +19,10 @@ namespace CardCollectionImpl
         [SerializeField] private UIListPool<EmptyCardView> _mockCardsPool;
         [SerializeField] private UIListPool<CollectionPointView> _pointStarsPool;
         
-        private readonly Dictionary<CardCollectionConfig, CollectionCardView> _viewsDict = new();
-        private readonly Dictionary<CardCollectionConfig, EmptyCardView> _mockDict = new();
-        private readonly Dictionary<CardCollectionConfig, int> _duplicatePointsDict = new();
-        private readonly List<CardCollectionConfig> _orderedConfigs = new();
+        private readonly Dictionary<CardConfig, CollectionCardView> _viewsDict = new();
+        private readonly Dictionary<CardConfig, EmptyCardView> _mockDict = new();
+        private readonly Dictionary<CardConfig, int> _duplicatePointsDict = new();
+        private readonly List<CardConfig> _orderedConfigs = new();
         
         private bool _hasDuplicates;
         
@@ -34,8 +35,8 @@ namespace CardCollectionImpl
             _hasDuplicates = cardsData.Any(c => !c.IsNew);
             
             var sortedCards = cardsData
-                .OrderByDescending(c => c.Config.PremiumCard)
-                .ThenByDescending(c => c.Config.Stars)
+                .OrderByDescending(c => c.Config.premiumCard)
+                .ThenByDescending(c => c.Config.stars)
                 .ToList();
             
             for (var i = 0; i < sortedCards.Count; i++)
@@ -43,7 +44,7 @@ namespace CardCollectionImpl
                 var cardDisplayData = sortedCards[i];
                 var cardView = _newCardsPool.GetNext();
                 
-                var config = cardDisplayData.Config;
+                CardConfig config = cardDisplayData.Config;
 
                 cardView.SetConfig(config);
                 cardView.SetCardOpen(cardDisplayData.IsUnlocked);
@@ -60,7 +61,7 @@ namespace CardCollectionImpl
                 _orderedConfigs.Add(config);
                 
                 var emptyCardView = _mockCardsPool.GetNext();
-                emptyCardView.UpdateCardFrame(config.PremiumCard);
+                emptyCardView.UpdateCardFrame(config.premiumCard);
                 emptyCardView.transform.rotation = Quaternion.Euler(0, 0, 0);
                 emptyCardView.transform.SetSiblingIndex(sortedCards.Count - 1 - i);
                 _mockDict[config] = emptyCardView;

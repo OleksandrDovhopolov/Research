@@ -1,4 +1,4 @@
-namespace Resources.Core
+namespace CoreResources
 {
     public enum ResourceType
     {

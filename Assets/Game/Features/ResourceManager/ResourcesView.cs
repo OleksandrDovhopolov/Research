@@ -3,7 +3,7 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Resources.Core
+namespace CoreResources
 {
     public class ResourcesView : MonoBehaviour
     {
@@ -14,7 +14,7 @@ namespace Resources.Core
 
         private readonly Dictionary<ResourceType, Tween> _tweenByType = new();
 
-        public ResourceManager ResourceManager { get; private set; }
+        private ResourceManager ResourceManager { get; set; }
 
         public void InitView(ResourceManager resourceManager)
         {

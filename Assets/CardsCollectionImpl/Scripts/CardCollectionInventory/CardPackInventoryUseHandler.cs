@@ -1,26 +1,17 @@
 using System;
 using System.Threading;
-using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Inventory.API;
-using UnityEngine;
 
 namespace CardCollectionImpl
 {
     public class CardPackInventoryUseHandler : IInventoryItemUseHandler
     {
-        private readonly IWindowPresenter _windowPresenter;
-        private readonly ICardCollectionModule _cardCollectionModule;
-        private readonly ICardCollectionReader _cardCollectionReader;
+        private readonly ICardCollectionWindowOpener _cardCollectionWindowOpener;
 
-        public CardPackInventoryUseHandler(
-            IWindowPresenter windowPresenter,
-            ICardCollectionModule cardCollectionModule,
-            ICardCollectionReader cardCollectionReader)
+        public CardPackInventoryUseHandler(ICardCollectionWindowOpener cardCollectionWindowOpener)
         {
-            _windowPresenter = windowPresenter ?? throw new ArgumentNullException(nameof(windowPresenter));
-            _cardCollectionModule = cardCollectionModule ?? throw new ArgumentNullException(nameof(cardCollectionModule));
-            _cardCollectionReader = cardCollectionReader ?? throw new ArgumentNullException(nameof(cardCollectionReader));
+            _cardCollectionWindowOpener = cardCollectionWindowOpener ?? throw new ArgumentNullException(nameof(cardCollectionWindowOpener));
         }
         
         //TODO better to rely on category type / enum ?? 
@@ -31,8 +22,7 @@ namespace CardCollectionImpl
 
         public async UniTask UseAsync(InventoryItemDelta item, string ownerId, CancellationToken ct)
         {
-            Debug.LogWarning($"Debug UseAsync {GetType().Name}");
-            _windowPresenter.OpenNewCardWindow(item.ItemId, _cardCollectionModule, _cardCollectionReader);
+            _cardCollectionWindowOpener.OpenNewCardWindow(item.ItemId);
             await UniTask.CompletedTask;
         }
     }

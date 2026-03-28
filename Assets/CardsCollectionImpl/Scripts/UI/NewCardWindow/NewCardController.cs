@@ -2,35 +2,47 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
-using UnityEngine;
+using VContainer;
 
 namespace CardCollectionImpl
 {
     public class NewCardArgs : WindowArgs
     {
         public readonly CardPack CardPack;
-        public readonly UIManager UiManager;
         public readonly ICardCollectionModule CollectionModule;
         public readonly ICardCollectionReader CollectionReader;
+        public readonly ICardCollectionCacheService CardCollectionCacheService;
 
-        public NewCardArgs(CardPack cardPack, UIManager uiManager, ICardCollectionModule collectionModule, ICardCollectionReader collectionReader)
+        public NewCardArgs(
+            CardPack cardPack,
+            ICardCollectionModule collectionModule,
+            ICardCollectionReader collectionReader,
+            ICardCollectionCacheService cardCollectionCacheService)
         {
             CardPack = cardPack;
-            UiManager = uiManager;
             CollectionModule = collectionModule;
             CollectionReader = collectionReader;
+            CollectionReader = collectionReader;
+            CardCollectionCacheService = cardCollectionCacheService;
         }
     }
 
     [Window("NewCardWindow")]
     public class NewCardController : WindowController<NewCardView>
     {
+        private ICardsConfigProvider _cardsConfigProvider;
+        
         private NewCardArgs Args => (NewCardArgs)Arguments;
         private CancellationTokenSource _cts;
 
+        [Inject]
+        private void Construct(ICardsConfigProvider cardsConfigProvider)
+        {
+            _cardsConfigProvider = cardsConfigProvider;
+        }
+        
         protected override void OnShowStart()
         {
-            Debug.LogWarning($"Debug {GetType().Name} OnShowStart");
             _cts = new CancellationTokenSource();
             GetNewCardsAsync(_cts.Token).Forget();
         }
@@ -42,14 +54,13 @@ namespace CardCollectionImpl
             
             var cardsIdList = await Args.CollectionModule.OpenPackAndUnlockAsync(Args.CardPack, ct);
             var cardsData = await Args.CollectionModule.GetCardsByIdsAsync(cardsIdList, ct);
-            var displayData = cardsData.ToNewCardDisplayData();
+            var displayData = Args.CardCollectionCacheService.ToNewCardDisplayData(cardsData);
             
             View.CreateNewCards(displayData);
         }
 
         protected override void OnShowComplete()
         {
-            Debug.LogWarning($"Debug {GetType().Name} OnShowComplete");
             View.CloseClick += CloseWindow;
         }
 
@@ -77,7 +88,7 @@ namespace CardCollectionImpl
         {
             View.CloseClick -= CloseWindow;
             await View.PlayCloseSequenceAsync(ct);
-            Args.UiManager.Hide<NewCardController>();
+            UIManager.Hide<NewCardController>();
         }
     }
 }

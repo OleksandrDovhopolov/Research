@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using CardCollection.Core;
-using Infrastructure;
 
 namespace CardCollectionImpl
 {
@@ -9,6 +8,15 @@ namespace CardCollectionImpl
         private bool _hasSnapshot;
         private CollectionProgressSnapshot _snapshot;
 
+        private readonly ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
+        private readonly IReadOnlyList<CardCollectionGroupConfig> _cardCollectionGroupConfigs;
+        
+        public CollectionProgressSnapshotService(ICardCollectionCacheService cardCollectionCacheService, IReadOnlyList<CardCollectionGroupConfig> groupsConfig)
+        {
+            _cardCollectionCardCollectionCacheService = cardCollectionCacheService;
+            _cardCollectionGroupConfigs = groupsConfig;
+        }
+        
         public bool TryGetSnapshot(out CollectionProgressSnapshot snapshot)
         {
             snapshot = _snapshot;
@@ -30,21 +38,16 @@ namespace CardCollectionImpl
             _hasSnapshot = true;
         }
 
-        private static List<CollectionProgressSnapshot.GroupProgressSnapshot> BuildGroupProgress(EventCardsSaveData collectionData)
+        private List<CollectionProgressSnapshot.GroupProgressSnapshot> BuildGroupProgress(EventCardsSaveData collectionData)
         {
             var result = new List<CollectionProgressSnapshot.GroupProgressSnapshot>();
-            var groups = CardGroupsConfigStorage.Instance?.Data;
-            if (groups == null)
-            {
-                return result;
-            }
 
-            foreach (var groupsConfig in groups)
+            foreach (var groupsConfig in _cardCollectionGroupConfigs)
             {
-                var groupType = groupsConfig.GroupType;
-                var groupName = groupsConfig.GroupName;
-                var totalGroupAmount = collectionData.GetGroupAmount(groupType);
-                var collectedGroupAmount = collectionData.GetCollectedGroupAmount(groupType);
+                var groupType = groupsConfig.groupType;
+                var groupName = groupsConfig.groupName;
+                var totalGroupAmount = _cardCollectionCardCollectionCacheService.GetGroupAmount(collectionData, groupType);
+                var collectedGroupAmount = _cardCollectionCardCollectionCacheService.GetCollectedGroupAmount(collectionData, groupType);
 
                 result.Add(new CollectionProgressSnapshot.GroupProgressSnapshot(
                     groupType,

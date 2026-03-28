@@ -1,0 +1,4 @@
+<linker>
+  <assembly fullname="Assembly-CSharp" preserve="all"/>
+  <assembly fullname="Zenject" preserve="all"/>
+  </linker>
