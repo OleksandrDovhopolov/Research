@@ -1,9 +1,9 @@
 using System;
 using TMPro;
+using UIShared;
 using UnityEngine;
-using VContainer;
 
-namespace UIShared
+namespace EventOrchestration
 {
     public sealed class EventTimerDisplay : MonoBehaviour
     {
@@ -12,12 +12,6 @@ namespace UIShared
 
         private string _eventId;
         private IGlobalTimerService _globalTimerService;
-
-        [Inject]
-        private void Construct(IGlobalTimerService globalTimerService)
-        {
-            _globalTimerService = globalTimerService;
-        }
 
         private void Awake()
         {
@@ -35,14 +29,15 @@ namespace UIShared
             Unsubscribe();
         }
 
-        public void Bind(string eventId)
+        public void Bind(string eventId, IGlobalTimerService globalTimerService)
         {
             if (string.IsNullOrEmpty(eventId))
                 throw new ArgumentException("Event id cannot be null or empty.", nameof(eventId));
-
+            
             if (isActiveAndEnabled)
                 Unsubscribe();
 
+            _globalTimerService = globalTimerService;
             _eventId = eventId;
 
             if (isActiveAndEnabled)
@@ -50,6 +45,15 @@ namespace UIShared
                 Subscribe();
                 RefreshFromService();
             }
+        }
+
+        public void Unbind()
+        {
+            if (isActiveAndEnabled)
+                Unsubscribe();
+
+            _globalTimerService = null;
+            _eventId = _targetEventId;
         }
 
         private void Subscribe()

@@ -351,6 +351,7 @@ MonoBehaviour:
   _collectionRewardButton: {fileID: 5760489675583522895}
   _collectionRewardButtonRect: {fileID: 9103466700667826800}
   _timerText: {fileID: 2614488177551861922}
+  _eventTimerDisplay: {fileID: 8720361928228335845}
   _inventoryWidgetView: {fileID: 2236575293384847307, guid: a2b1ecf91c3c022419aaeebce0ac2584, type: 3}
 --- !u!1 &1536287286893424970
 GameObject:
@@ -498,6 +499,7 @@ GameObject:
   - component: {fileID: 2187750155695837250}
   - component: {fileID: 483942235419879518}
   - component: {fileID: 6285471612731076036}
+  - component: {fileID: 8720361928228335845}
   m_Layer: 5
   m_Name: Timer
   m_TagString: Untagged
@@ -563,6 +565,20 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 0.75
+--- !u!114 &8720361928228335845
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2326146657557014401}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a5b6c7d8e9f0123c5d6e7f809123456, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _targetEventId: 
+  _timerText: {fileID: 2614488177551861922}
 --- !u!1 &4422018869165978535
 GameObject:
   m_ObjectHideFlags: 0

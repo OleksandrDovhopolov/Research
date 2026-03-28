@@ -17,14 +17,16 @@ namespace CardCollectionImpl
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
         public readonly IRewardDefinitionFactory RewardDefinitionFactory;
         public readonly CollectionProgressSnapshot CollectionProgressSnapshot;
-        
+        public readonly string ScheduleItemEventId;
+
         public CardCollectionArgs(
             CardCollectionNewCardsDto newCardsData,
             EventCardsSaveData eventCardsSaveData,
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory rewardDefinitionFactory,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
-            CollectionProgressSnapshot  collectionProgressSnapshot)
+            CollectionProgressSnapshot collectionProgressSnapshot,
+            string scheduleItemEventId = null)
         {
             NewCardsData = newCardsData;
             EventCardsSaveData = eventCardsSaveData;
@@ -32,6 +34,7 @@ namespace CardCollectionImpl
             RewardDefinitionFactory = rewardDefinitionFactory;
             CardCollectionPointsAccount = cardCollectionPointsAccount;
             CollectionProgressSnapshot = collectionProgressSnapshot;
+            ScheduleItemEventId = scheduleItemEventId;
         }
     }
     
@@ -41,6 +44,7 @@ namespace CardCollectionImpl
         private ICardsConfigProvider _cardsConfigProvider;
         private ICardGroupsConfigProvider _cardGroupsConfigProvider;
         private ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
+        private IGlobalTimerService _globalTimerService;
         
         private CardCollectionArgs Args => (CardCollectionArgs) Arguments;
         private IReadOnlyList<CardCollectionGroupConfig> GroupConfigs => _cardGroupsConfigProvider.Data;
@@ -49,19 +53,23 @@ namespace CardCollectionImpl
 
         [Inject]
         public void Install(
-            ICardsConfigProvider cardsConfigProvider, 
+            ICardsConfigProvider cardsConfigProvider,
             ICardGroupsConfigProvider cardGroupsConfigProvider,
-            ICardCollectionCacheService cardCollectionCardCollectionCacheService)
+            ICardCollectionCacheService cardCollectionCardCollectionCacheService,
+            IGlobalTimerService globalTimerService)
         {
-            _cardsConfigProvider = cardsConfigProvider; 
+            _cardsConfigProvider = cardsConfigProvider;
             _cardGroupsConfigProvider = cardGroupsConfigProvider;
             _cardCollectionCardCollectionCacheService = cardCollectionCardCollectionCacheService;
+            _globalTimerService = globalTimerService;
         }
         
         protected override void OnShowStart()
         {
             View.SetService(_cardCollectionCardCollectionCacheService);
-            
+
+            View.BindEventTimerDisplay(_globalTimerService, Args.ScheduleItemEventId);
+
             UpdatePointsAmount();
             
             if (_groupsCreated)
@@ -156,7 +164,9 @@ namespace CardCollectionImpl
         protected override void OnHideStart(bool isClosed)
         {
             TryHideContentWidget();
-            
+
+            View.UnbindEventTimerDisplay();
+
             View.CloseClick -= CloseWindow;
             View.OnPointsViewClicked -= OnPointsViewClickedHandler;
             View.OnInfoButtonClicked -= OnInfoButtonClickedHandler;

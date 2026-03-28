@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using Infrastructure;
+using EventOrchestration;
 using TMPro;
 using UIShared;
 using UISystem;
@@ -28,6 +28,7 @@ namespace CardCollectionImpl
         
         [Header("Points Container")]
         [SerializeField] private TextMeshProUGUI _timerText;
+        [SerializeField] private EventTimerDisplay _eventTimerDisplay;
         
         [Space, Space, Header("CardsContentWidget")]
         [SerializeField] private CardsOfferWidgetView _inventoryWidgetView;
@@ -136,9 +137,17 @@ namespace CardCollectionImpl
             }
         }
 
-        public void SetTimerText(string timerText)
+        public void BindEventTimerDisplay(IGlobalTimerService globalTimerService, string scheduleItemEventId)
         {
-            _timerText.text = timerText;
+            if (globalTimerService == null || string.IsNullOrEmpty(scheduleItemEventId) || _eventTimerDisplay == null)
+                return;
+
+            _eventTimerDisplay.Bind(scheduleItemEventId, globalTimerService);
+        }
+
+        public void UnbindEventTimerDisplay()
+        {
+            _eventTimerDisplay?.Unbind();
         }
         
         public void UpdateGroupNewCards(string groupType, int groupAmount)
@@ -186,8 +195,10 @@ namespace CardCollectionImpl
         
         protected override void OnDestroy()
         {
+            UnbindEventTimerDisplay();
+
             base.OnDestroy();
-            
+
             _cardsCollectionPointsView.OnViewClicked -= OnPointsViewClickedHandler;
             _collectionRewardButton.onClick.RemoveAllListeners();
             _infoButton.onClick.RemoveAllListeners();

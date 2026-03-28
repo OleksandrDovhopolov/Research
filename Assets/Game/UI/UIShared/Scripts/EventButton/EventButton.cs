@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using EventOrchestration;
 using EventOrchestration.Models;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,7 +14,6 @@ namespace UIShared
         [SerializeField] private EventTimerDisplay _eventTimerDisplay;
 
         private IGlobalTimerService _globalTimerService;
-        private string _registeredEventId;
 
         [Inject]
         private void Construct(IGlobalTimerService globalTimerService)
@@ -26,12 +26,7 @@ namespace UIShared
             _button.onClick.RemoveAllListeners();
             _button.onClick.AddListener(() => onClick?.Invoke());
 
-            if (!string.IsNullOrEmpty(_registeredEventId))
-                _globalTimerService.Unregister(_registeredEventId);
-
-            _registeredEventId = config.Id;
-            _globalTimerService.Register(config.Id, config.EndTimeUtc);
-            _eventTimerDisplay.Bind(config.Id);
+            _eventTimerDisplay.Bind(config.Id, _globalTimerService);
         }
 
         public void SetVisible(bool visible)
@@ -42,9 +37,6 @@ namespace UIShared
         private void OnDestroy()
         {
             _button.onClick.RemoveAllListeners();
-
-            if (!string.IsNullOrEmpty(_registeredEventId))
-                _globalTimerService?.Unregister(_registeredEventId);
         }
     }
 }

@@ -79,7 +79,8 @@ namespace CardCollectionImpl
                 _exchangeOfferProvider,
                 _rewardDefinitionFactory, 
                 _pointsAccount,
-                snapshot);
+                snapshot,
+                _module.EventId);
             _uiManager.Show<CardCollectionController>(args);
 
             _collectionProgressSnapshotService.SetSnapshot(collectionData);

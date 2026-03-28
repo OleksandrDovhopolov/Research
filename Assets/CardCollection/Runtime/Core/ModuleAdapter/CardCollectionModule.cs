@@ -30,6 +30,8 @@ namespace CardCollection.Core
             _selectionContext = new CardSelectionContext(this);
         }
 
+        public string EventId => _context.EventId;
+
         public async UniTask InitializeAsync(CancellationToken ct = default)
         {
             await _context.InitializeAsync(ct);
