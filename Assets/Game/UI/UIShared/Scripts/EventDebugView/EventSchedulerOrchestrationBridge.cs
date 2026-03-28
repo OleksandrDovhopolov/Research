@@ -14,10 +14,11 @@ namespace EventOrchestration.Core
         private IGlobalTimerService _globalTimerService;
 
         [Inject]
-        private void Construct(EventOrchestrator orchestrator,IGlobalTimerService  globalTimerService)
+        private void Construct(EventOrchestrator orchestrator, IGlobalTimerService  globalTimerService)
         {
             _orchestrator = orchestrator;
             _globalTimerService = globalTimerService;
+            Debug.LogWarning($"[VContainer] Construct {GetType().Name}, _orchestrator {_orchestrator == null}, _globalTimerService {_globalTimerService == null}");
         }
 
         private void Start()
@@ -28,6 +29,7 @@ namespace EventOrchestration.Core
                 return;
             }
 
+            Debug.LogWarning("EventSchedulerOrchestrationBridge Start.");
             _orchestrator.OnEventCreated += HandleEventCreated;
             _orchestrator.OnEventStarted += HandleEventStarted;
             _orchestrator.OnEventCompleted += HandleEventCompleted;
@@ -35,6 +37,7 @@ namespace EventOrchestration.Core
         
         private void HandleEventCreated(ScheduleItem item)
         {
+            Debug.LogWarning($"[VContainer] HandleEventCreated {item == null}");
             if (item == null) return;
             
             _globalTimerService.Register(item.Id, item.StartTimeUtc);
@@ -43,6 +46,7 @@ namespace EventOrchestration.Core
 
         private void HandleEventStarted(ScheduleItem item)
         {
+            Debug.LogWarning($"[VContainer] HandleEventStarted {item == null}");
             if (item == null) return;
             
             _globalTimerService.Register(item.Id, item.EndTimeUtc);
@@ -51,6 +55,7 @@ namespace EventOrchestration.Core
         
         private void HandleEventCompleted(ScheduleItem item)
         {
+            Debug.LogWarning($"[VContainer] HandleEventStarted {item == null}");
             if (item == null || string.IsNullOrEmpty(item.Id))
                 return;
 

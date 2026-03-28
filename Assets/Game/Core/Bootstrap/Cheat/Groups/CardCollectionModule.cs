@@ -29,9 +29,14 @@ namespace core
 
         public void Initialize(ICheatsContainer cheatsContainer)
         {
-            cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Create test event", () =>
+            cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Create test events", () =>
             {
-                _orchestratorRunner.AddDebugCardCollectionEventNextMinute(CreateDebugCardCollectionScheduleItemForNextMinute());
+                var first = CreateDebugCardCollectionScheduleItemForNextMinute(1, 1);
+                var second = CreateDebugCardCollectionScheduleItem(first.EndTimeUtc, TimeSpan.FromMinutes(3));
+                
+                _orchestratorRunner.AddDebugCardCollectionEventNextMinute(first);
+                _orchestratorRunner.AddDebugCardCollectionEventNextMinute(second);
+                
             }));
             
             /*cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Save collection", () =>
@@ -119,7 +124,7 @@ namespace core
 
         
 
-        private ScheduleItem CreateDebugCardCollectionScheduleItemForNextMinute()
+        private ScheduleItem CreateDebugCardCollectionScheduleItemForNextMinute(int minutedDelay = 1, int duration = 3)
         {
             var now = DateTimeOffset.UtcNow;
             var startAt = new DateTimeOffset(
@@ -129,8 +134,32 @@ namespace core
                 now.Hour,
                 now.Minute,
                 0,
-                TimeSpan.Zero);//.AddMinutes(1);
-            var endAt = startAt.AddMinutes(3);
+                TimeSpan.Zero).AddMinutes(minutedDelay);
+            var endAt = startAt.AddMinutes(duration);
+            var eventId = $"season_cards_debug_{_eventCounter++}";
+
+            return new ScheduleItem
+            {
+                Id = eventId,
+                EventType = "CardCollection",
+                StartTimeUtc = startAt,
+                EndTimeUtc = endAt,
+                Priority = 10,
+                StreamId = "card_collection_seasons",
+                CustomParams = new Dictionary<string, string>
+                {
+                    ["eventId"] = eventId,
+                    ["rewardsConfigAddress"] = "season_rewards_001",
+                    ["cardsCollectionAddress"] = "season_cards_001",
+                    ["cardGroupsAddress"] = "season_groups_001",
+                    ["cardPacksAddress"] = "shared_card_packs_config",
+                },
+            };
+        }
+        
+        private ScheduleItem CreateDebugCardCollectionScheduleItem(DateTimeOffset startAt, TimeSpan duration)
+        {
+            var endAt = startAt.Add(duration);
             var eventId = $"season_cards_debug_{_eventCounter++}";
 
             return new ScheduleItem

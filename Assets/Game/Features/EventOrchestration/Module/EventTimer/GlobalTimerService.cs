@@ -36,15 +36,14 @@ namespace EventOrchestration
 
             if (_events.ContainsKey(eventId))
             {
-                Debug.LogWarning($"[Debug] eventId {eventId}  is already registered.");
                 _events[eventId] = timeUtc;
-                return;
             }
-            
-            var wasEmpty = _events.Count == 0;
-            _events[eventId] = timeUtc;
-            if (wasEmpty && !_heartbeatActive)
+            else
             {
+                var wasEmpty = _events.Count == 0;
+                _events[eventId] = timeUtc;
+                
+                if (!wasEmpty || _heartbeatActive) return;
                 _heartbeatActive = true;
                 RunHeartbeatAsync(_destroyCt).Forget();
             }
@@ -59,11 +58,14 @@ namespace EventOrchestration
         
         public bool TryGetRemaining(string eventId, out TimeSpan remaining)
         {
-            remaining = default;
+            remaining = TimeSpan.Zero;
             if (string.IsNullOrEmpty(eventId) || !_events.TryGetValue(eventId, out var endUtc))
                 return false;
+
             var r = endUtc - _clock.UtcNow;
-            remaining = r.TotalSeconds <= 0 ? TimeSpan.Zero : r;
+            
+            remaining = r.TotalSeconds <= 0 ? TimeSpan.Zero : TimeSpan.FromSeconds(Math.Ceiling(r.TotalSeconds));
+            
             return true;
         }
         

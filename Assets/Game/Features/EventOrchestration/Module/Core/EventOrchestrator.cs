@@ -54,13 +54,9 @@ namespace EventOrchestration.Core
             {
                 throw new InvalidOperationException("Schedule validation failed: " + string.Join("; ", validationErrors));
             }
-
-            _schedule = loadedSchedule
-                .OrderBy(x => x.StreamId)
-                .ThenByDescending(x => x.Priority)
-                .ThenBy(x => x.StartTimeUtc)
-                .ToList();
-
+            
+            _schedule = BuildUpcomingSchedule(loadedSchedule);
+            
             var restored = await _stateStore.LoadAsync(ct);
             _states.Clear();
             foreach (var pair in restored)
@@ -68,21 +64,7 @@ namespace EventOrchestration.Core
                 _states[pair.Key] = pair.Value;
             }
 
-            foreach (var item in _schedule)
-            {
-                if (_states.ContainsKey(item.Id))
-                    continue;
-
-                _states[item.Id] = new EventStateData
-                {
-                    ScheduleItemId = item.Id,
-                    State = EventInstanceState.Pending,
-                    Version = 1,
-                    UpdatedAtUtc = _clock.UtcNow,
-                };
-
-                OnEventCreated?.Invoke(item);
-            }
+            CreateScheduleData();
 
             await _stateStore.SaveAsync(_states, ct);
         }
@@ -116,27 +98,45 @@ namespace EventOrchestration.Core
             {
                 throw new InvalidOperationException("Schedule validation failed: " + string.Join("; ", validationErrors));
             }
+            
+            _schedule = BuildUpcomingSchedule(updatedSchedule);
 
-            _schedule = updatedSchedule
-                .OrderBy(x => x.StreamId)
-                .ThenByDescending(x => x.Priority)
-                .ThenBy(x => x.StartTimeUtc)
-                .ToList();
+            CreateScheduleData();
 
-            if (!_states.ContainsKey(item.Id))
+            await _stateStore.SaveAsync(_states, ct);
+        }
+
+        private void CreateScheduleData()
+        {
+            var now = _clock.UtcNow;
+            foreach (var item in _schedule)
             {
+                if (_states.ContainsKey(item.Id))
+                    continue;
+
                 _states[item.Id] = new EventStateData
                 {
                     ScheduleItemId = item.Id,
                     State = EventInstanceState.Pending,
                     Version = 1,
-                    UpdatedAtUtc = _clock.UtcNow,
+                    UpdatedAtUtc = now,
                 };
-            }
 
-            await _stateStore.SaveAsync(_states, ct);
+                OnEventCreated?.Invoke(item);
+            }
         }
 
+        private List<ScheduleItem> BuildUpcomingSchedule(IEnumerable<ScheduleItem> schedule)
+        {
+            var now = _clock.UtcNow;
+            return schedule
+                .Where(x => x.EndTimeUtc > now)
+                .OrderBy(x => x.StreamId)
+                .ThenByDescending(x => x.Priority)
+                .ThenBy(x => x.StartTimeUtc)
+                .ToList();
+        }
+        
         private async UniTask ProcessStreamAsync(IEnumerable<ScheduleItem> streamItems, DateTimeOffset now, CancellationToken ct)
         {
             var items = streamItems as IList<ScheduleItem> ?? streamItems.ToList();
@@ -187,6 +187,8 @@ namespace EventOrchestration.Core
             return null;
         }
 
+        private static readonly TimeSpan StartSkew = TimeSpan.FromSeconds(0);
+        
         private async UniTask<ScheduleItem> FindStartCandidateAsync(IList<ScheduleItem> streamItems, DateTimeOffset now, CancellationToken ct)
         {
             for (var i = 0; i < streamItems.Count; i++)
@@ -197,7 +199,8 @@ namespace EventOrchestration.Core
                 if (state != EventInstanceState.Pending)
                     continue;
 
-                if (item.StartTimeUtc > now || now >= item.EndTimeUtc)
+                var startGate = item.StartTimeUtc - StartSkew;
+                if (startGate > now || now >= item.EndTimeUtc)
                     continue;
 
                 var canStart = await _conditionProvider.CanStartAsync(item, ct);
@@ -334,5 +337,6 @@ namespace EventOrchestration.Core
             await _telemetry.TrackFailureAsync(itemId, stage, exception, ct);
             await _stateStore.SaveAsync(_states, ct);
         }
+        
     }
 }

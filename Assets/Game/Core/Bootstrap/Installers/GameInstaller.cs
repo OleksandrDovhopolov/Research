@@ -22,7 +22,6 @@ namespace Game.Bootstrap
 
         protected override void Configure(IContainerBuilder builder)
         {
-            Debug.LogWarning($"[Debug] GameInstaller Start ");
             if (_uiManager == null)
             {
                 throw new MissingReferenceException($"{nameof(UIManager)} is not assigned on {nameof(GameInstaller)}.");
@@ -67,8 +66,6 @@ namespace Game.Bootstrap
 
             builder.RegisterComponentInHierarchy<Bootstrap>();
             builder.RegisterComponentInHierarchy<OrchestratorRunner>();
-
-            Debug.LogWarning($"[Debug] GameInstaller Complete ");
         }
     }
 }

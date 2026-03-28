@@ -33,7 +33,6 @@ namespace core
             OrchestratorRunner orchestratorRunner,
             ICardCollectionFeatureFacade cardCollectionFeatureFacade)
         {
-            Debug.LogWarning($"[VContainer] Construct {GetType().Name}");
             _inventoryService = inventoryService;
             _resourceManager = resourceManager;
             _orchestratorRunner = orchestratorRunner;
