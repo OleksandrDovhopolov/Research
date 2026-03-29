@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: MainEventConfig
   m_EditorClassIdentifier: 
   Events:
-  - EventName: season_cards_001
-    GroupsJson: {fileID: 4900000, guid: ce4eb55603ffd5a44a21ecffac813e10, type: 3}
+  - EventName: Spring_Collection
+    GroupsJson: {fileID: 4900000, guid: d4110d982dc5e004182914ee82b8a02b, type: 3}
     RewardsConfig: {fileID: 11400000, guid: 85bd7851c2bd916448a6a37cda369db6, type: 2}
-  - EventName: season_cards_002
+  - EventName: Winter_Collection
     GroupsJson: {fileID: 4900000, guid: 87734e1c7d1144a81b621f28d2e3ec2b, type: 3}
     RewardsConfig: {fileID: 11400000, guid: ca7c4a09d84b61c4d8846565a8ed01b7, type: 2}
   - EventName: test_event

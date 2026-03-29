@@ -89,7 +89,8 @@ namespace Infrastructure
         {
             if (_configStorages.Count > 0) return _configStorages;
 
-            //_configStorages.Add(CardCollectionConfigStorage.Instance);
+            _configStorages.Add(CardCollectionConfigStorage.Instance);
+            _configStorages.Add(CardGroupsConfigStorage.Instance);
 
             return _configStorages;
         }

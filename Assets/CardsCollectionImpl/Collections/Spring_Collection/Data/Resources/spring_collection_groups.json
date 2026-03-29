@@ -1,94 +1,94 @@
 {
- "groups": [
-	{
-		"ID": "1",
-		"groupType": "farming",
-		"groupName": "Farming",
-		"groupIcon": "icon_equip_shield"
-	},
-	{
-		"ID": "2",
-		"groupType": "worksite",
-		"groupName": "Worksite",
-		"groupIcon": "icon_equip_shoes"
-	},
-	{
-		"ID": "3",
-		"groupType": "railroads",
-		"groupName": "Railroads",
-		"groupIcon": "icon_equip_sword"
-	},
-	{
-		"ID": "4",
-		"groupType": "factories",
-		"groupName": "Factories",
-		"groupIcon": "icon_gemstone"
-	},
-	{
-		"ID": "5",
-		"groupType": "next door",
-		"groupName": "Next door",
-		"groupIcon": "icon_lamp"
-	},
-	{
-		"ID": "6",
-		"groupType": "delivery",
-		"groupName": "Delivery",
-		"groupIcon": "icon_megaphone"
-	},
-	{
-		"ID": "7",
-		"groupType": "mining",
-		"groupName": "Mining",
-		"groupIcon": "icon_potion_blue"
-	},
-	{
-		"ID": "8",
-		"groupType": "picnic",
-		"groupName": "Picnic",
-		"groupIcon": "icon_potion_purple"
-	},
-	{
-		"ID": "9",
-		"groupType": "farm store",
-		"groupName": "Farm store",
-		"groupIcon": "icon_potion_red"
-	},
-	{
-		"ID": "10",
-		"groupType": "animals",
-		"groupName": "Animals",
-		"groupIcon": "icon_pouch"
-	},
-	{
-		"ID": "11",
-		"groupType": "museum",
-		"groupName": "Museum",
-		"groupIcon": "icon_scale"
-	},
-	{
-		"ID": "12",
-		"groupType": "cafe",
-		"groupName": "Cafe",
-		"groupIcon": "icon_scroll"
-	},
-	{
-		"ID": "13",
-		"groupType": "big city",
-		"groupName": "Big city",
-		"groupIcon": "icon_stopwatch"
-	},
-	{
-		"ID": "14",
-		"groupType": "park",
-		"groupName": "Park",
-		"groupIcon": "icon_ticket"
-	},
-	{
-		"ID": "15",
-		"groupType": "town hall",
-		"groupName": "Town hall",
-		"groupIcon": "icon_wood"
-	}
+	"groups": [
+		{
+			"ID": "1",
+			"groupType": "decor",
+			"groupName": "Decor",
+			"groupIcon": "Icon_Bomb_Dynamite"
+		},
+		{
+			"ID": "2",
+			"groupType": "snow_day",
+			"groupName": "Snow day",
+			"groupIcon": "Icon_Clover"
+		},
+		{
+			"ID": "3",
+			"groupType": "sports",
+			"groupName": "Sports",
+			"groupIcon": "Icon_Crown"
+		},
+		{
+			"ID": "4",
+			"groupType": "cabin",
+			"groupName": "Cabin",
+			"groupIcon": "Icon_Dice_Yellow"
+		},
+		{
+			"ID": "5",
+			"groupType": "crafts",
+			"groupName": "Crafts",
+			"groupIcon": "Icon_Dog-Gum"
+		},
+		{
+			"ID": "6",
+			"groupType": "lights",
+			"groupName": "Lights",
+			"groupIcon": "Icon_Flippers"
+		},
+		{
+			"ID": "7",
+			"groupType": "market",
+			"groupName": "Market",
+			"groupIcon": "Icon_Food_Meat"
+		},
+		{
+			"ID": "8",
+			"groupType": "shopping",
+			"groupName": "Shopping",
+			"groupIcon": "Icon_Food_Pizza"
+		},
+		{
+			"ID": "9",
+			"groupType": "treats",
+			"groupName": "Treats",
+			"groupIcon": "Icon_Gps"
+		},
+		{
+			"ID": "10",
+			"groupType": "caroling",
+			"groupName": "Caroling",
+			"groupIcon": "Icon_Hammer"
+		},
+		{
+			"ID": "11",
+			"groupType": "interiors",
+			"groupName": "Interiors",
+			"groupIcon": "Icon_Heart"
+		},
+		{
+			"ID": "12",
+			"groupType": "outfits",
+			"groupName": "Outfits",
+			"groupIcon": "Icon_Lock"
+		},
+		{
+			"ID": "13",
+			"groupType": "travel",
+			"groupName": "Travel",
+			"groupIcon": "Icon_Magnetic"
+		},
+		{
+			"ID": "14",
+			"groupType": "traditions",
+			"groupName": "Traditions",
+			"groupIcon": "Icon_Missile"
+		},
+		{
+			"ID": "15",
+			"groupType": "party",
+			"groupName": "Party",
+			"groupIcon": "Icon_Oil"
+		}
 	]
 }

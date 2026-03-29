@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 893510ac06ccd91498a080f1e5e4a6b5, type: 3}
   m_Name: CardGroupsConfig
   m_EditorClassIdentifier: 
-  _sheetName: card_groups
-  _fileName: cardGroups
+  _sheetName: season_groups_002
+  _fileName: spring_collection_groups
   _typeName: CardGroupsConfig
   <RelativeSheets>k__BackingField: []
   references:
