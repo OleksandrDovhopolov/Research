@@ -15,7 +15,6 @@ namespace CardCollectionImpl
     {
         [SerializeField] private UIListPool<CardsCollectionView> _cardGroupsPool;
         [SerializeField] private GameObject _loadingAnimationObject;
-        [SerializeField] private CardCollectionRewardsConfigSO _cardCollectionRewardsConfigSo;
         [SerializeField] private Button _infoButton;
         
         [Header("Points Container")]
@@ -34,8 +33,6 @@ namespace CardCollectionImpl
         [SerializeField] private CardsOfferWidgetView _inventoryWidgetView;
         
         private readonly Dictionary<string, CardsCollectionView> _viewsDict = new();
-
-        public CardCollectionRewardsConfigSO RewardsConfigSo => _cardCollectionRewardsConfigSo;
         
         public event Action<string> OnGroupButtonPressed;
         public event Action OnPointsViewClicked;
@@ -79,7 +76,7 @@ namespace CardCollectionImpl
             _cardCollectionCardCollectionCacheService = cardCollectionCacheService;
         }
         
-        public void CreateViews(CardCollectionNewCardsDto newCardsData, IReadOnlyList<CardCollectionGroupConfig> configs)
+        public void CreateViews(CardCollectionNewCardsDto newCardsData, IReadOnlyList<CardCollectionGroupConfig> configs, CardCollectionRewardsConfigSO rewardsConfig)
         {
             _cardGroupsPool.DisableNonActive();
 
@@ -93,7 +90,7 @@ namespace CardCollectionImpl
                 var groupName = groupsConfig.groupName;
                 
                 groupView.SetData(groupType, groupName);
-                var rewardViewData = UIUtils.CreateRewardViewData(_cardCollectionRewardsConfigSo, groupType);
+                var rewardViewData = UIUtils.CreateRewardViewData(rewardsConfig, groupType);
                 groupView.SetRewardData(rewardViewData.Icon, rewardViewData.Amount);
                 
                 groupView.OnButtonPressed += OnButtonPressedHandler;

@@ -17,10 +17,10 @@ namespace CardCollectionImpl
         private readonly IExchangeOfferProvider _exchangeOfferProvider;
         private readonly IRewardDefinitionFactory _rewardDefinitionFactory;
         private readonly ICardCollectionCacheService _cardCollectionCacheService;
+        private readonly CardCollectionRewardsConfigSO _collectionRewardsConfigSo;
         private readonly ICollectionProgressSnapshotService _collectionProgressSnapshotService;
 
-        public CardCollectionWindowOpener(
-            UIManager uiManager,
+        public CardCollectionWindowOpener(UIManager uiManager,
             ICardCollectionModule module,
             ICardCollectionReader reader,
             ICardCollectionPointsAccount pointsAccount,
@@ -28,12 +28,14 @@ namespace CardCollectionImpl
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory rewardDefinitionFactory,
             ICardCollectionCacheService cardCollectionCacheService,
-            ICollectionProgressSnapshotService collectionProgressSnapshotService)
+            ICollectionProgressSnapshotService collectionProgressSnapshotService,
+            CardCollectionRewardsConfigSO rewardsConfig)
         {
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
             _module = module ?? throw new ArgumentNullException(nameof(module));
             _reader = reader ?? throw new ArgumentNullException(nameof(reader));
             _pointsAccount = pointsAccount ?? throw new ArgumentNullException(nameof(pointsAccount));
+            _collectionRewardsConfigSo = rewardsConfig ?? throw new ArgumentNullException(nameof(rewardsConfig));
             _cardsConfigProvider = cardsConfigProvider ?? throw new ArgumentNullException(nameof(cardsConfigProvider));
             _exchangeOfferProvider = exchangeOfferProvider ?? throw new ArgumentNullException(nameof(exchangeOfferProvider));
             _rewardDefinitionFactory = rewardDefinitionFactory ?? throw new ArgumentNullException(nameof(rewardDefinitionFactory));
@@ -78,6 +80,7 @@ namespace CardCollectionImpl
                 collectionData,
                 _exchangeOfferProvider,
                 _rewardDefinitionFactory, 
+                _collectionRewardsConfigSo,
                 _pointsAccount,
                 snapshot,
                 _module.EventId);

@@ -101,6 +101,7 @@ namespace CardCollectionImpl
 
                 //TODO move all files load in 1 the same logic. eg ICardsConfigProvider / ICardsConfigProvider /etc
                 ct.ThrowIfCancellationRequested();
+                //TODO move it into separate interface
                 rewardsConfig = await AddressablesWrapper
                     .LoadFromTask<CardCollectionRewardsConfigSO>(model.RewardsConfigAddress)
                     .AsUniTask()
@@ -115,7 +116,7 @@ namespace CardCollectionImpl
                 var rewardHandler = new CardCollectionRewardHandler(rewardsConfig, _rewardGrantService, rewardDefinitionFactory);
                 
                 var snapshotService = new CollectionProgressSnapshotService(_cardCollectionCacheService, staticData.Groups);
-                var windowOpener = CreateCardPackWindowOpener(module, snapshotService, rewardHandler, rewardDefinitionFactory);
+                var windowOpener = CreateCardPackWindowOpener(module, snapshotService, rewardHandler, rewardDefinitionFactory, rewardsConfig);
 
                 var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
                 var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, windowOpener);
@@ -147,7 +148,8 @@ namespace CardCollectionImpl
             CardCollectionModule module,
             ICollectionProgressSnapshotService snapshotService,
             ICardCollectionRewardHandler rewardHandler,
-            IRewardDefinitionFactory rewardDefinitionFactory)
+            IRewardDefinitionFactory rewardDefinitionFactory,
+            CardCollectionRewardsConfigSO rewardsConfig)
         {
             var exchangeOfferProvider = new ExchangeOfferProvider(_exchangePacksConfig, rewardHandler);
             
@@ -160,7 +162,8 @@ namespace CardCollectionImpl
                 exchangeOfferProvider,
                 rewardDefinitionFactory,
                 _cardCollectionCacheService,
-                snapshotService);
+                snapshotService,
+                rewardsConfig);
             
             return cardCollectionWindowOpener;
         }
