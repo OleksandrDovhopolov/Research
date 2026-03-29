@@ -72,7 +72,7 @@ namespace CardCollectionImpl
                 //TODO add collection name
                 Debug.LogWarning($"[Debug] Context.CollectionId {Context.CollectionId}");
                 var args = new CollectionStartedArgs(Context.CollectionId, "Spring Collection");
-                _uiManager.Show<CollectionStartedController>(args);
+                _uiManager.Show<CollectionStartedController>(args, UIShowCommand.UIShowType.Ordered);
                 
                 _isStarted = true;
             }
@@ -92,10 +92,10 @@ namespace CardCollectionImpl
             return UniTask.CompletedTask;
         }
 
-        public async UniTask StopAsync(CancellationToken externalCt)
+        public UniTask StopAsync(CancellationToken externalCt)
         {
             if (!_isStarted || _isDisposed)
-                return;
+                return UniTask.CompletedTask;
 
             externalCt.ThrowIfCancellationRequested();
             HideEventWindows();
@@ -105,8 +105,7 @@ namespace CardCollectionImpl
             var args = new CollectionCompletedArgs(Context.CollectionId, "Spring Collection");
             _uiManager.Show<CollectionCompletedController>(args);
 
-            await UniTask.WaitUntil(() => _uiManager.IsWindowShown<CollectionCompletedController>(), cancellationToken: externalCt);
-            await UniTask.WaitWhile(() => _uiManager.GetTopWindow() is CollectionCompletedController, cancellationToken: externalCt);
+            return UniTask.CompletedTask;
         }
 
         private void HideEventWindows()
