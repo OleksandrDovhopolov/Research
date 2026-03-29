@@ -32,6 +32,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 136c286ef1cd7ba43bf276cfd0693300
+    m_Address: CollectionStartedWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1a446817ead67a04c8cdc20caf74a5a1
     m_Address: Element3
     m_ReadOnly: 0
@@ -154,6 +159,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a98788304d20d7a40abf0bfb21621789
     m_Address: icon_potion_red
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b8343f963ab597d4c8841993527ca07d
+    m_Address: test
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c517bcceb2b91964a92ecf296c189e69
+    m_Address: CollectionCompletedWindow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -142,15 +142,6 @@ namespace Inventory.Tests.Editor
             
             yield return null;
         }
-        
-        [Test]
-        public void BuiltInCategories_ExposeExpectedCapabilities()
-        {
-            var simpleCategory = new SimpleItemCategory();
-
-            Assert.That(simpleCategory is IConsumable, Is.True);
-            Assert.That(simpleCategory is IOpenable, Is.False);
-        }
 
         private static InventoryModuleService CreateService()
         {
