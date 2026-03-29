@@ -32,8 +32,8 @@ namespace Game.Cheat
         {
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Create test events", () =>
             {
-                var first = CreateDebugCardCollectionScheduleItemForNextMinute(1, 1);
-                var second = CreateDebugCardCollectionScheduleItem(first.EndTimeUtc, TimeSpan.FromMinutes(3));
+                var first = CreateDebugCardCollectionScheduleItemForNextMinute(30, 30);
+                var second = CreateDebugCardCollectionScheduleItem(first.EndTimeUtc, TimeSpan.FromMinutes(60));
                 
                 _orchestratorRunner.AddDebugCardCollectionEventNextMinute(first);
                 _orchestratorRunner.AddDebugCardCollectionEventNextMinute(second);
@@ -86,7 +86,7 @@ namespace Game.Cheat
             }).WithGroup(CardCollectionPointGroup));
         }
         
-        private ScheduleItem CreateDebugCardCollectionScheduleItemForNextMinute(int minutedDelay = 1, int duration = 3)
+        private ScheduleItem CreateDebugCardCollectionScheduleItemForNextMinute(int secondsDelay = 30, int secondsDuration = 30)
         {
             var now = DateTimeOffset.UtcNow;
             var startAt = new DateTimeOffset(
@@ -96,8 +96,8 @@ namespace Game.Cheat
                 now.Hour,
                 now.Minute,
                 0,
-                TimeSpan.Zero).AddMinutes(minutedDelay);
-            var endAt = startAt.AddMinutes(duration);
+                TimeSpan.Zero).AddSeconds(secondsDelay);
+            var endAt = startAt.AddSeconds(secondsDuration);
             var eventId = $"season_cards_debug_{_eventCounter++}";
 
             return new ScheduleItem

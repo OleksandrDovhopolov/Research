@@ -117,7 +117,7 @@ namespace CardCollectionImpl
 
                 var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
                 var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, windowOpener);
-                var context = new CardCollectionSessionContext(module, module, module, windowOpener);
+                var context = new CardCollectionSessionContext(model.CollectionId, module, module, module, windowOpener);
 
                 return new CardCollectionSession(
                     _uiManager,

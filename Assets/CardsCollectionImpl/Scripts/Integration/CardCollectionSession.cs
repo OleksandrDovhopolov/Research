@@ -69,6 +69,11 @@ namespace CardCollectionImpl
                 _inventoryIntegration.Attach();
                 _hudPresenter.Bind(scheduleItem, ct);
 
+                //TODO add collection name
+                Debug.LogWarning($"[Debug] Context.CollectionId {Context.CollectionId}");
+                var args = new CollectionStartedArgs(Context.CollectionId, "Spring Collection");
+                _uiManager.Show<CollectionStartedController>(args);
+                
                 _isStarted = true;
             }
             catch
@@ -87,15 +92,21 @@ namespace CardCollectionImpl
             return UniTask.CompletedTask;
         }
 
-        public UniTask StopAsync(CancellationToken externalCt)
+        public async UniTask StopAsync(CancellationToken externalCt)
         {
             if (!_isStarted || _isDisposed)
-                return UniTask.CompletedTask;
+                return;
 
             externalCt.ThrowIfCancellationRequested();
             HideEventWindows();
             SafeStopInternal(externalCt);
-            return UniTask.CompletedTask;
+            
+            //TODO add collection name
+            var args = new CollectionCompletedArgs(Context.CollectionId, "Spring Collection");
+            _uiManager.Show<CollectionCompletedController>(args);
+
+            await UniTask.WaitUntil(() => _uiManager.IsWindowShown<CollectionCompletedController>(), cancellationToken: externalCt);
+            await UniTask.WaitWhile(() => _uiManager.GetTopWindow() is CollectionCompletedController, cancellationToken: externalCt);
         }
 
         private void HideEventWindows()
