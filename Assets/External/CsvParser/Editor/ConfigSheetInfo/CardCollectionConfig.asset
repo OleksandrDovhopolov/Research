@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 893510ac06ccd91498a080f1e5e4a6b5, type: 3}
   m_Name: CardCollectionConfig
   m_EditorClassIdentifier: 
-  _sheetName: card_collection
+  _sheetName: season_cards_002
   _fileName: cardCollection
   _typeName: CardCollectionConfig
   <RelativeSheets>k__BackingField: []

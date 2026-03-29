@@ -7,26 +7,11 @@ using UnityEngine;
 namespace CardCollectionImpl.Editor
 {
     [CustomEditor(typeof(CardCollectionRewardsConfigSO))]
-    [CanEditMultipleObjects]
     public class CardCollectionRewardsConfigSOEditor : UnityEditor.Editor
     {
-        private CardCollectionRewardsConfigSO _linkedConfig;
-        
         public override void OnInspectorGUI()
         {
             DrawDefaultInspector();
-
-            EditorGUILayout.Space();
-            _linkedConfig = (CardCollectionRewardsConfigSO)EditorGUILayout.ObjectField(
-                "Linked Config",
-                _linkedConfig,
-                typeof(CardCollectionRewardsConfigSO),
-                false);
-
-            if (GUILayout.Button("Copy Icon/RewardId/Amount From Linked"))
-            {
-                CopyRewardsFromLinked((CardCollectionRewardsConfigSO[])targets, _linkedConfig);
-            }
 
             EditorGUILayout.Space();
             if (GUILayout.Button("Clear Group Rewards"))
@@ -38,74 +23,6 @@ namespace CardCollectionImpl.Editor
             {
                 SyncRewards((CardCollectionRewardsConfigSO)target);
             }
-        }
-        
-        private static void CopyRewardsFromLinked(
-            CardCollectionRewardsConfigSO[] selectedConfigs,
-            CardCollectionRewardsConfigSO linkedConfig)
-        {
-            if (selectedConfigs == null || selectedConfigs.Length == 0)
-            {
-                return;
-            }
-            
-            if (linkedConfig == null)
-            {
-                Debug.LogWarning("[CardCollectionRewardsConfigSOEditor] Linked Config is not assigned.");
-                return;
-            }
-
-            if (linkedConfig.GroupRewards == null || linkedConfig.GroupRewards.Length == 0)
-            {
-                Debug.LogWarning("[CardCollectionRewardsConfigSOEditor] Linked Config has no GroupRewards.");
-                return;
-            }
-            
-            var linkedByGroupId = new Dictionary<string, CollectionCompletionRewardConfig>();
-            foreach (var linkedReward in linkedConfig.GroupRewards)
-            {
-                if (string.IsNullOrWhiteSpace(linkedReward.GroupId))
-                {
-                    continue;
-                }
-                
-                linkedByGroupId[linkedReward.GroupId] = linkedReward;
-            }
-
-            foreach (var config in selectedConfigs)
-            {
-                if (config == null || config == linkedConfig || config.GroupRewards == null)
-                {
-                    continue;
-                }
-                
-                Undo.RecordObject(config, "Copy Card Collection Group Rewards From Linked");
-                var rewards = config.GroupRewards;
-                for (var i = 0; i < rewards.Length; i++)
-                {
-                    var current = rewards[i];
-                    if (string.IsNullOrWhiteSpace(current.GroupId))
-                    {
-                        continue;
-                    }
-
-                    if (!linkedByGroupId.TryGetValue(current.GroupId, out var linkedValue))
-                    {
-                        continue;
-                    }
-                    
-                    current.Icon = linkedValue.Icon;
-                    current.RewardId = linkedValue.RewardId;
-                    current.Amount = linkedValue.Amount;
-                    rewards[i] = current;
-                }
-
-                config.GroupRewards = rewards;
-                EditorUtility.SetDirty(config);
-            }
-
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
         }
 
         private static void ClearRewards(CardCollectionRewardsConfigSO config)

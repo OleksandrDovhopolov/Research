@@ -67,6 +67,8 @@ namespace CardCollectionImpl
             {
                 //TODO migrate from resources load to addressabless and update this method
                 ValidateResources(model.CardPacksFileName, model.CardCollectionFileName, model.GroupsFileName);
+
+                Debug.LogWarning($"model.GroupsFileName {model.GroupsFileName}");
                 
                 await UniTask.WhenAll(
                     _cardPackProvider.LoadAsync(model.CardPacksFileName, ct),

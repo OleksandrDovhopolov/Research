@@ -79,30 +79,6 @@ namespace EventOrchestration.Core
             }
         }
 
-        public async UniTask AddScheduleItemForDebugAsync(ScheduleItem item, CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
-            if (item == null)
-            {
-                throw new ArgumentNullException(nameof(item));
-            }
-
-            var updatedSchedule = _schedule.ToList();
-            updatedSchedule.Add(item);
-
-            var validationErrors = await _scheduleValidator.ValidateAsync(updatedSchedule, ct);
-            if (validationErrors.Count > 0)
-            {
-                throw new InvalidOperationException("Schedule validation failed: " + string.Join("; ", validationErrors));
-            }
-            
-            _schedule = BuildUpcomingSchedule(updatedSchedule);
-
-            CreateScheduleData();
-
-            await _stateStore.SaveAsync(_states, ct);
-        }
-
         private void CreateScheduleData()
         {
             var now = _clock.UtcNow;
@@ -328,6 +304,65 @@ namespace EventOrchestration.Core
             await _telemetry.TrackFailureAsync(itemId, stage, exception, ct);
             await _stateStore.SaveAsync(_states, ct);
         }
+
+        #region Debug
         
+        public async UniTask AddScheduleItemForDebugAsync(ScheduleItem item, CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
+
+            var updatedSchedule = _schedule.ToList();
+            updatedSchedule.Add(item);
+
+            var validationErrors = await _scheduleValidator.ValidateAsync(updatedSchedule, ct);
+            if (validationErrors.Count > 0)
+            {
+                throw new InvalidOperationException("Schedule validation failed: " + string.Join("; ", validationErrors));
+            }
+            
+            _schedule = BuildUpcomingSchedule(updatedSchedule);
+
+            CreateScheduleData();
+
+            await _stateStore.SaveAsync(_states, ct);
+        }
+        
+        public async UniTask<bool> DebugCompleteCurrentEventAsync(CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            var now = _clock.UtcNow;
+
+            var current = _schedule.FirstOrDefault(item =>
+            {
+                if (!_states.TryGetValue(item.Id, out var state)) return false;
+
+                return state.State 
+                    is EventInstanceState.Active 
+                    or EventInstanceState.Starting 
+                    or EventInstanceState.Ending 
+                    or EventInstanceState.Settling;
+            });
+
+            if (current == null)
+            {
+                return false;
+            }
+
+            if (current.EndTimeUtc > now)
+            {
+                current.EndTimeUtc = now;
+            }
+
+            await TickAsync(ct);
+            await _stateStore.SaveAsync(_states, ct);
+            return true;
+        }
+
+        #endregion
     }
 }

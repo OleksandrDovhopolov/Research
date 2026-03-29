@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CardGroupsConfig
   m_EditorClassIdentifier: 
   _sheetName: season_groups_002
-  _fileName: spring_collection_groups
+  _fileName: collection_groups
   _typeName: CardGroupsConfig
   <RelativeSheets>k__BackingField: []
   references:

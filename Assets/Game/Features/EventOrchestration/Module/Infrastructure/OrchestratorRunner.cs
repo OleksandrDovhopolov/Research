@@ -49,14 +49,28 @@ namespace EventOrchestration
 
         public void AddDebugCardCollectionEventNextMinute(ScheduleItem scheduleItem)
         {
-            AddDebugCardCollectionEventNextMinuteAsync(scheduleItem, _destroyToken).Forget();
+            AddDebugCardCollectionEventNextMinuteAsync(scheduleItem).Forget();
         }
 
-        public async UniTask AddDebugCardCollectionEventNextMinuteAsync(ScheduleItem scheduleItem, CancellationToken ct)
+        public UniTask AddDebugCardCollectionEventNextMinuteAsync(ScheduleItem scheduleItem)
         {
-            ct.ThrowIfCancellationRequested();
+            _destroyToken.ThrowIfCancellationRequested();
 
-            await _orchestrator.AddScheduleItemForDebugAsync(scheduleItem, ct);
+            _orchestrator.AddScheduleItemForDebugAsync(scheduleItem, _destroyToken).Forget();
+            return UniTask.CompletedTask;
+        }
+
+        public void CompleteCurrentEvent()
+        {
+            DebugCompleteCurrentEventAsync().Forget();
+        }
+        
+        public UniTask DebugCompleteCurrentEventAsync()
+        {
+            _destroyToken.ThrowIfCancellationRequested();
+
+            _orchestrator.DebugCompleteCurrentEventAsync(_destroyToken).Forget();
+            return UniTask.CompletedTask;
         }
     }
 }
