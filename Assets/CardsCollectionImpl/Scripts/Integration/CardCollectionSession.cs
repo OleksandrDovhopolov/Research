@@ -70,7 +70,6 @@ namespace CardCollectionImpl
                 _hudPresenter.Bind(scheduleItem, ct);
 
                 //TODO add collection name
-                Debug.LogWarning($"[Debug] Context.CollectionId {Context.CollectionId}");
                 var args = new CollectionStartedArgs(Context.CollectionId, "Spring Collection");
                 _uiManager.Show<CollectionStartedController>(args, UIShowCommand.UIShowType.Ordered);
                 

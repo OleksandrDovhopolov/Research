@@ -16,52 +16,7 @@ MonoBehaviour:
   m_Data:
     m_SerializedData: []
   m_GUID: 90ee11b8848c47445bfaff561fd0014c
-  m_SerializeEntries:
-  - m_GUID: 0f99e518c4e8e8e41b1a33bdcc4c709a
-    m_Address: NewCardWindow
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1b4b4399ddd43ac4097770477b2b2cd8
-    m_Address: ContentWidget
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2d7a41fb5aea44a4db537ecdc7c0d25a
-    m_Address: CardGroupWindow
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4544c279cba48774d8a3dd0356732ce2
-    m_Address: CollectionPointsExchangeWindow
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 58240d5ba0d9c5e428b1b727caaec460
-    m_Address: InventoryWindow
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6e4edb3881932c9408afe98971a1336e
-    m_Address: InfoSlidesWindow
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7f685dc587da3c24a9bad647c5835ccc
-    m_Address: info_widget
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a1cd2d916a299c64a8e60b385e9f1683
-    m_Address: CardCollectionWindow
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ca7c4a09d84b61c4d8846565a8ed01b7
-    m_Address: season_rewards_002
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: c7236b2e70f2a9f4eb9a1c78df452a70, type: 2}
   m_SchemaSet:

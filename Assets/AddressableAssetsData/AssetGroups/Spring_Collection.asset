@@ -1,0 +1,186 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Spring_Collection
+  m_EditorClassIdentifier: 
+  m_GroupName: Spring_Collection
+  m_Data:
+    m_SerializedData: []
+  m_GUID: e79df6e55f9d9b741bd52497305bd6e2
+  m_SerializeEntries:
+  - m_GUID: 0c3df55912ccc3f4ab1003b75aa6adc3
+    m_Address: Spring_Collection/icon_wood
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0ca6cafc6f5b1f14ebc5f58ac01f52b6
+    m_Address: Spring_Collection/icon_equip_shoes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1567ce81669a43143853f8a839a201fb
+    m_Address: Spring_Collection/card_5
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 216e8523bf73c4e4496ca9542e2dc639
+    m_Address: Spring_Collection/icon_scale
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 30743734466063846a53f251a382e029
+    m_Address: Spring_Collection/card_8
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 39db44b7820e8c640a820e9b1992424e
+    m_Address: Spring_Collection/icon_megaphone
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4aa37274a34e73244b5cc06661a60c8c
+    m_Address: Spring_Collection/card_1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4be638e1e1429c348af73ffcff367417
+    m_Address: Spring_Collection/card_10
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4fe69e66d1dee9f43987df9d38a9c70c
+    m_Address: Spring_Collection/icon_gemstone
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 558f6e93672dbc64bb7225953314d552
+    m_Address: Spring_Collection/icon_lamp
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 59b8e3bf51998fd4b839b06558866b43
+    m_Address: Spring_Collection/icon_ticket
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5ca675f249b3e264e9ba6b01ec1fc05a
+    m_Address: Spring_Collection/icon_stopwatch
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 693e7d0a7a3dadb4eaf00d59592e11c4
+    m_Address: Spring_Collection/icon_potion_purple
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7583240dcc064e149bc4d068209e6cf4
+    m_Address: Spring_Collection/card_2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 81778c00af18b4d418964944cd4fe5f4
+    m_Address: Spring_Collection/icon_equip_sword
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 85bd7851c2bd916448a6a37cda369db6
+    m_Address: season_rewards_001
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 864ff63eaaece96438a50c15a268c2ea
+    m_Address: Spring_Collection/icon_potion_blue
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a27ff63e281387844a1dee71a8742539
+    m_Address: Spring_Collection/card_3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a512805d65ee79f4e9f0167cbda177c6
+    m_Address: Spring_Collection/card_9
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a98788304d20d7a40abf0bfb21621789
+    m_Address: Spring_Collection/icon_potion_red
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b729146ffe995c84e95ddd45a3d3e782
+    m_Address: Spring_Collection/card_7
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b8343f963ab597d4c8841993527ca07d
+    m_Address: Spring_Collection/Collection_background
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ccf36e75ff22389448fdbc6e59771cbd
+    m_Address: Spring_Collection/card_6
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d86174c2eef7caf4e9002eb7a46d3cf9
+    m_Address: Spring_Collection/card_4
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e381751f8714dd64ea531084c886ba95
+    m_Address: Spring_Collection/icon_scroll
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eb4c20978dc59dd49b3370d8bb1d1f46
+    m_Address: Spring_Collection/icon_pouch
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff7099bc3c74c8344a8d84d68195c513
+    m_Address: Spring_Collection/icon_equip_shield
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: c7236b2e70f2a9f4eb9a1c78df452a70, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 69028aaa840030b48bf71c48cb08ac5c, type: 2}
