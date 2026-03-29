@@ -19,6 +19,8 @@ namespace CardCollectionImpl
     [Window("CollectionCompletedWindow")]
     public class CollectionCompletedController :  WindowController<CollectionCompletedView>
     {
+        private const string CollectionBackground = "Collection_background";
+        
         private CollectionCompletedArgs Args => (CollectionCompletedArgs) Arguments;
         
         [Inject]
@@ -29,7 +31,8 @@ namespace CardCollectionImpl
         protected override void OnShowStart()
         {
             View.SetDescription(Args.EventName);
-            View.LoadCollectionSprite(Args.EventId).Forget();
+            var collectionBackground = Args.EventId + "/" + CollectionBackground;
+            View.LoadCollectionSprite(collectionBackground).Forget();
         }
         
         protected override void OnShowComplete()

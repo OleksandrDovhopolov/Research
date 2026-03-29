@@ -113,14 +113,13 @@ namespace CardCollectionImpl
             _groupRewardAmountText.text = amount.ToString();
         }
         
-        public async UniTask SetSprites(List<CardConfig> cardsData)
+        public async UniTask SetSprites(string eventId, List<CardConfig> cardsData)
         {
             await UIUtils.LoadAndSetSpritesAsync(
                 cardsData,
-                config => config.icon,
+                config =>  eventId + "/" + config.icon,
                 config => _viewsDict.TryGetValue(config, out var view) ? view : null,
-                (view, sprite) => view.SetCardImage(sprite),
-                config => config.cardName);
+                (view, sprite) => view.SetCardImageTest(sprite));
         }
 
         /// <summary>

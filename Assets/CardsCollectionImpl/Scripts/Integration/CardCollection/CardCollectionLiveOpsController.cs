@@ -34,7 +34,7 @@ namespace CardCollectionImpl
             try
             {
                 newSession = await _collectionRuntimeBuilder.BuildAsync(model, ct);
-                await newSession.StartAsync(CurrentSchedule, ct);
+                await newSession.StartAsync(model, CurrentSchedule, ct);
 
                 ct.ThrowIfCancellationRequested();
                 

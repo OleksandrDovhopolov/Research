@@ -78,7 +78,7 @@ MonoBehaviour:
     - Winter_Collection
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 38b20b529c43e514c9bb1ae7869f98c2
-    m_Address: Spring_Collection/Collection_background
+    m_Address: Winter_Collection/Collection_background
     m_ReadOnly: 0
     m_SerializedLabels:
     - Winter_Collection
@@ -162,13 +162,19 @@ MonoBehaviour:
     - Winter_Collection
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ca7c4a09d84b61c4d8846565a8ed01b7
-    m_Address: season_rewards_002
+    m_Address: winter_collection_rewards
     m_ReadOnly: 0
     m_SerializedLabels:
     - Winter_Collection
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d1525d006a890f446b6ab6257a082a01
     m_Address: Winter_Collection/card_8
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Winter_Collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e00aa920041e9534488e34e5525e7376
+    m_Address: Winter_Collection/Collection_preview
     m_ReadOnly: 0
     m_SerializedLabels:
     - Winter_Collection

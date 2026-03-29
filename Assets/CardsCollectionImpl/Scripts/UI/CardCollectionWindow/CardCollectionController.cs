@@ -135,7 +135,7 @@ namespace CardCollectionImpl
         {
             try
             {
-                await View.CreateGroupViews(GroupConfigs);
+                await View.CreateGroupViews(Args.ScheduleItemEventId, GroupConfigs);
                 _groupsCreated = true;
             }
             catch (Exception e)
@@ -181,6 +181,7 @@ namespace CardCollectionImpl
             OnGroupViewChangedHandler(groupType);
             
             var args = new CardGroupArgs(
+                Args.ScheduleItemEventId,
                 Args.NewCardsData,
                 Args.EventCardsSaveData, 
                 groupType, 

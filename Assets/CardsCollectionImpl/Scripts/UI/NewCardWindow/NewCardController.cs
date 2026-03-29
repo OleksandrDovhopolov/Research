@@ -8,17 +8,20 @@ namespace CardCollectionImpl
 {
     public class NewCardArgs : WindowArgs
     {
+        public readonly string EventId;
         public readonly CardPack CardPack;
         public readonly ICardCollectionModule CollectionModule;
         public readonly ICardCollectionReader CollectionReader;
         public readonly ICardCollectionCacheService CardCollectionCacheService;
 
         public NewCardArgs(
+            string eventId,
             CardPack cardPack,
             ICardCollectionModule collectionModule,
             ICardCollectionReader collectionReader,
             ICardCollectionCacheService cardCollectionCacheService)
         {
+            EventId =  eventId;
             CardPack = cardPack;
             CollectionModule = collectionModule;
             CollectionReader = collectionReader;
@@ -56,7 +59,7 @@ namespace CardCollectionImpl
             var cardsData = await Args.CollectionModule.GetCardsByIdsAsync(cardsIdList, ct);
             var displayData = Args.CardCollectionCacheService.ToNewCardDisplayData(cardsData);
             
-            View.CreateNewCards(displayData);
+            View.CreateNewCards(Args.EventId, displayData);
         }
 
         protected override void OnShowComplete()

@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using UIShared;
 using UISystem;
+using UnityEngine;
 using VContainer;
 
 namespace CardCollectionImpl
@@ -20,6 +21,8 @@ namespace CardCollectionImpl
     [Window("CollectionStartedWindow")]
     public class CollectionStartedController :  WindowController<CollectionStartedView>
     {
+        private const string CollectionBackground = "Collection_background";
+        
         private IGlobalTimerService _globalTimerService;
         
         private CollectionStartedArgs Args => (CollectionStartedArgs) Arguments;
@@ -34,7 +37,9 @@ namespace CardCollectionImpl
         {
             View.SetTimer(Args.EventId, _globalTimerService);
             View.SetDescription(Args.EventName);
-            View.LoadCollectionSprite(Args.EventId).Forget();
+            var collectionBackground = Args.EventId + "/" + CollectionBackground;
+            Debug.LogWarning($"[Debug] rgs.EventId {Args.EventId}, collectionBackground {collectionBackground}");
+            View.LoadCollectionSprite(collectionBackground).Forget();
         }
         
         protected override void OnShowComplete()

@@ -158,14 +158,15 @@ namespace CardCollectionImpl
             }
         }
         
-        public async UniTask CreateGroupViews(IReadOnlyList<CardCollectionGroupConfig> groupsData)
+        public async UniTask CreateGroupViews(
+            string argsScheduleItemEventId,
+            IReadOnlyList<CardCollectionGroupConfig> groupsData)
         {
             await UIUtils.LoadAndSetSpritesAsync(
                 groupsData,
-                config => config.groupIcon,
+                config => argsScheduleItemEventId + "/" + config.groupIcon,
                 config => _viewsDict.TryGetValue(config.groupType, out var view) ? view : null,
-                (view, sprite) => view.SetSprite(sprite),
-                config => config.groupIcon);
+                (view, sprite) => view.SetSprite(sprite));
         }
         
         public void UpdateCollectedAmount(int collectedAmount, int totalAmount)

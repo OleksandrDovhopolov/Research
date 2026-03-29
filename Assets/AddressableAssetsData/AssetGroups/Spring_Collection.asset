@@ -108,13 +108,19 @@ MonoBehaviour:
     - Spring_collection
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 85bd7851c2bd916448a6a37cda369db6
-    m_Address: season_rewards_001
+    m_Address: spring_collection_rewards
     m_ReadOnly: 0
     m_SerializedLabels:
     - Spring_collection
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 864ff63eaaece96438a50c15a268c2ea
     m_Address: Spring_Collection/icon_potion_blue
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a0ec70d3a806eea40b3dfa2c2e99006c
+    m_Address: Spring_Collection/Collection_preview
     m_ReadOnly: 0
     m_SerializedLabels:
     - Spring_collection

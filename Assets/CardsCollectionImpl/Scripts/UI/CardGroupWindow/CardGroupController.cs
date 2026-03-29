@@ -10,6 +10,7 @@ namespace CardCollectionImpl
 {
     public class CardGroupArgs : WindowArgs
     {
+        public readonly string EventId;
         public readonly string GroupType;
         public readonly CardCollectionNewCardsDto NewCardsData;
         public readonly EventCardsSaveData EventCardsSaveData;
@@ -17,12 +18,14 @@ namespace CardCollectionImpl
         public readonly Action<string> OnGroupChanged;
         
         public CardGroupArgs(
+            string  eventId,
             CardCollectionNewCardsDto newCardsData, 
             EventCardsSaveData eventCardsSaveData,
             string groupType,
             CardCollectionRewardsConfigSO rewardsConfigSo,
             Action<string> onGroupChanged)
         {
+            EventId = eventId;
             GroupType = groupType;
             NewCardsData = newCardsData;
             EventCardsSaveData = eventCardsSaveData;
@@ -92,7 +95,7 @@ namespace CardCollectionImpl
         
         private async UniTask SetCardSprites(List<CardConfig> cardsData)
         {
-            await View.SetSprites(cardsData);
+            await View.SetSprites(Args.EventId, cardsData);
         }
         
         protected override void OnShowComplete()

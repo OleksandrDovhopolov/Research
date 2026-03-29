@@ -1,16 +1,23 @@
+using System;
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using Infrastructure;
 using UnityEngine;
 
 namespace UIShared
 {
     public class EventDebugView : MonoBehaviour
     {
+        private const string CollectionPreview = "Collection_preview";
+        
         [SerializeField] private UIListPool<EventDebugItemView> _uiListPool;
         [SerializeField] private List<EventData> _eventData;
-        [SerializeField] private EventData _fallbackData;
 
         private readonly Dictionary<string, EventDebugItemView> _idToView = new();
 
+        private CancellationToken _ct;
+        
         private void Start()
         {
             if (_uiListPool == null)
@@ -19,6 +26,7 @@ namespace UIShared
                 return;
             }
 
+            _ct = this.GetCancellationTokenOnDestroy();
             _uiListPool.DisableAll();
         }
 
@@ -28,21 +36,33 @@ namespace UIShared
             if (string.IsNullOrEmpty(eventId)) return;
             if (_idToView.ContainsKey(eventId)) return;
 
-            var view = _uiListPool.GetNext();
-            view.SetData(eventId, GetEventIcon(eventId), globalTimerService);
-            _idToView[eventId] = view;
+            SetDataAsync(eventId, globalTimerService).Forget();
         }
 
-        private Sprite GetEventIcon(string eventId)
+        private async UniTask SetDataAsync(string eventId, IGlobalTimerService  globalTimerService)
         {
-            var eventData = _eventData.Find(data => data.EventId == eventId);
-            if (eventData == null)
-            {
-                Debug.LogWarning($"[EventDebugView] EventData not found: {eventId}. Default used");
-                eventData = _fallbackData;
-            }
+            var view = _uiListPool.GetNext();
+            var spriteAddress = eventId + "/" + CollectionPreview;
+            var sprite = await LoadCollectionSprite(spriteAddress);
+            view.SetData(eventId, sprite, globalTimerService);
+            _idToView[eventId] = view;
+        }
+        
+        public async UniTask<Sprite> LoadCollectionSprite(string spriteAddress)
+        {
+            _ct.ThrowIfCancellationRequested();
             
-            return eventData.EventIcon;
+            Sprite sprite = null;
+            try
+            {
+                sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress);
+            }
+            catch (Exception loadPrimaryException)
+            {
+                Debug.LogWarning($"Failed to load sprite for EventId='{spriteAddress}'. Falling back to default. {loadPrimaryException.Message}");
+            }
+
+            return sprite;
         }
         
         public void OnEventStarted(string eventId)

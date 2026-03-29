@@ -19,6 +19,7 @@ namespace CardCollectionImpl
         private readonly ICollectionProgressSnapshotService _snapshotService;
 
         private CardCollectionRewardsConfigSO _rewardsConfig;
+        private CardCollectionEventModel _cardCollectionEventModel;
 
         private CancellationTokenSource _cts;
         private bool _isStarted;
@@ -46,7 +47,7 @@ namespace CardCollectionImpl
             _snapshotService = snapshotService;
         }
 
-        public async UniTask StartAsync(ScheduleItem scheduleItem, CancellationToken externalCt)
+        public async UniTask StartAsync(CardCollectionEventModel model, ScheduleItem scheduleItem, CancellationToken externalCt)
         {
             ThrowIfDisposed();
 
@@ -56,6 +57,8 @@ namespace CardCollectionImpl
             _cts = CancellationTokenSource.CreateLinkedTokenSource(externalCt);
             var ct = _cts.Token;
 
+            _cardCollectionEventModel = model;
+            
             try
             {
                 await _module.InitializeAsync(ct);
@@ -69,8 +72,7 @@ namespace CardCollectionImpl
                 _inventoryIntegration.Attach();
                 _hudPresenter.Bind(scheduleItem, ct);
 
-                //TODO add collection name
-                var args = new CollectionStartedArgs(Context.CollectionId, "Spring Collection");
+                var args = new CollectionStartedArgs(_cardCollectionEventModel.EventId, _cardCollectionEventModel.CollectionName);
                 _uiManager.Show<CollectionStartedController>(args, UIShowCommand.UIShowType.Ordered);
                 
                 _isStarted = true;
@@ -101,7 +103,7 @@ namespace CardCollectionImpl
             SafeStopInternal(externalCt);
             
             //TODO add collection name
-            var args = new CollectionCompletedArgs(Context.CollectionId, "Spring Collection");
+            var args = new CollectionCompletedArgs(_cardCollectionEventModel.EventId, _cardCollectionEventModel.CollectionName);
             _uiManager.Show<CollectionCompletedController>(args);
 
             return UniTask.CompletedTask;

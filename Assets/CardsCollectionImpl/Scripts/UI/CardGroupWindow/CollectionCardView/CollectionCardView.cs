@@ -120,6 +120,11 @@ namespace CardCollectionImpl
             _cardImage.sprite = cardSprite;
         }
         
+        public void SetCardImageTest(Sprite cardSprite)
+        {
+            _cardImage.sprite = cardSprite;
+        }
+        
         public void UpdateCardView()
         {
             SetOpenCardContainerActive(IsOpen);

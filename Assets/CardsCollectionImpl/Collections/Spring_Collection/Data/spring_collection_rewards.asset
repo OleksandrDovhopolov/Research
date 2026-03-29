@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cec0cc30c2c12eb4f8ff87aaeade6ccf, type: 3}
-  m_Name: season_rewards_001
+  m_Name: spring_collection_rewards
   m_EditorClassIdentifier: 
   GroupsJson: {fileID: 4900000, guid: ce4eb55603ffd5a44a21ecffac813e10, type: 3}
   GroupRewards:

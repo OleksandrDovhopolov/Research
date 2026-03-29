@@ -26,7 +26,7 @@ namespace CardCollectionImpl
         
         private bool _hasDuplicates;
         
-        public void CreateNewCards(List<NewCardDisplayData> cardsData)
+        public void CreateNewCards(string eventId, List<NewCardDisplayData> cardsData)
         {
             _newCardsPool.DisableNonActive();
             _mockCardsPool.DisableNonActive();
@@ -52,7 +52,9 @@ namespace CardCollectionImpl
                 cardView.UpdateCardFrame();
                 cardView.UpdateCardName();
                 cardView.UpdateCardStars();
-                UIUtils.SetSprite(config, cardView, this.GetCancellationTokenOnDestroy()).Forget();
+                
+                var spriteAddress = eventId + "/" + config.icon;
+                UIUtils.SetSprite(spriteAddress, cardView, this.GetCancellationTokenOnDestroy()).Forget();
                 
                 cardView.SetAlpha(false);
                 cardView.transform.SetSiblingIndex(i);

@@ -20,6 +20,12 @@ namespace Game.Cheat
         private readonly ICardCollectionFeatureFacade _featureFacade;
 
         private int _eventCounter = 0;
+
+        private const string WinterCollectionEventId = "Winter_Collection";
+        private const string WinterCollectionEventName = "Winter Collection";
+        
+        private const string SpringCollectionEventId = "Spring_Collection";
+        private const string SpringCollectionEventName = "Spring Collection";
         
         public CardCollectionCheatModule(ICardCollectionFeatureFacade featureFacade, OrchestratorRunner orchestratorRunner, CancellationToken ct)
         {
@@ -32,8 +38,8 @@ namespace Game.Cheat
         {
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Create test events", () =>
             {
-                var first = CreateDebugCardCollectionScheduleItemForNextMinute(30, 30);
-                var second = CreateDebugCardCollectionScheduleItem(first.EndTimeUtc, TimeSpan.FromMinutes(60));
+                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 30, 120);
+                var second = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, first.EndTimeUtc, TimeSpan.FromSeconds(120));
                 
                 _orchestratorRunner.AddDebugCardCollectionEventNextMinute(first);
                 _orchestratorRunner.AddDebugCardCollectionEventNextMinute(second);
@@ -86,7 +92,7 @@ namespace Game.Cheat
             }).WithGroup(CardCollectionPointGroup));
         }
         
-        private ScheduleItem CreateDebugCardCollectionScheduleItemForNextMinute(int secondsDelay = 30, int secondsDuration = 30)
+        private ScheduleItem CreateDebugCardCollectionScheduleItemForNextMinute(string eventId, string eventName, int secondsDelay = 30, int secondsDuration = 30)
         {
             var now = DateTimeOffset.UtcNow;
             var startAt = new DateTimeOffset(
@@ -98,7 +104,7 @@ namespace Game.Cheat
                 0,
                 TimeSpan.Zero).AddSeconds(secondsDelay);
             var endAt = startAt.AddSeconds(secondsDuration);
-            var eventId = $"season_cards_debug_{_eventCounter++}";
+            //var eventId = $"season_cards_debug_{_eventCounter++}";
 
             return new ScheduleItem
             {
@@ -111,18 +117,19 @@ namespace Game.Cheat
                 CustomParams = new Dictionary<string, string>
                 {
                     ["eventId"] = eventId,
-                    ["rewardsConfigAddress"] = "season_rewards_001",
-                    ["cardsCollectionAddress"] = "season_cards_001",
-                    ["cardGroupsAddress"] = "season_groups_001",
+                    ["rewardsConfigAddress"] = "winter_collection_rewards",
+                    ["cardsCollectionAddress"] = "winter_collection_cards",
+                    ["cardGroupsAddress"] = "winter_collection_groups",
                     ["cardPacksAddress"] = "shared_card_packs_config",
+                    ["collectionName"] = eventName,
                 },
             };
         }
         
-        private ScheduleItem CreateDebugCardCollectionScheduleItem(DateTimeOffset startAt, TimeSpan duration)
+        private ScheduleItem CreateDebugCardCollectionScheduleItem(string eventId, string eventName, DateTimeOffset startAt, TimeSpan duration)
         {
             var endAt = startAt.Add(duration);
-            var eventId = $"season_cards_debug_{_eventCounter++}";
+            //var eventId = $"season_cards_debug_{_eventCounter++}";
 
             return new ScheduleItem
             {
@@ -135,10 +142,11 @@ namespace Game.Cheat
                 CustomParams = new Dictionary<string, string>
                 {
                     ["eventId"] = eventId,
-                    ["rewardsConfigAddress"] = "season_rewards_001",
-                    ["cardsCollectionAddress"] = "season_cards_001",
-                    ["cardGroupsAddress"] = "season_groups_001",
+                    ["rewardsConfigAddress"] = "spring_collection_rewards",
+                    ["cardsCollectionAddress"] = "spring_collection_cards",
+                    ["cardGroupsAddress"] = "spring_collection_groups",
                     ["cardPacksAddress"] = "shared_card_packs_config",
+                    ["collectionName"] = eventName,
                 },
             };
         }

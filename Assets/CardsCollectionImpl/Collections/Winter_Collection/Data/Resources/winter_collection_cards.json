@@ -6,7 +6,7 @@
 		"groupType": "farming",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "card_1"
 	},
 	{
 		"id": "2",
@@ -14,7 +14,7 @@
 		"groupType": "farming",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "card_2"
 	},
 	{
 		"id": "3",
@@ -22,7 +22,7 @@
 		"groupType": "farming",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element3"
+		"icon": "card_3"
 	},
 	{
 		"id": "4",
@@ -30,7 +30,7 @@
 		"groupType": "farming",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element4"
+		"icon": "card_4"
 	},
 	{
 		"id": "5",
@@ -38,7 +38,7 @@
 		"groupType": "farming",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element5"
+		"icon": "card_5"
 	},
 	{
 		"id": "6",
@@ -46,7 +46,7 @@
 		"groupType": "farming",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element6"
+		"icon": "card_6"
 	},
 	{
 		"id": "7",
@@ -54,7 +54,7 @@
 		"groupType": "farming",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element7"
+		"icon": "card_7"
 	},
 	{
 		"id": "8",
@@ -62,7 +62,7 @@
 		"groupType": "farming",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element8"
+		"icon": "card_8"
 	},
 	{
 		"id": "9",
@@ -70,7 +70,7 @@
 		"groupType": "farming",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element9"
+		"icon": "card_9"
 	},
 	{
 		"id": "10",
@@ -78,7 +78,7 @@
 		"groupType": "farming",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element10"
+		"icon": "card_10"
 	},
 	{
 		"id": "11",
@@ -86,7 +86,7 @@
 		"groupType": "worksite",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "card_1"
 	},
 	{
 		"id": "12",
@@ -94,7 +94,7 @@
 		"groupType": "worksite",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "card_2"
 	},
 	{
 		"id": "13",
@@ -102,7 +102,7 @@
 		"groupType": "worksite",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element3"
+		"icon": "card_3"
 	},
 	{
 		"id": "14",
@@ -110,7 +110,7 @@
 		"groupType": "worksite",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element4"
+		"icon": "card_4"
 	},
 	{
 		"id": "15",
@@ -118,7 +118,7 @@
 		"groupType": "worksite",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element5"
+		"icon": "card_5"
 	},
 	{
 		"id": "16",
@@ -126,7 +126,7 @@
 		"groupType": "worksite",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element6"
+		"icon": "card_6"
 	},
 	{
 		"id": "17",
@@ -134,7 +134,7 @@
 		"groupType": "worksite",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element7"
+		"icon": "card_7"
 	},
 	{
 		"id": "18",
@@ -142,7 +142,7 @@
 		"groupType": "worksite",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element8"
+		"icon": "card_8"
 	},
 	{
 		"id": "19",
@@ -150,7 +150,7 @@
 		"groupType": "worksite",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element9"
+		"icon": "card_9"
 	},
 	{
 		"id": "20",
@@ -158,7 +158,7 @@
 		"groupType": "worksite",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element10"
+		"icon": "card_10"
 	},
 	{
 		"id": "21",
@@ -166,7 +166,7 @@
 		"groupType": "railroads",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "card_1"
 	},
 	{
 		"id": "22",
@@ -174,7 +174,7 @@
 		"groupType": "railroads",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "card_2"
 	},
 	{
 		"id": "23",
@@ -182,7 +182,7 @@
 		"groupType": "railroads",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element3"
+		"icon": "card_3"
 	},
 	{
 		"id": "24",
@@ -190,7 +190,7 @@
 		"groupType": "railroads",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element4"
+		"icon": "card_4"
 	},
 	{
 		"id": "25",
@@ -198,7 +198,7 @@
 		"groupType": "railroads",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element5"
+		"icon": "card_5"
 	},
 	{
 		"id": "26",
@@ -206,7 +206,7 @@
 		"groupType": "railroads",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element6"
+		"icon": "card_6"
 	},
 	{
 		"id": "27",
@@ -214,7 +214,7 @@
 		"groupType": "railroads",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element7"
+		"icon": "card_7"
 	},
 	{
 		"id": "28",
@@ -222,7 +222,7 @@
 		"groupType": "railroads",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element8"
+		"icon": "card_8"
 	},
 	{
 		"id": "29",
@@ -230,7 +230,7 @@
 		"groupType": "railroads",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element9"
+		"icon": "card_9"
 	},
 	{
 		"id": "30",
@@ -238,7 +238,7 @@
 		"groupType": "railroads",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element10"
+		"icon": "card_10"
 	},
 	{
 		"id": "31",
@@ -246,7 +246,7 @@
 		"groupType": "factories",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "card_1"
 	},
 	{
 		"id": "32",
@@ -254,7 +254,7 @@
 		"groupType": "factories",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "card_2"
 	},
 	{
 		"id": "33",
@@ -262,7 +262,7 @@
 		"groupType": "factories",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element3"
+		"icon": "card_3"
 	},
 	{
 		"id": "34",
@@ -270,7 +270,7 @@
 		"groupType": "factories",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element4"
+		"icon": "card_4"
 	},
 	{
 		"id": "35",
@@ -278,7 +278,7 @@
 		"groupType": "factories",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element5"
+		"icon": "card_5"
 	},
 	{
 		"id": "36",
@@ -286,7 +286,7 @@
 		"groupType": "factories",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element6"
+		"icon": "card_6"
 	},
 	{
 		"id": "37",
@@ -294,7 +294,7 @@
 		"groupType": "factories",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element7"
+		"icon": "card_7"
 	},
 	{
 		"id": "38",
@@ -302,7 +302,7 @@
 		"groupType": "factories",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element8"
+		"icon": "card_8"
 	},
 	{
 		"id": "39",
@@ -310,7 +310,7 @@
 		"groupType": "factories",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element9"
+		"icon": "card_9"
 	},
 	{
 		"id": "40",
@@ -318,7 +318,7 @@
 		"groupType": "factories",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element10"
+		"icon": "card_10"
 	},
 	{
 		"id": "41",
@@ -326,7 +326,7 @@
 		"groupType": "next door",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "card_1"
 	},
 	{
 		"id": "42",
@@ -334,7 +334,7 @@
 		"groupType": "next door",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "card_2"
 	},
 	{
 		"id": "43",
@@ -342,7 +342,7 @@
 		"groupType": "next door",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element3"
+		"icon": "card_3"
 	},
 	{
 		"id": "44",
@@ -350,7 +350,7 @@
 		"groupType": "next door",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element4"
+		"icon": "card_4"
 	},
 	{
 		"id": "45",
@@ -358,7 +358,7 @@
 		"groupType": "next door",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element5"
+		"icon": "card_5"
 	},
 	{
 		"id": "46",
@@ -366,7 +366,7 @@
 		"groupType": "next door",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element6"
+		"icon": "card_6"
 	},
 	{
 		"id": "47",
@@ -374,7 +374,7 @@
 		"groupType": "next door",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element7"
+		"icon": "card_7"
 	},
 	{
 		"id": "48",
@@ -382,7 +382,7 @@
 		"groupType": "next door",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element8"
+		"icon": "card_8"
 	},
 	{
 		"id": "49",
@@ -390,7 +390,7 @@
 		"groupType": "next door",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element9"
+		"icon": "card_9"
 	},
 	{
 		"id": "50",
@@ -398,7 +398,7 @@
 		"groupType": "next door",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element10"
+		"icon": "card_10"
 	},
 	{
 		"id": "51",
@@ -406,7 +406,7 @@
 		"groupType": "delivery",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "card_1"
 	},
 	{
 		"id": "52",
@@ -414,7 +414,7 @@
 		"groupType": "delivery",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "card_2"
 	},
 	{
 		"id": "53",
@@ -422,7 +422,7 @@
 		"groupType": "delivery",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element3"
+		"icon": "card_3"
 	},
 	{
 		"id": "54",
@@ -430,7 +430,7 @@
 		"groupType": "delivery",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element4"
+		"icon": "card_4"
 	},
 	{
 		"id": "55",
@@ -438,7 +438,7 @@
 		"groupType": "delivery",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element5"
+		"icon": "card_5"
 	},
 	{
 		"id": "56",
@@ -446,7 +446,7 @@
 		"groupType": "delivery",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element6"
+		"icon": "card_6"
 	},
 	{
 		"id": "57",
@@ -454,7 +454,7 @@
 		"groupType": "delivery",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element7"
+		"icon": "card_7"
 	},
 	{
 		"id": "58",
@@ -462,7 +462,7 @@
 		"groupType": "delivery",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element8"
+		"icon": "card_8"
 	},
 	{
 		"id": "59",
@@ -470,7 +470,7 @@
 		"groupType": "delivery",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element9"
+		"icon": "card_9"
 	},
 	{
 		"id": "60",
@@ -478,7 +478,7 @@
 		"groupType": "delivery",
 		"stars": 5,
 		"premiumCard": false,
-		"icon": "Element10"
+		"icon": "card_10"
 	},
 	{
 		"id": "61",
@@ -486,7 +486,7 @@
 		"groupType": "mining",
 		"stars": 1,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "card_1"
 	},
 	{
 		"id": "62",
@@ -494,7 +494,7 @@
 		"groupType": "mining",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "card_2"
 	},
 	{
 		"id": "63",
@@ -502,7 +502,7 @@
 		"groupType": "mining",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element3"
+		"icon": "card_3"
 	},
 	{
 		"id": "64",
@@ -510,7 +510,7 @@
 		"groupType": "mining",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element4"
+		"icon": "card_4"
 	},
 	{
 		"id": "65",
@@ -518,7 +518,7 @@
 		"groupType": "mining",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element5"
+		"icon": "card_5"
 	},
 	{
 		"id": "66",
@@ -526,7 +526,7 @@
 		"groupType": "mining",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element6"
+		"icon": "card_6"
 	},
 	{
 		"id": "67",
@@ -534,7 +534,7 @@
 		"groupType": "mining",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element7"
+		"icon": "card_7"
 	},
 	{
 		"id": "68",
@@ -542,7 +542,7 @@
 		"groupType": "mining",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element8"
+		"icon": "card_8"
 	},
 	{
 		"id": "69",
@@ -550,7 +550,7 @@
 		"groupType": "mining",
 		"stars": 5,
 		"premiumCard": false,
-		"icon": "Element9"
+		"icon": "card_9"
 	},
 	{
 		"id": "70",
@@ -558,7 +558,7 @@
 		"groupType": "mining",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element10"
+		"icon": "card_10"
 	},
 	{
 		"id": "71",
@@ -566,7 +566,7 @@
 		"groupType": "picnic",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "card_1"
 	},
 	{
 		"id": "72",
@@ -574,7 +574,7 @@
 		"groupType": "picnic",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "card_2"
 	},
 	{
 		"id": "73",
@@ -582,7 +582,7 @@
 		"groupType": "picnic",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element3"
+		"icon": "card_3"
 	},
 	{
 		"id": "74",
@@ -590,7 +590,7 @@
 		"groupType": "picnic",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element4"
+		"icon": "card_4"
 	},
 	{
 		"id": "75",
@@ -598,7 +598,7 @@
 		"groupType": "picnic",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element5"
+		"icon": "card_5"
 	},
 	{
 		"id": "76",
@@ -606,7 +606,7 @@
 		"groupType": "picnic",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element6"
+		"icon": "card_6"
 	},
 	{
 		"id": "77",
@@ -614,7 +614,7 @@
 		"groupType": "picnic",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element7"
+		"icon": "card_7"
 	},
 	{
 		"id": "78",
@@ -622,7 +622,7 @@
 		"groupType": "picnic",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element8"
+		"icon": "card_8"
 	},
 	{
 		"id": "79",
@@ -630,7 +630,7 @@
 		"groupType": "picnic",
 		"stars": 5,
 		"premiumCard": false,
-		"icon": "Element9"
+		"icon": "card_9"
 	},
 	{
 		"id": "80",
@@ -638,7 +638,7 @@
 		"groupType": "picnic",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element10"
+		"icon": "card_10"
 	},
 	{
 		"id": "81",
@@ -646,7 +646,7 @@
 		"groupType": "farm store",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "card_1"
 	},
 	{
 		"id": "82",
@@ -654,7 +654,7 @@
 		"groupType": "farm store",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "card_2"
 	},
 	{
 		"id": "83",
@@ -662,7 +662,7 @@
 		"groupType": "farm store",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element3"
+		"icon": "card_3"
 	},
 	{
 		"id": "84",
@@ -670,7 +670,7 @@
 		"groupType": "farm store",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element4"
+		"icon": "card_4"
 	},
 	{
 		"id": "85",
@@ -678,7 +678,7 @@
 		"groupType": "farm store",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element5"
+		"icon": "card_5"
 	},
 	{
 		"id": "86",
@@ -686,7 +686,7 @@
 		"groupType": "farm store",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element6"
+		"icon": "card_6"
 	},
 	{
 		"id": "87",
@@ -694,7 +694,7 @@
 		"groupType": "farm store",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element7"
+		"icon": "card_7"
 	},
 	{
 		"id": "88",
@@ -702,7 +702,7 @@
 		"groupType": "farm store",
 		"stars": 5,
 		"premiumCard": false,
-		"icon": "Element8"
+		"icon": "card_8"
 	},
 	{
 		"id": "89",
@@ -710,7 +710,7 @@
 		"groupType": "farm store",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element9"
+		"icon": "card_9"
 	},
 	{
 		"id": "90",
@@ -718,7 +718,7 @@
 		"groupType": "farm store",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element10"
+		"icon": "card_10"
 	},
 	{
 		"id": "91",
@@ -726,7 +726,7 @@
 		"groupType": "animals",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "card_1"
 	},
 	{
 		"id": "92",
@@ -734,7 +734,7 @@
 		"groupType": "animals",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "card_2"
 	},
 	{
 		"id": "93",
@@ -742,7 +742,7 @@
 		"groupType": "animals",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element3"
+		"icon": "card_3"
 	},
 	{
 		"id": "94",
@@ -750,7 +750,7 @@
 		"groupType": "animals",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element4"
+		"icon": "card_4"
 	},
 	{
 		"id": "95",
@@ -758,7 +758,7 @@
 		"groupType": "animals",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element5"
+		"icon": "card_5"
 	},
 	{
 		"id": "96",
@@ -766,7 +766,7 @@
 		"groupType": "animals",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element6"
+		"icon": "card_6"
 	},
 	{
 		"id": "97",
@@ -774,7 +774,7 @@
 		"groupType": "animals",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element7"
+		"icon": "card_7"
 	},
 	{
 		"id": "98",
@@ -782,7 +782,7 @@
 		"groupType": "animals",
 		"stars": 5,
 		"premiumCard": false,
-		"icon": "Element8"
+		"icon": "card_8"
 	},
 	{
 		"id": "99",
@@ -790,7 +790,7 @@
 		"groupType": "animals",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element9"
+		"icon": "card_9"
 	},
 	{
 		"id": "100",
@@ -798,7 +798,7 @@
 		"groupType": "animals",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element10"
+		"icon": "card_10"
 	},
 	{
 		"id": "101",
@@ -806,7 +806,7 @@
 		"groupType": "museum",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "card_1"
 	},
 	{
 		"id": "102",
@@ -814,7 +814,7 @@
 		"groupType": "museum",
 		"stars": 2,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "card_2"
 	},
 	{
 		"id": "103",
@@ -822,7 +822,7 @@
 		"groupType": "museum",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element3"
+		"icon": "card_3"
 	},
 	{
 		"id": "104",
@@ -830,7 +830,7 @@
 		"groupType": "museum",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element4"
+		"icon": "card_4"
 	},
 	{
 		"id": "105",
@@ -838,7 +838,7 @@
 		"groupType": "museum",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element5"
+		"icon": "card_5"
 	},
 	{
 		"id": "106",
@@ -846,7 +846,7 @@
 		"groupType": "museum",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element6"
+		"icon": "card_6"
 	},
 	{
 		"id": "107",
@@ -854,7 +854,7 @@
 		"groupType": "museum",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element7"
+		"icon": "card_7"
 	},
 	{
 		"id": "108",
@@ -862,7 +862,7 @@
 		"groupType": "museum",
 		"stars": 5,
 		"premiumCard": false,
-		"icon": "Element8"
+		"icon": "card_8"
 	},
 	{
 		"id": "109",
@@ -870,7 +870,7 @@
 		"groupType": "museum",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element9"
+		"icon": "card_9"
 	},
 	{
 		"id": "110",
@@ -878,7 +878,7 @@
 		"groupType": "museum",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element10"
+		"icon": "card_10"
 	},
 	{
 		"id": "111",
@@ -886,7 +886,7 @@
 		"groupType": "cafe",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "card_1"
 	},
 	{
 		"id": "112",
@@ -894,7 +894,7 @@
 		"groupType": "cafe",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "card_2"
 	},
 	{
 		"id": "113",
@@ -902,7 +902,7 @@
 		"groupType": "cafe",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element3"
+		"icon": "card_3"
 	},
 	{
 		"id": "114",
@@ -910,7 +910,7 @@
 		"groupType": "cafe",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element4"
+		"icon": "card_4"
 	},
 	{
 		"id": "115",
@@ -918,7 +918,7 @@
 		"groupType": "cafe",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element5"
+		"icon": "card_5"
 	},
 	{
 		"id": "116",
@@ -926,7 +926,7 @@
 		"groupType": "cafe",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element6"
+		"icon": "card_6"
 	},
 	{
 		"id": "117",
@@ -934,7 +934,7 @@
 		"groupType": "cafe",
 		"stars": 5,
 		"premiumCard": false,
-		"icon": "Element7"
+		"icon": "card_7"
 	},
 	{
 		"id": "118",
@@ -942,7 +942,7 @@
 		"groupType": "cafe",
 		"stars": 5,
 		"premiumCard": false,
-		"icon": "Element8"
+		"icon": "card_8"
 	},
 	{
 		"id": "119",
@@ -950,7 +950,7 @@
 		"groupType": "cafe",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element9"
+		"icon": "card_9"
 	},
 	{
 		"id": "120",
@@ -958,7 +958,7 @@
 		"groupType": "cafe",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element10"
+		"icon": "card_10"
 	},
 	{
 		"id": "121",
@@ -966,7 +966,7 @@
 		"groupType": "big city",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "card_1"
 	},
 	{
 		"id": "122",
@@ -974,7 +974,7 @@
 		"groupType": "big city",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "card_2"
 	},
 	{
 		"id": "123",
@@ -982,7 +982,7 @@
 		"groupType": "big city",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element3"
+		"icon": "card_3"
 	},
 	{
 		"id": "124",
@@ -990,7 +990,7 @@
 		"groupType": "big city",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element4"
+		"icon": "card_4"
 	},
 	{
 		"id": "125",
@@ -998,7 +998,7 @@
 		"groupType": "big city",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element5"
+		"icon": "card_5"
 	},
 	{
 		"id": "126",
@@ -1006,7 +1006,7 @@
 		"groupType": "big city",
 		"stars": 5,
 		"premiumCard": false,
-		"icon": "Element6"
+		"icon": "card_6"
 	},
 	{
 		"id": "127",
@@ -1014,7 +1014,7 @@
 		"groupType": "big city",
 		"stars": 5,
 		"premiumCard": false,
-		"icon": "Element7"
+		"icon": "card_7"
 	},
 	{
 		"id": "128",
@@ -1022,7 +1022,7 @@
 		"groupType": "big city",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element8"
+		"icon": "card_8"
 	},
 	{
 		"id": "129",
@@ -1030,7 +1030,7 @@
 		"groupType": "big city",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element9"
+		"icon": "card_9"
 	},
 	{
 		"id": "130",
@@ -1038,7 +1038,7 @@
 		"groupType": "big city",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element10"
+		"icon": "card_10"
 	},
 	{
 		"id": "131",
@@ -1046,7 +1046,7 @@
 		"groupType": "park",
 		"stars": 3,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "card_1"
 	},
 	{
 		"id": "132",
@@ -1054,7 +1054,7 @@
 		"groupType": "park",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "card_2"
 	},
 	{
 		"id": "133",
@@ -1062,7 +1062,7 @@
 		"groupType": "park",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element3"
+		"icon": "card_3"
 	},
 	{
 		"id": "134",
@@ -1070,7 +1070,7 @@
 		"groupType": "park",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element4"
+		"icon": "card_4"
 	},
 	{
 		"id": "135",
@@ -1078,7 +1078,7 @@
 		"groupType": "park",
 		"stars": 5,
 		"premiumCard": false,
-		"icon": "Element5"
+		"icon": "card_5"
 	},
 	{
 		"id": "136",
@@ -1086,7 +1086,7 @@
 		"groupType": "park",
 		"stars": 5,
 		"premiumCard": false,
-		"icon": "Element6"
+		"icon": "card_6"
 	},
 	{
 		"id": "137",
@@ -1094,7 +1094,7 @@
 		"groupType": "park",
 		"stars": 5,
 		"premiumCard": false,
-		"icon": "Element7"
+		"icon": "card_7"
 	},
 	{
 		"id": "138",
@@ -1102,7 +1102,7 @@
 		"groupType": "park",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element8"
+		"icon": "card_8"
 	},
 	{
 		"id": "139",
@@ -1110,7 +1110,7 @@
 		"groupType": "park",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element9"
+		"icon": "card_9"
 	},
 	{
 		"id": "140",
@@ -1118,7 +1118,7 @@
 		"groupType": "park",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element10"
+		"icon": "card_10"
 	},
 	{
 		"id": "141",
@@ -1126,7 +1126,7 @@
 		"groupType": "town hall",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element1"
+		"icon": "card_1"
 	},
 	{
 		"id": "142",
@@ -1134,7 +1134,7 @@
 		"groupType": "town hall",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element2"
+		"icon": "card_2"
 	},
 	{
 		"id": "143",
@@ -1142,7 +1142,7 @@
 		"groupType": "town hall",
 		"stars": 4,
 		"premiumCard": false,
-		"icon": "Element3"
+		"icon": "card_3"
 	},
 	{
 		"id": "144",
@@ -1150,7 +1150,7 @@
 		"groupType": "town hall",
 		"stars": 5,
 		"premiumCard": false,
-		"icon": "Element4"
+		"icon": "card_4"
 	},
 	{
 		"id": "145",
@@ -1158,7 +1158,7 @@
 		"groupType": "town hall",
 		"stars": 5,
 		"premiumCard": false,
-		"icon": "Element5"
+		"icon": "card_5"
 	},
 	{
 		"id": "146",
@@ -1166,7 +1166,7 @@
 		"groupType": "town hall",
 		"stars": 5,
 		"premiumCard": false,
-		"icon": "Element6"
+		"icon": "card_6"
 	},
 	{
 		"id": "147",
@@ -1174,7 +1174,7 @@
 		"groupType": "town hall",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element7"
+		"icon": "card_7"
 	},
 	{
 		"id": "148",
@@ -1182,7 +1182,7 @@
 		"groupType": "town hall",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element8"
+		"icon": "card_8"
 	},
 	{
 		"id": "149",
@@ -1190,7 +1190,7 @@
 		"groupType": "town hall",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element9"
+		"icon": "card_9"
 	},
 	{
 		"id": "150",
@@ -1198,7 +1198,7 @@
 		"groupType": "town hall",
 		"stars": 5,
 		"premiumCard": true,
-		"icon": "Element10"
+		"icon": "card_10"
 	}
 ]
 }
