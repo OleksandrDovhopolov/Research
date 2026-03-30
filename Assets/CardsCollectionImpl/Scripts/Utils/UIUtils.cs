@@ -49,14 +49,16 @@ namespace CardCollectionImpl
             IReadOnlyList<TConfig> configs,
             Func<TConfig, string> getSpriteAddress,
             Func<TConfig, TView> getView,
-            Action<TView, Sprite> setSprite)
+            Action<TView, Sprite> setSprite,
+            CancellationToken cancellationToken = default)
         {
             var loadTasks = configs.Select(async config =>
             {
                 try
                 {
                     var spriteAddress = getSpriteAddress(config);
-                    var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, cancellationToken);
                     var view = getView(config);
                     if (view != null)
                         setSprite(view, sprite);
@@ -73,8 +75,8 @@ namespace CardCollectionImpl
         
         public static async UniTask SetSprite(string spriteAddress, CollectionCardView view, CancellationToken cancellationToken = default)
         {
-            var task = ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress);
-            var sprite = await task.AsUniTask().AttachExternalCancellation(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, cancellationToken);
             view.SetCardImageTest(sprite);
         }
     }

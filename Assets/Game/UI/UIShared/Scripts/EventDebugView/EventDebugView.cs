@@ -55,7 +55,7 @@ namespace UIShared
             Sprite sprite = null;
             try
             {
-                sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress);
+                sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, _ct);
             }
             catch (Exception loadPrimaryException)
             {

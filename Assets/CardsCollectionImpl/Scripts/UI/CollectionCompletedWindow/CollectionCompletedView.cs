@@ -39,7 +39,7 @@ namespace CardCollectionImpl
             Sprite sprite = null;
             try
             {
-                sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(eventId);
+                sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(eventId, _ct);
             }
             catch (Exception loadPrimaryException)
             {

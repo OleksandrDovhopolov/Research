@@ -1,3 +1,4 @@
+using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
@@ -40,7 +41,9 @@ namespace CardCollectionImpl
 
             async UniTask SetSprite()
             {
-                var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(config.icon);
+                var ct = this.GetCancellationTokenOnDestroy();
+                ct.ThrowIfCancellationRequested();
+                var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(config.icon, ct);
                 _selectedCardView.SetCardImage(sprite);
             }
         }

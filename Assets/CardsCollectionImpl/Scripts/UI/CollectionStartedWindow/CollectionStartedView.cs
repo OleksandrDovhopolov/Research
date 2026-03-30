@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using EventOrchestration;
 using Infrastructure;
@@ -41,10 +42,11 @@ namespace CardCollectionImpl
         
         public async UniTask LoadCollectionSprite(string eventId)
         {
+            var ct = this.GetCancellationTokenOnDestroy();
             Sprite sprite = null;
             try
             {
-                sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(eventId);
+                sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(eventId, ct);
             }
             catch (Exception loadPrimaryException)
             {

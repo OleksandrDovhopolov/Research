@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Infrastructure;
 using UISystem;
@@ -25,7 +26,7 @@ namespace core
         {
             var windowAttribute = UIExtension.GetWindowAttribute<T>();
 
-            var window = await AddressablesWrapper.LoadFromTask<GameObject>(windowAttribute.PrefabAddressableReference);
+            var window = await ProdAddressablesWrapper.LoadAsync<GameObject>(windowAttribute.PrefabAddressableReference, CancellationToken.None);
             
             if (window == null)
             {
@@ -37,7 +38,8 @@ namespace core
 
         public override T CreaseSync<T>()
         {
-            Debug.LogWarning("Creating Window CreaseSync");
+            throw new NotImplementedException("Method not implemented");
+            /*Debug.LogWarning("Creating Window CreaseSync");
             
             var windowAttribute = UIExtension.GetWindowAttribute<T>();
 
@@ -47,7 +49,7 @@ namespace core
                 throw new Exception($"{Tag} Base window at path {windowAttribute.PrefabAddressableReference} does not exist");
             }
 
-            return Create<T>(windowView, windowAttribute);
+            return Create<T>(windowView, windowAttribute);*/
         }
 
         protected override T Create<T>(WindowView windowPrefab, WindowAttribute windowAttribute)

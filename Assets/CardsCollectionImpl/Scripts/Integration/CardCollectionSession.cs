@@ -122,6 +122,11 @@ namespace CardCollectionImpl
                 _uiManager.Hide<NewCardController>();
             }
             
+            if (_uiManager.IsWindowShown<CollectionStartedController>())
+            {
+                _uiManager.Hide<CollectionStartedController>();
+            }
+            
             //TODO uncomment this when new window created
             /*if (_uiManager.IsWindowShown<CardGroupRewardController>())
             {
@@ -250,19 +255,16 @@ namespace CardCollectionImpl
                 Debug.LogError($"[CardCollectionRuntime] HUD dispose error: {e}");
             }
 
-            if (_rewardsConfig != null)
+            try
             {
-                try
-                {
-                    AddressablesWrapper.Release(_rewardsConfig);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"[CardCollectionRuntime] Addressables release error: {e}");
-                }
-
-                _rewardsConfig = null;
+                ProdAddressablesWrapper.Release(_rewardsConfig);
             }
+            catch (Exception e)
+            {
+                Debug.LogError($"[CardCollectionRuntime] Addressables release error: {e}");
+            }
+
+            _rewardsConfig = null;
         }
 
         private void ThrowIfDisposed()

@@ -136,7 +136,7 @@ namespace Inventory.Implementation
 
                 if (!_spriteLoadTasks.TryGetValue(spriteId, out var loadTask))
                 {
-                    loadTask = ProdAddressablesWrapper.LoadAsync<Sprite>(spriteId);
+                    loadTask = ProdAddressablesWrapper.LoadAsync<Sprite>(spriteId, ct);
                     _spriteLoadTasks[spriteId] = loadTask;
                 }
                 

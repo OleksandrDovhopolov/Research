@@ -102,10 +102,9 @@ namespace CardCollectionImpl
                 //TODO move all files load in 1 the same logic. eg ICardsConfigProvider / ICardsConfigProvider /etc
                 ct.ThrowIfCancellationRequested();
                 //TODO move it into separate interface
-                rewardsConfig = await AddressablesWrapper
-                    .LoadFromTask<CardCollectionRewardsConfigSO>(model.RewardsConfigAddress)
-                    .AsUniTask()
-                    .AttachExternalCancellation(ct);
+                rewardsConfig = await ProdAddressablesWrapper
+                    .LoadAsync<CardCollectionRewardsConfigSO>(model.RewardsConfigAddress, ct)
+                    .AsUniTask();
                 ct.ThrowIfCancellationRequested();
 
                 if (rewardsConfig == null)
@@ -136,7 +135,7 @@ namespace CardCollectionImpl
             {
                 if (rewardsConfig != null)
                 {
-                    AddressablesWrapper.Release(rewardsConfig);
+                    ProdAddressablesWrapper.Release(rewardsConfig);
                 }
 
                 module?.Dispose();

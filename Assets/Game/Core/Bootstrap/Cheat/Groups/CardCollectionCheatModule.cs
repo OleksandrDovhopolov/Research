@@ -19,8 +19,6 @@ namespace Game.Cheat
         private readonly OrchestratorRunner _orchestratorRunner;
         private readonly ICardCollectionFeatureFacade _featureFacade;
 
-        private int _eventCounter = 0;
-
         private const string WinterCollectionEventId = "Winter_Collection";
         private const string WinterCollectionEventName = "Winter Collection";
         
@@ -38,12 +36,12 @@ namespace Game.Cheat
         {
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Create test events", () =>
             {
-                //var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 30, 120);
-                var first = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, 30, 120);
-                //var second = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, first.EndTimeUtc, TimeSpan.FromSeconds(120));
+                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 20, 60);
+                //var first = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, 30, 120);
+                var second = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, first.EndTimeUtc, TimeSpan.FromSeconds(120));
                 
                 _orchestratorRunner.AddDebugCardCollectionEventNextMinute(first);
-                //_orchestratorRunner.AddDebugCardCollectionEventNextMinute(second);
+                _orchestratorRunner.AddDebugCardCollectionEventNextMinute(second);
             }).WithGroup(CardCollectionGroup));
 
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Complete current event", () =>
@@ -100,7 +98,7 @@ namespace Game.Cheat
         
         private ScheduleItem CreateDebugCardCollectionScheduleItemForNextMinute(string eventId, string eventName, int secondsDelay = 30, int secondsDuration = 30)
         {
-            var now = DateTimeOffset.UtcNow;
+            /*var now = DateTimeOffset.UtcNow;
             var startAt = new DateTimeOffset(
                 now.Year,
                 now.Month,
@@ -108,9 +106,9 @@ namespace Game.Cheat
                 now.Hour,
                 now.Minute,
                 0,
-                TimeSpan.Zero).AddSeconds(secondsDelay);
+                TimeSpan.Zero).AddSeconds(secondsDelay);*/
+            var startAt = DateTimeOffset.UtcNow.AddSeconds(secondsDelay);
             var endAt = startAt.AddSeconds(secondsDuration);
-            //var eventId = $"season_cards_debug_{_eventCounter++}";
 
             return new ScheduleItem
             {
@@ -135,7 +133,6 @@ namespace Game.Cheat
         private ScheduleItem CreateDebugCardCollectionScheduleItem(string eventId, string eventName, DateTimeOffset startAt, TimeSpan duration)
         {
             var endAt = startAt.Add(duration);
-            //var eventId = $"season_cards_debug_{_eventCounter++}";
 
             return new ScheduleItem
             {
