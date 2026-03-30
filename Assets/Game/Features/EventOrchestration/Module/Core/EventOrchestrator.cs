@@ -78,6 +78,31 @@ namespace EventOrchestration.Core
                 await ProcessStreamAsync(stream, now, ct);
             }
         }
+        
+        public ScheduleItem GetNextUpcomingEvent()
+        {
+            var now = _clock.UtcNow;
+            ScheduleItem nextItem = null;
+            for (var i = 0; i < _schedule.Count; i++)
+            {
+                var item = _schedule[i];
+                if (item.EndTimeUtc <= now)
+                    continue;
+
+                if (!_states.TryGetValue(item.Id, out var state))
+                    continue;
+
+                if (state.State != EventInstanceState.Pending)
+                    continue;
+
+                if (nextItem == null || item.StartTimeUtc < nextItem.StartTimeUtc)
+                {
+                    nextItem = item;
+                }
+            }
+
+            return nextItem;
+        }
 
         private void CreateScheduleData()
         {

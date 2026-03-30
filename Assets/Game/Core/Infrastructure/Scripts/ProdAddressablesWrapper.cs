@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceLocations;
 using Object = UnityEngine.Object;
 
 namespace Infrastructure
@@ -262,6 +264,81 @@ namespace Infrastructure
             {
                 semaphore.Dispose();
             }
+        }
+
+        public static async Task DownloadDependenciesByLabelAsync(string label, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(label))
+                throw new ArgumentException("Label is null or empty.", nameof(label));
+
+            ct.ThrowIfCancellationRequested();
+
+            var handle = Addressables.DownloadDependenciesAsync(label);
+            try
+            {
+                await AwaitWithCancellation(handle.Task, ct);
+                if (handle.Status != AsyncOperationStatus.Succeeded)
+                {
+                    throw new InvalidOperationException(
+                        $"Addressables.DownloadDependenciesAsync failed for label '{label}'. Status: {handle.Status}");
+                }
+            }
+            finally
+            {
+                if (handle.IsValid())
+                {
+                    Addressables.Release(handle);
+                }
+            }
+        }
+
+        public static async Task<IReadOnlyList<string>> ResolveAddressesByLabelAsync<T>(string label, CancellationToken ct)
+            where T : Object
+        {
+            if (string.IsNullOrWhiteSpace(label))
+                throw new ArgumentException("Label is null or empty.", nameof(label));
+
+            ct.ThrowIfCancellationRequested();
+
+            var handle = Addressables.LoadResourceLocationsAsync(label, typeof(T));
+            try
+            {
+                await AwaitWithCancellation(handle.Task, ct);
+                if (handle.Status != AsyncOperationStatus.Succeeded || handle.Result == null)
+                    return Array.Empty<string>();
+
+                return handle.Result
+                    .Where(x => x != null)
+                    .Select(x => x.PrimaryKey)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct()
+                    .ToArray();
+            }
+            finally
+            {
+                if (handle.IsValid())
+                {
+                    Addressables.Release(handle);
+                }
+            }
+        }
+
+        public static async Task<IReadOnlyList<string>> WarmupGroupByLabelAsync<T>(
+            string label,
+            CancellationToken ct,
+            int takeCount,
+            int maxConcurrency = 8) where T : Object
+        {
+            if (takeCount <= 0)
+                throw new ArgumentOutOfRangeException(nameof(takeCount));
+
+            var addresses = await ResolveAddressesByLabelAsync<T>(label, ct);
+            var selected = addresses.Take(takeCount).ToArray();
+            if (selected.Length == 0)
+                return selected;
+
+            await LoadGroupAsync<T>(selected, ct, maxConcurrency);
+            return selected;
         }
         
         public static void ReleaseGroup(IEnumerable<string> addresses)

@@ -2,6 +2,7 @@ using EventOrchestration.Abstractions;
 using EventOrchestration.Core;
 using EventOrchestration.Infrastructure;
 using VContainer;
+using VContainer.Unity;
 
 namespace core
 {
@@ -20,6 +21,9 @@ namespace core
             builder.Register<EventOrchestrator>(
                 resolver => resolver.Resolve<OrchestratorFactory>().Create(),
                 Lifetime.Singleton);
+            
+            builder.RegisterEntryPoint<EventAssetWarmupService>(Lifetime.Singleton)
+                .As<IEventAssetWarmupService>();
         }
     }
 }
