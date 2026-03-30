@@ -205,9 +205,9 @@ namespace CardCollectionImpl
             View.UpdateGroupNewCards(currentGroupType, 0);
         }
 
-        public void ResetGroupSprites()
+        public void ReleaseSprites()
         {
-            View.ResetGroupSprites();
+            View.ReleaseSprites();
         }
 
         private void CloseWindow()

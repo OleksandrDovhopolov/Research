@@ -48,6 +48,11 @@ namespace CardCollectionImpl
                 _selectedCardView.SetCardImage(sprite);
             }
         }
+
+        public void ReleaseSprite()
+        {
+            _selectedCardView.SetCardImage(null, true);
+        }
         
         private void SelectedCardCallback()
         {

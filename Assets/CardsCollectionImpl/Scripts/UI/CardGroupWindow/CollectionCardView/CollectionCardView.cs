@@ -115,13 +115,16 @@ namespace CardCollectionImpl
             }            
         }
         
-        public void SetCardImage(Sprite cardSprite)
+        public void SetCardImage(Sprite cardSprite,  bool shouldRelease = false)
         {
-            _cardImage.sprite = cardSprite;
-        }
-        
-        public void SetCardImageTest(Sprite cardSprite)
-        {
+            //_cardImage.sprite = cardSprite;
+            
+            var previous = _cardImage.sprite;
+            if (shouldRelease && !ReferenceEquals(previous, cardSprite))
+            {
+                ProdAddressablesWrapper.Release(previous);
+            }
+
             _cardImage.sprite = cardSprite;
         }
         

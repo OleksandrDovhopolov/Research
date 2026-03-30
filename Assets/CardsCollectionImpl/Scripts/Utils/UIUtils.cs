@@ -77,7 +77,7 @@ namespace CardCollectionImpl
         {
             cancellationToken.ThrowIfCancellationRequested();
             var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, cancellationToken);
-            view.SetCardImageTest(sprite);
+            view.SetCardImage(sprite);
         }
     }
 }

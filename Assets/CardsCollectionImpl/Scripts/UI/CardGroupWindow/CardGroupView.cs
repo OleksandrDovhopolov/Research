@@ -121,7 +121,7 @@ namespace CardCollectionImpl
                 cardsData,
                 config =>  eventId + "/" + config.icon,
                 config => _viewsDict.TryGetValue(config, out var view) ? view : null,
-                (view, sprite) => view.SetCardImageTest(sprite));
+                (view, sprite) => view.SetCardImage(sprite));
         }
 
         /// <summary>
@@ -184,6 +184,16 @@ namespace CardCollectionImpl
             _selectedCardAnimation.OnCardPressedHandler(_eventId, cardView, config);
         }
 
+        public void ReleaseSprites()
+        {
+            foreach (var kvp in _viewsDict)
+            {
+                kvp.Value.SetCardImage(null, true);
+            }
+
+            _selectedCardAnimation.ReleaseSprite();
+        }
+        
         public void DisableAll()
         {
             _selectedCardAnimation.HideImmediately();

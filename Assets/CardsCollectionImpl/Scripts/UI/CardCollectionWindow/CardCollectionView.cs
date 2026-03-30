@@ -191,7 +191,7 @@ namespace CardCollectionImpl
             _cardsCollectionPointsView.SetPointsAmount(pointsAmount);
         }
 
-        public void ResetGroupSprites()
+        public void ReleaseSprites()
         {
             foreach (var kvp in _viewsDict)
             {

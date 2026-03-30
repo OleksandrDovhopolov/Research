@@ -111,26 +111,43 @@ namespace CardCollectionImpl
 
         private void HideEventWindows()
         {
-            //TODO find better way
             if (_uiManager.IsWindowSpawned<CardCollectionController>())
             {
                 var window = _uiManager.GetWindowSync<CardCollectionController>();
-                window.ResetGroupSprites();
-            }
-
-            if (_uiManager.IsWindowShown<CardCollectionController>())
-            {
-                _uiManager.Hide<CardCollectionController>();
-            }
-            
-            if (_uiManager.IsWindowShown<NewCardController>())
-            {
-                _uiManager.Hide<NewCardController>();
+                if (window.IsShown)
+                {
+                    _uiManager.Hide<CardCollectionController>();
+                }
+                window.ReleaseSprites();
             }
             
-            if (_uiManager.IsWindowShown<CollectionStartedController>())
+            if (_uiManager.IsWindowSpawned<CardGroupController>())
             {
-                _uiManager.Hide<CollectionStartedController>();
+                var window = _uiManager.GetWindowSync<CardGroupController>();
+               
+                window.ReleaseSprites();
+            }
+            
+            if (_uiManager.IsWindowSpawned<NewCardController>())
+            {
+                var window = _uiManager.GetWindowSync<NewCardController>();
+                if (window.IsShown)
+                {
+                    _uiManager.Hide<NewCardController>();
+                }
+                //TODO release resources
+                //window.ReleaseSprites();
+            }
+            
+            if (_uiManager.IsWindowSpawned<CollectionStartedController>())
+            {
+                var window = _uiManager.GetWindowSync<CollectionStartedController>();
+                if (window.IsShown)
+                {
+                    _uiManager.Hide<CollectionStartedController>();
+                }
+                //TODO release resources
+                //window.ReleaseSprites();
             }
             
             //TODO uncomment this when new window created
