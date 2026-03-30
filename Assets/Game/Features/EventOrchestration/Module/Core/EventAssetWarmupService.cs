@@ -159,6 +159,10 @@ namespace EventOrchestration.Core
             {
                 if (state?.WarmedAddresses != null && state.WarmedAddresses.Count > 0)
                 {
+                    foreach (var warmed in state.WarmedAddresses)
+                    {
+                        Debug.LogWarning($"[EventAssetWarmupService] released {warmed}");
+                    }
                     Debug.LogWarning($"[EventAssetWarmupService] ReleaseForEvent: eventId={eventId}, addresses={state.WarmedAddresses.Count}.");
                     ProdAddressablesWrapper.ReleaseGroup(state.WarmedAddresses);
                     Debug.LogWarning($"[EventAssetWarmupService] ReleaseForEvent: completed for eventId={eventId}.");

@@ -112,6 +112,12 @@ namespace CardCollectionImpl
         private void HideEventWindows()
         {
             //TODO find better way
+            if (_uiManager.IsWindowSpawned<CardCollectionController>())
+            {
+                var window = _uiManager.GetWindowSync<CardCollectionController>();
+                window.ResetGroupSprites();
+            }
+
             if (_uiManager.IsWindowShown<CardCollectionController>())
             {
                 _uiManager.Hide<CardCollectionController>();

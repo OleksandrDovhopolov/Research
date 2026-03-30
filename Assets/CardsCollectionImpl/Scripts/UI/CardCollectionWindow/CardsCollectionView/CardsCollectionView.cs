@@ -1,4 +1,5 @@
 using System;
+using Infrastructure;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -66,9 +67,16 @@ namespace CardCollectionImpl
         {
             _cardsGrouopButton.onClick.RemoveAllListeners();
         }
-
-        public void SetSprite(Sprite groupSprite)
+        
+        //TODO make release here better way
+        public void SetSprite(Sprite groupSprite, bool shouldRelease = false)
         {
+            var previous = _cardsGrouopImage.sprite;
+            if (shouldRelease && !ReferenceEquals(previous, groupSprite))
+            {
+                ProdAddressablesWrapper.Release(previous);
+            }
+
             _cardsGrouopImage.sprite = groupSprite;
         }
     }

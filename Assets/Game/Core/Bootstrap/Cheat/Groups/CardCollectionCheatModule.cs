@@ -36,12 +36,12 @@ namespace Game.Cheat
         {
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Create test events", () =>
             {
-                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 15, 30);
+                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 15, 15);
                 //var first = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, 30, 120);
                 var second = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, first.EndTimeUtc, TimeSpan.FromSeconds(120));
                 
                 _orchestratorRunner.AddDebugCardCollectionEventNextMinute(first);
-                _orchestratorRunner.AddDebugCardCollectionEventNextMinute(second);
+                //_orchestratorRunner.AddDebugCardCollectionEventNextMinute(second);
             }).WithGroup(CardCollectionGroup));
 
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Complete current event", () =>

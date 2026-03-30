@@ -190,6 +190,14 @@ namespace CardCollectionImpl
         {
             _cardsCollectionPointsView.SetPointsAmount(pointsAmount);
         }
+
+        public void ResetGroupSprites()
+        {
+            foreach (var kvp in _viewsDict)
+            {
+                kvp.Value.SetSprite(null, true);
+            }
+        }
         
         protected override void OnDestroy()
         {

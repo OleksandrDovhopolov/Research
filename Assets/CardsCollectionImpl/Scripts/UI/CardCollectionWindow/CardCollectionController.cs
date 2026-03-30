@@ -204,7 +204,12 @@ namespace CardCollectionImpl
         {
             View.UpdateGroupNewCards(currentGroupType, 0);
         }
-        
+
+        public void ResetGroupSprites()
+        {
+            View.ResetGroupSprites();
+        }
+
         private void CloseWindow()
         {
             UIManager.Hide<CardCollectionController>();
