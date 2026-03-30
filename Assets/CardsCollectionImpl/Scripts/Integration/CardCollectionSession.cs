@@ -111,6 +111,15 @@ namespace CardCollectionImpl
 
         private void HideEventWindows()
         {
+            /*if (_uiManager.IsWindowSpawned<CardGroupController>())
+            {
+                var window = _uiManager.GetWindowSync<CardGroupController>();
+                if (window.IsShown)
+                {
+                    _uiManager.Hide<CardGroupController>(true);
+                }
+            }*/
+            
             if (_uiManager.IsWindowSpawned<CardCollectionController>())
             {
                 var window = _uiManager.GetWindowSync<CardCollectionController>();
@@ -137,7 +146,7 @@ namespace CardCollectionImpl
                 var window = _uiManager.GetWindowSync<CollectionStartedController>();
                 if (window.IsShown)
                 {
-                    _uiManager.Hide<CollectionStartedController>();
+                    _uiManager.Hide<CollectionStartedController>(true);
                 }
             }
             

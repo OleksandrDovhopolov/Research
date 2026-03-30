@@ -14,6 +14,8 @@ namespace CardCollectionImpl
 {
     public sealed class EventSpriteManager : IEventSpriteManager, IDisposable
     {
+        private const int ReleaseDelay = 1000;
+        
         private sealed class SpriteBinding
         {
             public string Address;
@@ -30,7 +32,9 @@ namespace CardCollectionImpl
         private readonly object _gate = new();
         private readonly Dictionary<string, EventState> _stateByEventId = new(StringComparer.Ordinal);
         private readonly EventOrchestrator _eventOrchestrator;
-
+        
+        private readonly CancellationTokenSource _disposeCts = new();
+        
         public EventSpriteManager(EventOrchestrator eventOrchestrator)
         {
             _eventOrchestrator = eventOrchestrator ?? throw new ArgumentNullException(nameof(eventOrchestrator));
@@ -134,6 +138,18 @@ namespace CardCollectionImpl
             return loadedSprite;
         }
 
+        private async UniTaskVoid ReleaseEventAsync(string eventId, CancellationToken ct)
+        {
+            try
+            {
+                await UniTask.Delay(ReleaseDelay, cancellationToken: ct);
+                ReleaseEvent(eventId);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+        
         public void ReleaseEvent(string eventId)
         {
             if (string.IsNullOrWhiteSpace(eventId))
@@ -179,6 +195,8 @@ namespace CardCollectionImpl
         public void Dispose()
         {
             _eventOrchestrator.OnEventCompleted -= HandleEventCompleted;
+            _disposeCts.Cancel();
+            _disposeCts.Dispose();
             ReleaseAll();
         }
 
@@ -187,7 +205,7 @@ namespace CardCollectionImpl
             if (item == null || string.IsNullOrWhiteSpace(item.Id))
                 return;
             
-            ReleaseEvent(item.Id);
+            ReleaseEventAsync(item.Id, _disposeCts.Token).Forget();
         }
 
         private EventState GetOrCreateEventState(string eventId)
