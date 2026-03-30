@@ -27,10 +27,8 @@ namespace UIShared
         [SerializeField] private UIListPool<SharedAnimationView> _animationViewsPool;
         [SerializeField] private AnimationSettings _animationSettings;
         
-        public Tween Animate(ArgAnimateCurrency animationArgs)
+        public Tween Animate(ArgAnimateCurrency animationArgs, Action onAnimationCompleted)
         {
-            _animationViewsPool.DisableNonActive();
-            
             var delay = 0f;
             var destination = AnimationTargets.GetTargetPosition(animationArgs.ResourceType);
             var animation = DOTween.Sequence().SetUpdate(true);
@@ -39,7 +37,7 @@ namespace UIShared
             {
                 var parameters = _animationSettings.GetResourceAnimationParameters(animationArgs.ResourceType);
                 
-                animation.Insert(delay, AnimateCurvedParticle(animationArgs.StartScreenPosition, destination, parameters));
+                animation.Insert(delay, AnimateCurvedParticle(animationArgs.StartScreenPosition, destination, parameters, onAnimationCompleted));
                 
                 delay += parameters.SpawnDelay;
             }
@@ -47,7 +45,7 @@ namespace UIShared
             return animation;
         }
         
-        private Tween AnimateCurvedParticle(Vector3 startPosition, Vector3 finishPosition, ParticleAnimationParameters parameters)
+        private Tween AnimateCurvedParticle(Vector3 startPosition, Vector3 finishPosition, ParticleAnimationParameters parameters, Action onAnimationCompleted)
         {
             var particle = _animationViewsPool.GetNext();
             particle.gameObject.SetActive(false);
@@ -81,6 +79,7 @@ namespace UIShared
 
             particleAnimation.OnComplete(() =>
             {
+                onAnimationCompleted?.Invoke();
                 _animationViewsPool.Return(particle);
             });
 

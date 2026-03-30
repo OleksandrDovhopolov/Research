@@ -24,7 +24,7 @@ namespace Game.Cheat
             {
                 var screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
                 var animationArgs = new ArgAnimateCurrency(screenCenter, ResourceType.Gold,  amount);
-                _animateCurrency.Animate(animationArgs);
+                _animateCurrency.Animate(animationArgs, () => _resourceManager.NotifyAmountChanged(ResourceType.Gold));
                 _resourceManager.Add(ResourceType.Gold, amount);
             }).WithGroup(SampleGroup));
             
@@ -37,7 +37,7 @@ namespace Game.Cheat
             {
                 var screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
                 var animationArgs = new ArgAnimateCurrency(screenCenter, ResourceType.Energy,  amount);
-                _animateCurrency.Animate(animationArgs);
+                _animateCurrency.Animate(animationArgs, () => _resourceManager.NotifyAmountChanged(ResourceType.Energy));
                 _resourceManager.Add(ResourceType.Energy, amount);
             }).WithGroup(SampleGroup));
             
@@ -51,7 +51,7 @@ namespace Game.Cheat
                 _resourceManager.Add(ResourceType.Gems, amount);
                 var screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
                 var animationArgs = new ArgAnimateCurrency(screenCenter, ResourceType.Gems,  amount);
-                _animateCurrency.Animate(animationArgs);
+                _animateCurrency.Animate(animationArgs, () => _resourceManager.NotifyAmountChanged(ResourceType.Gems));
             }).WithGroup(SampleGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Remove gems", amount =>

@@ -42,13 +42,20 @@ namespace Rewards
                 
                 var screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
                 var animationArgs = new ArgAnimateCurrency(screenCenter, resourceType,  rewardRequest.Amount);
-                _animateCurrency.Animate(animationArgs);
+                _animateCurrency.Animate(animationArgs, OnAnimationCompleted);
                 return true;
             }
 
             return await AddToInventoryAsync(rewardRequest, ct);
+            
+            void OnAnimationCompleted()
+            {
+                _resourceManager.NotifyAmountChanged(resourceType);
+            }
         }
 
+       
+        
         private async UniTask<bool> AddToInventoryAsync(RewardGrantRequest rewardRequest, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
