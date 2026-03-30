@@ -178,11 +178,6 @@ namespace CardCollectionImpl
         {
             View.DisableAll();
         }
-
-        public void ReleaseSprites()
-        {
-            View.ReleaseSprites();
-        }
         
         private void CloseWindow()
         {

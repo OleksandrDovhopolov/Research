@@ -98,6 +98,9 @@ namespace CardCollectionImpl
 
             View.SetGroupsProgress(Args.CollectionProgressSnapshot.GroupProgress);
             View.SetCollectedAmountProgressStart(Args.CollectionProgressSnapshot.CollectedAmount, Args.CollectionProgressSnapshot.TotalAmount);
+            
+            if (_groupsCreated) return;
+            CreateGroupViews().Forget();
         }
         
         protected override void OnShowComplete()
@@ -113,9 +116,6 @@ namespace CardCollectionImpl
             
             View.UpdateCollectedAmount(collectedAmount, totalAmount);
             View.UpdateGroupsProgressAnimated(Args.EventCardsSaveData, Args.Cards);
-            
-            if (_groupsCreated) return;
-            CreateGroupViews().Forget();
         }
 
         private void OnRewardChestClickedHandler(RectTransform rectTransform)
@@ -175,19 +175,6 @@ namespace CardCollectionImpl
             }
         }
         
-        protected override void OnHideStart(bool isClosed)
-        {
-            TryHideContentWidget();
-
-            View.UnbindEventTimerDisplay();
-
-            View.CloseClick -= CloseWindow;
-            View.OnPointsViewClicked -= OnPointsViewClickedHandler;
-            View.OnInfoButtonClicked -= OnInfoButtonClickedHandler;
-            View.OnRewardChestClicked -= OnRewardChestClickedHandler;
-            View.OnGroupButtonPressed -= OnGroupButtonPressedHandler;
-        }
-
         private void OnGroupButtonPressedHandler(string groupType)
         {
             TryHideContentWidget();
@@ -205,15 +192,23 @@ namespace CardCollectionImpl
                 OnGroupViewChangedHandler);
             UIManager.Show<CardGroupController>(args);
         }
+        
+        protected override void OnHideStart(bool isClosed)
+        {
+            TryHideContentWidget();
+
+            View.UnbindEventTimerDisplay();
+
+            View.CloseClick -= CloseWindow;
+            View.OnPointsViewClicked -= OnPointsViewClickedHandler;
+            View.OnInfoButtonClicked -= OnInfoButtonClickedHandler;
+            View.OnRewardChestClicked -= OnRewardChestClickedHandler;
+            View.OnGroupButtonPressed -= OnGroupButtonPressedHandler;
+        }
 
         private void OnGroupViewChangedHandler(string currentGroupType)
         {
             View.UpdateGroupNewCards(currentGroupType, 0);
-        }
-
-        public void ReleaseSprites()
-        {
-            View.ReleaseSprites();
         }
 
         private void CloseWindow()

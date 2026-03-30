@@ -118,19 +118,12 @@ namespace CardCollectionImpl
                 {
                     _uiManager.Hide<CardCollectionController>();
                 }
-                window.ReleaseSprites();
-            }
-            
-            if (_uiManager.IsWindowSpawned<CardGroupController>())
-            {
-                var window = _uiManager.GetWindowSync<CardGroupController>();
-               
-                window.ReleaseSprites();
             }
             
             if (_uiManager.IsWindowSpawned<NewCardController>())
             {
                 var window = _uiManager.GetWindowSync<NewCardController>();
+                      
                 if (window.IsShown)
                 {
                     _uiManager.Hide<NewCardController>();
@@ -146,8 +139,6 @@ namespace CardCollectionImpl
                 {
                     _uiManager.Hide<CollectionStartedController>();
                 }
-                //TODO release resources
-                //window.ReleaseSprites();
             }
             
             //TODO uncomment this when new window created
