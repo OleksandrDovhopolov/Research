@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: 90ee11b8848c47445bfaff561fd0014c
   m_currentHash:
     serializedVersion: 2
-    Hash: 91ffa196d6f5bd819ca6d3aae444c556
+    Hash: a2f111c7686144880c4a8f76d6b0a701
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 1
   m_BundleLocalCatalog: 0
@@ -94,6 +94,7 @@ MonoBehaviour:
     - default
     - Spring_collection
     - Winter_Collection
+    - Spring_Collection
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 96f82f1b271a81343b3175cea4da7d64, type: 2}

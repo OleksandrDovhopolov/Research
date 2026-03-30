@@ -19,10 +19,10 @@ namespace EventOrchestration.Core
         }
 
         private static readonly TimeSpan PrepareDisk_SecondsBefore = TimeSpan.FromMilliseconds(10000);
-        private static readonly TimeSpan PrepareRam_SecondsBefore = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan PrepareRam_SecondsBefore = TimeSpan.FromMilliseconds(1500);
         
         //TODO update If you have 150 cards in your collection, that means the other 140 will load cold when you open the window.
-        private const int MaxWarmupSpritesCount = 10;
+        private const int MaxWarmupSpritesCount = 30;
 
         private readonly EventOrchestrator _orchestrator;
         private readonly IClock _clock;
@@ -42,50 +42,41 @@ namespace EventOrchestration.Core
         {
             _lifetimeCts = new CancellationTokenSource();
             _orchestrator.OnEventCompleted += HandleEventCompleted;
-            Debug.Log("[EventAssetWarmupService] Start: subscribed to OnEventCompleted and created lifetime token.");
+            Debug.LogWarning("[EventAssetWarmupService] Start: subscribed to OnEventCompleted and created lifetime token.");
         }
 
         public void Tick()
         {
             var ct = _lifetimeCts?.Token ?? CancellationToken.None;
             if (ct.IsCancellationRequested)
-            {
-                Debug.Log("[EventAssetWarmupService] Tick skipped: cancellation requested.");
                 return;
-            }
 
             if (Interlocked.CompareExchange(ref _tickInProgress, 1, 0) != 0)
-            {
-                Debug.Log("[EventAssetWarmupService] Tick skipped: previous tick is still running.");
                 return;
-            }
-
-            Debug.Log("[EventAssetWarmupService] Tick started.");
+            
             TickAsync(ct).Forget();
         }
 
         public void ReleaseAllWarmedAssets()
         {
-            Debug.Log($"[EventAssetWarmupService] ReleaseAllWarmedAssets: count={_warmupByEventId.Count}.");
             foreach (var pair in _warmupByEventId)
             {
                 ReleaseForEvent(pair.Key, pair.Value);
             }
 
             _warmupByEventId.Clear();
-            Debug.Log("[EventAssetWarmupService] ReleaseAllWarmedAssets: completed.");
         }
 
         public void Dispose()
         {
-            Debug.Log("[EventAssetWarmupService] Dispose: begin.");
+            Debug.LogWarning("[EventAssetWarmupService] Dispose: begin.");
             _orchestrator.OnEventCompleted -= HandleEventCompleted;
             ReleaseAllWarmedAssets();
 
             _lifetimeCts?.Cancel();
             _lifetimeCts?.Dispose();
             _lifetimeCts = null;
-            Debug.Log("[EventAssetWarmupService] Dispose: completed.");
+            Debug.LogWarning("[EventAssetWarmupService] Dispose: completed.");
         }
 
         private async UniTaskVoid TickAsync(CancellationToken ct)
@@ -98,38 +89,34 @@ namespace EventOrchestration.Core
                 //the second one may only start to warm up once the first one has already started.
                 var item = _orchestrator.GetNextUpcomingEvent();
                 if (item == null || string.IsNullOrWhiteSpace(item.Id))
-                {
-                    Debug.Log("[EventAssetWarmupService] TickAsync: no upcoming event.");
                     return;
-                }
 
                 var state = GetOrCreateState(item.Id);
                 var now = _clock.UtcNow;
-                Debug.Log($"[EventAssetWarmupService] TickAsync: eventId={item.Id}, now={now:O}, start={item.StartTimeUtc:O}, diskPrepared={state.DiskPrepared}, ramPrepared={state.RamPrepared}.");
 
                 if (!state.DiskPrepared && now >= item.StartTimeUtc - PrepareDisk_SecondsBefore)
                 {
-                    Debug.Log($"[EventAssetWarmupService] Disk warmup: start for eventId={item.Id}.");
+                    Debug.LogWarning($"[EventAssetWarmupService] Disk warmup started: eventId={item.Id}.");
                     await ProdAddressablesWrapper.DownloadDependenciesByLabelAsync(item.Id, ct);
                     state.DiskPrepared = true;
-                    Debug.Log($"[EventAssetWarmupService] Disk warmup: completed for eventId={item.Id}.");
+                    Debug.LogWarning($"[EventAssetWarmupService] Disk warmup completed: eventId={item.Id}.");
                 }
 
                 if (!state.RamPrepared && now >= item.StartTimeUtc - PrepareRam_SecondsBefore)
                 {
-                    Debug.Log($"[EventAssetWarmupService] RAM warmup: start for eventId={item.Id}, maxCount={MaxWarmupSpritesCount}.");
+                    Debug.LogWarning($"[EventAssetWarmupService] RAM warmup started: eventId={item.Id}, maxCount={MaxWarmupSpritesCount}.");
                     var warmedAddresses = await ProdAddressablesWrapper.WarmupGroupByLabelAsync<Sprite>(
                         item.Id,
                         ct,
                         MaxWarmupSpritesCount);
                     state.WarmedAddresses = warmedAddresses;
                     state.RamPrepared = true;
-                    Debug.Log($"[EventAssetWarmupService] RAM warmup: completed for eventId={item.Id}, warmedCount={warmedAddresses.Count}.");
+                    Debug.LogWarning($"[EventAssetWarmupService] RAM warmup: completed for eventId={item.Id}, warmedCount={warmedAddresses.Count}.");
                 }
             }
             catch (OperationCanceledException)
             {
-                Debug.Log("[EventAssetWarmupService] TickAsync canceled.");
+                // Expected during disposal/shutdown.
             }
             catch (Exception ex)
             {
@@ -138,7 +125,6 @@ namespace EventOrchestration.Core
             finally
             {
                 Interlocked.Exchange(ref _tickInProgress, 0);
-                Debug.Log("[EventAssetWarmupService] Tick finished.");
             }
         }
 
@@ -148,7 +134,7 @@ namespace EventOrchestration.Core
             {
                 state = new WarmupState();
                 _warmupByEventId[eventId] = state;
-                Debug.Log($"[EventAssetWarmupService] Created warmup state for eventId={eventId}.");
+                Debug.LogWarning($"[EventAssetWarmupService] Warmup tracking started: eventId={eventId}.");
             }
 
             return state;
@@ -157,21 +143,14 @@ namespace EventOrchestration.Core
         private void HandleEventCompleted(EventOrchestration.Models.ScheduleItem item)
         {
             if (item == null || string.IsNullOrWhiteSpace(item.Id))
-            {
-                Debug.Log("[EventAssetWarmupService] OnEventCompleted ignored: invalid item.");
                 return;
-            }
 
             if (!_warmupByEventId.TryGetValue(item.Id, out var state))
-            {
-                Debug.Log($"[EventAssetWarmupService] OnEventCompleted: no warmup state for eventId={item.Id}.");
                 return;
-            }
-
-            Debug.Log($"[EventAssetWarmupService] OnEventCompleted: releasing warmed assets for eventId={item.Id}.");
+            
             ReleaseForEvent(item.Id, state);
             _warmupByEventId.Remove(item.Id);
-            Debug.Log($"[EventAssetWarmupService] OnEventCompleted: removed warmup state for eventId={item.Id}.");
+            Debug.LogWarning($"[EventAssetWarmupService] Warmup tracking finished: eventId={item.Id}.");
         }
 
         private static void ReleaseForEvent(string eventId, WarmupState state)
@@ -180,13 +159,13 @@ namespace EventOrchestration.Core
             {
                 if (state?.WarmedAddresses != null && state.WarmedAddresses.Count > 0)
                 {
-                    Debug.Log($"[EventAssetWarmupService] ReleaseForEvent: eventId={eventId}, addresses={state.WarmedAddresses.Count}.");
+                    Debug.LogWarning($"[EventAssetWarmupService] ReleaseForEvent: eventId={eventId}, addresses={state.WarmedAddresses.Count}.");
                     ProdAddressablesWrapper.ReleaseGroup(state.WarmedAddresses);
-                    Debug.Log($"[EventAssetWarmupService] ReleaseForEvent: completed for eventId={eventId}.");
+                    Debug.LogWarning($"[EventAssetWarmupService] ReleaseForEvent: completed for eventId={eventId}.");
                 }
                 else
                 {
-                    Debug.Log($"[EventAssetWarmupService] ReleaseForEvent: nothing to release for eventId={eventId}.");
+                    // Nothing was warmed for this event.
                 }
             }
             catch (Exception ex)
