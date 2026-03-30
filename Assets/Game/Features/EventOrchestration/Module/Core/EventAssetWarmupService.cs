@@ -19,7 +19,7 @@ namespace EventOrchestration.Core
         }
 
         private static readonly TimeSpan PrepareDisk_SecondsBefore = TimeSpan.FromMilliseconds(10000);
-        private static readonly TimeSpan PrepareRam_SecondsBefore = TimeSpan.FromMilliseconds(1500);
+        private static readonly TimeSpan PrepareRam_SecondsBefore = TimeSpan.FromMilliseconds(3000);
         
         //TODO update If you have 150 cards in your collection, that means the other 140 will load cold when you open the window.
         private const int MaxWarmupSpritesCount = 30;

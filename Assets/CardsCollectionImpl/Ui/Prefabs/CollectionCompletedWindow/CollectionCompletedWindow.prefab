@@ -281,7 +281,6 @@ MonoBehaviour:
   _collectionImage: {fileID: 1730784947568544805}
   _descriptionText: {fileID: 122140743662915957}
   _titleText: {fileID: 2791841992374266469}
-  _fallbackSprite: {fileID: 21300000, guid: b8343f963ab597d4c8841993527ca07d, type: 3}
 --- !u!1 &1551677508063684806
 GameObject:
   m_ObjectHideFlags: 0

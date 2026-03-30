@@ -14,15 +14,15 @@ namespace CardCollectionImpl
         [SerializeField] private Image _collectionImage;
         [SerializeField] private TextMeshProUGUI _descriptionText;
         [SerializeField] private TextMeshProUGUI _titleText;
-        [SerializeField] private Sprite _fallbackSprite;
 
         private CancellationToken _ct;
+        private string _spriteAddress;
         
         private void Start()
         {
             _ct = this.GetCancellationTokenOnDestroy();
         }
-
+        
         public void SetDescription(string collectionName)
         {
             _titleText.text = collectionName;
@@ -34,19 +34,27 @@ namespace CardCollectionImpl
             _collectionImage.sprite = sprite;
         }
         
-        public async UniTask LoadCollectionSprite(string eventId)
+        public async UniTask LoadCollectionSprite(string spriteAddress)
         {
+            _spriteAddress =  spriteAddress;
             Sprite sprite = null;
             try
             {
-                sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(eventId, _ct);
+                sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(_spriteAddress, _ct);
             }
             catch (Exception loadPrimaryException)
             {
-                Debug.LogWarning($"Failed to load sprite for EventId='{eventId}'. Falling back to default. {loadPrimaryException.Message}");
+                Debug.LogWarning($"Failed to load sprite for Sprite='{_spriteAddress}'. Falling back to default. {loadPrimaryException.Message}");
             }
 
-            SetCollectionImage(sprite == null ? _fallbackSprite : sprite);
+            SetCollectionImage(sprite);
+        }
+
+        public void Release()
+        {
+            _collectionImage = null;
+            ProdAddressablesWrapper.Release(_spriteAddress);
+            _spriteAddress =  null;
         }
     }
 }

@@ -11,6 +11,8 @@ namespace UIShared
         [SerializeField] private EventTimerDisplay _timerDisplay;
         [SerializeField] private Image icon;
         
+        public Image Image => icon;
+
         public void SetData(string eventId, Sprite eventIcon, IGlobalTimerService  globalTimerService)
         {
             idText.text = eventId;
@@ -18,6 +20,11 @@ namespace UIShared
             _timerDisplay.Bind(eventId , globalTimerService);
         }
 
+        public void ResetSprite()
+        {
+            icon.sprite = null;
+        }
+        
         public void Cleanup()
         {
             _timerDisplay.Unbind();

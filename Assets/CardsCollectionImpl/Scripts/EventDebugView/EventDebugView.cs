@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
 using UnityEngine;
+using VContainer;
 
 namespace UIShared
 {
@@ -17,6 +19,13 @@ namespace UIShared
         private readonly Dictionary<string, EventDebugItemView> _idToView = new();
 
         private CancellationToken _ct;
+        /*private IEventSpriteManager  _eventSpriteManager;
+        
+        [Inject]
+        private void Construct(IEventSpriteManager eventSpriteManager)
+        {
+            _eventSpriteManager = eventSpriteManager;
+        }*/
         
         private void Start()
         {
@@ -44,6 +53,7 @@ namespace UIShared
             var view = _uiListPool.GetNext();
             var spriteAddress = eventId + "/" + CollectionPreview;
             var sprite = await LoadCollectionSprite(spriteAddress);
+            //await _eventSpriteManager.BindSpriteAsync(eventId, CollectionPreview, view.Image, _ct);
             view.SetData(eventId, sprite, globalTimerService);
             _idToView[eventId] = view;
         }
@@ -71,10 +81,13 @@ namespace UIShared
 
             if (_idToView.TryGetValue(eventId, out var view) && view != null)
             {
+                view.ResetSprite();
                 _uiListPool.Return(view);
                 _idToView.Remove(eventId);
             }
             
+            var spriteAddress = eventId + "/" + CollectionPreview;
+            ProdAddressablesWrapper.Release(spriteAddress);
             _uiListPool.DisableNonActive();
         }
     }

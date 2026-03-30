@@ -37,8 +37,8 @@ namespace CardCollectionImpl
         {
             View.SetTimer(Args.EventId, _globalTimerService);
             View.SetDescription(Args.EventName);
-            var collectionBackground = Args.EventId + "/" + CollectionBackground;
-            View.LoadCollectionSprite(collectionBackground).Forget();
+            var spriteAddress = Args.EventId + "/" + CollectionBackground;
+            View.LoadCollectionSprite(spriteAddress).Forget();
         }
         
         protected override void OnShowComplete()
@@ -51,7 +51,12 @@ namespace CardCollectionImpl
             View.RemoveTimer();
             View.CloseClick -= CloseWindow;
         }
-        
+
+        protected override void OnHideComplete(bool isClosed)
+        {
+            View.Release();
+        }
+
         private void CloseWindow()
         {
             UIManager.Hide<CollectionStartedController>();
