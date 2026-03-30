@@ -17,7 +17,7 @@ namespace CardCollectionImpl
         
         private CollectionCardView _clickedCardView;
         
-        public void OnCardPressedHandler(CollectionCardView cardView, CardConfig config)
+        public void OnCardPressedHandler(string eventId, CollectionCardView cardView, CardConfig config)
         {
             _clickedCardView = cardView;
             
@@ -43,7 +43,8 @@ namespace CardCollectionImpl
             {
                 var ct = this.GetCancellationTokenOnDestroy();
                 ct.ThrowIfCancellationRequested();
-                var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(config.icon, ct);
+                var spriteAddress = eventId + "/" + config.icon;
+                var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, ct);
                 _selectedCardView.SetCardImage(sprite);
             }
         }
@@ -67,6 +68,18 @@ namespace CardCollectionImpl
                 _clickedCardView.OnCardAnimationCompleted();
                 _selectedCardContainer.gameObject.SetActive(false); 
             }, _selectedCardView.AnimationDuration).Forget();
+        }
+
+        public void HideImmediately()
+        {
+            _selectedCardBackgroundButton.onClick.RemoveAllListeners();
+            if (_clickedCardView != null)
+            {
+                _clickedCardView.OnCardAnimationCompleted();
+                _clickedCardView = null;
+            }
+
+            _selectedCardContainer.gameObject.SetActive(false);
         }
     }
 }

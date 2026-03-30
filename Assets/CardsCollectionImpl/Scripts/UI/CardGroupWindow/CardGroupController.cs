@@ -81,7 +81,7 @@ namespace CardCollectionImpl
                 break;
             }
 
-            View.SetCardConfigs(Args.Cards);
+            View.SetCardConfigs(Args.EventId, Args.Cards);
             ShowCurrentGroup();
         }
         

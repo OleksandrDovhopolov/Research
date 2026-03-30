@@ -37,7 +37,8 @@ namespace CardCollectionImpl
         [SerializeField] private TextMeshProUGUI _groupRewardAmountText;
 
         private readonly Dictionary<CardConfig, CollectionCardView> _viewsDict = new();
-        
+
+        private string _eventId;
         private IReadOnlyList<CardConfig> _cardConfigs;
         
         private bool _isAnimating;
@@ -52,8 +53,9 @@ namespace CardCollectionImpl
             _rightSwitchButton.onClick.AddListener(() => OnRightClick?.Invoke());
         }
 
-        public void SetCardConfigs(IReadOnlyList<CardConfig>  cardConfigs)
+        public void SetCardConfigs(string eventId, IReadOnlyList<CardConfig>  cardConfigs)
         {
+            _eventId = eventId;
             _cardConfigs = cardConfigs;
         }
         
@@ -179,11 +181,13 @@ namespace CardCollectionImpl
 
             if (config == null) return;
 
-            _selectedCardAnimation.OnCardPressedHandler(cardView, config);
+            _selectedCardAnimation.OnCardPressedHandler(_eventId, cardView, config);
         }
 
         public void DisableAll()
         {
+            _selectedCardAnimation.HideImmediately();
+
             foreach (var cardView in _viewsDict.Values)
             {
                 cardView.OnCardPressed -= OnCardPressedHandler;
