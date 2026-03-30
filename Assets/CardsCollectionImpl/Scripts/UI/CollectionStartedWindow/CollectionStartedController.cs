@@ -38,7 +38,6 @@ namespace CardCollectionImpl
             View.SetTimer(Args.EventId, _globalTimerService);
             View.SetDescription(Args.EventName);
             var collectionBackground = Args.EventId + "/" + CollectionBackground;
-            Debug.LogWarning($"[Debug] rgs.EventId {Args.EventId}, collectionBackground {collectionBackground}");
             View.LoadCollectionSprite(collectionBackground).Forget();
         }
         

@@ -70,6 +70,10 @@ namespace CardCollectionImpl
 
                 Debug.LogWarning($"model.GroupsFileName {model.GroupsFileName}");
                 
+                _cardsConfigProvider.ClearCache();
+                _cardGroupsConfigProvider.ClearCache();
+                _cardPackProvider.ClearCache();
+                
                 await UniTask.WhenAll(
                     _cardPackProvider.LoadAsync(model.CardPacksFileName, ct),
                     _cardsConfigProvider.LoadAsync(model.CardCollectionFileName, ct),
@@ -115,7 +119,13 @@ namespace CardCollectionImpl
                 var rewardHandler = new CardCollectionRewardHandler(rewardsConfig, _rewardGrantService, rewardDefinitionFactory);
                 
                 var snapshotService = new CollectionProgressSnapshotService(_cardCollectionCacheService, staticData.Groups);
-                var windowOpener = CreateCardPackWindowOpener(module, snapshotService, rewardHandler, rewardDefinitionFactory, rewardsConfig);
+                var windowOpener = CreateCardPackWindowOpener(
+                    module,
+                    snapshotService,
+                    rewardHandler,
+                    rewardDefinitionFactory,
+                    rewardsConfig,
+                    staticData);
 
                 var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
                 var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, windowOpener);
@@ -148,7 +158,8 @@ namespace CardCollectionImpl
             ICollectionProgressSnapshotService snapshotService,
             ICardCollectionRewardHandler rewardHandler,
             IRewardDefinitionFactory rewardDefinitionFactory,
-            CardCollectionRewardsConfigSO rewardsConfig)
+            CardCollectionRewardsConfigSO rewardsConfig,
+            CardCollectionStaticData staticData)
         {
             var exchangeOfferProvider = new ExchangeOfferProvider(_exchangePacksConfig, rewardHandler);
             
@@ -157,7 +168,8 @@ namespace CardCollectionImpl
                 module, 
                 module, 
                 module,
-                _cardsConfigProvider,
+                staticData.Cards,
+                staticData.Groups,
                 exchangeOfferProvider,
                 rewardDefinitionFactory,
                 _cardCollectionCacheService,

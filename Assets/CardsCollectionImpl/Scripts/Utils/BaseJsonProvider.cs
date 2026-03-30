@@ -10,12 +10,13 @@ namespace CardCollectionImpl
     {
         private T _cachedData;
         private bool _isInitialized;
+        private string _loadedFileName;
         
         public T Data => _isInitialized 
             ? _cachedData 
             : throw new InvalidOperationException($"[{GetType().Name}] Data not loaded!");
         
-        public async UniTask<T> LoadAsync(string fileName, CancellationToken ct = default)
+        /*public async UniTask<T> LoadAsync(string fileName, CancellationToken ct = default)
         {
             if (_isInitialized && _cachedData != null) 
                 return _cachedData;
@@ -46,6 +47,49 @@ namespace CardCollectionImpl
             }
 
             return _cachedData;
+        }*/
+        
+        public async UniTask<T> LoadAsync(string fileName, CancellationToken ct = default)
+        {
+            if (_isInitialized &&
+                _cachedData != null &&
+                string.Equals(_loadedFileName, fileName, StringComparison.Ordinal))
+            {
+                return _cachedData;
+            }
+
+            ct.ThrowIfCancellationRequested();
+
+            string jsonText = await LoadRawJsonAsync(fileName, ct);
+
+            if (string.IsNullOrEmpty(jsonText))
+            {
+                _cachedData = CreateDefault();
+                _isInitialized = true;
+                _loadedFileName = fileName;
+                return _cachedData;
+            }
+
+            try
+            {
+                _cachedData = ParseJson(jsonText);
+                _isInitialized = true;
+                _loadedFileName = fileName;
+                Debug.Log($"[{GetType().Name}] Loaded data from {fileName}");
+            }
+            catch (Exception ex)
+            {
+                //TODO remove CreateDefault and _isInitialized. only throw error 
+                Debug.LogError($"[{GetType().Name}] Error parsing {fileName}: {ex.Message}");
+                _cachedData = CreateDefault();
+                _isInitialized = true;
+                _loadedFileName = fileName;
+            }
+            
+            /*_cachedData = ParseJson(jsonText);
+            _isInitialized = true;
+            _loadedFileName = fileName;*/
+            return _cachedData;
         }
 
         private async UniTask<string> LoadRawJsonAsync(string fileName, CancellationToken ct)
@@ -74,6 +118,7 @@ namespace CardCollectionImpl
         {
             _cachedData = default;
             _isInitialized = false;
+            _loadedFileName = null;
         }
     }
 }
