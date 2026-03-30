@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
@@ -23,8 +25,20 @@ namespace CardCollectionImpl
         private readonly Dictionary<CardConfig, EmptyCardView> _mockDict = new();
         private readonly Dictionary<CardConfig, int> _duplicatePointsDict = new();
         private readonly List<CardConfig> _orderedConfigs = new();
-        
+
+        private CancellationToken _ct;
         private bool _hasDuplicates;
+        private IEventSpriteManager _eventSpriteManager;
+
+        private void Start()
+        {
+            _ct = this.GetCancellationTokenOnDestroy();
+        }
+
+        public void SetSpriteManager(IEventSpriteManager eventSpriteManager)
+        {
+            _eventSpriteManager = eventSpriteManager;
+        }
         
         public void CreateNewCards(string eventId, List<NewCardDisplayData> cardsData)
         {
@@ -54,7 +68,8 @@ namespace CardCollectionImpl
                 cardView.UpdateCardStars();
                 
                 var spriteAddress = eventId + "/" + config.icon;
-                UIUtils.SetSprite(spriteAddress, cardView, this.GetCancellationTokenOnDestroy()).Forget();
+                _eventSpriteManager.BindSpriteAsync(eventId, spriteAddress, cardView.CardImage, _ct).Forget();
+                //UIUtils.SetSprite(spriteAddress, cardView, this.GetCancellationTokenOnDestroy()).Forget();
                 
                 cardView.SetAlpha(false);
                 cardView.transform.SetSiblingIndex(i);

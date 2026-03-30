@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using Infrastructure;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace CardCollectionImpl
 {
@@ -45,11 +45,12 @@ namespace CardCollectionImpl
             return localPoint;
         }
 
-        public static async UniTask LoadAndSetSpritesAsync<TConfig, TView>(
+        public static async UniTask BindAndSetSpritesAsync<TConfig>(
             IReadOnlyList<TConfig> configs,
+            string eventId,
+            IEventSpriteManager eventSpriteManager,
             Func<TConfig, string> getSpriteAddress,
-            Func<TConfig, TView> getView,
-            Action<TView, Sprite> setSprite,
+            Func<TConfig, Image> getImage,
             CancellationToken cancellationToken = default)
         {
             var loadTasks = configs.Select(async config =>
@@ -57,11 +58,12 @@ namespace CardCollectionImpl
                 try
                 {
                     var spriteAddress = getSpriteAddress(config);
+                    var image = getImage(config);
+                    if (image == null)
+                        return;
+
                     cancellationToken.ThrowIfCancellationRequested();
-                    var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, cancellationToken);
-                    var view = getView(config);
-                    if (view != null)
-                        setSprite(view, sprite);
+                    await eventSpriteManager.BindSpriteAsync(eventId, spriteAddress, image, cancellationToken);
                 }
                 catch (Exception e)
                 {
@@ -71,13 +73,6 @@ namespace CardCollectionImpl
 
             await UniTask.WhenAll(loadTasks);
             await UniTask.WaitForSeconds(0.5f);
-        }
-        
-        public static async UniTask SetSprite(string spriteAddress, CollectionCardView view, CancellationToken cancellationToken = default)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, cancellationToken);
-            view.SetCardImage(sprite);
         }
     }
 }

@@ -50,6 +50,7 @@ namespace CardCollectionImpl
     public class CardCollectionController : WindowController<CardCollectionView>
     {
         private IGlobalTimerService _globalTimerService;
+        private IEventSpriteManager _eventSpriteManager;
         private ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
         
         private CardCollectionArgs Args => (CardCollectionArgs) Arguments;
@@ -59,9 +60,13 @@ namespace CardCollectionImpl
         private string _lastRenderedEventId;
 
         [Inject]
-        public void Install(IGlobalTimerService globalTimerService, ICardCollectionCacheService cardCollectionCardCollectionCacheService)
+        public void Install(
+            IEventSpriteManager eventSpriteManager,
+            IGlobalTimerService globalTimerService,
+            ICardCollectionCacheService cardCollectionCardCollectionCacheService)
         {
             _globalTimerService = globalTimerService;
+            _eventSpriteManager = eventSpriteManager;
             _cardCollectionCardCollectionCacheService = cardCollectionCardCollectionCacheService;
         }
         
@@ -75,6 +80,7 @@ namespace CardCollectionImpl
             }
 
             View.SetService(_cardCollectionCardCollectionCacheService);
+            View.SetSpriteManager(_eventSpriteManager);
 
             View.BindEventTimerDisplay(_globalTimerService, Args.ScheduleItemEventId);
 

@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using CardCollection.Core;
 using DG.Tweening;
-using Infrastructure;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace CardCollectionImpl
 {
+    //TODO rename this. what is the difference with CardsCollectionView ?
     public class CollectionCardView : MonoBehaviour
     {
         [SerializeField] private Button _cardButton;
@@ -38,6 +38,7 @@ namespace CardCollectionImpl
         public bool IsOpen { get; private set; }
         public bool IsNew { get; private set; }
         public int Stars { get; private set; }
+        public Image CardImage => _cardImage;
 
         protected RectTransform CardRect;
         
@@ -117,15 +118,12 @@ namespace CardCollectionImpl
         
         public void SetCardImage(Sprite cardSprite,  bool shouldRelease = false)
         {
-            //_cardImage.sprite = cardSprite;
-            
-            var previous = _cardImage.sprite;
-            if (shouldRelease && !ReferenceEquals(previous, cardSprite))
-            {
-                ProdAddressablesWrapper.Release(previous);
-            }
-
             _cardImage.sprite = cardSprite;
+        }
+
+        public Image GetCardImage()
+        {
+            return _cardImage;
         }
         
         public void UpdateCardView()

@@ -1,7 +1,6 @@
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using Infrastructure;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,6 +15,12 @@ namespace CardCollectionImpl
         [SerializeField] private RectTransform _targetRect;
         
         private CollectionCardView _clickedCardView;
+        private IEventSpriteManager _eventSpriteManager;
+
+        public void SetSpriteManager(IEventSpriteManager eventSpriteManager)
+        {
+            _eventSpriteManager = eventSpriteManager;
+        }
         
         public void OnCardPressedHandler(string eventId, CollectionCardView cardView, CardConfig config)
         {
@@ -44,8 +49,7 @@ namespace CardCollectionImpl
                 var ct = this.GetCancellationTokenOnDestroy();
                 ct.ThrowIfCancellationRequested();
                 var spriteAddress = eventId + "/" + config.icon;
-                var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, ct);
-                _selectedCardView.SetCardImage(sprite);
+                await _eventSpriteManager.BindSpriteAsync(eventId, spriteAddress, _selectedCardView.GetCardImage(), ct);
             }
         }
 

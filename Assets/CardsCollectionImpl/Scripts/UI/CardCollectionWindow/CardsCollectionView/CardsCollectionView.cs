@@ -1,11 +1,11 @@
 using System;
-using Infrastructure;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace CardCollectionImpl
 {
+    //TODO rename this. what is the difference with CollectionCardView ?
     public class CardsCollectionView : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI _cardsGroupName;
@@ -68,15 +68,13 @@ namespace CardCollectionImpl
             _cardsGrouopButton.onClick.RemoveAllListeners();
         }
         
-        //TODO make release here better way
+        public Image GetGroupImage()
+        {
+            return _cardsGrouopImage;
+        }
+
         public void SetSprite(Sprite groupSprite, bool shouldRelease = false)
         {
-            var previous = _cardsGrouopImage.sprite;
-            if (shouldRelease && !ReferenceEquals(previous, groupSprite))
-            {
-                ProdAddressablesWrapper.Release(previous);
-            }
-
             _cardsGrouopImage.sprite = groupSprite;
         }
     }

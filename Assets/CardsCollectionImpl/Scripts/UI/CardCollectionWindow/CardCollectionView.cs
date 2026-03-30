@@ -33,6 +33,7 @@ namespace CardCollectionImpl
         [SerializeField] private CardsOfferWidgetView _inventoryWidgetView;
         
         private readonly Dictionary<string, CardsCollectionView> _viewsDict = new();
+        private IEventSpriteManager _eventSpriteManager;
         
         public event Action<string> OnGroupButtonPressed;
         public event Action OnPointsViewClicked;
@@ -74,6 +75,11 @@ namespace CardCollectionImpl
         public void SetService(ICardCollectionCacheService cardCollectionCacheService)
         {
             _cardCollectionCardCollectionCacheService = cardCollectionCacheService;
+        }
+
+        public void SetSpriteManager(IEventSpriteManager eventSpriteManager)
+        {
+            _eventSpriteManager = eventSpriteManager;
         }
         
         public void CreateViews(CardCollectionNewCardsDto newCardsData, IReadOnlyList<CardCollectionGroupConfig> configs, CardCollectionRewardsConfigSO rewardsConfig)
@@ -159,11 +165,18 @@ namespace CardCollectionImpl
             string argsScheduleItemEventId,
             IReadOnlyList<CardCollectionGroupConfig> groupsData)
         {
-            await UIUtils.LoadAndSetSpritesAsync(
+            await UIUtils.BindAndSetSpritesAsync(
                 groupsData,
+                argsScheduleItemEventId,
+                _eventSpriteManager,
                 config => argsScheduleItemEventId + "/" + config.groupIcon,
-                config => _viewsDict.TryGetValue(config.groupType, out var view) ? view : null,
-                (view, sprite) => view.SetSprite(sprite));
+                config =>
+                {
+                    if (_viewsDict.TryGetValue(config.groupType, out var view))
+                        return view.GetGroupImage();
+
+                    return null;
+                });
         }
         
         public void UpdateCollectedAmount(int collectedAmount, int totalAmount)

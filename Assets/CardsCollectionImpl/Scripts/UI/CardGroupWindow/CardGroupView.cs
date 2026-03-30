@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using Infrastructure;
 using TMPro;
 using UIShared;
 using UISystem;
@@ -40,6 +39,7 @@ namespace CardCollectionImpl
 
         private string _eventId;
         private IReadOnlyList<CardConfig> _cardConfigs;
+        private IEventSpriteManager _eventSpriteManager;
         
         private bool _isAnimating;
         
@@ -57,6 +57,12 @@ namespace CardCollectionImpl
         {
             _eventId = eventId;
             _cardConfigs = cardConfigs;
+        }
+
+        public void SetSpriteManager(IEventSpriteManager eventSpriteManager)
+        {
+            _eventSpriteManager = eventSpriteManager;
+            _selectedCardAnimation.SetSpriteManager(eventSpriteManager);
         }
         
         public void CreateDataViews(string groupType, List<CardProgressData> cardsData, CardCollectionNewCardsDto newCardsData)
@@ -117,11 +123,18 @@ namespace CardCollectionImpl
         
         public async UniTask SetSprites(string eventId, List<CardConfig> cardsData)
         {
-            await UIUtils.LoadAndSetSpritesAsync(
+            await UIUtils.BindAndSetSpritesAsync(
                 cardsData,
+                eventId,
+                _eventSpriteManager,
                 config =>  eventId + "/" + config.icon,
-                config => _viewsDict.TryGetValue(config, out var view) ? view : null,
-                (view, sprite) => view.SetCardImage(sprite));
+                config =>
+                {
+                    if (_viewsDict.TryGetValue(config, out var view))
+                        return view.GetCardImage();
+
+                    return null;
+                });
         }
 
         /// <summary>

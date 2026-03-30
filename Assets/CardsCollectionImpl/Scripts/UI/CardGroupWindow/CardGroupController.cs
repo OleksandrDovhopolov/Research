@@ -44,6 +44,7 @@ namespace CardCollectionImpl
     public class CardGroupController :  WindowController<CardGroupView>
     {
         private ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
+        private IEventSpriteManager _eventSpriteManager;
         
         private CardGroupArgs Args => (CardGroupArgs) Arguments;
 
@@ -56,9 +57,12 @@ namespace CardCollectionImpl
         private CardCollectionRewardsConfigSO _activeRewardsConfigSo;
         
         [Inject]
-        private void Construct(ICardCollectionCacheService cardCollectionCardCollectionCacheService)
+        private void Construct(
+            ICardCollectionCacheService cardCollectionCardCollectionCacheService,
+            IEventSpriteManager eventSpriteManager)
         {
             _cardCollectionCardCollectionCacheService = cardCollectionCardCollectionCacheService;
+            _eventSpriteManager = eventSpriteManager;
         }
         
         protected override void OnShowStart()
@@ -82,6 +86,7 @@ namespace CardCollectionImpl
             }
 
             View.SetCardConfigs(Args.EventId, Args.Cards);
+            View.SetSpriteManager(_eventSpriteManager);
             ShowCurrentGroup();
         }
         

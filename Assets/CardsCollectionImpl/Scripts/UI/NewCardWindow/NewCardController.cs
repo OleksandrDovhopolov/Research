@@ -33,20 +33,21 @@ namespace CardCollectionImpl
     [Window("NewCardWindow")]
     public class NewCardController : WindowController<NewCardView>
     {
-        private ICardsConfigProvider _cardsConfigProvider;
+        private IEventSpriteManager _eventSpriteManager;
         
         private NewCardArgs Args => (NewCardArgs)Arguments;
         private CancellationTokenSource _cts;
 
         [Inject]
-        private void Construct(ICardsConfigProvider cardsConfigProvider)
+        private void Construct(IEventSpriteManager eventSpriteManager)
         {
-            _cardsConfigProvider = cardsConfigProvider;
+            _eventSpriteManager = eventSpriteManager;
         }
         
         protected override void OnShowStart()
         {
             _cts = new CancellationTokenSource();
+            View.SetSpriteManager(_eventSpriteManager);
             GetNewCardsAsync(_cts.Token).Forget();
         }
 

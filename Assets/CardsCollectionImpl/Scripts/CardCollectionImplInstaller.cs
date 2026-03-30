@@ -27,6 +27,9 @@ namespace CardCollectionImpl
             // Points calculator
             builder.Register<ICardCollectionCacheService, CardCollectionCardCollectionCacheService>(Lifetime.Singleton);
             builder.Register<ICardPointsCalculator, CardsCollectionPointsCalculator>(Lifetime.Singleton);
+            builder.Register<EventSpriteManager>(Lifetime.Singleton)
+                .As<IEventSpriteManager>()
+                .As<System.IDisposable>();
             
             // Feature session builder
             builder.Register<ICardCollectionRuntimeBuilder, CardCollectionRuntimeBuilder>(Lifetime.Singleton);
