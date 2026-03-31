@@ -54,6 +54,12 @@ desktop.ini
 /**/catalog_*.json
 /**/*.bundle
 
+# Firebase files
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
 # Misc
 MemoryCaptures/
 ProfilerCaptures/
