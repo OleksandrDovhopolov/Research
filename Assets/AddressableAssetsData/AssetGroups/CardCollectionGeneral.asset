@@ -17,6 +17,11 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: 61a3618e307c535428d8bcd3064189f2
   m_SerializeEntries:
+  - m_GUID: 0f12d70bc2c0cb94db86596d0c426cdf
+    m_Address: CardGroupCompletedWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0f99e518c4e8e8e41b1a33bdcc4c709a
     m_Address: NewCardWindow
     m_ReadOnly: 0

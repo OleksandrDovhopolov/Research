@@ -24,10 +24,10 @@ namespace CardCollectionImpl
         {
             ct.ThrowIfCancellationRequested();
             
-            var groupDefinition = _cardCollectionRewardsConfigSo.GroupRewards.FirstOrDefault(group => group.GroupId == groupCompletedData.GroupId);
+            var groupDefinition = _cardCollectionRewardsConfigSo.GroupRewards.FirstOrDefault(group => group.GroupId == groupCompletedData.GroupType);
             if (string.IsNullOrEmpty(groupDefinition.GroupId))
             {
-                Debug.LogWarning($"Failed to find GroupRewardDefinition for group with ID {groupCompletedData.GroupId}");
+                Debug.LogWarning($"Failed to find GroupRewardDefinition for group with ID {groupCompletedData.GroupType}");
                 return false;
             }
             

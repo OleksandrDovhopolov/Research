@@ -276,7 +276,7 @@ namespace CardCollection.Core
             var completedGroupIds = _groupCompletionTracker.RegisterOpenedCards(openedCardIds);
             foreach (var groupId in completedGroupIds)
             {
-                OnGroupCompleted?.Invoke(new CardGroupCompletedData { GroupId = groupId });
+                OnGroupCompleted?.Invoke(new CardGroupCompletedData { GroupType = groupId });
             }
         }
 

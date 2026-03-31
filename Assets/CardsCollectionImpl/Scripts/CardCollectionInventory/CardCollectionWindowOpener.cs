@@ -66,12 +66,12 @@ namespace CardCollectionImpl
             _uiManager.Show<NewCardController>(args);
         }
         
-        public async UniTask OpenCardGroupCompletedWindow(string groupId, CancellationToken ct)
+        public async UniTask OpenCardGroupCompletedWindow(string groupType, CancellationToken ct)
         {
-            var groupConfig = _groups.FirstOrDefault(group => group.ID == groupId);
+            var groupConfig = _groups.FirstOrDefault(group => group.groupType == groupType);
             if (groupConfig == null)
             {
-                Debug.LogError($"Failed to find group {groupId}");
+                Debug.LogError($"Failed to find group {groupType}");
                 return;
             }
             

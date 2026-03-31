@@ -243,9 +243,8 @@ namespace CardCollectionImpl
         {
             var granted = await _rewardHandler.TryHandleGroupCompleted(data, ct);
             if (!granted) return;
-
             
-            await Context.WindowOpener.OpenCardGroupCompletedWindow(data.GroupId, ct);
+            await Context.WindowOpener.OpenCardGroupCompletedWindow(data.GroupType, ct);
         }
 
         private void OnCollectionCompleted(CardCollectionCompletedData data)
@@ -258,9 +257,15 @@ namespace CardCollectionImpl
             if (ct.IsCancellationRequested)
                 return;
 
-            _rewardHandler?
-                .TryHandleCollectionCompleted(data, ct)
-                .Forget();
+            HandleCollectionCompletedAsync(data, ct).Forget();
+        }
+        
+        private async UniTask HandleCollectionCompletedAsync(CardCollectionCompletedData data, CancellationToken ct)
+        {
+            var granted = await _rewardHandler.TryHandleCollectionCompleted(data, ct);
+            if (!granted) return;
+
+            //TODO add window collection reward. no reward animation now is shown
         }
         
         public void Dispose()

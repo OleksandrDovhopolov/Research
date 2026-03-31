@@ -3,7 +3,6 @@ using System.Threading;
 using CoreResources;
 using Cysharp.Threading.Tasks;
 using Inventory.API;
-using UIShared;
 using UnityEngine;
 
 namespace Rewards
@@ -12,16 +11,13 @@ namespace Rewards
     {
         private readonly ResourceManager _resourceManager;
         private readonly IInventoryService _inventoryService;
-        private readonly AnimateCurrency _animateCurrency;
         private readonly string _inventoryOwnerId;
 
         public GameRewardGrantService(
-            AnimateCurrency animateCurrency,
             ResourceManager resourceManager,
             IInventoryService inventoryService,
             string inventoryOwnerId)
         {
-            _animateCurrency =  animateCurrency;
             _resourceManager = resourceManager;
             _inventoryService = inventoryService;
             _inventoryOwnerId = inventoryOwnerId;
@@ -40,18 +36,10 @@ namespace Rewards
             {
                 _resourceManager.Add(resourceType, rewardRequest.Amount);
                 
-                var screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
-                var animationArgs = new ArgAnimateCurrency(screenCenter, resourceType,  rewardRequest.Amount);
-                //_animateCurrency.Animate(animationArgs, OnAnimationCompleted);
                 return true;
             }
 
             return await AddToInventoryAsync(rewardRequest, ct);
-            
-            void OnAnimationCompleted()
-            {
-                _resourceManager.NotifyAmountChanged(resourceType);
-            }
         }
         
         private async UniTask<bool> AddToInventoryAsync(RewardGrantRequest rewardRequest, CancellationToken ct)

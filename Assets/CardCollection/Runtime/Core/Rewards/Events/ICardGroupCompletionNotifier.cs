@@ -4,7 +4,7 @@ namespace CardCollection.Core
 {
     public struct CardGroupCompletedData
     {
-        public string GroupId;
+        public string GroupType;
     }
     
     public interface ICardGroupCompletionNotifier

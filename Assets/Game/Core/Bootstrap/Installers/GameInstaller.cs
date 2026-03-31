@@ -47,6 +47,8 @@ namespace Game.Bootstrap
             builder.RegisterInstance<IGlobalTimerService>(_globalTimerService);
             builder.Register<JsonResourcesStorage>(Lifetime.Singleton);
             builder.Register<ResourceManager>(Lifetime.Singleton);
+            builder.Register<IAnimationService, AnimationService>(Lifetime.Singleton);
+            
             builder.RegisterInventoryService();
             builder.RegisterCardCollectionImpl(_exchangePacksConfig);
             
@@ -57,9 +59,8 @@ namespace Game.Bootstrap
             {
                 var resourceManager = resolver.Resolve<ResourceManager>();
                 var inventoryService = resolver.Resolve<IInventoryService>();
-                var animateCurrency = resolver.Resolve<AnimateCurrency>();
                 var inventoryOwnerId = resolver.Resolve<string>();
-                return new GameRewardGrantService(animateCurrency, resourceManager, inventoryService, inventoryOwnerId);
+                return new GameRewardGrantService(resourceManager, inventoryService, inventoryOwnerId);
             }, Lifetime.Singleton);
 
             builder.RegisterOrchestration(_cardCollectionScheduleFile);

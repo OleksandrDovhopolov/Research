@@ -14,6 +14,7 @@ namespace CardCollectionImpl
         {
             if (string.IsNullOrEmpty(groupType) || so.GroupRewards == null || so.GroupRewards.Length == 0)
             {
+                Debug.LogWarning($"Failed to find groupType {groupType}. Empty returned");
                 return RewardViewData.Empty;
             }
 

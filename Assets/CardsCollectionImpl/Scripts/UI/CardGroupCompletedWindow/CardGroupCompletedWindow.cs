@@ -1,5 +1,4 @@
 using CardCollection.Core;
-using CoreResources;
 using UIShared;
 using UISystem;
 using VContainer;
@@ -26,24 +25,24 @@ namespace CardCollectionImpl
     [Window("CardGroupCompletedWindow")]
     public class CardGroupCompletedWindow : WindowController<CardGroupCompletedView>
     {
-        //TODO remove it from here. Add interface and make this logic outside module
-        private AnimateCurrency _animateCurrency;
-        //TODO remove it from here. Add interface and make this logic outside module
-        private ResourceManager _resourceManager;
+        private IAnimationService _animationService;
         private ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
         
         private CardGroupCollectionArgs Args => (CardGroupCollectionArgs) Arguments;
         
+        private RewardViewData _rewardViewData;
+        
         [Inject]
-        public void Install(AnimateCurrency animateCurrency, ResourceManager resourceManager, ICardCollectionCacheService cardCollectionCardCollectionCacheService)
+        public void Install(IAnimationService animationService, ICardCollectionCacheService cardCollectionCardCollectionCacheService)
         {
-            _animateCurrency = animateCurrency;
-            _resourceManager = resourceManager;
+            _animationService = animationService;
             _cardCollectionCardCollectionCacheService = cardCollectionCardCollectionCacheService;
         }
         
         protected override void OnShowStart()
         {
+            _rewardViewData = UIUtils.CreateRewardViewData(Args.CollectionRewardsConfigSo, Args.GroupType);
+            View.SetRewardData(_rewardViewData.Icon, _rewardViewData.Amount);
         }
         
         protected override void OnShowComplete()
@@ -65,13 +64,7 @@ namespace CardCollectionImpl
         {
             View.ResetView();
             
-            var rewardViewData = UIUtils.CreateRewardViewData(Args.CollectionRewardsConfigSo, Args.GroupType);
-            var animationArgs = new ArgAnimateCurrency(View.AnimationStartPosition, ResourceType.Gold,  rewardViewData.Amount);
-            _animateCurrency.Animate(animationArgs, OnAnimationCompleted);
-            void OnAnimationCompleted()
-            {
-                _resourceManager.NotifyAmountChanged(ResourceType.Gold);
-            }
+            _animationService.Animate(View.AnimationStartPosition, _rewardViewData.Amount, _rewardViewData.Id);
         }
 
         private void CloseWindow()

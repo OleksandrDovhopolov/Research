@@ -42,7 +42,6 @@ namespace EventOrchestration.Core
         {
             _lifetimeCts = new CancellationTokenSource();
             _orchestrator.OnEventCompleted += HandleEventCompleted;
-            Debug.LogWarning("[EventAssetWarmupService] Start: subscribed to OnEventCompleted and created lifetime token.");
         }
 
         public void Tick()
@@ -69,14 +68,12 @@ namespace EventOrchestration.Core
 
         public void Dispose()
         {
-            Debug.LogWarning("[EventAssetWarmupService] Dispose: begin.");
             _orchestrator.OnEventCompleted -= HandleEventCompleted;
             ReleaseAllWarmedAssets();
 
             _lifetimeCts?.Cancel();
             _lifetimeCts?.Dispose();
             _lifetimeCts = null;
-            Debug.LogWarning("[EventAssetWarmupService] Dispose: completed.");
         }
 
         private async UniTaskVoid TickAsync(CancellationToken ct)
@@ -96,22 +93,18 @@ namespace EventOrchestration.Core
 
                 if (!state.DiskPrepared && now >= item.StartTimeUtc - PrepareDisk_SecondsBefore)
                 {
-                    Debug.LogWarning($"[EventAssetWarmupService] Disk warmup started: eventId={item.Id}.");
                     await ProdAddressablesWrapper.DownloadDependenciesByLabelAsync(item.Id, ct);
                     state.DiskPrepared = true;
-                    Debug.LogWarning($"[EventAssetWarmupService] Disk warmup completed: eventId={item.Id}.");
                 }
 
                 if (!state.RamPrepared && now >= item.StartTimeUtc - PrepareRam_SecondsBefore)
                 {
-                    Debug.LogWarning($"[EventAssetWarmupService] RAM warmup started: eventId={item.Id}, maxCount={MaxWarmupSpritesCount}.");
                     var warmedAddresses = await ProdAddressablesWrapper.WarmupGroupByLabelAsync<Sprite>(
                         item.Id,
                         ct,
                         MaxWarmupSpritesCount);
                     state.WarmedAddresses = warmedAddresses;
                     state.RamPrepared = true;
-                    Debug.LogWarning($"[EventAssetWarmupService] RAM warmup: completed for eventId={item.Id}, warmedCount={warmedAddresses.Count}.");
                 }
             }
             catch (OperationCanceledException)
@@ -134,13 +127,12 @@ namespace EventOrchestration.Core
             {
                 state = new WarmupState();
                 _warmupByEventId[eventId] = state;
-                Debug.LogWarning($"[EventAssetWarmupService] Warmup tracking started: eventId={eventId}.");
             }
 
             return state;
         }
 
-        private void HandleEventCompleted(EventOrchestration.Models.ScheduleItem item)
+        private void HandleEventCompleted(Models.ScheduleItem item)
         {
             if (item == null || string.IsNullOrWhiteSpace(item.Id))
                 return;
@@ -150,7 +142,6 @@ namespace EventOrchestration.Core
             
             ReleaseForEvent(item.Id, state);
             _warmupByEventId.Remove(item.Id);
-            Debug.LogWarning($"[EventAssetWarmupService] Warmup tracking finished: eventId={item.Id}.");
         }
 
         private static void ReleaseForEvent(string eventId, WarmupState state)
@@ -159,17 +150,7 @@ namespace EventOrchestration.Core
             {
                 if (state?.WarmedAddresses != null && state.WarmedAddresses.Count > 0)
                 {
-                    foreach (var warmed in state.WarmedAddresses)
-                    {
-                        Debug.LogWarning($"[EventAssetWarmupService] released {warmed}");
-                    }
-                    Debug.LogWarning($"[EventAssetWarmupService] ReleaseForEvent: eventId={eventId}, addresses={state.WarmedAddresses.Count}.");
                     ProdAddressablesWrapper.ReleaseGroup(state.WarmedAddresses);
-                    Debug.LogWarning($"[EventAssetWarmupService] ReleaseForEvent: completed for eventId={eventId}.");
-                }
-                else
-                {
-                    // Nothing was warmed for this event.
                 }
             }
             catch (Exception ex)
