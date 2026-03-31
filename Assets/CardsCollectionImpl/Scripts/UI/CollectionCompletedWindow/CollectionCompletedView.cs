@@ -52,7 +52,7 @@ namespace CardCollectionImpl
 
         public void Release()
         {
-            _collectionImage = null;
+            _collectionImage.sprite = null;
             ProdAddressablesWrapper.Release(_spriteAddress);
             _spriteAddress =  null;
         }
