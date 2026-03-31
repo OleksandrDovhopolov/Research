@@ -10,7 +10,7 @@ using UIShared;
 using UnityEngine;
 using VContainer;
 
-namespace core
+namespace Game.Cheat
 {
     public class ResearchCheatModule : MonoBehaviour, ICheatsContainer
     {
@@ -33,7 +33,6 @@ namespace core
             OrchestratorRunner orchestratorRunner,
             ICardCollectionFeatureFacade cardCollectionFeatureFacade)
         {
-            Debug.LogWarning($"[VContainer] Construct {GetType().Name}");
             _inventoryService = inventoryService;
             _resourceManager = resourceManager;
             _orchestratorRunner = orchestratorRunner;
@@ -62,7 +61,6 @@ namespace core
             _rootPanel.transform.SetParent(_cheatsManager.transform, false);
         }
         
-        //TODO restore cheat when module integration is ready
         private void InitializeCheatsModules()
         {
             _cheatsModules = new List<ICheatsModule>(GetCheatModules());
@@ -83,9 +81,10 @@ namespace core
             
             var cheatsModules = new List<ICheatsModule>
             {
-                new CardCollectionModule(_cardCollectionFeatureFacade, _orchestratorRunner, destroyCt),
-                new SampleModule(_resourceManager, _animateCurrency),
-                new InventoryModule(_inventoryService),
+                new CardCollectionCheatModule(_cardCollectionFeatureFacade, _orchestratorRunner, destroyCt),
+                new AddCardsCheatModule(_cardCollectionFeatureFacade, destroyCt),
+                new ResourcesCheatModule(_resourceManager, _animateCurrency),
+                //new InventoryCheatModule(_inventoryService),
             };
             
             return cheatsModules;

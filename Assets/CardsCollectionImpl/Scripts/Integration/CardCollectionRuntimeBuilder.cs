@@ -67,6 +67,12 @@ namespace CardCollectionImpl
             {
                 //TODO migrate from resources load to addressabless and update this method
                 ValidateResources(model.CardPacksFileName, model.CardCollectionFileName, model.GroupsFileName);
+
+                Debug.LogWarning($"model.GroupsFileName {model.GroupsFileName}");
+                
+                _cardsConfigProvider.ClearCache();
+                _cardGroupsConfigProvider.ClearCache();
+                _cardPackProvider.ClearCache();
                 
                 await UniTask.WhenAll(
                     _cardPackProvider.LoadAsync(model.CardPacksFileName, ct),
@@ -88,7 +94,7 @@ namespace CardCollectionImpl
 
             _cardCollectionCacheService.Initialize(staticData.Cards);
             
-            var moduleConfig = CreateModuleConfig(staticData, model.CollectionId);
+            var moduleConfig = CreateModuleConfig(staticData, model.EventId);
             CardCollectionModule module = null;
             CardCollectionRewardsConfigSO rewardsConfig = null;
             
@@ -99,10 +105,10 @@ namespace CardCollectionImpl
 
                 //TODO move all files load in 1 the same logic. eg ICardsConfigProvider / ICardsConfigProvider /etc
                 ct.ThrowIfCancellationRequested();
-                rewardsConfig = await AddressablesWrapper
-                    .LoadFromTask<CardCollectionRewardsConfigSO>(model.RewardsConfigAddress)
-                    .AsUniTask()
-                    .AttachExternalCancellation(ct);
+                //TODO move it into separate interface
+                rewardsConfig = await ProdAddressablesWrapper
+                    .LoadAsync<CardCollectionRewardsConfigSO>(model.RewardsConfigAddress, ct)
+                    .AsUniTask();
                 ct.ThrowIfCancellationRequested();
 
                 if (rewardsConfig == null)
@@ -113,7 +119,13 @@ namespace CardCollectionImpl
                 var rewardHandler = new CardCollectionRewardHandler(rewardsConfig, _rewardGrantService, rewardDefinitionFactory);
                 
                 var snapshotService = new CollectionProgressSnapshotService(_cardCollectionCacheService, staticData.Groups);
-                var windowOpener = CreateCardPackWindowOpener(module, snapshotService, rewardHandler, rewardDefinitionFactory);
+                var windowOpener = CreateCardPackWindowOpener(
+                    module,
+                    snapshotService,
+                    rewardHandler,
+                    rewardDefinitionFactory,
+                    rewardsConfig,
+                    staticData);
 
                 var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
                 var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, windowOpener);
@@ -133,7 +145,7 @@ namespace CardCollectionImpl
             {
                 if (rewardsConfig != null)
                 {
-                    AddressablesWrapper.Release(rewardsConfig);
+                    ProdAddressablesWrapper.Release(rewardsConfig);
                 }
 
                 module?.Dispose();
@@ -145,7 +157,9 @@ namespace CardCollectionImpl
             CardCollectionModule module,
             ICollectionProgressSnapshotService snapshotService,
             ICardCollectionRewardHandler rewardHandler,
-            IRewardDefinitionFactory rewardDefinitionFactory)
+            IRewardDefinitionFactory rewardDefinitionFactory,
+            CardCollectionRewardsConfigSO rewardsConfig,
+            CardCollectionStaticData staticData)
         {
             var exchangeOfferProvider = new ExchangeOfferProvider(_exchangePacksConfig, rewardHandler);
             
@@ -154,11 +168,13 @@ namespace CardCollectionImpl
                 module, 
                 module, 
                 module,
-                _cardsConfigProvider,
+                staticData.Cards,
+                staticData.Groups,
                 exchangeOfferProvider,
                 rewardDefinitionFactory,
                 _cardCollectionCacheService,
-                snapshotService);
+                snapshotService,
+                rewardsConfig);
             
             return cardCollectionWindowOpener;
         }

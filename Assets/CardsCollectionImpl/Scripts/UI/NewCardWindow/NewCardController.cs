@@ -8,17 +8,20 @@ namespace CardCollectionImpl
 {
     public class NewCardArgs : WindowArgs
     {
+        public readonly string EventId;
         public readonly CardPack CardPack;
         public readonly ICardCollectionModule CollectionModule;
         public readonly ICardCollectionReader CollectionReader;
         public readonly ICardCollectionCacheService CardCollectionCacheService;
 
         public NewCardArgs(
+            string eventId,
             CardPack cardPack,
             ICardCollectionModule collectionModule,
             ICardCollectionReader collectionReader,
             ICardCollectionCacheService cardCollectionCacheService)
         {
+            EventId =  eventId;
             CardPack = cardPack;
             CollectionModule = collectionModule;
             CollectionReader = collectionReader;
@@ -30,20 +33,21 @@ namespace CardCollectionImpl
     [Window("NewCardWindow")]
     public class NewCardController : WindowController<NewCardView>
     {
-        private ICardsConfigProvider _cardsConfigProvider;
+        private IEventSpriteManager _eventSpriteManager;
         
         private NewCardArgs Args => (NewCardArgs)Arguments;
         private CancellationTokenSource _cts;
 
         [Inject]
-        private void Construct(ICardsConfigProvider cardsConfigProvider)
+        private void Construct(IEventSpriteManager eventSpriteManager)
         {
-            _cardsConfigProvider = cardsConfigProvider;
+            _eventSpriteManager = eventSpriteManager;
         }
         
         protected override void OnShowStart()
         {
             _cts = new CancellationTokenSource();
+            View.SetSpriteManager(_eventSpriteManager);
             GetNewCardsAsync(_cts.Token).Forget();
         }
 
@@ -56,7 +60,7 @@ namespace CardCollectionImpl
             var cardsData = await Args.CollectionModule.GetCardsByIdsAsync(cardsIdList, ct);
             var displayData = Args.CardCollectionCacheService.ToNewCardDisplayData(cardsData);
             
-            View.CreateNewCards(displayData);
+            View.CreateNewCards(Args.EventId, displayData);
         }
 
         protected override void OnShowComplete()

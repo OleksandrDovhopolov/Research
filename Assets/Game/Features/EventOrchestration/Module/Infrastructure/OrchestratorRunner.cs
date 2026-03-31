@@ -10,11 +10,13 @@ namespace EventOrchestration
 {
     public sealed class OrchestratorRunner : MonoBehaviour
     {
-        [SerializeField] private int _tickIntervalSeconds = 1;
+        [SerializeField] private float _tickIntervalSeconds = 1f;
 
         private CancellationToken _destroyToken;
         private EventOrchestrator _orchestrator;
 
+        private TimeSpan _timeSpan;
+        
         [Inject]
         private void Construct(EventOrchestrator orchestrator)
         {
@@ -24,6 +26,7 @@ namespace EventOrchestration
         private void Awake()
         {
             _destroyToken = this.GetCancellationTokenOnDestroy();
+            _timeSpan =  TimeSpan.FromSeconds(_tickIntervalSeconds);
         }
 
         private void Start()
@@ -40,20 +43,34 @@ namespace EventOrchestration
             while (!ct.IsCancellationRequested)
             {
                 await _orchestrator.TickAsync(ct);
-                await UniTask.Delay(TimeSpan.FromSeconds(_tickIntervalSeconds), cancellationToken: ct);
+                await UniTask.Delay(_timeSpan, cancellationToken: ct);
             }
         }
 
         public void AddDebugCardCollectionEventNextMinute(ScheduleItem scheduleItem)
         {
-            AddDebugCardCollectionEventNextMinuteAsync(scheduleItem, _destroyToken).Forget();
+            AddDebugCardCollectionEventNextMinuteAsync(scheduleItem).Forget();
         }
 
-        public async UniTask AddDebugCardCollectionEventNextMinuteAsync(ScheduleItem scheduleItem, CancellationToken ct)
+        public UniTask AddDebugCardCollectionEventNextMinuteAsync(ScheduleItem scheduleItem)
         {
-            ct.ThrowIfCancellationRequested();
+            _destroyToken.ThrowIfCancellationRequested();
 
-            await _orchestrator.AddScheduleItemForDebugAsync(scheduleItem, ct);
+            _orchestrator.AddScheduleItemForDebugAsync(scheduleItem, _destroyToken).Forget();
+            return UniTask.CompletedTask;
+        }
+
+        public void CompleteCurrentEvent()
+        {
+            DebugCompleteCurrentEventAsync().Forget();
+        }
+        
+        public UniTask DebugCompleteCurrentEventAsync()
+        {
+            _destroyToken.ThrowIfCancellationRequested();
+
+            _orchestrator.DebugCompleteCurrentEventAsync(_destroyToken).Forget();
+            return UniTask.CompletedTask;
         }
     }
 }

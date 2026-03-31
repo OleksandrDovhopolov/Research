@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using Infrastructure;
 using TMPro;
 using UIShared;
 using UISystem;
@@ -37,8 +36,10 @@ namespace CardCollectionImpl
         [SerializeField] private TextMeshProUGUI _groupRewardAmountText;
 
         private readonly Dictionary<CardConfig, CollectionCardView> _viewsDict = new();
-        
+
+        private string _eventId;
         private IReadOnlyList<CardConfig> _cardConfigs;
+        private IEventSpriteManager _eventSpriteManager;
         
         private bool _isAnimating;
         
@@ -52,9 +53,16 @@ namespace CardCollectionImpl
             _rightSwitchButton.onClick.AddListener(() => OnRightClick?.Invoke());
         }
 
-        public void SetCardConfigs(IReadOnlyList<CardConfig>  cardConfigs)
+        public void SetCardConfigs(string eventId, IReadOnlyList<CardConfig>  cardConfigs)
         {
+            _eventId = eventId;
             _cardConfigs = cardConfigs;
+        }
+
+        public void SetSpriteManager(IEventSpriteManager eventSpriteManager)
+        {
+            _eventSpriteManager = eventSpriteManager;
+            _selectedCardAnimation.SetSpriteManager(eventSpriteManager);
         }
         
         public void CreateDataViews(string groupType, List<CardProgressData> cardsData, CardCollectionNewCardsDto newCardsData)
@@ -113,14 +121,20 @@ namespace CardCollectionImpl
             _groupRewardAmountText.text = amount.ToString();
         }
         
-        public async UniTask SetSprites(List<CardConfig> cardsData)
+        public async UniTask SetSprites(string eventId, List<CardConfig> cardsData)
         {
-            await UIUtils.LoadAndSetSpritesAsync(
+            await UIUtils.BindAndSetSpritesAsync(
                 cardsData,
-                config => config.icon,
-                config => _viewsDict.TryGetValue(config, out var view) ? view : null,
-                (view, sprite) => view.SetCardImage(sprite),
-                config => config.cardName);
+                eventId,
+                _eventSpriteManager,
+                config =>  eventId + "/" + config.icon,
+                config =>
+                {
+                    if (_viewsDict.TryGetValue(config, out var view))
+                        return view.GetCardImage();
+
+                    return null;
+                });
         }
 
         /// <summary>
@@ -180,11 +194,23 @@ namespace CardCollectionImpl
 
             if (config == null) return;
 
-            _selectedCardAnimation.OnCardPressedHandler(cardView, config);
+            _selectedCardAnimation.OnCardPressedHandler(_eventId, cardView, config);
         }
 
+        public void ReleaseSprites()
+        {
+            foreach (var kvp in _viewsDict)
+            {
+                kvp.Value.SetCardImage(null, true);
+            }
+
+            _selectedCardAnimation.ReleaseSprite();
+        }
+        
         public void DisableAll()
         {
+            _selectedCardAnimation.HideImmediately();
+
             foreach (var cardView in _viewsDict.Values)
             {
                 cardView.OnCardPressed -= OnCardPressedHandler;

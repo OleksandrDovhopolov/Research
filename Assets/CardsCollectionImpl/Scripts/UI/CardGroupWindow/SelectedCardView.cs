@@ -1,6 +1,6 @@
+using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using Infrastructure;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,8 +15,14 @@ namespace CardCollectionImpl
         [SerializeField] private RectTransform _targetRect;
         
         private CollectionCardView _clickedCardView;
+        private IEventSpriteManager _eventSpriteManager;
+
+        public void SetSpriteManager(IEventSpriteManager eventSpriteManager)
+        {
+            _eventSpriteManager = eventSpriteManager;
+        }
         
-        public void OnCardPressedHandler(CollectionCardView cardView, CardConfig config)
+        public void OnCardPressedHandler(string eventId, CollectionCardView cardView, CardConfig config)
         {
             _clickedCardView = cardView;
             
@@ -40,9 +46,16 @@ namespace CardCollectionImpl
 
             async UniTask SetSprite()
             {
-                var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(config.icon);
-                _selectedCardView.SetCardImage(sprite);
+                var ct = this.GetCancellationTokenOnDestroy();
+                ct.ThrowIfCancellationRequested();
+                var spriteAddress = eventId + "/" + config.icon;
+                await _eventSpriteManager.BindSpriteAsync(eventId, spriteAddress, _selectedCardView.GetCardImage(), ct);
             }
+        }
+
+        public void ReleaseSprite()
+        {
+            _selectedCardView.SetCardImage(null, true);
         }
         
         private void SelectedCardCallback()
@@ -64,6 +77,18 @@ namespace CardCollectionImpl
                 _clickedCardView.OnCardAnimationCompleted();
                 _selectedCardContainer.gameObject.SetActive(false); 
             }, _selectedCardView.AnimationDuration).Forget();
+        }
+
+        public void HideImmediately()
+        {
+            _selectedCardBackgroundButton.onClick.RemoveAllListeners();
+            if (_clickedCardView != null)
+            {
+                _clickedCardView.OnCardAnimationCompleted();
+                _clickedCardView = null;
+            }
+
+            _selectedCardContainer.gameObject.SetActive(false);
         }
     }
 }

@@ -13,7 +13,6 @@ namespace EventOrchestration.Core
         private readonly IScheduleProvider _scheduleProvider;
         private readonly IScheduleValidator _scheduleValidator;
         private readonly IEventRegistry _eventRegistry;
-        private readonly IConditionProvider _conditionProvider;
         private readonly IClock _clock;
         private readonly IStateStore _stateStore;
         private readonly IOrchestratorTelemetry _telemetry;
@@ -22,6 +21,7 @@ namespace EventOrchestration.Core
         private readonly HashSet<string> _transitionInFlight = new();
         private List<ScheduleItem> _schedule = new();
 
+        public event Action<ScheduleItem> OnEventCreated;
         public event Action<ScheduleItem> OnEventStarted;
         public event Action<ScheduleItem> OnEventCompleted;
 
@@ -29,7 +29,6 @@ namespace EventOrchestration.Core
             IScheduleProvider scheduleProvider,
             IScheduleValidator scheduleValidator,
             IEventRegistry eventRegistry,
-            IConditionProvider conditionProvider,
             IClock clock,
             IStateStore stateStore,
             IOrchestratorTelemetry telemetry)
@@ -37,7 +36,6 @@ namespace EventOrchestration.Core
             _scheduleProvider = scheduleProvider ?? throw new ArgumentNullException(nameof(scheduleProvider));
             _scheduleValidator = scheduleValidator ?? throw new ArgumentNullException(nameof(scheduleValidator));
             _eventRegistry = eventRegistry ?? throw new ArgumentNullException(nameof(eventRegistry));
-            _conditionProvider = conditionProvider ?? throw new ArgumentNullException(nameof(conditionProvider));
             _clock = clock ?? throw new ArgumentNullException(nameof(clock));
             _stateStore = stateStore ?? throw new ArgumentNullException(nameof(stateStore));
             _telemetry = telemetry ?? throw new ArgumentNullException(nameof(telemetry));
@@ -53,13 +51,9 @@ namespace EventOrchestration.Core
             {
                 throw new InvalidOperationException("Schedule validation failed: " + string.Join("; ", validationErrors));
             }
-
-            _schedule = loadedSchedule
-                .OrderBy(x => x.StreamId)
-                .ThenByDescending(x => x.Priority)
-                .ThenBy(x => x.StartTimeUtc)
-                .ToList();
-
+            
+            _schedule = BuildUpcomingSchedule(loadedSchedule);
+            
             var restored = await _stateStore.LoadAsync(ct);
             _states.Clear();
             foreach (var pair in restored)
@@ -67,19 +61,7 @@ namespace EventOrchestration.Core
                 _states[pair.Key] = pair.Value;
             }
 
-            foreach (var item in _schedule)
-            {
-                if (_states.ContainsKey(item.Id))
-                    continue;
-
-                _states[item.Id] = new EventStateData
-                {
-                    ScheduleItemId = item.Id,
-                    State = EventInstanceState.Pending,
-                    Version = 1,
-                    UpdatedAtUtc = _clock.UtcNow,
-                };
-            }
+            CreateScheduleData();
 
             await _stateStore.SaveAsync(_states, ct);
         }
@@ -96,44 +78,63 @@ namespace EventOrchestration.Core
                 await ProcessStreamAsync(stream, now, ct);
             }
         }
-
-        public async UniTask AddScheduleItemForDebugAsync(ScheduleItem item, CancellationToken ct)
+        
+        public ScheduleItem GetNextUpcomingEvent()
         {
-            ct.ThrowIfCancellationRequested();
-            if (item == null)
+            var now = _clock.UtcNow;
+            ScheduleItem nextItem = null;
+            for (var i = 0; i < _schedule.Count; i++)
             {
-                throw new ArgumentNullException(nameof(item));
+                var item = _schedule[i];
+                if (item.EndTimeUtc <= now)
+                    continue;
+
+                if (!_states.TryGetValue(item.Id, out var state))
+                    continue;
+
+                if (state.State != EventInstanceState.Pending)
+                    continue;
+
+                if (nextItem == null || item.StartTimeUtc < nextItem.StartTimeUtc)
+                {
+                    nextItem = item;
+                }
             }
 
-            var updatedSchedule = _schedule.ToList();
-            updatedSchedule.Add(item);
+            return nextItem;
+        }
 
-            var validationErrors = await _scheduleValidator.ValidateAsync(updatedSchedule, ct);
-            if (validationErrors.Count > 0)
+        private void CreateScheduleData()
+        {
+            var now = _clock.UtcNow;
+            foreach (var item in _schedule)
             {
-                throw new InvalidOperationException("Schedule validation failed: " + string.Join("; ", validationErrors));
-            }
+                if (_states.ContainsKey(item.Id))
+                    continue;
 
-            _schedule = updatedSchedule
-                .OrderBy(x => x.StreamId)
-                .ThenByDescending(x => x.Priority)
-                .ThenBy(x => x.StartTimeUtc)
-                .ToList();
-
-            if (!_states.ContainsKey(item.Id))
-            {
                 _states[item.Id] = new EventStateData
                 {
                     ScheduleItemId = item.Id,
                     State = EventInstanceState.Pending,
                     Version = 1,
-                    UpdatedAtUtc = _clock.UtcNow,
+                    UpdatedAtUtc = now,
                 };
-            }
 
-            await _stateStore.SaveAsync(_states, ct);
+                OnEventCreated?.Invoke(item);
+            }
         }
 
+        private List<ScheduleItem> BuildUpcomingSchedule(IEnumerable<ScheduleItem> schedule)
+        {
+            var now = _clock.UtcNow;
+            return schedule
+                .Where(x => x.EndTimeUtc > now)
+                .OrderBy(x => x.StreamId)
+                .ThenByDescending(x => x.Priority)
+                .ThenBy(x => x.StartTimeUtc)
+                .ToList();
+        }
+        
         private async UniTask ProcessStreamAsync(IEnumerable<ScheduleItem> streamItems, DateTimeOffset now, CancellationToken ct)
         {
             var items = streamItems as IList<ScheduleItem> ?? streamItems.ToList();
@@ -151,7 +152,7 @@ namespace EventOrchestration.Core
                     return;
                 }
 
-                var candidate = await FindStartCandidateAsync(items, now, ct);
+                var candidate = FindStartCandidateAsync(items, now);
                 if (candidate == null)
                 {
                     return;
@@ -184,24 +185,22 @@ namespace EventOrchestration.Core
             return null;
         }
 
-        private async UniTask<ScheduleItem> FindStartCandidateAsync(IList<ScheduleItem> streamItems, DateTimeOffset now, CancellationToken ct)
+        private static readonly TimeSpan StartSkew = TimeSpan.FromSeconds(0);
+        
+        private ScheduleItem FindStartCandidateAsync(IList<ScheduleItem> streamItems, DateTimeOffset now)
         {
             for (var i = 0; i < streamItems.Count; i++)
             {
-                ct.ThrowIfCancellationRequested();
                 var item = streamItems[i];
                 var state = _states[item.Id].State;
                 if (state != EventInstanceState.Pending)
                     continue;
 
-                if (item.StartTimeUtc > now || now >= item.EndTimeUtc)
+                var startGate = item.StartTimeUtc - StartSkew;
+                if (startGate > now || now >= item.EndTimeUtc)
                     continue;
 
-                var canStart = await _conditionProvider.CanStartAsync(item, ct);
-                if (canStart)
-                    return item;
-
-                await _telemetry.TrackStartRejectedAsync(item.Id, "conditions_not_met", ct);
+                return item;
             }
 
             return null;
@@ -264,10 +263,9 @@ namespace EventOrchestration.Core
                     await controller.OnUpdate(ct);
                 }
 
-                var forceEnd = await _conditionProvider.ShouldForceEndAsync(item, ct);
                 var shouldEndByTime = now >= item.EndTimeUtc;
 
-                if (forceEnd || shouldEndByTime)
+                if (shouldEndByTime)
                 {
                     await EndAndSettleAsync(item, controller, ct);
                 }
@@ -331,5 +329,65 @@ namespace EventOrchestration.Core
             await _telemetry.TrackFailureAsync(itemId, stage, exception, ct);
             await _stateStore.SaveAsync(_states, ct);
         }
+
+        #region Debug
+        
+        public async UniTask AddScheduleItemForDebugAsync(ScheduleItem item, CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
+
+            var updatedSchedule = _schedule.ToList();
+            updatedSchedule.Add(item);
+
+            var validationErrors = await _scheduleValidator.ValidateAsync(updatedSchedule, ct);
+            if (validationErrors.Count > 0)
+            {
+                throw new InvalidOperationException("Schedule validation failed: " + string.Join("; ", validationErrors));
+            }
+            
+            _schedule = BuildUpcomingSchedule(updatedSchedule);
+
+            CreateScheduleData();
+
+            await _stateStore.SaveAsync(_states, ct);
+        }
+        
+        public async UniTask<bool> DebugCompleteCurrentEventAsync(CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            var now = _clock.UtcNow;
+
+            var current = _schedule.FirstOrDefault(item =>
+            {
+                if (!_states.TryGetValue(item.Id, out var state)) return false;
+
+                return state.State 
+                    is EventInstanceState.Active 
+                    or EventInstanceState.Starting 
+                    or EventInstanceState.Ending 
+                    or EventInstanceState.Settling;
+            });
+
+            if (current == null)
+            {
+                return false;
+            }
+
+            if (current.EndTimeUtc > now)
+            {
+                current.EndTimeUtc = now;
+            }
+
+            await TickAsync(ct);
+            await _stateStore.SaveAsync(_states, ct);
+            return true;
+        }
+
+        #endregion
     }
 }

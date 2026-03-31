@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using Infrastructure;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace CardCollectionImpl
 {
@@ -45,39 +45,34 @@ namespace CardCollectionImpl
             return localPoint;
         }
 
-        public static async UniTask LoadAndSetSpritesAsync<TConfig, TView>(
+        public static async UniTask BindAndSetSpritesAsync<TConfig>(
             IReadOnlyList<TConfig> configs,
+            string eventId,
+            IEventSpriteManager eventSpriteManager,
             Func<TConfig, string> getSpriteAddress,
-            Func<TConfig, TView> getView,
-            Action<TView, Sprite> setSprite,
-            Func<TConfig, string> getErrorIdentifier)
+            Func<TConfig, Image> getImage,
+            CancellationToken cancellationToken = default)
         {
             var loadTasks = configs.Select(async config =>
             {
                 try
                 {
                     var spriteAddress = getSpriteAddress(config);
-                    var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress);
-                    var view = getView(config);
-                    if (view != null)
-                        setSprite(view, sprite);
+                    var image = getImage(config);
+                    if (image == null)
+                        return;
+
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await eventSpriteManager.BindSpriteAsync(eventId, spriteAddress, image, cancellationToken);
                 }
                 catch (Exception e)
                 {
-                    var identifier = getErrorIdentifier(config);
-                    Debug.LogError($"Failed sprite {identifier}: {e}");
+                    Debug.LogError($"Failed sprite : {e}");
                 }
             });
 
             await UniTask.WhenAll(loadTasks);
             await UniTask.WaitForSeconds(0.5f);
-        }
-        
-        public static async UniTask SetSprite(CardConfig config, CollectionCardView view, CancellationToken cancellationToken = default)
-        {
-            var task = ProdAddressablesWrapper.LoadAsync<Sprite>(config.icon);
-            var sprite = await task.AsUniTask().AttachExternalCancellation(cancellationToken);
-            view.SetCardImage(sprite);
         }
     }
 }

@@ -1,10 +1,11 @@
+using core;
 using UnityEditor;
 using UnityEngine;
 
-namespace core
+namespace EventOrchestration.Core
 {
     [CustomEditor(typeof(ScheduleTimeGeneratorPanel))]
-    public sealed class ScheduleTimeGeneratorPanelEditor : UnityEditor.Editor
+    public sealed class ScheduleTimeGeneratorPanelEditor : Editor
     {
         public override void OnInspectorGUI()
         {

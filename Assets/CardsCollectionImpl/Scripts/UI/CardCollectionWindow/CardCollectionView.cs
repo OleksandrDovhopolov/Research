@@ -15,7 +15,6 @@ namespace CardCollectionImpl
     {
         [SerializeField] private UIListPool<CardsCollectionView> _cardGroupsPool;
         [SerializeField] private GameObject _loadingAnimationObject;
-        [SerializeField] private CardCollectionRewardsConfigSO _cardCollectionRewardsConfigSo;
         [SerializeField] private Button _infoButton;
         
         [Header("Points Container")]
@@ -34,8 +33,7 @@ namespace CardCollectionImpl
         [SerializeField] private CardsOfferWidgetView _inventoryWidgetView;
         
         private readonly Dictionary<string, CardsCollectionView> _viewsDict = new();
-
-        public CardCollectionRewardsConfigSO RewardsConfigSo => _cardCollectionRewardsConfigSo;
+        private IEventSpriteManager _eventSpriteManager;
         
         public event Action<string> OnGroupButtonPressed;
         public event Action OnPointsViewClicked;
@@ -78,8 +76,13 @@ namespace CardCollectionImpl
         {
             _cardCollectionCardCollectionCacheService = cardCollectionCacheService;
         }
+
+        public void SetSpriteManager(IEventSpriteManager eventSpriteManager)
+        {
+            _eventSpriteManager = eventSpriteManager;
+        }
         
-        public void CreateViews(CardCollectionNewCardsDto newCardsData, IReadOnlyList<CardCollectionGroupConfig> configs)
+        public void CreateViews(CardCollectionNewCardsDto newCardsData, IReadOnlyList<CardCollectionGroupConfig> configs, CardCollectionRewardsConfigSO rewardsConfig)
         {
             _cardGroupsPool.DisableNonActive();
 
@@ -93,7 +96,7 @@ namespace CardCollectionImpl
                 var groupName = groupsConfig.groupName;
                 
                 groupView.SetData(groupType, groupName);
-                var rewardViewData = UIUtils.CreateRewardViewData(_cardCollectionRewardsConfigSo, groupType);
+                var rewardViewData = UIUtils.CreateRewardViewData(rewardsConfig, groupType);
                 groupView.SetRewardData(rewardViewData.Icon, rewardViewData.Amount);
                 
                 groupView.OnButtonPressed += OnButtonPressedHandler;
@@ -158,14 +161,22 @@ namespace CardCollectionImpl
             }
         }
         
-        public async UniTask CreateGroupViews(IReadOnlyList<CardCollectionGroupConfig> groupsData)
+        public async UniTask CreateGroupViews(
+            string argsScheduleItemEventId,
+            IReadOnlyList<CardCollectionGroupConfig> groupsData)
         {
-            await UIUtils.LoadAndSetSpritesAsync(
+            await UIUtils.BindAndSetSpritesAsync(
                 groupsData,
-                config => config.groupIcon,
-                config => _viewsDict.TryGetValue(config.groupType, out var view) ? view : null,
-                (view, sprite) => view.SetSprite(sprite),
-                config => config.groupIcon);
+                argsScheduleItemEventId,
+                _eventSpriteManager,
+                config => argsScheduleItemEventId + "/" + config.groupIcon,
+                config =>
+                {
+                    if (_viewsDict.TryGetValue(config.groupType, out var view))
+                        return view.GetGroupImage();
+
+                    return null;
+                });
         }
         
         public void UpdateCollectedAmount(int collectedAmount, int totalAmount)
@@ -191,6 +202,14 @@ namespace CardCollectionImpl
         public void UpdatePointsAmount(int pointsAmount)
         {
             _cardsCollectionPointsView.SetPointsAmount(pointsAmount);
+        }
+
+        public void ReleaseSprites()
+        {
+            foreach (var kvp in _viewsDict)
+            {
+                kvp.Value.SetSprite(null, true);
+            }
         }
         
         protected override void OnDestroy()

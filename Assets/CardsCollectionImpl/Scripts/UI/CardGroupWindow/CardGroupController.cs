@@ -10,20 +10,29 @@ namespace CardCollectionImpl
 {
     public class CardGroupArgs : WindowArgs
     {
+        public readonly string EventId;
         public readonly string GroupType;
+        public readonly IReadOnlyList<CardConfig> Cards;
+        public readonly IReadOnlyList<CardCollectionGroupConfig> Groups;
         public readonly CardCollectionNewCardsDto NewCardsData;
         public readonly EventCardsSaveData EventCardsSaveData;
         public readonly CardCollectionRewardsConfigSO RewardsConfigSo;
         public readonly Action<string> OnGroupChanged;
         
         public CardGroupArgs(
+            string  eventId,
             CardCollectionNewCardsDto newCardsData, 
             EventCardsSaveData eventCardsSaveData,
             string groupType,
+            IReadOnlyList<CardConfig> cards,
+            IReadOnlyList<CardCollectionGroupConfig> groups,
             CardCollectionRewardsConfigSO rewardsConfigSo,
             Action<string> onGroupChanged)
         {
+            EventId = eventId;
             GroupType = groupType;
+            Cards = cards;
+            Groups = groups;
             NewCardsData = newCardsData;
             EventCardsSaveData = eventCardsSaveData;
             RewardsConfigSo = rewardsConfigSo;
@@ -34,31 +43,38 @@ namespace CardCollectionImpl
     [Window("CardGroupWindow", WindowType.Popup)]
     public class CardGroupController :  WindowController<CardGroupView>
     {
-        private ICardsConfigProvider _cardsConfigProvider;
-        private ICardGroupsConfigProvider _cardGroupsConfigProvider;
         private ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
+        private IEventSpriteManager _eventSpriteManager;
         
         private CardGroupArgs Args => (CardGroupArgs) Arguments;
 
         private List<CardProgressData> GroupCardsData => _cardCollectionCardCollectionCacheService.GetCardsByGroupType(Args.EventCardsSaveData, _currentGroupType).ToList();
 
-        private IReadOnlyList<CardCollectionGroupConfig> CollectionGroups => _cardGroupsConfigProvider.Data;
+        private IReadOnlyList<CardCollectionGroupConfig> CollectionGroups => Args.Groups;
         private int _currentGroupIndex;
         private string _currentGroupType;
+        private string _lastRenderedEventId;
+        private CardCollectionRewardsConfigSO _activeRewardsConfigSo;
         
         [Inject]
         private void Construct(
-            ICardsConfigProvider cardsConfigProvider,
-            ICardGroupsConfigProvider cardGroupsConfigProvider,
-            ICardCollectionCacheService cardCollectionCardCollectionCacheService)
+            ICardCollectionCacheService cardCollectionCardCollectionCacheService,
+            IEventSpriteManager eventSpriteManager)
         {
-            _cardsConfigProvider = cardsConfigProvider;
-            _cardGroupsConfigProvider = cardGroupsConfigProvider;
             _cardCollectionCardCollectionCacheService = cardCollectionCardCollectionCacheService;
+            _eventSpriteManager = eventSpriteManager;
         }
         
         protected override void OnShowStart()
         {
+            var currentEventId = Args.EventId;
+            if (!string.Equals(_lastRenderedEventId, currentEventId, StringComparison.Ordinal))
+            {
+                View.DisableAll();
+                _lastRenderedEventId = currentEventId;
+            }
+
+            _activeRewardsConfigSo = Args.RewardsConfigSo;
             _currentGroupType = Args.GroupType;
             
             _currentGroupIndex = -1;
@@ -69,7 +85,8 @@ namespace CardCollectionImpl
                 break;
             }
 
-            View.SetCardConfigs(_cardsConfigProvider.Data);
+            View.SetCardConfigs(Args.EventId, Args.Cards);
+            View.SetSpriteManager(_eventSpriteManager);
             ShowCurrentGroup();
         }
         
@@ -86,13 +103,13 @@ namespace CardCollectionImpl
 
         private void SetRewardData()
         {
-            var rewardViewData = UIUtils.CreateRewardViewData(Args.RewardsConfigSo, _currentGroupType);
+            var rewardViewData = UIUtils.CreateRewardViewData(_activeRewardsConfigSo, _currentGroupType);
             View.SetRewardData(rewardViewData.Icon, rewardViewData.Amount);
         }
         
         private async UniTask SetCardSprites(List<CardConfig> cardsData)
         {
-            await View.SetSprites(cardsData);
+            await View.SetSprites(Args.EventId, cardsData);
         }
         
         protected override void OnShowComplete()
@@ -141,7 +158,7 @@ namespace CardCollectionImpl
 
         private void UpdateCardSprites()
         {
-            var configs = _cardsConfigProvider.Data.GetByGroupType(_currentGroupType);
+            var configs = Args.Cards.GetByGroupType(_currentGroupType);
             SetCardSprites(configs).Forget();
         }
         
@@ -161,7 +178,7 @@ namespace CardCollectionImpl
         {
             View.DisableAll();
         }
-
+        
         private void CloseWindow()
         {
             UIManager.Hide<CardGroupController>();

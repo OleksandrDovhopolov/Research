@@ -60,8 +60,13 @@ namespace CoreResources
             }
 
             _amountByType[type] += amount;
-            ResourceAmountChanged?.Invoke(type, _amountByType[type]);
             QueueSave();
+        }
+
+        public void NotifyAmountChanged(ResourceType type)
+        {
+            ThrowIfDisposed();
+            ResourceAmountChanged?.Invoke(type, _amountByType[type]);
         }
 
         public bool Remove(ResourceType type, int amount)

@@ -19,6 +19,7 @@ namespace CardCollectionImpl
         private readonly ICollectionProgressSnapshotService _snapshotService;
 
         private CardCollectionRewardsConfigSO _rewardsConfig;
+        private CardCollectionEventModel _cardCollectionEventModel;
 
         private CancellationTokenSource _cts;
         private bool _isStarted;
@@ -46,7 +47,7 @@ namespace CardCollectionImpl
             _snapshotService = snapshotService;
         }
 
-        public async UniTask StartAsync(ScheduleItem scheduleItem, CancellationToken externalCt)
+        public async UniTask StartAsync(CardCollectionEventModel model, ScheduleItem scheduleItem, CancellationToken externalCt)
         {
             ThrowIfDisposed();
 
@@ -56,6 +57,8 @@ namespace CardCollectionImpl
             _cts = CancellationTokenSource.CreateLinkedTokenSource(externalCt);
             var ct = _cts.Token;
 
+            _cardCollectionEventModel = model;
+            
             try
             {
                 await _module.InitializeAsync(ct);
@@ -69,6 +72,9 @@ namespace CardCollectionImpl
                 _inventoryIntegration.Attach();
                 _hudPresenter.Bind(scheduleItem, ct);
 
+                var args = new CollectionStartedArgs(_cardCollectionEventModel.EventId, _cardCollectionEventModel.CollectionName);
+                _uiManager.Show<CollectionStartedController>(args, UIShowCommand.UIShowType.Ordered);
+                
                 _isStarted = true;
             }
             catch
@@ -95,20 +101,53 @@ namespace CardCollectionImpl
             externalCt.ThrowIfCancellationRequested();
             HideEventWindows();
             SafeStopInternal(externalCt);
+            
+            //TODO add collection name
+            var args = new CollectionCompletedArgs(_cardCollectionEventModel.EventId, _cardCollectionEventModel.CollectionName);
+            _uiManager.Show<CollectionCompletedController>(args);
+
             return UniTask.CompletedTask;
         }
 
         private void HideEventWindows()
         {
-            //TODO find better way
-            if (_uiManager.IsWindowShown<CardCollectionController>())
+            /*if (_uiManager.IsWindowSpawned<CardGroupController>())
             {
-                _uiManager.Hide<CardCollectionController>();
+                var window = _uiManager.GetWindowSync<CardGroupController>();
+                if (window.IsShown)
+                {
+                    _uiManager.Hide<CardGroupController>(true);
+                }
+            }*/
+            
+            if (_uiManager.IsWindowSpawned<CardCollectionController>())
+            {
+                var window = _uiManager.GetWindowSync<CardCollectionController>();
+                if (window.IsShown)
+                {
+                    _uiManager.Hide<CardCollectionController>();
+                }
             }
             
-            if (_uiManager.IsWindowShown<NewCardController>())
+            if (_uiManager.IsWindowSpawned<NewCardController>())
             {
-                _uiManager.Hide<NewCardController>();
+                var window = _uiManager.GetWindowSync<NewCardController>();
+                      
+                if (window.IsShown)
+                {
+                    _uiManager.Hide<NewCardController>();
+                }
+                //TODO release resources
+                //window.ReleaseSprites();
+            }
+            
+            if (_uiManager.IsWindowSpawned<CollectionStartedController>())
+            {
+                var window = _uiManager.GetWindowSync<CollectionStartedController>();
+                if (window.IsShown)
+                {
+                    _uiManager.Hide<CollectionStartedController>(true);
+                }
             }
             
             //TODO uncomment this when new window created
@@ -239,19 +278,16 @@ namespace CardCollectionImpl
                 Debug.LogError($"[CardCollectionRuntime] HUD dispose error: {e}");
             }
 
-            if (_rewardsConfig != null)
+            try
             {
-                try
-                {
-                    AddressablesWrapper.Release(_rewardsConfig);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"[CardCollectionRuntime] Addressables release error: {e}");
-                }
-
-                _rewardsConfig = null;
+                ProdAddressablesWrapper.Release(_rewardsConfig);
             }
+            catch (Exception e)
+            {
+                Debug.LogError($"[CardCollectionRuntime] Addressables release error: {e}");
+            }
+
+            _rewardsConfig = null;
         }
 
         private void ThrowIfDisposed()

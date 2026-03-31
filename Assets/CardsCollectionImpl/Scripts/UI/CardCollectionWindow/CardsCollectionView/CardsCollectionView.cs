@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 namespace CardCollectionImpl
 {
+    //TODO rename this. what is the difference with CollectionCardView ?
     public class CardsCollectionView : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI _cardsGroupName;
@@ -66,8 +67,13 @@ namespace CardCollectionImpl
         {
             _cardsGrouopButton.onClick.RemoveAllListeners();
         }
+        
+        public Image GetGroupImage()
+        {
+            return _cardsGrouopImage;
+        }
 
-        public void SetSprite(Sprite groupSprite)
+        public void SetSprite(Sprite groupSprite, bool shouldRelease = false)
         {
             _cardsGrouopImage.sprite = groupSprite;
         }

@@ -13,7 +13,6 @@ namespace core
 
         public static void RegisterInventoryService(this IContainerBuilder builder)
         {
-            Debug.LogWarning($"[VContainer] Construct InventoryVContainerBindings");
             builder.RegisterInstance(InventoryOwnerId);
 
             builder.Register<IInventoryStorage, InMemoryInventoryStorage>(Lifetime.Singleton);

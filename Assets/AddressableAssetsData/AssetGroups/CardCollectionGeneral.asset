@@ -1,0 +1,95 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: CardCollectionGeneral
+  m_EditorClassIdentifier: 
+  m_GroupName: CardCollectionGeneral
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 61a3618e307c535428d8bcd3064189f2
+  m_SerializeEntries:
+  - m_GUID: 0f99e518c4e8e8e41b1a33bdcc4c709a
+    m_Address: NewCardWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1092e3bfb2feca44294c05bc48c5b989
+    m_Address: Ruby_Pack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 136c286ef1cd7ba43bf276cfd0693300
+    m_Address: CollectionStartedWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1415239eee3bca44e8244422f0afa642
+    m_Address: CardsExchangeImage
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2d7a41fb5aea44a4db537ecdc7c0d25a
+    m_Address: CardGroupWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3cb0d1854023f914582a5f5735c936b7
+    m_Address: Ruby_Pack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4544c279cba48774d8a3dd0356732ce2
+    m_Address: CollectionPointsExchangeWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4673902ec1e84e64b84f93d6221f6cb7
+    m_Address: CardCollectionRewardsConfig
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 46806fdc6ca128d46972600a49df3ffc
+    m_Address: Sapphire_Pack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6d8515a205588524f8bff84418cc9b3f
+    m_Address: Emerald_Pack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9e9881d78756a504da763c5f6e644412
+    m_Address: Lazurite_Pack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a1cd2d916a299c64a8e60b385e9f1683
+    m_Address: CardCollectionWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c517bcceb2b91964a92ecf296c189e69
+    m_Address: CollectionCompletedWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e9f67f12eaa54c542a3e403cf26c006c
+    m_Address: CardCollection/Collection_event_button
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: c7236b2e70f2a9f4eb9a1c78df452a70, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 56b5a1a34b8763f44a364db45a069736, type: 2}
+    - {fileID: 11400000, guid: 39a6a430491378a40897e5b77984ebb2, type: 2}

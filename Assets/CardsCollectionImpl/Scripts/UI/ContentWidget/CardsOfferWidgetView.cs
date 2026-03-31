@@ -124,7 +124,7 @@ namespace CardCollectionImpl
                 ct.ThrowIfCancellationRequested();
                 try
                 {
-                    var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(request.Address);
+                    var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(request.Address, ct);
                     request.View.SetSprite(sprite);
                 }
                 finally

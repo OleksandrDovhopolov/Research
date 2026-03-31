@@ -29,7 +29,6 @@ namespace Inventory.Implementation
             IInventoryItemUseService inventoryItemUseService,
             IItemCategoryRegistry  itemCategoryRegistry)
         {
-            Debug.LogWarning($"[VContainer] Construct {GetType().Name}");
             _inventoryService = inventoryService;
             _inventoryReadService = inventoryReadService;
             _inventoryItemUseService = inventoryItemUseService;

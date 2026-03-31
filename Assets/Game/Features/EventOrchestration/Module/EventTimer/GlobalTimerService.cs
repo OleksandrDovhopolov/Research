@@ -28,18 +28,27 @@ namespace EventOrchestration
         {
             _destroyCt = this.GetCancellationTokenOnDestroy();
         }
-        public void Register(string eventId, DateTimeOffset endTimeUtc)
+        
+        public void Register(string eventId, DateTimeOffset timeUtc)
         {
             if (string.IsNullOrEmpty(eventId))
                 throw new ArgumentException("Event id cannot be null or empty.", nameof(eventId));
-            var wasEmpty = _events.Count == 0;
-            _events[eventId] = endTimeUtc;
-            if (wasEmpty && !_heartbeatActive)
+
+            if (_events.ContainsKey(eventId))
             {
+                _events[eventId] = timeUtc;
+            }
+            else
+            {
+                var wasEmpty = _events.Count == 0;
+                _events[eventId] = timeUtc;
+                
+                if (!wasEmpty || _heartbeatActive) return;
                 _heartbeatActive = true;
                 RunHeartbeatAsync(_destroyCt).Forget();
             }
         }
+        
         public void Unregister(string eventId)
         {
             if (string.IsNullOrEmpty(eventId))
@@ -49,11 +58,14 @@ namespace EventOrchestration
         
         public bool TryGetRemaining(string eventId, out TimeSpan remaining)
         {
-            remaining = default;
+            remaining = TimeSpan.Zero;
             if (string.IsNullOrEmpty(eventId) || !_events.TryGetValue(eventId, out var endUtc))
                 return false;
+
             var r = endUtc - _clock.UtcNow;
-            remaining = r.TotalSeconds <= 0 ? TimeSpan.Zero : r;
+            
+            remaining = r.TotalSeconds <= 0 ? TimeSpan.Zero : TimeSpan.FromSeconds(Math.Ceiling(r.TotalSeconds));
+            
             return true;
         }
         

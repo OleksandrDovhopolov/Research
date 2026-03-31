@@ -12,27 +12,35 @@ namespace CardCollectionImpl
     public class CardCollectionArgs : WindowArgs
     {
         public readonly CardCollectionNewCardsDto NewCardsData;
+        public readonly IReadOnlyList<CardConfig> Cards;
+        public readonly IReadOnlyList<CardCollectionGroupConfig> Groups;
         public readonly ICardCollectionPointsAccount CardCollectionPointsAccount;
         public readonly EventCardsSaveData EventCardsSaveData;
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
         public readonly IRewardDefinitionFactory RewardDefinitionFactory;
         public readonly CollectionProgressSnapshot CollectionProgressSnapshot;
+        public readonly CardCollectionRewardsConfigSO CollectionRewardsConfigSo;
         public readonly string ScheduleItemEventId;
 
-        public CardCollectionArgs(
-            CardCollectionNewCardsDto newCardsData,
+        public CardCollectionArgs(CardCollectionNewCardsDto newCardsData,
             EventCardsSaveData eventCardsSaveData,
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory rewardDefinitionFactory,
+            CardCollectionRewardsConfigSO collectionRewardsConfigSo,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
             CollectionProgressSnapshot collectionProgressSnapshot,
-            string scheduleItemEventId = null)
+            string scheduleItemEventId,
+            IReadOnlyList<CardConfig> cards,
+            IReadOnlyList<CardCollectionGroupConfig> groups)
         {
             NewCardsData = newCardsData;
+            Cards = cards;
+            Groups = groups;
             EventCardsSaveData = eventCardsSaveData;
             ExchangeOfferProvider = exchangeOfferProvider;
             RewardDefinitionFactory = rewardDefinitionFactory;
             CardCollectionPointsAccount = cardCollectionPointsAccount;
+            CollectionRewardsConfigSo = collectionRewardsConfigSo;
             CollectionProgressSnapshot = collectionProgressSnapshot;
             ScheduleItemEventId = scheduleItemEventId;
         }
@@ -41,32 +49,38 @@ namespace CardCollectionImpl
     [Window("CardCollectionWindow")]
     public class CardCollectionController : WindowController<CardCollectionView>
     {
-        private ICardsConfigProvider _cardsConfigProvider;
-        private ICardGroupsConfigProvider _cardGroupsConfigProvider;
-        private ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
         private IGlobalTimerService _globalTimerService;
+        private IEventSpriteManager _eventSpriteManager;
+        private ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
         
         private CardCollectionArgs Args => (CardCollectionArgs) Arguments;
-        private IReadOnlyList<CardCollectionGroupConfig> GroupConfigs => _cardGroupsConfigProvider.Data;
+        private IReadOnlyList<CardCollectionGroupConfig> GroupConfigs => Args.Groups;
         
         private bool _groupsCreated;
+        private string _lastRenderedEventId;
 
         [Inject]
         public void Install(
-            ICardsConfigProvider cardsConfigProvider,
-            ICardGroupsConfigProvider cardGroupsConfigProvider,
-            ICardCollectionCacheService cardCollectionCardCollectionCacheService,
-            IGlobalTimerService globalTimerService)
+            IEventSpriteManager eventSpriteManager,
+            IGlobalTimerService globalTimerService,
+            ICardCollectionCacheService cardCollectionCardCollectionCacheService)
         {
-            _cardsConfigProvider = cardsConfigProvider;
-            _cardGroupsConfigProvider = cardGroupsConfigProvider;
-            _cardCollectionCardCollectionCacheService = cardCollectionCardCollectionCacheService;
             _globalTimerService = globalTimerService;
+            _eventSpriteManager = eventSpriteManager;
+            _cardCollectionCardCollectionCacheService = cardCollectionCardCollectionCacheService;
         }
         
         protected override void OnShowStart()
         {
+            var currentEventId = Args.ScheduleItemEventId;
+            if (!string.Equals(_lastRenderedEventId, currentEventId, StringComparison.Ordinal))
+            {
+                _groupsCreated = false;
+                _lastRenderedEventId = currentEventId;
+            }
+
             View.SetService(_cardCollectionCardCollectionCacheService);
+            View.SetSpriteManager(_eventSpriteManager);
 
             View.BindEventTimerDisplay(_globalTimerService, Args.ScheduleItemEventId);
 
@@ -79,11 +93,14 @@ namespace CardCollectionImpl
             else
             {
                 View.ShowLoader(true); 
-                View.CreateViews(Args.NewCardsData, GroupConfigs);
+                View.CreateViews(Args.NewCardsData, GroupConfigs, Args.CollectionRewardsConfigSo);
             }
 
             View.SetGroupsProgress(Args.CollectionProgressSnapshot.GroupProgress);
             View.SetCollectedAmountProgressStart(Args.CollectionProgressSnapshot.CollectedAmount, Args.CollectionProgressSnapshot.TotalAmount);
+            
+            if (_groupsCreated) return;
+            CreateGroupViews().Forget();
         }
         
         protected override void OnShowComplete()
@@ -98,10 +115,7 @@ namespace CardCollectionImpl
             var totalAmount = Args.EventCardsSaveData.Cards.Count;
             
             View.UpdateCollectedAmount(collectedAmount, totalAmount);
-            View.UpdateGroupsProgressAnimated(Args.EventCardsSaveData, _cardsConfigProvider.Data);
-            
-            if (_groupsCreated) return;
-            CreateGroupViews().Forget();
+            View.UpdateGroupsProgressAnimated(Args.EventCardsSaveData, Args.Cards);
         }
 
         private void OnRewardChestClickedHandler(RectTransform rectTransform)
@@ -135,7 +149,7 @@ namespace CardCollectionImpl
         {
             try
             {
-                await View.CreateGroupViews(GroupConfigs);
+                await View.CreateGroupViews(Args.ScheduleItemEventId, GroupConfigs);
                 _groupsCreated = true;
             }
             catch (Exception e)
@@ -161,6 +175,24 @@ namespace CardCollectionImpl
             }
         }
         
+        private void OnGroupButtonPressedHandler(string groupType)
+        {
+            TryHideContentWidget();
+
+            OnGroupViewChangedHandler(groupType);
+            
+            var args = new CardGroupArgs(
+                Args.ScheduleItemEventId,
+                Args.NewCardsData,
+                Args.EventCardsSaveData, 
+                groupType,
+                Args.Cards,
+                Args.Groups,
+                Args.CollectionRewardsConfigSo,
+                OnGroupViewChangedHandler);
+            UIManager.Show<CardGroupController>(args);
+        }
+        
         protected override void OnHideStart(bool isClosed)
         {
             TryHideContentWidget();
@@ -174,26 +206,11 @@ namespace CardCollectionImpl
             View.OnGroupButtonPressed -= OnGroupButtonPressedHandler;
         }
 
-        private void OnGroupButtonPressedHandler(string groupType)
-        {
-            TryHideContentWidget();
-
-            OnGroupViewChangedHandler(groupType);
-            
-            var args = new CardGroupArgs(
-                Args.NewCardsData,
-                Args.EventCardsSaveData, 
-                groupType, 
-                View.RewardsConfigSo,
-                OnGroupViewChangedHandler);
-            UIManager.Show<CardGroupController>(args);
-        }
-
         private void OnGroupViewChangedHandler(string currentGroupType)
         {
             View.UpdateGroupNewCards(currentGroupType, 0);
         }
-        
+
         private void CloseWindow()
         {
             UIManager.Hide<CardCollectionController>();

@@ -1,58 +1,354 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceLocations;
 using Object = UnityEngine.Object;
 
 namespace Infrastructure
 {
     public static class ProdAddressablesWrapper
     {
-        // key = address
-        private static readonly Dictionary<string, AsyncOperationHandle> Cache = new();
+        private readonly struct CacheKey : IEquatable<CacheKey>
+        {
+            public readonly string Address;
+            public readonly Type AssetType;
+
+            public CacheKey(string address, Type assetType)
+            {
+                Address = address;
+                AssetType = assetType;
+            }
+
+            public bool Equals(CacheKey other)
+            {
+                return Address == other.Address && AssetType == other.AssetType;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is CacheKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((Address != null ? Address.GetHashCode() : 0) * 397) ^ (AssetType != null ? AssetType.GetHashCode() : 0);
+                }
+            }
+        }
+
+        private static readonly Dictionary<CacheKey, AsyncOperationHandle> HandleByKey = new();
+        private static readonly Dictionary<CacheKey, int> RefCountByKey = new();
+        private static readonly Dictionary<int, CacheKey> InstanceIdToKey = new();
         private static readonly object Lock = new();
 
-        // ---------------- LOAD ASYNC ----------------
-
-        public static async Task<T> LoadAsync<T>(string address) where T : Object
+        public static async Task<T> LoadAsync<T>(string address, CancellationToken ct) where T : Object
         {
+            if (string.IsNullOrEmpty(address))
+                throw new ArgumentException("Address is null or empty.", nameof(address));
+
+            ct.ThrowIfCancellationRequested();
+
+            var key = new CacheKey(address, typeof(T));
             AsyncOperationHandle handle;
-            
             lock (Lock)
             {
-                if (Cache.TryGetValue(address, out var cachedHandle))
+                if (HandleByKey.TryGetValue(key, out var cachedHandle))
                 {
+                    RefCountByKey[key]++;
                     handle = cachedHandle;
                 }
                 else
                 {
                     handle = Addressables.LoadAssetAsync<T>(address);
-                    Cache[address] = handle;
+                    HandleByKey[key] = handle;
+                    RefCountByKey[key] = 1;
                 }
             }
 
-            await handle.Task;
-            return handle.Convert<T>().Result;
+            try
+            {
+                await AwaitWithCancellation(handle.Task, ct);
+            }
+            catch
+            {
+                Release(key);
+                throw;
+            }
+
+            if (handle.Status != AsyncOperationStatus.Succeeded)
+            {
+                Release(key);
+                throw new InvalidOperationException($"Failed to load address '{address}' as {typeof(T).Name}. Status: {handle.Status}");
+            }
+
+            var result = handle.Convert<T>().Result;
+            if (result == null)
+            {
+                Release(key);
+                throw new InvalidOperationException($"Loaded null from address '{address}' as {typeof(T).Name}.");
+            }
+
+            lock (Lock)
+            {
+                if (!RefCountByKey.ContainsKey(key))
+                    return result;
+
+                InstanceIdToKey[result.GetInstanceID()] = key;
+            }
+
+            return result;
         }
 
-        // ---------------- RELEASE ----------------
+        public static void Release(object obj)
+        {
+            if (obj == null)
+                return;
+
+            CacheKey key = default;
+            var hasKnownKey = false;
+            lock (Lock)
+            {
+                if (obj is Object unityObject && unityObject != null &&
+                    InstanceIdToKey.TryGetValue(unityObject.GetInstanceID(), out key))
+                {
+                    hasKnownKey = true;
+                }
+            }
+
+            if (hasKnownKey)
+            {
+                Release(key);
+                return;
+            }
+
+            Addressables.Release(obj);
+        }
 
         public static void Release(string address)
         {
-            if (!Cache.TryGetValue(address, out var handle)) return;
+            if (string.IsNullOrEmpty(address))
+                return;
 
-            Addressables.Release(handle);
-            Cache.Remove(address);
+            List<CacheKey> keysToRelease;
+            lock (Lock)
+            {
+                keysToRelease = HandleByKey.Keys
+                    .Where(k => k.Address == address)
+                    .ToList();
+            }
+
+            foreach (var key in keysToRelease)
+            {
+                Release(key);
+            }
         }
 
         public static void ReleaseAll()
         {
-            foreach (var handle in Cache.Values)
+            List<AsyncOperationHandle> handlesToRelease;
+            lock (Lock)
+            {
+                handlesToRelease = HandleByKey.Values.ToList();
+                HandleByKey.Clear();
+                RefCountByKey.Clear();
+                InstanceIdToKey.Clear();
+            }
+
+            foreach (var handle in handlesToRelease)
+            {
+                if (handle.IsValid())
+                {
+                    Addressables.Release(handle);
+                }
+            }
+        }
+
+        private static void Release(CacheKey key)
+        {
+            AsyncOperationHandle handle = default;
+            var shouldReleaseHandle = false;
+
+            lock (Lock)
+            {
+                if (!RefCountByKey.TryGetValue(key, out var refCount))
+                    return;
+
+                refCount--;
+                if (refCount > 0)
+                {
+                    RefCountByKey[key] = refCount;
+                    return;
+                }
+
+                RefCountByKey.Remove(key);
+                if (!HandleByKey.TryGetValue(key, out handle))
+                    return;
+
+                HandleByKey.Remove(key);
+                if (handle.IsValid() && handle.Result is Object loadedObject && loadedObject != null)
+                {
+                    InstanceIdToKey.Remove(loadedObject.GetInstanceID());
+                }
+
+                shouldReleaseHandle = handle.IsValid();
+            }
+
+            if (shouldReleaseHandle)
             {
                 Addressables.Release(handle);
             }
+        }
 
-            Cache.Clear();
+        private static async Task AwaitWithCancellation(Task task, CancellationToken ct)
+        {
+            if (task.IsCompleted)
+            {
+                await task;
+                return;
+            }
+
+            var cancellationTcs = new TaskCompletionSource<bool>();
+            using (ct.Register(static state => ((TaskCompletionSource<bool>)state).TrySetResult(true), cancellationTcs))
+            {
+                var completedTask = await Task.WhenAny(task, cancellationTcs.Task);
+                if (completedTask != task)
+                {
+                    throw new OperationCanceledException(ct);
+                }
+            }
+
+            await task;
+        }
+        
+        public static async Task LoadGroupAsync<T>(
+            IEnumerable<string> addresses,
+            CancellationToken ct,
+            int maxConcurrency = 8) where T : Object
+        {
+            if (addresses == null) throw new ArgumentNullException(nameof(addresses));
+            if (maxConcurrency <= 0) throw new ArgumentOutOfRangeException(nameof(maxConcurrency));
+
+            var unique = addresses
+                .Where(a => !string.IsNullOrWhiteSpace(a))
+                .Distinct()
+                .ToArray();
+
+            var semaphore = new SemaphoreSlim(maxConcurrency);
+
+            try
+            {
+                var tasks = unique.Select(async address =>
+                {
+                    ct.ThrowIfCancellationRequested();
+                    await semaphore.WaitAsync(ct);
+                    try
+                    {
+                        await LoadAsync<T>(address, ct);
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                }).ToArray();
+
+                await Task.WhenAll(tasks);
+            }
+            finally
+            {
+                semaphore.Dispose();
+            }
+        }
+
+        public static async Task DownloadDependenciesByLabelAsync(string label, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(label))
+                throw new ArgumentException("Label is null or empty.", nameof(label));
+
+            ct.ThrowIfCancellationRequested();
+
+            var handle = Addressables.DownloadDependenciesAsync(label);
+            try
+            {
+                await AwaitWithCancellation(handle.Task, ct);
+                if (handle.Status != AsyncOperationStatus.Succeeded)
+                {
+                    throw new InvalidOperationException(
+                        $"Addressables.DownloadDependenciesAsync failed for label '{label}'. Status: {handle.Status}");
+                }
+            }
+            finally
+            {
+                if (handle.IsValid())
+                {
+                    Addressables.Release(handle);
+                }
+            }
+        }
+
+        public static async Task<IReadOnlyList<string>> ResolveAddressesByLabelAsync<T>(string label, CancellationToken ct)
+            where T : Object
+        {
+            if (string.IsNullOrWhiteSpace(label))
+                throw new ArgumentException("Label is null or empty.", nameof(label));
+
+            ct.ThrowIfCancellationRequested();
+
+            var handle = Addressables.LoadResourceLocationsAsync(label, typeof(T));
+            try
+            {
+                await AwaitWithCancellation(handle.Task, ct);
+                if (handle.Status != AsyncOperationStatus.Succeeded || handle.Result == null)
+                    return Array.Empty<string>();
+
+                return handle.Result
+                    .Where(x => x != null)
+                    .Select(x => x.PrimaryKey)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct()
+                    .ToArray();
+            }
+            finally
+            {
+                if (handle.IsValid())
+                {
+                    Addressables.Release(handle);
+                }
+            }
+        }
+
+        public static async Task<IReadOnlyList<string>> WarmupGroupByLabelAsync<T>(
+            string label,
+            CancellationToken ct,
+            int takeCount,
+            int maxConcurrency = 8) where T : Object
+        {
+            if (takeCount <= 0)
+                throw new ArgumentOutOfRangeException(nameof(takeCount));
+
+            var addresses = await ResolveAddressesByLabelAsync<T>(label, ct);
+            var selected = addresses.Take(takeCount).ToArray();
+            if (selected.Length == 0)
+                return selected;
+
+            await LoadGroupAsync<T>(selected, ct, maxConcurrency);
+            return selected;
+        }
+        
+        public static void ReleaseGroup(IEnumerable<string> addresses)
+        {
+            if (addresses == null) return;
+
+            foreach (var address in addresses.Where(a => !string.IsNullOrWhiteSpace(a)).Distinct())
+            {
+                Release(address);
+            }
         }
     }
 }

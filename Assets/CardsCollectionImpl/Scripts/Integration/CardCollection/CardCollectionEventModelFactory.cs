@@ -10,11 +10,10 @@ namespace EventOrchestration.Controllers
 {
     public sealed class CardCollectionEventModelFactory : IEventModelFactory
     {
-        private const string CollectionIdKey = "eventId";
+        private const string CollectionNameKey = "collectionName";
         
         private const string RewardsConfigAddressKey = "rewardsConfigAddress";
         private const string FallbackRewardsConfigAddress = "CardCollectionRewardsConfig";
-
         
         private const string CardsCollectionAddressKey = "cardsCollectionAddress";
         private const string FallbackCollectionAddress = "fallback_card_collection";
@@ -31,7 +30,8 @@ namespace EventOrchestration.Controllers
             if (item == null) throw new ArgumentNullException(nameof(item));
 
             item.CustomParams ??= new Dictionary<string, string>();
-            item.CustomParams.TryGetValue(CollectionIdKey, out var collectionId);
+            
+            item.CustomParams.TryGetValue(CollectionNameKey, out var collectionName);
             
             item.CustomParams.TryGetValue(RewardsConfigAddressKey, out var rewardsConfigAddress);
             if (string.IsNullOrEmpty(rewardsConfigAddress))
@@ -66,11 +66,11 @@ namespace EventOrchestration.Controllers
                 EventId = item.Id,
                 EventType = item.EventType,
                 StreamId = item.StreamId,
+                CollectionName = collectionName,
                 RewardsConfigAddress = rewardsConfigAddress,
                 CardCollectionFileName = cardsCollectionAddress,
                 GroupsFileName = cardGroupsAddress,
                 CardPacksFileName = cardPacksAddress,
-                CollectionId = string.IsNullOrWhiteSpace(collectionId) ? item.Id : collectionId,
             };
 
             return UniTask.FromResult(model);

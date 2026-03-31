@@ -2,6 +2,7 @@ using EventOrchestration.Abstractions;
 using EventOrchestration.Core;
 using EventOrchestration.Infrastructure;
 using VContainer;
+using VContainer.Unity;
 
 namespace core
 {
@@ -11,7 +12,6 @@ namespace core
         {
             builder.Register<IScheduleProvider>(_ => new StreamingAssetsScheduleProvider(scheduleJsonFile), Lifetime.Singleton);
             builder.Register<IScheduleValidator, BasicScheduleValidator>(Lifetime.Singleton);
-            builder.Register<IConditionProvider, AllowAllConditionProvider>(Lifetime.Singleton);
             builder.Register<IClock, SystemClock>(Lifetime.Singleton);
             builder.Register<IStateStore, InMemoryStateStore>(Lifetime.Singleton);
             builder.Register<IOrchestratorTelemetry, UnityDebugTelemetry>(Lifetime.Singleton);
@@ -21,6 +21,9 @@ namespace core
             builder.Register<EventOrchestrator>(
                 resolver => resolver.Resolve<OrchestratorFactory>().Create(),
                 Lifetime.Singleton);
+            
+            builder.RegisterEntryPoint<EventAssetWarmupService>(Lifetime.Singleton)
+                .As<IEventAssetWarmupService>();
         }
     }
 }
