@@ -82,6 +82,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e9f67f12eaa54c542a3e403cf26c006c
+    m_Address: CardCollection/Collection_event_button
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: c7236b2e70f2a9f4eb9a1c78df452a70, type: 2}
   m_SchemaSet:

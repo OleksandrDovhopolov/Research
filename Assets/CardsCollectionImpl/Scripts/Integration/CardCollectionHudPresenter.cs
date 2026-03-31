@@ -24,7 +24,8 @@ namespace CardCollectionImpl
 
         public void Bind(ScheduleItem config, CancellationToken ct)
         {
-            var entryButton = _hudService.SpawnEventButton(CardCollectionButtonId);
+            var spriteAddress = CardCollectionButtonId + "/" + CardCollectionGeneralConfig.CollectionEventButton;
+            var entryButton = _hudService.SpawnEventButton(CardCollectionButtonId, spriteAddress);
 
             if (entryButton == null)
             {

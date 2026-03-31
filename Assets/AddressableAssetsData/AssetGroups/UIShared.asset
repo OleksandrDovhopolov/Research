@@ -37,8 +37,23 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 23f481e52262190499b9ba9c4e39ee30
+    m_Address: Assets/Game/UI/UIShared/Sprites/ContentWidget/u_pop_up_default_body.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3f5eb3ce00c12487eac31f936321c69a
+    m_Address: Assets/Game/UI/UIShared/Prefabs/Loading/Animatons/Loading_rotate.anim
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 482a183e4d8b64347b84fde9fa6bf485
     m_Address: Assets/Game/UI/UIShared/Prefabs/Loading/Animatons/Loading_rotate_08.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 489886f490fcc98418d241449a5e3865
+    m_Address: Assets/CardsCollectionImpl/Ui/Prefabs/Shared/ContentWidget/ContentItemView.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -49,6 +64,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 58240d5ba0d9c5e428b1b727caaec460
     m_Address: InventoryWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 68e6db2ebdc24f95958faec2be5558d6
+    m_Address: Assets/Plugins/TextMesh Pro/Shaders/TMP_SDF.shader
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -77,6 +97,17 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ae279366cc8224447b43888c08d41a5b
+    m_Address: Assets/Game/UI/UIShared/Sprites/ContentWidget/u_pop_up_bottom_pointer.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c1482dbce654844b9ba1c753cbea5d80
+    m_Address: Assets/Game/Features/Inventory/Presentation/ResourcesData/Fonts/LilitaOne-Regular
+      SDF.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c1a8b91abb7e542bcb36beac9b1e7452
     m_Address: Assets/Game/UI/UIShared/Prefabs/Loading/Animatons/Loading_rotate_01.png
     m_ReadOnly: 0
@@ -89,6 +120,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d5d19c73da9a048f785ba8f6cd6ac0a3
     m_Address: Assets/Game/UI/UIShared/Prefabs/Loading/Animatons/Loading_rotate_04.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e3265ab4bf004d28a9537516768c1c75
+    m_Address: Assets/Plugins/TextMesh Pro/Fonts/LiberationSans.ttf
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fe393ace9b354375a9cb14cdbbc28be4
+    m_Address: Assets/Plugins/TextMesh Pro/Shaders/TMP_SDF-Mobile.shader
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -5,27 +5,16 @@ using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
 using UnityEngine;
-using VContainer;
 
 namespace UIShared
 {
     public class EventDebugView : MonoBehaviour
     {
-        private const string CollectionPreview = "Collection_preview";
-        
         [SerializeField] private UIListPool<EventDebugItemView> _uiListPool;
-        [SerializeField] private List<EventData> _eventData;
 
         private readonly Dictionary<string, EventDebugItemView> _idToView = new();
 
         private CancellationToken _ct;
-        /*private IEventSpriteManager  _eventSpriteManager;
-        
-        [Inject]
-        private void Construct(IEventSpriteManager eventSpriteManager)
-        {
-            _eventSpriteManager = eventSpriteManager;
-        }*/
         
         private void Start()
         {
@@ -51,9 +40,8 @@ namespace UIShared
         private async UniTask SetDataAsync(string eventId, IGlobalTimerService  globalTimerService)
         {
             var view = _uiListPool.GetNext();
-            var spriteAddress = eventId + "/" + CollectionPreview;
+            var spriteAddress = eventId + "/" + CardCollectionGeneralConfig.CollectionPreview;
             var sprite = await LoadCollectionSprite(spriteAddress);
-            //await _eventSpriteManager.BindSpriteAsync(eventId, CollectionPreview, view.Image, _ct);
             view.SetData(eventId, sprite, globalTimerService);
             _idToView[eventId] = view;
         }
@@ -86,7 +74,7 @@ namespace UIShared
                 _idToView.Remove(eventId);
             }
             
-            var spriteAddress = eventId + "/" + CollectionPreview;
+            var spriteAddress = eventId + "/" + CardCollectionGeneralConfig.CollectionPreview;
             ProdAddressablesWrapper.Release(spriteAddress);
             _uiListPool.DisableNonActive();
         }

@@ -19,7 +19,7 @@ namespace UIShared
             _resolver = resolver;
         }
 
-        public IEventButton SpawnEventButton(string eventId)
+        public IEventButton SpawnEventButton(string eventId, string spriteAddress)
         {
             if (_activeButtons.TryGetValue(eventId, out var button))
             {
@@ -36,6 +36,7 @@ namespace UIShared
             btnObj.SetActive(wasPrefabActive);
 
             var eventButton = btnObj.GetComponent<EventButton>();
+            eventButton.LoadSprite(eventId, spriteAddress);
             _activeButtons.Add(eventId, eventButton);
 
             return eventButton;

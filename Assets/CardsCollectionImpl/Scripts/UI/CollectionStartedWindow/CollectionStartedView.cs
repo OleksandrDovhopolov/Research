@@ -17,7 +17,6 @@ namespace CardCollectionImpl
         [SerializeField] private TextMeshProUGUI _descriptionText;
         [SerializeField] private TextMeshProUGUI _titleText;
         [SerializeField] private EventTimerDisplay _timer;
-        [SerializeField] private Sprite _fallbackSprite;
 
         private CancellationToken _ct;
         private string _spriteAddress;

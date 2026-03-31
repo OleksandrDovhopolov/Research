@@ -69,7 +69,6 @@ namespace CardCollectionImpl
                 
                 var spriteAddress = eventId + "/" + config.icon;
                 _eventSpriteManager.BindSpriteAsync(eventId, spriteAddress, cardView.CardImage, _ct).Forget();
-                //UIUtils.SetSprite(spriteAddress, cardView, this.GetCancellationTokenOnDestroy()).Forget();
                 
                 cardView.SetAlpha(false);
                 cardView.transform.SetSiblingIndex(i);
