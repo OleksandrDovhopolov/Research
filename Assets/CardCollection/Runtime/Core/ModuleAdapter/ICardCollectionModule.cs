@@ -44,6 +44,7 @@ namespace CardCollection.Core
     public interface ICardCollectionUpdater
     {
         UniTask UnlockCard(string cardId, CancellationToken ct = default);
+        UniTask UnlockCards(IReadOnlyCollection<string> cardIds, CancellationToken ct = default);
         UniTask Save(CancellationToken ct = default);
         UniTask Clear(CancellationToken ct = default);
     }

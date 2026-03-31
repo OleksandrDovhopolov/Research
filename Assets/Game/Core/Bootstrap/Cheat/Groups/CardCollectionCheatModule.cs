@@ -218,7 +218,7 @@ namespace Game.Cheat
                 }
             }
         }
-
+        
         private async UniTask UnlockAllMinusOneCardAsync(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
@@ -230,20 +230,14 @@ namespace Game.Cheat
                 return;
             }
 
-            var unlockCount = cardIds.Count - 1;
-            for (var i = 0; i < unlockCount; i++)
+            if (!_featureFacade.TryGetCollectionUpdater(out var updater))
             {
-                ct.ThrowIfCancellationRequested();
-                if (_featureFacade.TryGetCollectionUpdater(out var updater))
-                {
-                    await updater.UnlockCard(cardIds[i], ct);
-                }
-                else
-                {
-                    Debug.LogWarning("[Cheat] CardCollection updater is unavailable.");
-                    return;
-                }
+                Debug.LogWarning("[Cheat] CardCollection updater is unavailable.");
+                return;
             }
+
+            var unlockIds = cardIds.Take(cardIds.Count - 1).ToList();
+            await updater.UnlockCards(unlockIds, ct);
         }
         
         private async UniTask UnlockGroupByInt(int groupIndex, CancellationToken ct)

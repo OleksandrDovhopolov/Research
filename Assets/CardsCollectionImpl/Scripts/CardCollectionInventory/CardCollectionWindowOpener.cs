@@ -83,7 +83,7 @@ namespace CardCollectionImpl
             
             var collectionData = await _reader.Load(ct);
             
-            var args = new CardGroupCollectionArgs(collectionData, groupConfigs, _collectionRewardsConfigSo);
+            var args = new CardGroupCollectionArgs(_module.EventId, collectionData, groupConfigs, _collectionRewardsConfigSo);
             _uiManager.Show<CardGroupCompletedWindow>(args);
         }
         
@@ -100,7 +100,6 @@ namespace CardCollectionImpl
                 await _module.ResetNewFlagsAsync(newCardIds, ct);
             }
 
-            Debug.LogWarning($"[Debug] _collectionRewardsConfigSo {_collectionRewardsConfigSo.name}");
             _collectionProgressSnapshotService.TryGetSnapshot(out var snapshot);
             var args = new CardCollectionArgs(
                 newCardsData,

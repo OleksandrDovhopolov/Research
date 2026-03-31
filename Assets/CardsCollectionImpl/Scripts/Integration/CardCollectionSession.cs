@@ -249,6 +249,7 @@ namespace CardCollectionImpl
                 return;
             }
 
+            Debug.LogWarning($"Test data {data.Groups.Count}");
             var rewardTasks = data.Groups
                 .Select(group => _rewardHandler.TryHandleGroupCompleted(group, ct))
                 .ToArray();

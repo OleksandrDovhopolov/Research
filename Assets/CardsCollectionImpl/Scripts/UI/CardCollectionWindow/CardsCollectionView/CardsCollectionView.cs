@@ -17,12 +17,14 @@ namespace CardCollectionImpl
         [SerializeField] private TextMeshProUGUI _groupRewardAmountText;
         [SerializeField] private CollectedAmountProgressView _collectedAmountProgressView;
         [SerializeField] private Image _groupCompletedImage;
+        [SerializeField] private RectTransform _animationStartPosition;
         
         [Space, Header("NewCards")]
         [SerializeField] private GameObject _newCardsContainer;
         [SerializeField] private TextMeshProUGUI _nexCardsAmountText;
 
         public string GroupType { get; private set; }
+        public Vector3 AnimationStartPosition => _animationStartPosition.transform.position;
 
         public event Action<string> OnButtonPressed;
 

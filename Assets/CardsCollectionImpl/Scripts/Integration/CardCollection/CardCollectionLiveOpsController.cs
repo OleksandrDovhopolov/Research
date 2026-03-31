@@ -60,7 +60,6 @@ namespace CardCollectionImpl
             
             if (_cardCollectionSession == null)
                 return;
-            Debug.LogWarning($"[CardCollectionRuntime] OnUpdateAsync: {model.EventId}");
             await _cardCollectionSession.UpdateAsync(ct);
         }
 

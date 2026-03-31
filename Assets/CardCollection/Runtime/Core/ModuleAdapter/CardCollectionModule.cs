@@ -182,6 +182,32 @@ namespace CardCollection.Core
                 throw new InvalidOperationException($"[CardCollectionSaveController] Failed to unlock card {cardId} for event {_context.EventId}: {ex}");
             }
         }
+        
+        public async UniTask UnlockCards(IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            if (cardIds == null || cardIds.Count == 0)
+            {
+                return;
+            }
+
+            try
+            {
+                await _context.UnlockCardsAsync(_context.EventId, cardIds, ct);
+                NotifyCompletedGroups(cardIds);
+                NotifyCollectionCompleted();
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    $"[CardCollectionSaveController] Failed to unlock cards for event {_context.EventId}: {ex}");
+            }
+        }
 
         public async UniTask Save(CancellationToken ct = default)
         {

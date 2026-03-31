@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using CardCollection.Core;
 using UIShared;
 using UISystem;
@@ -8,17 +9,18 @@ namespace CardCollectionImpl
 {
     public class CardGroupCollectionArgs : WindowArgs
     {
-        public readonly string GroupType;
-        public readonly string GroupName;
-        public readonly List<CardCollectionGroupConfig>  GroupConfigs;
+        public readonly string EventId;
+        public readonly List<CardCollectionGroupConfig> GroupConfigs;
         public readonly EventCardsSaveData EventCardsSaveData;
         public readonly CardCollectionRewardsConfigSO CollectionRewardsConfigSo;
         
         public CardGroupCollectionArgs(
+            string eventId,
             EventCardsSaveData eventCardsSaveData, 
             List<CardCollectionGroupConfig>  groupConfigs,
             CardCollectionRewardsConfigSO collectionRewardsConfigSo)
         {
+            EventId = eventId;
             GroupConfigs = groupConfigs;
             EventCardsSaveData = eventCardsSaveData;
             CollectionRewardsConfigSo = collectionRewardsConfigSo;
@@ -29,33 +31,57 @@ namespace CardCollectionImpl
     public class CardGroupCompletedWindow : WindowController<CardGroupCompletedView>
     {
         private IAnimationService _animationService;
+        private IEventSpriteManager _eventSpriteManager;
         private ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
         
         private CardGroupCollectionArgs Args => (CardGroupCollectionArgs) Arguments;
         
-        private RewardViewData _rewardViewData;
+        private readonly Dictionary<string, RewardViewData> _groupRewardsByType = new();
         
         [Inject]
-        public void Install(IAnimationService animationService, ICardCollectionCacheService cardCollectionCardCollectionCacheService)
+        public void Install(IAnimationService animationService, IEventSpriteManager eventSpriteManager, ICardCollectionCacheService cardCollectionCardCollectionCacheService)
         {
             _animationService = animationService;
+            _eventSpriteManager = eventSpriteManager;
             _cardCollectionCardCollectionCacheService = cardCollectionCardCollectionCacheService;
         }
         
         protected override void OnShowStart()
         {
-            _rewardViewData = UIUtils.CreateRewardViewData(Args.CollectionRewardsConfigSo, Args.GroupType);
-            View.SetRewardData(_rewardViewData.Icon, _rewardViewData.Amount);
+            var groupsDataByType = new List<CardGroupCompletedView.GroupCompletedViewData>();
+            _groupRewardsByType.Clear();
+            
+            foreach (var groupConfig in Args.GroupConfigs ?? Enumerable.Empty<CardCollectionGroupConfig>())
+            {
+                var groupType = groupConfig.groupType;
+                if (string.IsNullOrWhiteSpace(groupType))
+                {
+                    continue;
+                }
+
+                var totalGroupAmount = _cardCollectionCardCollectionCacheService.GetGroupAmount(Args.EventCardsSaveData, groupType);
+                var collectedGroupAmount = _cardCollectionCardCollectionCacheService.GetCollectedGroupAmount(Args.EventCardsSaveData, groupType);
+                var rewardViewData = UIUtils.CreateRewardViewData(Args.CollectionRewardsConfigSo, groupType);
+
+                _groupRewardsByType[groupType] = rewardViewData;
+
+                var viewData = new CardGroupCompletedView.GroupCompletedViewData(
+                    groupType,
+                    groupConfig.groupName,
+                    groupConfig.groupIcon,
+                    collectedGroupAmount,
+                    totalGroupAmount,
+                    rewardViewData.Icon,
+                    rewardViewData.Amount);
+                groupsDataByType.Add(viewData);
+            }
+
+            View.CreateViews(Args.EventId, groupsDataByType, _eventSpriteManager);
         }
         
         protected override void OnShowComplete()
         {
             View.CloseClick += CloseWindow;
-            
-            var totalGroupAmount = _cardCollectionCardCollectionCacheService.GetGroupAmount(Args.EventCardsSaveData, Args.GroupType);
-            var collectedGroupAmount = _cardCollectionCardCollectionCacheService.GetCollectedGroupAmount(Args.EventCardsSaveData, Args.GroupType);;
-
-            View.CreateViews(Args.GroupType, Args.GroupName, collectedGroupAmount, totalGroupAmount);
         }
         
         protected override void OnHideStart(bool isClosed)
@@ -65,9 +91,21 @@ namespace CardCollectionImpl
 
         protected override void OnHideComplete(bool isClosed)
         {
+            foreach (var rewardByType in _groupRewardsByType)
+            {
+                var groupType = rewardByType.Key;
+                var rewardViewData = rewardByType.Value;
+                if (rewardViewData.Amount <= 0 || string.IsNullOrWhiteSpace(rewardViewData.Id))
+                {
+                    continue;
+                }
+
+                View.TryGetAnimationStartPosition(groupType, out var animationStartPosition);
+                _animationService.Animate(animationStartPosition, rewardViewData.Amount, rewardViewData.Id);
+            }
+
+            _groupRewardsByType.Clear();
             View.ResetView();
-            
-            _animationService.Animate(View.AnimationStartPosition, _rewardViewData.Amount, _rewardViewData.Id);
         }
 
         private void CloseWindow()
