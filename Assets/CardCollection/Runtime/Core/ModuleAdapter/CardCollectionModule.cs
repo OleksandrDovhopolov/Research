@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -21,7 +22,7 @@ namespace CardCollection.Core
         private GroupCompletionTracker _groupCompletionTracker;
         private bool _isCollectionCompleted;
         
-        public event Action<CardGroupCompletedData> OnGroupCompleted;
+        public event Action<CardGroupsCompletedData> OnGroupCompleted;
         public event Action<CardCollectionCompletedData> OnCollectionCompleted;
         
         public CardCollectionModule(CardCollectionModuleConfig  config)
@@ -274,10 +275,14 @@ namespace CardCollection.Core
             }
 
             var completedGroupIds = _groupCompletionTracker.RegisterOpenedCards(openedCardIds);
-            foreach (var groupId in completedGroupIds)
-            {
-                OnGroupCompleted?.Invoke(new CardGroupCompletedData { GroupType = groupId });
-            }
+            if (completedGroupIds == null || completedGroupIds.Count == 0)
+                return;
+
+            var items = completedGroupIds
+                .Select(id => new CardGroupCompletedData { GroupType = id })
+                .ToList();
+
+            OnGroupCompleted?.Invoke(new CardGroupsCompletedData(items));
         }
 
         private void NotifyCollectionCompleted()

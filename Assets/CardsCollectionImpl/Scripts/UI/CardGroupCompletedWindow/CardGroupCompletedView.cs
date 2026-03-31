@@ -1,3 +1,4 @@
+using UIShared;
 using UISystem;
 using UnityEngine;
 
@@ -6,6 +7,7 @@ namespace CardCollectionImpl
     public class CardGroupCompletedView : WindowView
     {
         [SerializeField] private CardsCollectionView _cardsCollectionView;
+        [SerializeField] private UIListPool<CardsCollectionView> _uiListPool;
         [SerializeField] private RectTransform _animationStartPosition;
         public Vector3 AnimationStartPosition => _animationStartPosition.transform.position;
 

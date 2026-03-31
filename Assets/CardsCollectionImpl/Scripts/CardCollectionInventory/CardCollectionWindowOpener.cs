@@ -66,18 +66,24 @@ namespace CardCollectionImpl
             _uiManager.Show<NewCardController>(args);
         }
         
-        public async UniTask OpenCardGroupCompletedWindow(string groupType, CancellationToken ct)
+        public async UniTask OpenCardGroupCompletedWindow(IEnumerable<string> groupTypes, CancellationToken ct)
         {
-            var groupConfig = _groups.FirstOrDefault(group => group.groupType == groupType);
-            if (groupConfig == null)
+            var groupConfigs = new List<CardCollectionGroupConfig>();
+
+            foreach (var groupType in groupTypes)
             {
-                Debug.LogError($"Failed to find group {groupType}");
-                return;
+                var groupConfig = _groups.FirstOrDefault(group => group.groupType == groupType);
+                if (groupConfig == null)
+                {
+                    Debug.LogError($"Failed to find group {groupType}");
+                    continue;
+                }
+                groupConfigs.Add(groupConfig);
             }
             
             var collectionData = await _reader.Load(ct);
             
-            var args = new CardGroupCollectionArgs(collectionData, groupConfig.groupType, groupConfig.groupName, _collectionRewardsConfigSo);
+            var args = new CardGroupCollectionArgs(collectionData, groupConfigs, _collectionRewardsConfigSo);
             _uiManager.Show<CardGroupCompletedWindow>(args);
         }
         

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace CardCollection.Core
 {
@@ -7,8 +8,18 @@ namespace CardCollection.Core
         public string GroupType;
     }
     
+    public readonly struct CardGroupsCompletedData
+    {
+        public readonly IReadOnlyList<CardGroupCompletedData> Groups;
+
+        public CardGroupsCompletedData(IReadOnlyList<CardGroupCompletedData> groups)
+        {
+            Groups = groups;
+        }
+    }
+    
     public interface ICardGroupCompletionNotifier
     {
-        event Action<CardGroupCompletedData> OnGroupCompleted;
+        event Action<CardGroupsCompletedData> OnGroupCompleted;
     }
 }

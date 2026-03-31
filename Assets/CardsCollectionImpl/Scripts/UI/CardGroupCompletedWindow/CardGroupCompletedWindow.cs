@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CardCollection.Core;
 using UIShared;
 using UISystem;
@@ -9,14 +10,16 @@ namespace CardCollectionImpl
     {
         public readonly string GroupType;
         public readonly string GroupName;
+        public readonly List<CardCollectionGroupConfig>  GroupConfigs;
         public readonly EventCardsSaveData EventCardsSaveData;
         public readonly CardCollectionRewardsConfigSO CollectionRewardsConfigSo;
         
-        public CardGroupCollectionArgs(EventCardsSaveData eventCardsSaveData, string groupType,  string groupName,
+        public CardGroupCollectionArgs(
+            EventCardsSaveData eventCardsSaveData, 
+            List<CardCollectionGroupConfig>  groupConfigs,
             CardCollectionRewardsConfigSO collectionRewardsConfigSo)
         {
-            GroupType = groupType;
-            GroupName = groupName;
+            GroupConfigs = groupConfigs;
             EventCardsSaveData = eventCardsSaveData;
             CollectionRewardsConfigSo = collectionRewardsConfigSo;
         }

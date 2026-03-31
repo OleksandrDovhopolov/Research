@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
@@ -226,7 +227,7 @@ namespace CardCollectionImpl
             _cts = null;
         }
 
-        private void OnGroupCompleted(CardGroupCompletedData data)
+        private void OnGroupCompleted(CardGroupsCompletedData data)
         {
             if (_isDisposed || !_isStarted)
                 return;
@@ -239,12 +240,38 @@ namespace CardCollectionImpl
             HandleGroupCompletedAsync(data, ct).Forget();
         }
         
-        private async UniTask HandleGroupCompletedAsync(CardGroupCompletedData data, CancellationToken ct)
+        private async UniTask HandleGroupCompletedAsync(CardGroupsCompletedData data, CancellationToken ct)
         {
-            var granted = await _rewardHandler.TryHandleGroupCompleted(data, ct);
-            if (!granted) return;
-            
-            await Context.WindowOpener.OpenCardGroupCompletedWindow(data.GroupType, ct);
+            ct.ThrowIfCancellationRequested();
+
+            if (data.Groups == null || data.Groups.Count == 0)
+            {
+                return;
+            }
+
+            var rewardTasks = data.Groups
+                .Select(group => _rewardHandler.TryHandleGroupCompleted(group, ct))
+                .ToArray();
+
+            var results = await UniTask.WhenAll(rewardTasks);
+            var allRewardsGranted = results.All(isGranted => isGranted);
+            if (!allRewardsGranted)
+            {
+                return;
+            }
+
+            var groupTypes = data.Groups
+                .Select(group => group.GroupType)
+                .Where(groupType => !string.IsNullOrWhiteSpace(groupType))
+                .Distinct()
+                .ToArray();
+
+            if (groupTypes.Length == 0)
+            {
+                return;
+            }
+
+            await Context.WindowOpener.OpenCardGroupCompletedWindow(groupTypes, ct);
         }
 
         private void OnCollectionCompleted(CardCollectionCompletedData data)
