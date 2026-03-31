@@ -117,12 +117,13 @@ namespace CardCollectionImpl
                 }
                 
                 var rewardHandler = new CardCollectionRewardHandler(rewardsConfig, _rewardGrantService, rewardDefinitionFactory);
-                
                 var snapshotService = new CollectionProgressSnapshotService(_cardCollectionCacheService, staticData.Groups);
+                var exchangeOfferProvider = new ExchangeOfferProvider(_exchangePacksConfig, rewardHandler);
+                
                 var windowOpener = CreateCardPackWindowOpener(
                     module,
                     snapshotService,
-                    rewardHandler,
+                    exchangeOfferProvider,
                     rewardDefinitionFactory,
                     rewardsConfig,
                     staticData);
@@ -156,13 +157,11 @@ namespace CardCollectionImpl
         private ICardCollectionWindowOpener CreateCardPackWindowOpener(
             CardCollectionModule module,
             ICollectionProgressSnapshotService snapshotService,
-            ICardCollectionRewardHandler rewardHandler,
+            IExchangeOfferProvider exchangeOfferProvider,
             IRewardDefinitionFactory rewardDefinitionFactory,
             CardCollectionRewardsConfigSO rewardsConfig,
             CardCollectionStaticData staticData)
         {
-            var exchangeOfferProvider = new ExchangeOfferProvider(_exchangePacksConfig, rewardHandler);
-            
             var cardCollectionWindowOpener = new CardCollectionWindowOpener(
                 _uiManager, 
                 module, 

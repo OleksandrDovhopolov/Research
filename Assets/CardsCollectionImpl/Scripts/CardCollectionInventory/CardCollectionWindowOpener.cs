@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
@@ -63,6 +64,21 @@ namespace CardCollectionImpl
         {
             var args = new NewCardArgs(_module.EventId, pack, _module, _reader, _cardCollectionCacheService);
             _uiManager.Show<NewCardController>(args);
+        }
+        
+        public async UniTask OpenCardGroupCompletedWindow(string groupId, CancellationToken ct)
+        {
+            var groupConfig = _groups.FirstOrDefault(group => group.ID == groupId);
+            if (groupConfig == null)
+            {
+                Debug.LogError($"Failed to find group {groupId}");
+                return;
+            }
+            
+            var collectionData = await _reader.Load(ct);
+            
+            var args = new CardGroupCollectionArgs(collectionData, groupConfig.groupType, groupConfig.groupName, _collectionRewardsConfigSo);
+            _uiManager.Show<CardGroupCompletedWindow>(args);
         }
         
         public async UniTask OpenCardCollectionWindow(CancellationToken ct)

@@ -53,9 +53,9 @@ namespace CardCollectionImpl
             _collectedAmountProgressView.SetPreviousProgress(collectedAmount, totalAmount);
         }
         
-        public void UpdateCollectedAmount(int collectedAmount, int totalAmount)
+        public void UpdateCollectedAmountAnimated(int collectedAmount, int totalAmount, Action<bool> onAnimationCompleted = null)
         {
-            _collectedAmountProgressView.UpdateCollectedAmountAnimated(collectedAmount, totalAmount);
+            _collectedAmountProgressView.UpdateCollectedAmountAnimated(collectedAmount, totalAmount, onAnimationCompleted);
         }
 
         public void SetGroupCompleted(bool isCompleted)
@@ -83,6 +83,11 @@ namespace CardCollectionImpl
         public void SetSprite(Sprite groupSprite, bool shouldRelease = false)
         {
             _cardsGrouopImage.sprite = groupSprite;
+        }
+
+        public void ShowCompleteCheckMark()
+        {
+            throw new NotImplementedException();
         }
     }
 }

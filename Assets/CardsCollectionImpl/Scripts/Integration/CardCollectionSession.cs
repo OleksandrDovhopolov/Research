@@ -236,9 +236,16 @@ namespace CardCollectionImpl
             if (ct.IsCancellationRequested)
                 return;
 
-            _rewardHandler?
-                .TryHandleGroupCompleted(data, ct)
-                .Forget();
+            HandleGroupCompletedAsync(data, ct).Forget();
+        }
+        
+        private async UniTask HandleGroupCompletedAsync(CardGroupCompletedData data, CancellationToken ct)
+        {
+            var granted = await _rewardHandler.TryHandleGroupCompleted(data, ct);
+            if (!granted) return;
+
+            
+            await Context.WindowOpener.OpenCardGroupCompletedWindow(data.GroupId, ct);
         }
 
         private void OnCollectionCompleted(CardCollectionCompletedData data)

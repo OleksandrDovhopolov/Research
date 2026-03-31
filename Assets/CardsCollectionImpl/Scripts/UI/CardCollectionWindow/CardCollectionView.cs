@@ -127,25 +127,35 @@ namespace CardCollectionImpl
             }
         }
 
-        public void UpdateGroupsProgressAnimated(EventCardsSaveData collectionData, IReadOnlyList<CardConfig> cardConfigs)
+        public void UpdateGroupsProgressAnimated(EventCardsSaveData collectionData)
         {
             foreach (var groupView in _viewsDict.Values)
             {
                 var groupType = groupView.GroupType;
                 var totalGroupAmount = _cardCollectionCardCollectionCacheService.GetGroupAmount(collectionData, groupType);
                 var collectedGroupAmount = _cardCollectionCardCollectionCacheService.GetCollectedGroupAmount(collectionData, groupType);;
-                
-                if (collectedGroupAmount == totalGroupAmount)
-                {
-                    groupView.SetGroupCompleted(true);
-                }
-                else
-                {
-                    groupView.UpdateCollectedAmount(collectedGroupAmount, totalGroupAmount);
-                }
+
+                UpdateGroupProgressAnimated(groupView, collectedGroupAmount,  totalGroupAmount);
             }
         }
 
+        public void UpdateGroupProgressAnimated(CardsCollectionView groupView, int collectedGroupAmount, int totalGroupAmount)
+        {
+            if (collectedGroupAmount == totalGroupAmount)
+            {
+                groupView.SetGroupCompleted(true);
+            }
+            else
+            {
+                groupView.UpdateCollectedAmountAnimated(collectedGroupAmount, totalGroupAmount);
+            }
+        }
+
+        public void UpdateGroupProgressAnimated(EventCardsSaveData collectionData, CardConfig cardConfig)
+        {
+            
+        }
+        
         public void UpdateViews(CardCollectionNewCardsDto newCardsData)
         {
             foreach (var groupView in _viewsDict.Values)

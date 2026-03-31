@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using CardCollectionImpl;
 using cheatModule;
@@ -36,7 +37,7 @@ namespace Game.Cheat
         {
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Create test events", () =>
             {
-                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 10, 30);
+                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 10, 120);
                 //var first = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, 30, 120);
                 var second = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, first.EndTimeUtc, TimeSpan.FromSeconds(120));
                 
@@ -57,6 +58,11 @@ namespace Game.Cheat
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Unlock all cards - 1", () =>
             {
                 UnlockAllMinusOneCardAsync(_ct).Forget();
+            }).WithGroup(CardCollectionGroup));
+            
+            cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Complete group(Int)", groupIndex =>
+            {
+               UnlockGroupByInt(groupIndex, _ct).Forget();
             }).WithGroup(CardCollectionGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<string>("Open card ID(str)", cardId =>
@@ -237,6 +243,48 @@ namespace Game.Cheat
                     Debug.LogWarning("[Cheat] CardCollection updater is unavailable.");
                     return;
                 }
+            }
+        }
+        
+        private async UniTask UnlockGroupByInt(int groupIndex, CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            if (groupIndex < 0)
+            {
+                Debug.LogWarning("[Cheat] Group index must be >= 0.");
+                return;
+            }
+
+            var cardIds = await GetAllCardIdsAsync(ct);
+            if (cardIds.Count == 0)
+            {
+                Debug.LogWarning("[Cheat] Could not find card IDs to unlock group.");
+                return;
+            }
+
+            const int groupSize = 10;
+            var groupCardIds = cardIds
+                .Skip(groupIndex * groupSize)
+                .Take(groupSize)
+                .ToList();
+
+            if (groupCardIds.Count == 0)
+            {
+                Debug.LogWarning($"[Cheat] Group index {groupIndex} is out of range.");
+                return;
+            }
+
+            if (!_featureFacade.TryGetCollectionUpdater(out var updater))
+            {
+                Debug.LogWarning("[Cheat] CardCollection updater is unavailable.");
+                return;
+            }
+
+            foreach (var cardId in groupCardIds)
+            {
+                ct.ThrowIfCancellationRequested();
+                await updater.UnlockCard(cardId, ct);
             }
         }
 

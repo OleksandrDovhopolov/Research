@@ -115,7 +115,8 @@ namespace CardCollectionImpl
             var totalAmount = Args.EventCardsSaveData.Cards.Count;
             
             View.UpdateGlobalCollectedAmount(collectedAmount, totalAmount);
-            View.UpdateGroupsProgressAnimated(Args.EventCardsSaveData, Args.Cards);
+            //View.UpdateGroupsProgressAnimated(Args.EventCardsSaveData, Args.Cards);
+            View.UpdateGroupsProgressAnimated(Args.EventCardsSaveData);
         }
 
         private void OnRewardChestClickedHandler(RectTransform rectTransform)

@@ -9,5 +9,6 @@ namespace CardCollectionImpl
         void OpenNewCardWindow(string packId);
         void OpenNewCardWindow(CardPack pack);
         UniTask OpenCardCollectionWindow(CancellationToken ct);
+        UniTask OpenCardGroupCompletedWindow(string groupId, CancellationToken ct);
     }
 }
