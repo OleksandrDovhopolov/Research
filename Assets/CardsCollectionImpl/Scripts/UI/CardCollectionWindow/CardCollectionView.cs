@@ -114,7 +114,15 @@ namespace CardCollectionImpl
             {
                 if (_viewsDict.TryGetValue(groupProgressSnapshot.GroupType, out var groupView))
                 {
-                    groupView.SetCollectedAmountProgressStart(groupProgressSnapshot.CollectedAmount, groupProgressSnapshot.TotalAmount);
+                    if (groupProgressSnapshot.CollectedAmount == groupProgressSnapshot.TotalAmount)
+                    {
+                        groupView.SetGroupCompleted(true);
+                    }
+                    else
+                    {
+                        groupView.SetGroupCompleted(false);
+                        groupView.SetCollectedAmountProgressStart(groupProgressSnapshot.CollectedAmount, groupProgressSnapshot.TotalAmount);
+                    }
                 }
             }
         }
@@ -126,7 +134,15 @@ namespace CardCollectionImpl
                 var groupType = groupView.GroupType;
                 var totalGroupAmount = _cardCollectionCardCollectionCacheService.GetGroupAmount(collectionData, groupType);
                 var collectedGroupAmount = _cardCollectionCardCollectionCacheService.GetCollectedGroupAmount(collectionData, groupType);;
-                groupView.UpdateCollectedAmount(collectedGroupAmount, totalGroupAmount);
+                
+                if (collectedGroupAmount == totalGroupAmount)
+                {
+                    groupView.SetGroupCompleted(true);
+                }
+                else
+                {
+                    groupView.UpdateCollectedAmount(collectedGroupAmount, totalGroupAmount);
+                }
             }
         }
 
@@ -179,12 +195,12 @@ namespace CardCollectionImpl
                 });
         }
         
-        public void UpdateCollectedAmount(int collectedAmount, int totalAmount)
+        public void UpdateGlobalCollectedAmount(int collectedAmount, int totalAmount)
         {
-            _collectedAmountProgressView.UpdateCollectedAmount(collectedAmount, totalAmount);
+            _collectedAmountProgressView.UpdateCollectedAmountAnimated(collectedAmount, totalAmount);
         }
 
-        public void SetCollectedAmountProgressStart(int collectedAmount, int totalAmount)
+        public void SetGlobalCollectedProgressStart(int collectedAmount, int totalAmount)
         {
             _collectedAmountProgressView.SetPreviousProgress(collectedAmount, totalAmount);
         }

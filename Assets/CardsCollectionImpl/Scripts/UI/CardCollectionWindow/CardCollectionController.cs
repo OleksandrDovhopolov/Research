@@ -96,8 +96,8 @@ namespace CardCollectionImpl
                 View.CreateViews(Args.NewCardsData, GroupConfigs, Args.CollectionRewardsConfigSo);
             }
 
+            View.SetGlobalCollectedProgressStart(Args.CollectionProgressSnapshot.CollectedAmount, Args.CollectionProgressSnapshot.TotalAmount);
             View.SetGroupsProgress(Args.CollectionProgressSnapshot.GroupProgress);
-            View.SetCollectedAmountProgressStart(Args.CollectionProgressSnapshot.CollectedAmount, Args.CollectionProgressSnapshot.TotalAmount);
             
             if (_groupsCreated) return;
             CreateGroupViews().Forget();
@@ -114,7 +114,7 @@ namespace CardCollectionImpl
             var collectedAmount = Args.EventCardsSaveData.GetCollectedCardsAmount();
             var totalAmount = Args.EventCardsSaveData.Cards.Count;
             
-            View.UpdateCollectedAmount(collectedAmount, totalAmount);
+            View.UpdateGlobalCollectedAmount(collectedAmount, totalAmount);
             View.UpdateGroupsProgressAnimated(Args.EventCardsSaveData, Args.Cards);
         }
 

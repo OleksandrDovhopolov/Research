@@ -171,7 +171,16 @@ namespace CardCollectionImpl
 
             var collectedAmount =  _cardCollectionCardCollectionCacheService.GetCollectedGroupAmount(Args.EventCardsSaveData, _currentGroupType);;
             var totalAmount = _cardCollectionCardCollectionCacheService.GetGroupAmount(Args.EventCardsSaveData, _currentGroupType);
-            View.UpdateCollectedAmount(collectedAmount, totalAmount);
+
+            if (collectedAmount == totalAmount)
+            {
+                View.SetGroupCompleted(true);
+            }
+            else
+            {
+                View.SetGroupCompleted(false);
+                View.UpdateCollectedAmount(collectedAmount, totalAmount);
+            }
         }
         
         protected override void OnHideComplete(bool isClosed) 

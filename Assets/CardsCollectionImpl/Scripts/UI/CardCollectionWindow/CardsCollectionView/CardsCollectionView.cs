@@ -16,6 +16,7 @@ namespace CardCollectionImpl
         [SerializeField] private Image _grouoRewardImage;
         [SerializeField] private TextMeshProUGUI _groupRewardAmountText;
         [SerializeField] private CollectedAmountProgressView _collectedAmountProgressView;
+        [SerializeField] private Image _groupCompletedImage;
         
         [Space, Header("NewCards")]
         [SerializeField] private GameObject _newCardsContainer;
@@ -54,7 +55,13 @@ namespace CardCollectionImpl
         
         public void UpdateCollectedAmount(int collectedAmount, int totalAmount)
         {
-            _collectedAmountProgressView.UpdateCollectedAmount(collectedAmount, totalAmount);
+            _collectedAmountProgressView.UpdateCollectedAmountAnimated(collectedAmount, totalAmount);
+        }
+
+        public void SetGroupCompleted(bool isCompleted)
+        {
+            _collectedAmountProgressView.gameObject.SetActive(!isCompleted);
+            _groupCompletedImage.gameObject.SetActive(isCompleted);
         }
 
         public void SetRewardData(Sprite sprite, int amount)

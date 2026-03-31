@@ -1,3 +1,4 @@
+using System;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -34,7 +35,7 @@ namespace CardCollectionImpl
             _lastTotalAmount = totalAmount;
         }
 
-        public void UpdateCollectedAmount(int collectedAmount, int totalAmount)
+        public void UpdateCollectedAmountAnimated(int collectedAmount, int totalAmount, Action<bool> onAnimationCompleted = null)
         {
             if (_hasLastAmounts &&
                 _lastCollectedAmount == collectedAmount &&
@@ -64,7 +65,11 @@ namespace CardCollectionImpl
             _sliderTween = _collectedSlider
                 .DOFillAmount(targetProgress, _animationDuration)
                 .SetEase(Ease.OutCubic)
-                .OnComplete(() => _sliderTween = null);
+                .OnComplete(() =>
+                {
+                    onAnimationCompleted?.Invoke(collectedAmount == totalAmount);
+                    _sliderTween = null;
+                });
 
             _lastCollectedProgressValue = targetProgress;
             _hasLastAmounts = true;

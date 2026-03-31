@@ -2349,9 +2349,6 @@ MonoBehaviour:
   _uiListPool:
     prefab: {fileID: 893425945445050835, guid: ca2841f9453ba1744a78c83112e63961, type: 3}
     parent: {fileID: 802872359}
-  _eventData:
-  - {fileID: 11400000, guid: 61963fd3caa040e4ab3dd3e81ac6f69b, type: 2}
-  - {fileID: 11400000, guid: dfc3acbc34f8c7f4abfc231963c904d8, type: 2}
 --- !u!1 &1942930688
 GameObject:
   m_ObjectHideFlags: 0

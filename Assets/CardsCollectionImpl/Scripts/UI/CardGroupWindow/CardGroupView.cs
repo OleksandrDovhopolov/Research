@@ -30,6 +30,8 @@ namespace CardCollectionImpl
         [SerializeField] private float _slideOffset = 1200f;
         
         [Space, Space, Header("GroupReward")]
+        [SerializeField] private GameObject _progressContainer;
+        [SerializeField] private GameObject _groupCompletedContainer;
         [SerializeField] private Image _collectedSlider;
         [SerializeField] private TextMeshProUGUI _groupCollectedAmountText;
         [SerializeField] private Image _grouoRewardImage;
@@ -103,12 +105,18 @@ namespace CardCollectionImpl
                 _viewsDict[config] = cardView;
             }
         }
-
+        
         public void SetCollectionNumber(string collectionNumber)
         {
             _collectionNumberText.text = collectionNumber;
         }
 
+        public void SetGroupCompleted(bool isCompleted)
+        {
+            _progressContainer.SetActive(!isCompleted);
+            _groupCompletedContainer.SetActive(isCompleted);
+        }
+        
         public void UpdateCollectedAmount(int collectedAmount, int totalAmount)
         {
             _collectedSlider.fillAmount = (float)collectedAmount / totalAmount;;
