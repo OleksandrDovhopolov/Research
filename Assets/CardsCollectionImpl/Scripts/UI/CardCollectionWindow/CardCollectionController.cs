@@ -20,14 +20,14 @@ namespace CardCollectionImpl
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
         public readonly IRewardSpecProvider RewardSpecProvider;
         public readonly CollectionProgressSnapshot CollectionProgressSnapshot;
-        public readonly CardCollectionRewardsConfigSO CollectionRewardsConfigSo;
+        public readonly ICardCollectionRewardHandler RewardHandler;
         public readonly string ScheduleItemEventId;
 
         public CardCollectionArgs(CardCollectionNewCardsDto newCardsData,
             EventCardsSaveData eventCardsSaveData,
             IExchangeOfferProvider exchangeOfferProvider,
             IRewardSpecProvider rewardSpecProvider,
-            CardCollectionRewardsConfigSO collectionRewardsConfigSo,
+            ICardCollectionRewardHandler rewardHandler,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
             CollectionProgressSnapshot collectionProgressSnapshot,
             string scheduleItemEventId,
@@ -41,7 +41,7 @@ namespace CardCollectionImpl
             ExchangeOfferProvider = exchangeOfferProvider;
             RewardSpecProvider = rewardSpecProvider;
             CardCollectionPointsAccount = cardCollectionPointsAccount;
-            CollectionRewardsConfigSo = collectionRewardsConfigSo;
+            RewardHandler = rewardHandler;
             CollectionProgressSnapshot = collectionProgressSnapshot;
             ScheduleItemEventId = scheduleItemEventId;
         }
@@ -94,7 +94,7 @@ namespace CardCollectionImpl
             else
             {
                 View.ShowLoader(true); 
-                View.CreateViews(Args.NewCardsData, GroupConfigs, Args.CollectionRewardsConfigSo);
+                View.CreateViews(Args.NewCardsData, GroupConfigs, Args.RewardHandler);
             }
 
             View.SetGlobalCollectedProgressStart(Args.CollectionProgressSnapshot.CollectedAmount, Args.CollectionProgressSnapshot.TotalAmount);
@@ -195,7 +195,7 @@ namespace CardCollectionImpl
                 groupType,
                 Args.Cards,
                 Args.Groups,
-                Args.CollectionRewardsConfigSo,
+                Args.RewardHandler,
                 OnGroupViewChangedHandler);
             UIManager.Show<CardGroupController>(args);
         }

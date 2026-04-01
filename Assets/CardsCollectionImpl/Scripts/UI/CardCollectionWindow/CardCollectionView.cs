@@ -82,7 +82,7 @@ namespace CardCollectionImpl
             _eventSpriteManager = eventSpriteManager;
         }
         
-        public void CreateViews(CardCollectionNewCardsDto newCardsData, IReadOnlyList<CardCollectionGroupConfig> configs, CardCollectionRewardsConfigSO rewardsConfig)
+        public void CreateViews(CardCollectionNewCardsDto newCardsData, IReadOnlyList<CardCollectionGroupConfig> configs, ICardCollectionRewardHandler rewardHandler)
         {
             _cardGroupsPool.DisableNonActive();
 
@@ -96,7 +96,7 @@ namespace CardCollectionImpl
                 var groupName = groupsConfig.groupName;
                 
                 groupView.SetData(groupType, groupName);
-                var rewardViewData = UIUtils.CreateRewardViewData(rewardsConfig, groupType);
+                var rewardViewData = rewardHandler.CreateRewardViewData(groupType);
                 groupView.SetRewardData(rewardViewData.Icon, rewardViewData.Amount);
                 
                 groupView.OnButtonPressed += OnButtonPressedHandler;

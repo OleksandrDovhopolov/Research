@@ -16,7 +16,7 @@ namespace CardCollectionImpl
         public readonly IReadOnlyList<CardCollectionGroupConfig> Groups;
         public readonly CardCollectionNewCardsDto NewCardsData;
         public readonly EventCardsSaveData EventCardsSaveData;
-        public readonly CardCollectionRewardsConfigSO RewardsConfigSo;
+        public readonly ICardCollectionRewardHandler RewardHandler;
         public readonly Action<string> OnGroupChanged;
         
         public CardGroupArgs(
@@ -26,7 +26,7 @@ namespace CardCollectionImpl
             string groupType,
             IReadOnlyList<CardConfig> cards,
             IReadOnlyList<CardCollectionGroupConfig> groups,
-            CardCollectionRewardsConfigSO rewardsConfigSo,
+            ICardCollectionRewardHandler rewardHandler,
             Action<string> onGroupChanged)
         {
             EventId = eventId;
@@ -35,7 +35,7 @@ namespace CardCollectionImpl
             Groups = groups;
             NewCardsData = newCardsData;
             EventCardsSaveData = eventCardsSaveData;
-            RewardsConfigSo = rewardsConfigSo;
+            RewardHandler = rewardHandler;
             OnGroupChanged = onGroupChanged;
         }
     }
@@ -54,7 +54,6 @@ namespace CardCollectionImpl
         private int _currentGroupIndex;
         private string _currentGroupType;
         private string _lastRenderedEventId;
-        private CardCollectionRewardsConfigSO _activeRewardsConfigSo;
         
         [Inject]
         private void Construct(
@@ -74,7 +73,6 @@ namespace CardCollectionImpl
                 _lastRenderedEventId = currentEventId;
             }
 
-            _activeRewardsConfigSo = Args.RewardsConfigSo;
             _currentGroupType = Args.GroupType;
             
             _currentGroupIndex = -1;
@@ -103,7 +101,7 @@ namespace CardCollectionImpl
 
         private void SetRewardData()
         {
-            var rewardViewData = UIUtils.CreateRewardViewData(_activeRewardsConfigSo, _currentGroupType);
+            var rewardViewData = Args.RewardHandler.CreateRewardViewData(_currentGroupType);
             View.SetRewardData(rewardViewData.Icon, rewardViewData.Amount);
         }
         

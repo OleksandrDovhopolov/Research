@@ -21,7 +21,7 @@ namespace CardCollectionImpl
         private readonly IExchangeOfferProvider _exchangeOfferProvider;
         private readonly IRewardSpecProvider _rewardSpecProvider;
         private readonly ICardCollectionCacheService _cardCollectionCacheService;
-        private readonly CardCollectionRewardsConfigSO _collectionRewardsConfigSo;
+        private readonly ICardCollectionRewardHandler _rewardHandler;
         private readonly ICollectionProgressSnapshotService _collectionProgressSnapshotService;
 
         public CardCollectionWindowOpener(UIManager uiManager,
@@ -34,13 +34,13 @@ namespace CardCollectionImpl
             IRewardSpecProvider rewardSpecProvider,
             ICardCollectionCacheService cardCollectionCacheService,
             ICollectionProgressSnapshotService collectionProgressSnapshotService,
-            CardCollectionRewardsConfigSO rewardsConfig)
+            ICardCollectionRewardHandler rewardHandler)
         {
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
             _module = module ?? throw new ArgumentNullException(nameof(module));
             _reader = reader ?? throw new ArgumentNullException(nameof(reader));
             _pointsAccount = pointsAccount ?? throw new ArgumentNullException(nameof(pointsAccount));
-            _collectionRewardsConfigSo = rewardsConfig ?? throw new ArgumentNullException(nameof(rewardsConfig));
+            _rewardHandler = rewardHandler ?? throw new ArgumentNullException(nameof(rewardHandler));
             _cards = cards ?? throw new ArgumentNullException(nameof(cards));
             _groups = groups ?? throw new ArgumentNullException(nameof(groups));
             _exchangeOfferProvider = exchangeOfferProvider ?? throw new ArgumentNullException(nameof(exchangeOfferProvider));
@@ -79,7 +79,7 @@ namespace CardCollectionImpl
             
             var collectionData = await _reader.Load(ct);
             
-            var args = new CardGroupCollectionArgs(_module.EventId, collectionData, groupConfigs, _collectionRewardsConfigSo);
+            var args = new CardGroupCollectionArgs(_module.EventId, collectionData, groupConfigs, _rewardHandler);
             _uiManager.Show<CardGroupCompletedWindow>(args);
         }
         
@@ -102,7 +102,7 @@ namespace CardCollectionImpl
                 collectionData,
                 _exchangeOfferProvider,
                 _rewardSpecProvider, 
-                _collectionRewardsConfigSo,
+                _rewardHandler,
                 _pointsAccount,
                 snapshot,
                 _module.EventId,

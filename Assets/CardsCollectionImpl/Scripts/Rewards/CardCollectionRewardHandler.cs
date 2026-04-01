@@ -111,5 +111,24 @@ namespace CardCollectionImpl
 
             return await _rewardGrantService.TryGrantAsync(requests, ct);
         }
+        
+        public RewardViewData CreateRewardViewData(string groupType)
+        {
+            if (string.IsNullOrEmpty(groupType) || _cardCollectionRewardsConfigSo.GroupRewards == null)
+                return RewardViewData.Empty;
+
+            foreach (var groupReward in _cardCollectionRewardsConfigSo.GroupRewards)
+            {
+                if (!string.Equals(groupReward.GroupId, groupType, StringComparison.Ordinal))
+                    continue;
+
+                if (!_rewardSpecProvider.TryGet(groupReward.RewardId, out var spec))
+                    return RewardViewData.Empty;
+
+                return new RewardViewData(groupReward.RewardId, spec.Icon, spec.TotalAmountForUi);
+            }
+
+            return RewardViewData.Empty;
+        }
     }
 }

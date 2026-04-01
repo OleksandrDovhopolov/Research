@@ -126,7 +126,7 @@ namespace CardCollectionImpl
                     module,
                     snapshotService,
                     exchangeOfferProvider,
-                    rewardsConfig,
+                    rewardHandler,
                     staticData);
 
                 var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
@@ -159,7 +159,7 @@ namespace CardCollectionImpl
             CardCollectionModule module,
             ICollectionProgressSnapshotService snapshotService,
             IExchangeOfferProvider exchangeOfferProvider,
-            CardCollectionRewardsConfigSO rewardsConfig,
+            ICardCollectionRewardHandler rewardHandler,
             CardCollectionStaticData staticData)
         {
             var cardCollectionWindowOpener = new CardCollectionWindowOpener(
@@ -173,7 +173,7 @@ namespace CardCollectionImpl
                 _rewardSpecProvider,
                 _cardCollectionCacheService,
                 snapshotService,
-                rewardsConfig);
+                rewardHandler);
             
             return cardCollectionWindowOpener;
         }

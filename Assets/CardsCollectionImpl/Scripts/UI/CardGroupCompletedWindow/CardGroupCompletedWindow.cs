@@ -12,18 +12,18 @@ namespace CardCollectionImpl
         public readonly string EventId;
         public readonly List<CardCollectionGroupConfig> GroupConfigs;
         public readonly EventCardsSaveData EventCardsSaveData;
-        public readonly CardCollectionRewardsConfigSO CollectionRewardsConfigSo;
+        public readonly ICardCollectionRewardHandler RewardHandler;
         
         public CardGroupCollectionArgs(
             string eventId,
             EventCardsSaveData eventCardsSaveData, 
             List<CardCollectionGroupConfig>  groupConfigs,
-            CardCollectionRewardsConfigSO collectionRewardsConfigSo)
+            ICardCollectionRewardHandler rewardHandler)
         {
             EventId = eventId;
             GroupConfigs = groupConfigs;
             EventCardsSaveData = eventCardsSaveData;
-            CollectionRewardsConfigSo = collectionRewardsConfigSo;
+            RewardHandler = rewardHandler;
         }
     }
     
@@ -61,7 +61,7 @@ namespace CardCollectionImpl
 
                 var totalGroupAmount = _cardCollectionCardCollectionCacheService.GetGroupAmount(Args.EventCardsSaveData, groupType);
                 var collectedGroupAmount = _cardCollectionCardCollectionCacheService.GetCollectedGroupAmount(Args.EventCardsSaveData, groupType);
-                var rewardViewData = UIUtils.CreateRewardViewData(Args.CollectionRewardsConfigSo, groupType);
+                var rewardViewData = Args.RewardHandler.CreateRewardViewData(groupType);
 
                 _groupRewardsByType[groupType] = rewardViewData;
 
