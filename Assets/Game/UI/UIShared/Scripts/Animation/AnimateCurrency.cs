@@ -9,13 +9,15 @@ namespace UIShared
     public class ArgAnimateCurrency
     {
         public Vector3 StartScreenPosition { get; }
-        public ResourceType ResourceType { get; }
+        public string ItemType { get; }
         public int Amount { get; }
+        public Sprite Sprite { get; }
 
-        public ArgAnimateCurrency(Vector3 startScreenPosition, ResourceType resourceType, int amount)
+        public ArgAnimateCurrency(Vector3 startScreenPosition, string itemType, int amount, Sprite sprite)
         {
             Amount = amount;
-            ResourceType = resourceType;
+            Sprite = sprite;
+            ItemType = itemType;
             StartScreenPosition = startScreenPosition;
         }
     }
@@ -30,14 +32,16 @@ namespace UIShared
         public Tween Animate(ArgAnimateCurrency animationArgs, Action onAnimationCompleted)
         {
             var delay = 0f;
-            var destination = AnimationTargets.GetTargetPosition(animationArgs.ResourceType);
+            var destination = AnimationTargets.GetTargetPosition(animationArgs.ItemType);
             var animation = DOTween.Sequence().SetUpdate(true);
-            
-            for (var i = 0; i < ViewsCount; i++)
-            {
-                var parameters = _animationSettings.GetResourceAnimationParameters(animationArgs.ResourceType);
+
+            var viewsCount = animationArgs.Amount == 1 ? 1 : ViewsCount;
                 
-                animation.Insert(delay, AnimateCurvedParticle(animationArgs.StartScreenPosition, destination, parameters, onAnimationCompleted));
+            for (var i = 0; i < viewsCount; i++)
+            {
+                var parameters = _animationSettings.GetResourceAnimationParameters(animationArgs.ItemType);
+                
+                animation.Insert(delay, AnimateCurvedParticle(animationArgs.StartScreenPosition, destination, animationArgs.Sprite, parameters, onAnimationCompleted));
                 
                 delay += parameters.SpawnDelay;
             }
@@ -45,11 +49,11 @@ namespace UIShared
             return animation;
         }
         
-        private Tween AnimateCurvedParticle(Vector3 startPosition, Vector3 finishPosition, ParticleAnimationParameters parameters, Action onAnimationCompleted)
+        private Tween AnimateCurvedParticle(Vector3 startPosition, Vector3 finishPosition, Sprite sprite, ParticleAnimationParameters parameters, Action onAnimationCompleted)
         {
             var particle = _animationViewsPool.GetNext();
             particle.gameObject.SetActive(false);
-            particle.SetSprite(parameters.Sprite);
+            particle.SetSprite(sprite);
             
             var pt = particle.transform;
             pt.position = startPosition;

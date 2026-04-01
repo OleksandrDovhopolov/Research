@@ -15,19 +15,20 @@ namespace UIShared
             _resourceManager =  resourceManager;
         }
 
-        public void Animate(Vector3 from, int amount, string resourceId)
+        public void Animate(Vector3 from, int amount, string resourceId, Sprite sprite)
         {
-            if (Enum.TryParse<ResourceType>(resourceId, true, out var resourceType))
-            {
-                var animationArgs = new ArgAnimateCurrency(from, resourceType,  amount);
-                _animateCurrency.Animate(animationArgs, OnAnimationCompleted);
-            }
+            var animationTargetId = Enum.TryParse<ResourceType>(resourceId, true, out var resourceType) ? resourceType.ToString() : "Inventory";
+            var animationArgs = new ArgAnimateCurrency(from, animationTargetId,  amount, sprite);
+            _animateCurrency.Animate(animationArgs, OnAnimationCompleted);
 
             return;
 
             void OnAnimationCompleted()
             {
-                _resourceManager.NotifyAmountChanged(resourceType);
+                if (Enum.TryParse<ResourceType>(resourceId, true, out var resource))
+                {
+                    _resourceManager.NotifyAmountChanged(resource);
+                }
             }
         }
     }

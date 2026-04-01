@@ -101,7 +101,7 @@ namespace CardCollectionImpl
                 }
 
                 View.TryGetAnimationStartPosition(groupType, out var animationStartPosition);
-                _animationService.Animate(animationStartPosition, rewardViewData.Amount, rewardViewData.Id);
+                _animationService.Animate(animationStartPosition, rewardViewData.Amount, rewardViewData.Id, rewardViewData.Icon);
             }
 
             _groupRewardsByType.Clear();

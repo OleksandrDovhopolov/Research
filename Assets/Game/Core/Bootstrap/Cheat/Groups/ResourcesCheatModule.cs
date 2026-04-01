@@ -23,7 +23,7 @@ namespace Game.Cheat
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Add gold", amount =>
             {
                 var screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
-                var animationArgs = new ArgAnimateCurrency(screenCenter, ResourceType.Gold,  amount);
+                var animationArgs = new ArgAnimateCurrency(screenCenter, nameof(ResourceType.Gold),  amount, null);
                 _animateCurrency.Animate(animationArgs, () => _resourceManager.NotifyAmountChanged(ResourceType.Gold));
                 _resourceManager.Add(ResourceType.Gold, amount);
             }).WithGroup(SampleGroup));
@@ -36,7 +36,7 @@ namespace Game.Cheat
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Add energy", amount =>
             {
                 var screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
-                var animationArgs = new ArgAnimateCurrency(screenCenter, ResourceType.Energy,  amount);
+                var animationArgs = new ArgAnimateCurrency(screenCenter, nameof(ResourceType.Energy),  amount, null);
                 _animateCurrency.Animate(animationArgs, () => _resourceManager.NotifyAmountChanged(ResourceType.Energy));
                 _resourceManager.Add(ResourceType.Energy, amount);
             }).WithGroup(SampleGroup));
@@ -50,7 +50,7 @@ namespace Game.Cheat
             {
                 _resourceManager.Add(ResourceType.Gems, amount);
                 var screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
-                var animationArgs = new ArgAnimateCurrency(screenCenter, ResourceType.Gems,  amount);
+                var animationArgs = new ArgAnimateCurrency(screenCenter, nameof(ResourceType.Gems),  amount, null);
                 _animateCurrency.Animate(animationArgs, () => _resourceManager.NotifyAmountChanged(ResourceType.Gems));
             }).WithGroup(SampleGroup));
             

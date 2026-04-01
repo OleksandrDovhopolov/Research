@@ -91,7 +91,7 @@ namespace CardCollectionImpl
                         {
                             foreach (var rewardSpecResource in spec.Resources)
                             {
-                                _animationService.Animate(rectTransform.position, rewardSpecResource.Amount, rewardSpecResource.ResourceId);
+                                _animationService.Animate(rectTransform.position, rewardSpecResource.Amount, rewardSpecResource.ResourceId, rewardSpecResource.Icon);
                             }
                         }
                         ShowInfoWidget("Pack received successfully");

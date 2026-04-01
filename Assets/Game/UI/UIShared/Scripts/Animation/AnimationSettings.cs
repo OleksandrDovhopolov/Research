@@ -8,18 +8,20 @@ namespace UIShared
     [CreateAssetMenu(fileName = "AnimationSettings", menuName = "AnimationSettings")]
     public class AnimationSettings : ScriptableObject
     {
+        private const string DefaultAnimationParams = "default";
+        
         [SerializeField]
         private List<ParticleAnimationParameters> _animationParameters;
 
-        public ParticleAnimationParameters GetResourceAnimationParameters(ResourceType resourceType)
+        public ParticleAnimationParameters GetResourceAnimationParameters(string itemType)
         {
-            var animationSettings = _animationParameters.Find(parameters => parameters.ResourceType == resourceType);
+            var animationSettings = _animationParameters.Find(parameters => parameters.ItemType == itemType);
             if (animationSettings != null)
             {
                 return animationSettings;
             }
             
-            throw new Exception("AnimationSettings not found with resource type: " + resourceType);
+            return _animationParameters.Find(parameters => parameters.ItemType == DefaultAnimationParams);
         }
     }
     
@@ -27,8 +29,7 @@ namespace UIShared
     public class ParticleAnimationParameters
     {
         public AnimationCurve ParticleAccelerationCurve;
-        public ResourceType ResourceType;
-        public Sprite Sprite;
+        public string ItemType;
         
         public Vector3 StartScaleValue = Vector3.one;
         public float UpScaleDuration = 0.5f;

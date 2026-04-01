@@ -1,20 +1,19 @@
-using CoreResources;
 using UnityEngine;
 
 namespace UIShared
 {
     public class AnimationTarget : MonoBehaviour
     {
-        [SerializeField] private ResourceType resourceType;
+        [SerializeField] private string animationType;
         
         public void Awake()
         {
-            AnimationTargets.Register(resourceType, transform);
+            AnimationTargets.Register(animationType, transform);
         }
 
         public void OnDestroy()
         {
-            AnimationTargets.Remove(resourceType);
+            AnimationTargets.Remove(animationType);
         }
     }
 }

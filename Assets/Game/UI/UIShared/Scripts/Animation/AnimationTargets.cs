@@ -6,32 +6,32 @@ namespace UIShared
 {
     public static class AnimationTargets
     {
-        private static readonly Dictionary<ResourceType, Transform> Targets = new();
+        private static readonly Dictionary<string, Transform> Targets = new();
 
-        public static void Register(ResourceType resourceType, Transform targetTransform)
+        public static void Register(string targetType, Transform targetTransform)
         {
             if (targetTransform == null)
             {
-                Debug.LogWarning($"Cannot register animation target for {resourceType}: target transform is null.");
+                Debug.LogWarning($"Cannot register animation target for {targetType}: target transform is null.");
                 return;
             }
 
-            Targets[resourceType] = targetTransform;
+            Targets[targetType] = targetTransform;
         }
 
-        public static void Remove(ResourceType resourceType)
+        public static void Remove(string targetType)
         {
-            Targets.Remove(resourceType);
+            Targets.Remove(targetType);
         }
 
-        public static Vector3 GetTargetPosition(ResourceType resourceType)
+        public static Vector3 GetTargetPosition(string targetType)
         {
-            if (Targets.TryGetValue(resourceType, out var targetTransform) && targetTransform != null)
+            if (Targets.TryGetValue(targetType, out var targetTransform) && targetTransform != null)
             {
                 return targetTransform.position;
             }
 
-            Debug.LogWarning($"Animation target is not registered for {resourceType}. Returning Vector3.zero.");
+            Debug.LogWarning($"Animation target is not registered for {targetType}. Returning Vector3.zero.");
             return Vector3.zero;
         }
     }
