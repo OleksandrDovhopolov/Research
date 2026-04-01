@@ -90,9 +90,7 @@ namespace CardCollectionImpl.Editor
                 rewards[i] = new CollectionCompletionRewardConfig
                 {
                     GroupId = groupType,
-                    RewardId = string.Empty,
-                    Amount = 0,
-                    Icon = null
+                    RewardId = string.Empty
                 };
             }
 

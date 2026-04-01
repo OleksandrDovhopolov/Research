@@ -18,7 +18,7 @@ namespace CardCollectionImpl
         [SerializeField] private RectTransform _rectTransform;
 
         private ExchangeOfferData _packEntry;
-        public event Action<string> OnButtonClicked;
+        public event Action<string, RectTransform> OnButtonClicked;
         public event Action<string, RectTransform> OnPackClicked;
 
         private void Start()
@@ -29,7 +29,7 @@ namespace CardCollectionImpl
 
         private void OnBuyButtonClickHandler()
         {
-            OnButtonClicked?.Invoke(_packEntry.OfferId);
+            OnButtonClicked?.Invoke(_packEntry.OfferId, _rectTransform);
         }
 
         private void OnInfoButtonClickHandler()

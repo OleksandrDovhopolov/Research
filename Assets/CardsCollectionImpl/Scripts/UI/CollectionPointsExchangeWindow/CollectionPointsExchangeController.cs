@@ -6,6 +6,7 @@ using Rewards;
 using UIShared;
 using UISystem;
 using UnityEngine;
+using VContainer;
 
 namespace CardCollectionImpl
 {
@@ -15,18 +16,15 @@ namespace CardCollectionImpl
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
         public readonly ICardCollectionPointsAccount CardCollectionPointsAccount;
         public readonly Action OnPointsAmountChangedHandler;
-        public readonly IRewardSpecProvider RewardSpecProvider;
         
         public CollectionPointsExchangeArgs(
             int pointsAmount,
             IExchangeOfferProvider exchangeOfferProvider, 
-            IRewardSpecProvider rewardSpecProvider,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
             Action onPointsAmountChangedHandler = null)
         {
             PointsAmount = pointsAmount;
             ExchangeOfferProvider = exchangeOfferProvider;
-            RewardSpecProvider = rewardSpecProvider;
             CardCollectionPointsAccount = cardCollectionPointsAccount;
             OnPointsAmountChangedHandler = onPointsAmountChangedHandler;
         }
@@ -35,10 +33,20 @@ namespace CardCollectionImpl
     [Window("CollectionPointsExchangeWindow", WindowType.Popup)]
     public class CollectionPointsExchangeController : WindowController<CollectionPointsExchangeView>
     {
+        private IAnimationService _animationService;
+        private IRewardSpecProvider _rewardSpecProvider;
+        
         private CollectionPointsExchangeArgs Args => (CollectionPointsExchangeArgs) Arguments;
         
         private CancellationTokenSource _buyCts;
         private bool _isPurchaseInProgress;
+        
+        [Inject]
+        public void Install(IRewardSpecProvider rewardSpecProvider, IAnimationService animationService)
+        {
+            _rewardSpecProvider = rewardSpecProvider;
+            _animationService = animationService;
+        }
         
         protected override void OnShowStart()
         {
@@ -53,12 +61,12 @@ namespace CardCollectionImpl
             View.OnOfferInfoClicked += OnInfoOfferClickedHandler;
         }
         
-        private void OnBuyOfferClickedHandler(string offerPackId)
+        private void OnBuyOfferClickedHandler(string offerPackId, RectTransform rectTransform)
         {
-            OnBuyPackClickedHandlerAsync(offerPackId, _buyCts?.Token ?? CancellationToken.None).Forget();
+            OnBuyPackClickedHandlerAsync(offerPackId, rectTransform, _buyCts?.Token ?? CancellationToken.None).Forget();
         }
 
-        private async UniTask OnBuyPackClickedHandlerAsync(string offerPackId, CancellationToken ct)
+        private async UniTask OnBuyPackClickedHandlerAsync(string offerPackId, RectTransform rectTransform, CancellationToken ct)
         {
             if (_isPurchaseInProgress || string.IsNullOrWhiteSpace(offerPackId))
                 return;
@@ -79,6 +87,13 @@ namespace CardCollectionImpl
                 {
                     if (await Args.ExchangeOfferProvider.ReceiveOfferContent(offerPackId, ct))
                     {
+                        if (_rewardSpecProvider.TryGet(offerPackId, out var spec))
+                        {
+                            foreach (var rewardSpecResource in spec.Resources)
+                            {
+                                _animationService.Animate(rectTransform.position, rewardSpecResource.Amount, rewardSpecResource.ResourceId);
+                            }
+                        }
                         ShowInfoWidget("Pack received successfully");
                         Args.OnPointsAmountChangedHandler?.Invoke();
                         CloseWindow();
@@ -110,7 +125,7 @@ namespace CardCollectionImpl
         {
             if (string.IsNullOrWhiteSpace(packName)) return;
 
-            if (Args.RewardSpecProvider.TryGet(packName, out var spec))
+            if (_rewardSpecProvider.TryGet(packName, out var spec))
             {
                 var contentWidgetData = spec.ToContentWidgetData();
                 var args = new ContentWidgetArgs(contentWidgetData, rectTransform);

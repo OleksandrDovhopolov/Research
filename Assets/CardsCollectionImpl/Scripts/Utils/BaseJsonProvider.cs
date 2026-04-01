@@ -16,39 +16,6 @@ namespace CardCollectionImpl
             ? _cachedData 
             : throw new InvalidOperationException($"[{GetType().Name}] Data not loaded!");
         
-        /*public async UniTask<T> LoadAsync(string fileName, CancellationToken ct = default)
-        {
-            if (_isInitialized && _cachedData != null) 
-                return _cachedData;
-
-            ct.ThrowIfCancellationRequested();
-
-            string jsonText = await LoadRawJsonAsync(fileName, ct);
-
-            if (string.IsNullOrEmpty(jsonText))
-            {
-                _cachedData = CreateDefault();
-                _isInitialized = true;
-                return _cachedData;
-            }
-
-            try
-            {
-                _cachedData = ParseJson(jsonText);
-                _isInitialized = true;
-                Debug.Log($"[{GetType().Name}] Loaded data from {fileName}");
-            }
-            catch (Exception ex)
-            {
-                //TODO remove CreateDefault and _isInitialized. only throw error 
-                Debug.LogError($"[{GetType().Name}] Error parsing {fileName}: {ex.Message}");
-                _cachedData = CreateDefault();
-                _isInitialized = true;
-            }
-
-            return _cachedData;
-        }*/
-        
         public async UniTask<T> LoadAsync(string fileName, CancellationToken ct = default)
         {
             if (_isInitialized &&
@@ -86,9 +53,6 @@ namespace CardCollectionImpl
                 _loadedFileName = fileName;
             }
             
-            /*_cachedData = ParseJson(jsonText);
-            _isInitialized = true;
-            _loadedFileName = fileName;*/
             return _cachedData;
         }
 

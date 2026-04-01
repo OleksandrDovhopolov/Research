@@ -69,11 +69,55 @@ MonoBehaviour:
       Amount: 1000
       Category: regular
       Icon: {fileID: 21300000, guid: a90d15eca49af4c35a74467dea6c9c07, type: 3}
-    - ResourceId: Emerald_Pack
-      Amount: 1
-      Category: card_pack
-      Icon: {fileID: 21300000, guid: 1092e3bfb2feca44294c05bc48c5b989, type: 3}
     - ResourceId: Gems
       Amount: 10
       Category: regular
       Icon: {fileID: 21300000, guid: baddc6138b88d4615bbd843bb59d70c0, type: 3}
+    - ResourceId: Emerald_Pack
+      Amount: 1
+      Category: card_pack
+      Icon: {fileID: 21300000, guid: 1092e3bfb2feca44294c05bc48c5b989, type: 3}
+  - RewardId: MiddlePack
+    Icon: {fileID: 21300000, guid: ad6290e5e00b7b54c89272c27b5a5661, type: 3}
+    TotalAmountForUi: 1
+    Resources:
+    - ResourceId: Gold
+      Amount: 500
+      Category: regular
+      Icon: {fileID: 21300000, guid: a90d15eca49af4c35a74467dea6c9c07, type: 3}
+    - ResourceId: Energy
+      Amount: 75
+      Category: regular
+      Icon: {fileID: 21300000, guid: d37846b1ca5494942a3b7328b7b99a42, type: 3}
+    - ResourceId: Emerald_Pack
+      Amount: 1
+      Category: card_pack
+      Icon: {fileID: 21300000, guid: 1092e3bfb2feca44294c05bc48c5b989, type: 3}
+    - ResourceId: Lazurite_Pack
+      Amount: 1
+      Category: card_pack
+      Icon: {fileID: 21300000, guid: 6d8515a205588524f8bff84418cc9b3f, type: 3}
+  - RewardId: BigPack
+    Icon: {fileID: 21300000, guid: ad6290e5e00b7b54c89272c27b5a5661, type: 3}
+    TotalAmountForUi: 1
+    Resources:
+    - ResourceId: Gold
+      Amount: 1000
+      Category: regular
+      Icon: {fileID: 21300000, guid: a90d15eca49af4c35a74467dea6c9c07, type: 3}
+    - ResourceId: Gems
+      Amount: 10
+      Category: regular
+      Icon: {fileID: 21300000, guid: baddc6138b88d4615bbd843bb59d70c0, type: 3}
+    - ResourceId: Emerald_Pack
+      Amount: 1
+      Category: card_pack
+      Icon: {fileID: 21300000, guid: 1092e3bfb2feca44294c05bc48c5b989, type: 3}
+    - ResourceId: Lazurite_Pack
+      Amount: 1
+      Category: card_pack
+      Icon: {fileID: 21300000, guid: 1092e3bfb2feca44294c05bc48c5b989, type: 3}
+    - ResourceId: Ruby_Pack
+      Amount: 1
+      Category: card_pack
+      Icon: {fileID: 21300000, guid: 9e9881d78756a504da763c5f6e644412, type: 3}

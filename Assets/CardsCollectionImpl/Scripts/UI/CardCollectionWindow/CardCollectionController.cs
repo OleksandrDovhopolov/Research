@@ -140,7 +140,6 @@ namespace CardCollectionImpl
             var args = new CollectionPointsExchangeArgs(
                 Args.EventCardsSaveData.Points,
                 Args.ExchangeOfferProvider, 
-                Args.RewardSpecProvider,
                 Args.CardCollectionPointsAccount,
                 UpdatePointsAmount);
             UIManager.Show<CollectionPointsExchangeController>(args);

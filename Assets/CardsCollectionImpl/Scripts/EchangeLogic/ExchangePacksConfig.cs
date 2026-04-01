@@ -20,6 +20,5 @@ namespace CardCollectionImpl
         public string Id;
         public Sprite Sprite;
         public int PackPrice;
-        public ExchangePackCardsRewardEntrySO RewardEntry;
     }
 }

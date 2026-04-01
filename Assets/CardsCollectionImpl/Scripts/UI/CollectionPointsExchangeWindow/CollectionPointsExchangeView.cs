@@ -17,7 +17,7 @@ namespace CardCollectionImpl
 
         private readonly List<ExchangePackView> _exchangePacks = new();
         
-        public event Action<string> OnOfferBuyClicked;
+        public event Action<string, RectTransform> OnOfferBuyClicked;
         public event Action<string, RectTransform> OnOfferInfoClicked;
         
         public void CreateView(int pointsAmount, IExchangeOfferProvider exchangeOfferProvider)
@@ -39,9 +39,9 @@ namespace CardCollectionImpl
             }
         }
 
-        private void OnBuyPackClickedHandler(string offerPackId)
+        private void OnBuyPackClickedHandler(string offerPackId, RectTransform rectTransform)
         {
-            OnOfferBuyClicked?.Invoke(offerPackId);
+            OnOfferBuyClicked?.Invoke(offerPackId, rectTransform);
         }
 
         private void OnInfoPackClickedHandler(string offerPackId, RectTransform rectTransform)
