@@ -9,20 +9,20 @@ namespace CardCollectionImpl
     public class NewCardArgs : WindowArgs
     {
         public readonly string EventId;
-        public readonly CardPack CardPack;
+        public readonly string PackId;
         public readonly ICardCollectionModule CollectionModule;
         public readonly ICardCollectionReader CollectionReader;
         public readonly ICardCollectionCacheService CardCollectionCacheService;
 
         public NewCardArgs(
             string eventId,
-            CardPack cardPack,
+            string packId,
             ICardCollectionModule collectionModule,
             ICardCollectionReader collectionReader,
             ICardCollectionCacheService cardCollectionCacheService)
         {
             EventId =  eventId;
-            CardPack = cardPack;
+            PackId = packId;
             CollectionModule = collectionModule;
             CollectionReader = collectionReader;
             CollectionReader = collectionReader;
@@ -56,7 +56,7 @@ namespace CardCollectionImpl
             var collectionPoints = await Args.CollectionReader.GetCollectionPoints();
             View.UpdatePointsAmount(collectionPoints);
             
-            var cardsIdList = await Args.CollectionModule.OpenPackAndUnlockAsync(Args.CardPack, ct);
+            var cardsIdList = await Args.CollectionModule.OpenPackAndUnlockAsync(Args.PackId, ct);
             var cardsData = await Args.CollectionModule.GetCardsByIdsAsync(cardsIdList, ct);
             var displayData = Args.CardCollectionCacheService.ToNewCardDisplayData(cardsData);
             

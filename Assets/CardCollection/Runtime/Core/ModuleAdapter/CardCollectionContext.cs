@@ -44,9 +44,7 @@ namespace CardCollection.Core
         }
 
         // ── CardPackService delegation ──
-
-        public List<CardPack> GetAllPacks() => _cardPackService.GetAllPacks();
-
+        
         public CardPack GetPackById(string packId) => _cardPackService.GetPackById(packId);
 
         // ── PackBasedCardsRandomizer delegation ──
@@ -70,10 +68,7 @@ namespace CardCollection.Core
 
         public UniTask<List<CardProgressData>> GetCardsByIdsAsync(string eventId, List<string> cardIds, CancellationToken ct = default)
             => _cardProgressService.GetCardsByIdsAsync(eventId, cardIds, ct);
-
-        public UniTask ResetNewFlagAsync(string eventId, string cardId, CancellationToken ct = default)
-            => _cardProgressService.ResetNewFlagAsync(eventId, cardId, ct);
-
+        
         public UniTask ResetNewFlagsAsync(string eventId, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
             => _cardProgressService.ResetNewFlagsAsync(eventId, cardIds, ct);
 

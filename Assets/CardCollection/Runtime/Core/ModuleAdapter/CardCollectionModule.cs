@@ -73,28 +73,21 @@ namespace CardCollection.Core
             return initializedData;
         }
 
-        public List<CardPack> GetAllPacks() => _context.GetAllPacks();
-
         public CardPack GetPackById(string packId) => _context.GetPackById(packId);
 
         public async UniTask<List<string>> OpenPackAndUnlockAsync(string packId, CancellationToken ct = default)
         {
             var pack = _context.GetPackById(packId);
 
-            return await OpenPackAndUnlockAsync(pack, ct);
-        }
-
-        public async UniTask<List<string>> OpenPackAndUnlockAsync(CardPack cardPack, CancellationToken ct = default)
-        {
-            if (cardPack == null)
+            if (pack == null)
             {
                 return new List<string>();
             }
             
-            var cardIds = await _context.GetRandomNewCardsAsync(cardPack, ct);
+            var cardIds = await _context.GetRandomNewCardsAsync(pack, ct);
             if (cardIds.Count > 0)
             {
-                await AwardDuplicateCardPointsAsync(cardPack, cardIds, ct);
+                await AwardDuplicateCardPointsAsync(pack, cardIds, ct);
                 await _context.UnlockCardsAsync(_context.EventId, cardIds, ct);
                 NotifyCompletedGroups(cardIds);
                 NotifyCollectionCompleted();
@@ -127,11 +120,6 @@ namespace CardCollection.Core
         public UniTask<List<CardProgressData>> GetCardsByIdsAsync(List<string> cardIds, CancellationToken ct = default)
         {
             return _context.GetCardsByIdsAsync(_context.EventId, cardIds, ct);
-        }
-
-        public UniTask ResetNewFlagAsync(string cardId, CancellationToken ct = default)
-        {
-            return _context.ResetNewFlagAsync(_context.EventId, cardId, ct);
         }
 
         public UniTask ResetNewFlagsAsync(IReadOnlyCollection<string> cardIds, CancellationToken ct = default)

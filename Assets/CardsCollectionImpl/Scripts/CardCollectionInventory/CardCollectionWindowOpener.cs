@@ -57,12 +57,7 @@ namespace CardCollectionImpl
                 return;
             }
 
-            OpenNewCardWindow(pack);
-        }
-
-        public void OpenNewCardWindow(CardPack pack)
-        {
-            var args = new NewCardArgs(_module.EventId, pack, _module, _reader, _cardCollectionCacheService);
+            var args = new NewCardArgs(_module.EventId, packId, _module, _reader, _cardCollectionCacheService);
             _uiManager.Show<NewCardController>(args);
         }
         

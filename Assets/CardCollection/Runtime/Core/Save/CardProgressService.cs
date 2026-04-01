@@ -216,14 +216,6 @@ namespace CardCollection.Core
                 .Where(card => cardIds.Contains(card.CardId))
                 .ToList();
         }
-        
-        public async UniTask ResetNewFlagAsync(string eventId, string cardId, CancellationToken ct = default)
-        {
-            if (string.IsNullOrEmpty(cardId))
-                throw new ArgumentException("Card ID cannot be null or empty", nameof(cardId));
-
-            await ResetNewFlagsAsync(eventId, new[] { cardId }, ct);
-        }
 
         public async UniTask ResetNewFlagsAsync(string eventId, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
         {
