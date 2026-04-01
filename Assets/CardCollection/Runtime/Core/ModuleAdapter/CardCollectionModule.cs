@@ -17,7 +17,6 @@ namespace CardCollection.Core
         IDisposable
     {
         private readonly CardCollectionContext _context;
-        private readonly CardSelectionContext _selectionContext;
         
         private GroupCompletionTracker _groupCompletionTracker;
         private bool _isCollectionCompleted;
@@ -28,7 +27,6 @@ namespace CardCollection.Core
         public CardCollectionModule(CardCollectionModuleConfig  config)
         {
             _context = new CardCollectionContext(config);
-            _selectionContext = new CardSelectionContext(this);
         }
 
         public string EventId => _context.EventId;
@@ -93,7 +91,7 @@ namespace CardCollection.Core
                 return new List<string>();
             }
             
-            var cardIds = await _context.GetRandomNewCardsAsync(cardPack, _selectionContext, ct);
+            var cardIds = await _context.GetRandomNewCardsAsync(cardPack, ct);
             if (cardIds.Count > 0)
             {
                 await AwardDuplicateCardPointsAsync(cardPack, cardIds, ct);

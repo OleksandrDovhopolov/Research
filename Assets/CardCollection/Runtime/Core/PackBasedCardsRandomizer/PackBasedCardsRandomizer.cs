@@ -17,7 +17,7 @@ namespace CardCollection.Core
             _cardDefinitionProvider = cardDefinitionProvider ?? throw new ArgumentNullException(nameof(cardDefinitionProvider));
         }
 
-        public async UniTask<List<string>> GetRandomNewCardsAsync(CardPack pack, CardSelectionContext context, CancellationToken ct = default)
+        public async UniTask<List<string>> GetRandomNewCardsAsync(CardPack pack, CancellationToken ct = default)
         {
             var allCards = _cardDefinitionProvider.GetCardDefinitions();
 
@@ -27,7 +27,7 @@ namespace CardCollection.Core
                 return new List<string>();
             }
 
-            var result = await _cardSelector.SelectCardsAsync(pack, allCards, context, ct);
+            var result = await _cardSelector.SelectCardsAsync(pack, allCards, ct);
 
             return result;
         }

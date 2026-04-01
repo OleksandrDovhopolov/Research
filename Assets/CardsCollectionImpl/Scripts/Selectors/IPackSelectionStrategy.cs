@@ -5,24 +5,8 @@ using Cysharp.Threading.Tasks;
 
 namespace CardCollectionImpl
 {
-    /// <summary>
-    /// Strategy interface for pack-specific card selection logic.
-    /// Each pack type can have its own strategy implementation.
-    /// </summary>
     public interface IPackSelectionStrategy
     {
-        /// <summary>
-        /// Selects cards for a pack using pack-specific rules.
-        /// </summary>
-        /// <param name="pack">The pack to select cards for</param>
-        /// <param name="allCards">List of all available cards</param>
-        /// <param name="context">Context containing services and helpers</param>
-        /// <param name="ct">Cancellation token for cooperative cancellation</param>
-        /// <returns>List of selected card IDs</returns>
-        UniTask<List<string>> SelectCardsAsync(
-            CardPack pack, 
-            List<CardDefinition> allCards, 
-            PackSelectionContext context,
-            CancellationToken ct = default);
+        UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards, CancellationToken ct = default);
     }
 }

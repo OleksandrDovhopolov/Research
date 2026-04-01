@@ -51,8 +51,8 @@ namespace CardCollection.Core
 
         // ── PackBasedCardsRandomizer delegation ──
 
-        public UniTask<List<string>> GetRandomNewCardsAsync(CardPack pack, CardSelectionContext context, CancellationToken ct = default)
-            => _cardRandomizer.GetRandomNewCardsAsync(pack, context, ct);
+        public UniTask<List<string>> GetRandomNewCardsAsync(CardPack pack, CancellationToken ct = default)
+            => _cardRandomizer.GetRandomNewCardsAsync(pack, ct);
 
         // ── CardProgressService delegation ──
 

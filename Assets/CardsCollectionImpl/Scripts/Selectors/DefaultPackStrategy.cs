@@ -9,6 +9,20 @@ using Random = UnityEngine.Random;
 namespace CardCollectionImpl
 {
     /// <summary>
+    /// Card categories for probability-based selection.
+    /// </summary>
+    public enum CardCategory
+    {
+        Silver1Star,
+        Silver2Star,
+        Silver3Star,
+        Silver4Star,
+        Silver5Star,
+        Gold,
+        Unknown
+    }
+    
+    /// <summary>
     /// Default pack selection strategy using base probability distribution:
     /// - 1-Star Silver: 33.67%
     /// - 2-Star Silver: 26.93%
@@ -28,8 +42,7 @@ namespace CardCollectionImpl
 
         public virtual async UniTask<List<string>> SelectCardsAsync(
             CardPack pack, 
-            List<CardDefinition> allCards, 
-            PackSelectionContext context,
+            List<CardDefinition> allCards,
             CancellationToken ct = default)
         {
             await UniTask.Yield(ct);
@@ -59,7 +72,7 @@ namespace CardCollectionImpl
                 }
 
                 // Group cards by category from remaining cards
-                var cardsByCategory = context.GroupCardsByCategory(availableCardsForSelection);
+                var cardsByCategory = GroupCardsByCategory(availableCardsForSelection);
 
                 var selectedCard = SelectCardByProbability(cardsByCategory);
 
@@ -128,6 +141,51 @@ namespace CardCollectionImpl
             }
 
             return null;
+        }
+        
+        /// <summary>
+        /// Helper to group cards by category (1-5 star silver, gold).
+        /// </summary>
+        private Dictionary<CardCategory, List<CardDefinition>> GroupCardsByCategory(List<CardDefinition> cards)
+        {
+            var grouped = new Dictionary<CardCategory, List<CardDefinition>>();
+
+            foreach (var card in cards)
+            {
+                if (!TryGetCardCategory(card, out var category))
+                    continue;
+
+                if (!grouped.TryGetValue(category, out var categoryCards))
+                {
+                    categoryCards = new List<CardDefinition>();
+                    grouped[category] = categoryCards;
+                }
+
+                categoryCards.Add(card);
+            }
+
+            return grouped;
+        }
+        
+        private bool TryGetCardCategory(CardDefinition card, out CardCategory category)
+        {
+            if (card.PremiumCard)
+            {
+                category = CardCategory.Gold;
+                return true;
+            }
+
+            category = card.Stars switch
+            {
+                1 => CardCategory.Silver1Star,
+                2 => CardCategory.Silver2Star,
+                3 => CardCategory.Silver3Star,
+                4 => CardCategory.Silver4Star,
+                5 => CardCategory.Silver5Star,
+                _ => CardCategory.Unknown
+            };
+
+            return category != CardCategory.Unknown;
         }
     }
 }

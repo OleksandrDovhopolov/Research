@@ -37,7 +37,6 @@ namespace CardCollectionImpl
         public IEnumerator SelectCardsAsync_ReturnsCardCount_AndNoDuplicates()
         {
             var strategy = new DefaultPackStrategy();
-            var context = new PackSelectionContext();
 
             var pack = CreatePack("default", 6);
             var allCards = CreateCards(
@@ -47,7 +46,7 @@ namespace CardCollectionImpl
             );
 
             List<string> ids = null;
-            yield return strategy.SelectCardsAsync(pack, allCards, context).ToCoroutine(result => ids = result);
+            yield return strategy.SelectCardsAsync(pack, allCards).ToCoroutine(result => ids = result);
 
             Assert.AreEqual(6, ids.Count);
             Assert.AreEqual(ids.Count, ids.Distinct().Count(), "Selector should not return duplicate card IDs within one pack.");
@@ -57,7 +56,6 @@ namespace CardCollectionImpl
         public IEnumerator SelectCardsAsync_WhenCardCountExceedsAllCards_ReturnsAllCardsCount()
         {
             var strategy = new DefaultPackStrategy();
-            var context = new PackSelectionContext();
 
             var pack = CreatePack("default", 10);
             var allCards = CreateCards(
@@ -65,7 +63,7 @@ namespace CardCollectionImpl
             );
 
             List<string> ids = null;
-            yield return strategy.SelectCardsAsync(pack, allCards, context).ToCoroutine(result => ids = result);
+            yield return strategy.SelectCardsAsync(pack, allCards).ToCoroutine(result => ids = result);
 
             Assert.AreEqual(4, ids.Count);
             Assert.AreEqual(ids.Count, ids.Distinct().Count());

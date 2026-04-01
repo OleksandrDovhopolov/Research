@@ -184,7 +184,7 @@ namespace CardCollectionImpl
                 _cardPackProvider,
                 new JsonEventCardsStorage(),
                 new DefaultCardDefinitionProvider(staticData.Cards),
-                new ProbabilityBasedCardSelector(PackRulesConfig.CreateDefaultRules()),
+                new RandomCardSelector(new DefaultPackStrategy()),
                 _cardPointsCalculator,
                 eventId);
         }

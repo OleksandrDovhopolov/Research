@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using CardCollection.Core;
@@ -24,7 +25,7 @@ namespace CardCollectionImpl
         {
             ct.ThrowIfCancellationRequested();
             
-            var groupDefinition = _cardCollectionRewardsConfigSo.GroupRewards.FirstOrDefault(group => group.GroupId == groupCompletedData.GroupType);
+            CollectionCompletionRewardConfig groupDefinition = _cardCollectionRewardsConfigSo.GroupRewards.FirstOrDefault(group => group.GroupId == groupCompletedData.GroupType);
             if (string.IsNullOrEmpty(groupDefinition.GroupId))
             {
                 Debug.LogWarning($"Failed to find GroupRewardDefinition for group with ID {groupCompletedData.GroupType}");
@@ -68,7 +69,7 @@ namespace CardCollectionImpl
             //TODO unsafe to create categories via strings in CollectionRewardDefinition childs  ?
             //categories should be the same as in inventory
             
-            var requests = rewardDefinition.ToRequests();
+            IEnumerable<RewardGrantRequest> requests = rewardDefinition.ToRequests();
             
             var allSuccess = true;
             foreach (var request in requests)

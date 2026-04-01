@@ -6,6 +6,6 @@ namespace CardCollection.Core
 {
     public interface ICardSelector
     {
-        UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards, CardSelectionContext context, CancellationToken ct = default);
+        UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards, CancellationToken ct = default);
     }
 }

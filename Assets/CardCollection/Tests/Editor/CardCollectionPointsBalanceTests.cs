@@ -223,7 +223,6 @@ namespace CardCollection.Tests
             public UniTask<List<string>> SelectCardsAsync(
                 CardPack pack,
                 List<CardDefinition> allCards,
-                CardSelectionContext context,
                 CancellationToken ct = default)
             {
                 ct.ThrowIfCancellationRequested();

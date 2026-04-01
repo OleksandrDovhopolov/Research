@@ -203,7 +203,6 @@ namespace CardCollection.Tests
             public async UniTask<List<string>> SelectCardsAsync(
                 CardPack pack,
                 List<CardDefinition> allCards,
-                CardSelectionContext context,
                 CancellationToken ct = default)
             {
                 await UniTask.Yield(ct);
