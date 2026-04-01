@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
+using Rewards;
 using UIShared;
 using UISystem;
 using UnityEngine;
@@ -17,7 +18,7 @@ namespace CardCollectionImpl
         public readonly ICardCollectionPointsAccount CardCollectionPointsAccount;
         public readonly EventCardsSaveData EventCardsSaveData;
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
-        public readonly IRewardDefinitionFactory RewardDefinitionFactory;
+        public readonly IRewardSpecProvider RewardSpecProvider;
         public readonly CollectionProgressSnapshot CollectionProgressSnapshot;
         public readonly CardCollectionRewardsConfigSO CollectionRewardsConfigSo;
         public readonly string ScheduleItemEventId;
@@ -25,7 +26,7 @@ namespace CardCollectionImpl
         public CardCollectionArgs(CardCollectionNewCardsDto newCardsData,
             EventCardsSaveData eventCardsSaveData,
             IExchangeOfferProvider exchangeOfferProvider,
-            IRewardDefinitionFactory rewardDefinitionFactory,
+            IRewardSpecProvider rewardSpecProvider,
             CardCollectionRewardsConfigSO collectionRewardsConfigSo,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
             CollectionProgressSnapshot collectionProgressSnapshot,
@@ -38,7 +39,7 @@ namespace CardCollectionImpl
             Groups = groups;
             EventCardsSaveData = eventCardsSaveData;
             ExchangeOfferProvider = exchangeOfferProvider;
-            RewardDefinitionFactory = rewardDefinitionFactory;
+            RewardSpecProvider = rewardSpecProvider;
             CardCollectionPointsAccount = cardCollectionPointsAccount;
             CollectionRewardsConfigSo = collectionRewardsConfigSo;
             CollectionProgressSnapshot = collectionProgressSnapshot;
@@ -115,16 +116,21 @@ namespace CardCollectionImpl
             var totalAmount = Args.EventCardsSaveData.Cards.Count;
             
             View.UpdateGlobalCollectedAmount(collectedAmount, totalAmount);
-            //View.UpdateGroupsProgressAnimated(Args.EventCardsSaveData, Args.Cards);
             View.UpdateGroupsProgressAnimated(Args.EventCardsSaveData);
         }
 
         private void OnRewardChestClickedHandler(RectTransform rectTransform)
         {
-            var cardCollectionRewardContent = Args.RewardDefinitionFactory.CreateFromCollectionReward();
-            var contentWidgetData = cardCollectionRewardContent.ToContentWidgetData();
-            var args = new ContentWidgetArgs(contentWidgetData, rectTransform);
-            UIManager.Show<ContentWidgetController>(args);
+            if (Args.RewardSpecProvider.TryGet(Args.EventCardsSaveData.EventId, out var spec))
+            {
+                var contentWidgetData = spec.ToContentWidgetData();
+                var args = new ContentWidgetArgs(contentWidgetData, rectTransform);
+                UIManager.Show<ContentWidgetController>(args);
+            }
+            else
+            {
+                Debug.LogWarning($"{GetType().Name} failed to find reward with Id {Args.EventCardsSaveData.EventId}");
+            }
         }
         
         private void OnPointsViewClickedHandler()
@@ -134,7 +140,7 @@ namespace CardCollectionImpl
             var args = new CollectionPointsExchangeArgs(
                 Args.EventCardsSaveData.Points,
                 Args.ExchangeOfferProvider, 
-                Args.RewardDefinitionFactory,
+                Args.RewardSpecProvider,
                 Args.CardCollectionPointsAccount,
                 UpdatePointsAmount);
             UIManager.Show<CollectionPointsExchangeController>(args);

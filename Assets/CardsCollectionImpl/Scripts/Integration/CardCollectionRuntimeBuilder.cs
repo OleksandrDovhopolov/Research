@@ -17,6 +17,7 @@ namespace CardCollectionImpl
     {
         private readonly UIManager _uiManager;
         private readonly IHUDService _hudService;
+        private readonly IRewardSpecProvider _rewardSpecProvider;
         private readonly ExchangePacksConfig _exchangePacksConfig;
         private readonly IRewardGrantService _rewardGrantService;
         private readonly IItemCategoryRegistry _itemCategoryRegistry;
@@ -32,6 +33,7 @@ namespace CardCollectionImpl
             UIManager uiManager,
             IHUDService hudService,
             ICardPackProvider cardPackProvider,
+            IRewardSpecProvider rewardSpecProvider,
             ICardPointsCalculator pointsCalculator,
             ICardsConfigProvider cardsConfigProvider,
             ICardGroupsConfigProvider cardGroupsConfigProvider,
@@ -44,6 +46,7 @@ namespace CardCollectionImpl
             _uiManager = uiManager;
             _hudService = hudService;
             _cardPackProvider = cardPackProvider;
+            _rewardSpecProvider = rewardSpecProvider;
             _cardPointsCalculator = pointsCalculator;
             _cardsConfigProvider = cardsConfigProvider;
             _cardGroupsConfigProvider = cardGroupsConfigProvider;
@@ -101,7 +104,6 @@ namespace CardCollectionImpl
             try
             {
                 module = new CardCollectionModule(moduleConfig);
-                var rewardDefinitionFactory = new RewardDefinitionFactory(_exchangePacksConfig, staticData.Packs);
 
                 //TODO move all files load in 1 the same logic. eg ICardsConfigProvider / ICardsConfigProvider /etc
                 ct.ThrowIfCancellationRequested();
@@ -116,7 +118,7 @@ namespace CardCollectionImpl
                     Debug.LogError($"RewardsConfig not found with ID {model.RewardsConfigAddress}!");
                 }
                 
-                var rewardHandler = new CardCollectionRewardHandler(rewardsConfig, _rewardGrantService, rewardDefinitionFactory);
+                var rewardHandler = new CardCollectionRewardHandler(rewardsConfig, _rewardSpecProvider, _rewardGrantService);
                 var snapshotService = new CollectionProgressSnapshotService(_cardCollectionCacheService, staticData.Groups);
                 var exchangeOfferProvider = new ExchangeOfferProvider(_exchangePacksConfig, rewardHandler);
                 
@@ -124,7 +126,6 @@ namespace CardCollectionImpl
                     module,
                     snapshotService,
                     exchangeOfferProvider,
-                    rewardDefinitionFactory,
                     rewardsConfig,
                     staticData);
 
@@ -158,7 +159,6 @@ namespace CardCollectionImpl
             CardCollectionModule module,
             ICollectionProgressSnapshotService snapshotService,
             IExchangeOfferProvider exchangeOfferProvider,
-            IRewardDefinitionFactory rewardDefinitionFactory,
             CardCollectionRewardsConfigSO rewardsConfig,
             CardCollectionStaticData staticData)
         {
@@ -170,7 +170,7 @@ namespace CardCollectionImpl
                 staticData.Cards,
                 staticData.Groups,
                 exchangeOfferProvider,
-                rewardDefinitionFactory,
+                _rewardSpecProvider,
                 _cardCollectionCacheService,
                 snapshotService,
                 rewardsConfig);

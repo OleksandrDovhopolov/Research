@@ -18,8 +18,9 @@ namespace Game.Bootstrap
         [SerializeField] private HUDService _hudService;
         [SerializeField] private GlobalTimerService _globalTimerService;
         [SerializeField] private ExchangePacksConfig _exchangePacksConfig;
+        [SerializeField] private RewardSpecsConfigSO _rewardSpecsConfigSo;
         [SerializeField] private string _cardCollectionScheduleFile = "card_collection_schedule.json";
-
+        
         protected override void Configure(IContainerBuilder builder)
         {
             if (_uiManager == null)
@@ -63,10 +64,13 @@ namespace Game.Bootstrap
                 return new GameRewardGrantService(resourceManager, inventoryService, inventoryOwnerId);
             }, Lifetime.Singleton);
 
+            builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(_rewardSpecsConfigSo), Lifetime.Singleton); 
+            
+            // Orchestration.asmdef
             builder.RegisterOrchestration(_cardCollectionScheduleFile);
+            builder.RegisterComponentInHierarchy<OrchestratorRunner>();
 
             builder.RegisterComponentInHierarchy<Bootstrap>();
-            builder.RegisterComponentInHierarchy<OrchestratorRunner>();
         }
     }
 }

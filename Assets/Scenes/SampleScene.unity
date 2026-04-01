@@ -1960,6 +1960,7 @@ MonoBehaviour:
   _hudService: {fileID: 1180951367}
   _globalTimerService: {fileID: 430775085}
   _exchangePacksConfig: {fileID: 11400000, guid: 65c81ad1becc709499632b874a67d555, type: 2}
+  _rewardSpecsConfigSo: {fileID: 11400000, guid: aaef6b3978f98c645b03c0530515339b, type: 2}
   _cardCollectionScheduleFile: card_collection_schedule.json
 --- !u!4 &1452037902
 Transform:

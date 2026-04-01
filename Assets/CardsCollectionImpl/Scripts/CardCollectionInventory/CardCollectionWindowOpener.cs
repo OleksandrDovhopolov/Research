@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
+using Rewards;
 using UISystem;
 using UnityEngine;
 
@@ -18,7 +19,7 @@ namespace CardCollectionImpl
         private readonly IReadOnlyList<CardCollectionGroupConfig> _groups;
         private readonly ICardCollectionPointsAccount _pointsAccount;
         private readonly IExchangeOfferProvider _exchangeOfferProvider;
-        private readonly IRewardDefinitionFactory _rewardDefinitionFactory;
+        private readonly IRewardSpecProvider _rewardSpecProvider;
         private readonly ICardCollectionCacheService _cardCollectionCacheService;
         private readonly CardCollectionRewardsConfigSO _collectionRewardsConfigSo;
         private readonly ICollectionProgressSnapshotService _collectionProgressSnapshotService;
@@ -30,7 +31,7 @@ namespace CardCollectionImpl
             IReadOnlyList<CardConfig> cards,
             IReadOnlyList<CardCollectionGroupConfig> groups,
             IExchangeOfferProvider exchangeOfferProvider,
-            IRewardDefinitionFactory rewardDefinitionFactory,
+            IRewardSpecProvider rewardSpecProvider,
             ICardCollectionCacheService cardCollectionCacheService,
             ICollectionProgressSnapshotService collectionProgressSnapshotService,
             CardCollectionRewardsConfigSO rewardsConfig)
@@ -43,7 +44,7 @@ namespace CardCollectionImpl
             _cards = cards ?? throw new ArgumentNullException(nameof(cards));
             _groups = groups ?? throw new ArgumentNullException(nameof(groups));
             _exchangeOfferProvider = exchangeOfferProvider ?? throw new ArgumentNullException(nameof(exchangeOfferProvider));
-            _rewardDefinitionFactory = rewardDefinitionFactory ?? throw new ArgumentNullException(nameof(rewardDefinitionFactory));
+            _rewardSpecProvider = rewardSpecProvider ?? throw new ArgumentNullException(nameof(rewardSpecProvider));
             _cardCollectionCacheService = cardCollectionCacheService ?? throw new ArgumentNullException(nameof(cardCollectionCacheService));
             _collectionProgressSnapshotService = collectionProgressSnapshotService ?? throw new ArgumentNullException(nameof(collectionProgressSnapshotService));
         }
@@ -100,7 +101,7 @@ namespace CardCollectionImpl
                 newCardsData,
                 collectionData,
                 _exchangeOfferProvider,
-                _rewardDefinitionFactory, 
+                _rewardSpecProvider, 
                 _collectionRewardsConfigSo,
                 _pointsAccount,
                 snapshot,

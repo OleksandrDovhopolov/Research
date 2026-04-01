@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using CoreResources;
 using Cysharp.Threading.Tasks;
@@ -41,7 +42,30 @@ namespace Rewards
 
             return await AddToInventoryAsync(rewardRequest, ct);
         }
-        
+
+        public async UniTask<bool> TryGrantAsync(List<RewardGrantRequest> rewardRequest, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (rewardRequest == null || rewardRequest.Count == 0)
+            {
+                Debug.LogWarning("Failed to add reward list. List is null or empty");
+                return false;
+            }
+
+            var allSuccess = true;
+            foreach (var request in rewardRequest)
+            {
+                ct.ThrowIfCancellationRequested();
+                var success = await TryGrantAsync(request, ct);
+                if (!success)
+                {
+                    allSuccess = false;
+                }
+            }
+
+            return allSuccess;
+        }
+
         private async UniTask<bool> AddToInventoryAsync(RewardGrantRequest rewardRequest, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();

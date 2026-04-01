@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
+using Rewards;
 using UIShared;
 using UISystem;
 using UnityEngine;
@@ -14,18 +15,18 @@ namespace CardCollectionImpl
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
         public readonly ICardCollectionPointsAccount CardCollectionPointsAccount;
         public readonly Action OnPointsAmountChangedHandler;
-        public readonly IRewardDefinitionFactory OfferDefinitionFactory;
+        public readonly IRewardSpecProvider RewardSpecProvider;
         
         public CollectionPointsExchangeArgs(
             int pointsAmount,
             IExchangeOfferProvider exchangeOfferProvider, 
-            IRewardDefinitionFactory offerDefinitionFactory,
+            IRewardSpecProvider rewardSpecProvider,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
             Action onPointsAmountChangedHandler = null)
         {
             PointsAmount = pointsAmount;
             ExchangeOfferProvider = exchangeOfferProvider;
-            OfferDefinitionFactory = offerDefinitionFactory;
+            RewardSpecProvider = rewardSpecProvider;
             CardCollectionPointsAccount = cardCollectionPointsAccount;
             OnPointsAmountChangedHandler = onPointsAmountChangedHandler;
         }
@@ -109,10 +110,16 @@ namespace CardCollectionImpl
         {
             if (string.IsNullOrWhiteSpace(packName)) return;
 
-            var packContent = Args.OfferDefinitionFactory.CreateFromOfferReward(packName);
-            var contentWidgetData = packContent.ToContentWidgetData();
-            var args = new ContentWidgetArgs(contentWidgetData, rectTransform);
-            UIManager.Show<ContentWidgetController>(args);
+            if (Args.RewardSpecProvider.TryGet(packName, out var spec))
+            {
+                var contentWidgetData = spec.ToContentWidgetData();
+                var args = new ContentWidgetArgs(contentWidgetData, rectTransform);
+                UIManager.Show<ContentWidgetController>(args);
+            }
+            else
+            {
+                Debug.LogWarning($"{GetType().Name} failed to find reward with Id {packName}");
+            }
         }
         
         protected override void OnHideStart(bool isClosed)

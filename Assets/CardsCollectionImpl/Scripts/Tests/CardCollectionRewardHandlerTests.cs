@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using CardCollection.Core;
@@ -19,7 +20,7 @@ namespace CardCollectionImpl
         public void TryHandleCollectionCompleted_WhenRewardIdIsMissing_ReturnsTrue()
         {
             var rewardGrantService = new FakeRewardGrantService();
-            var rewardFactory = new FakeRewardDefinitionFactory();
+            var rewardSpecProvider = new FakeRewardSpecProvider();
             
             //TODO moving file to different folders would cause fail
             var config = AssetDatabase.LoadAssetAtPath<CardCollectionRewardsConfigSO>(
@@ -27,7 +28,7 @@ namespace CardCollectionImpl
             
             Assert.IsNotNull(config, "CardCollectionRewardsConfig asset not found at expected path.");
             
-            var handler = new CardCollectionRewardHandler(config, rewardGrantService, rewardFactory);
+            var handler = new CardCollectionRewardHandler(config, rewardSpecProvider, rewardGrantService);
             
             //SetInitializedConfig(handler, config);
 
@@ -38,14 +39,14 @@ namespace CardCollectionImpl
             }).GetAwaiter().GetResult();
 
             Assert.IsTrue(result);
-            Assert.AreEqual(1, rewardFactory.CreateCollectionCallsCount);
+            Assert.AreEqual(1, rewardSpecProvider.CreateCollectionCallsCount);
         }
 
         [Test]
         public void TryHandleCollectionCompleted_WhenRewardIdMatchesEventId_ReturnsTrueAndSendsReward()
         {
             var rewardGrantService = new FakeRewardGrantService();
-            var rewardFactory = new FakeRewardDefinitionFactory();
+            var rewardSpecProvider = new FakeRewardSpecProvider();
             
             var config = ScriptableObject.CreateInstance<CardCollectionRewardsConfigSO>();
             config.FullCollectionReward = new FullCollectionRewardConfig
@@ -53,7 +54,7 @@ namespace CardCollectionImpl
                 RewardId = "event-1",
             };
             
-            var handler = new CardCollectionRewardHandler(config, rewardGrantService, rewardFactory);
+            var handler = new CardCollectionRewardHandler(config, rewardSpecProvider, rewardGrantService);
             
             //SetInitializedConfig(handler, config);
 
@@ -63,7 +64,7 @@ namespace CardCollectionImpl
             }).GetAwaiter().GetResult();
 
             Assert.IsTrue(result);
-            Assert.AreEqual(1, rewardFactory.CreateCollectionCallsCount);
+            Assert.AreEqual(1, rewardSpecProvider.CreateCollectionCallsCount);
         }
 
         private sealed class FakeRewardGrantService : IRewardGrantService
@@ -75,27 +76,23 @@ namespace CardCollectionImpl
                 GrantCallsCount++;
                 return UniTask.FromResult(true);
             }
+
+            public UniTask<bool> TryGrantAsync(List<RewardGrantRequest> rewardRequest, CancellationToken ct = default)
+            {
+                GrantCallsCount++;
+                return UniTask.FromResult(true);
+            }
         }
 
-        private sealed class FakeRewardDefinitionFactory : IRewardDefinitionFactory
+        private sealed class FakeRewardSpecProvider : IRewardSpecProvider
         {
             public int CreateCollectionCallsCount { get; private set; }
 
-            public CollectionRewardDefinition CreateFromGroupReward(CollectionCompletionRewardConfig collectionCompletionRewardConfig)
+            public bool TryGet(string rewardId, out RewardSpec spec)
             {
-                return new CardGroupCompletionReward();
-            }
-
-            public CollectionRewardDefinition CreateFromCollectionReward(FullCollectionRewardConfig fullCollectionRewardConfig = default)
-            {
+                spec = null;
                 CreateCollectionCallsCount++;
-                return new FullCollectionReward();
-            }
-
-            public CollectionRewardDefinition CreateFromOfferReward(string offerPackId)
-            {
-                CreateCollectionCallsCount++;
-                return new DuplicatePointsChestOffer();
+                return true;
             }
         }
     }

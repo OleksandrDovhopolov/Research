@@ -16,7 +16,7 @@ MonoBehaviour:
   GroupRewards:
   - GroupId: farming
     Icon: {fileID: 21300000, guid: baddc6138b88d4615bbd843bb59d70c0, type: 3}
-    RewardId: Gems
+    RewardId: test
     Amount: 48
   - GroupId: worksite
     Icon: {fileID: 21300000, guid: a90d15eca49af4c35a74467dea6c9c07, type: 3}

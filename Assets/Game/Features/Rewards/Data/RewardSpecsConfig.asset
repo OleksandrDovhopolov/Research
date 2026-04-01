@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abc6467de85077c48974d8fe4b165706, type: 3}
+  m_Name: RewardSpecsConfig
+  m_EditorClassIdentifier: 
+  RewardSpecs:
+  - RewardId: test
+    Icon: {fileID: 21300000, guid: baddc6138b88d4615bbd843bb59d70c0, type: 3}
+    TotalAmountForUi: 100
+    Resources:
+    - ResourceId: Gems
+      Amount: 100
+      Category: regular
+      Icon: {fileID: 21300000, guid: baddc6138b88d4615bbd843bb59d70c0, type: 3}
+  - RewardId: default
+    Icon: {fileID: 21300000, guid: a90d15eca49af4c35a74467dea6c9c07, type: 3}
+    TotalAmountForUi: 1
+    Resources:
+    - ResourceId: Gold
+      Amount: 1
+      Category: regular
+      Icon: {fileID: 21300000, guid: a90d15eca49af4c35a74467dea6c9c07, type: 3}
+  - RewardId: Spring_Collection
+    Icon: {fileID: 21300000, guid: c18565495745b3445a73b61b12bea321, type: 3}
+    TotalAmountForUi: 1
+    Resources:
+    - ResourceId: Gold
+      Amount: 1000
+      Category: regular
+      Icon: {fileID: 21300000, guid: a90d15eca49af4c35a74467dea6c9c07, type: 3}
+    - ResourceId: Energy
+      Amount: 100
+      Category: regular
+      Icon: {fileID: 21300000, guid: d37846b1ca5494942a3b7328b7b99a42, type: 3}
+    - ResourceId: Gems
+      Amount: 10
+      Category: regular
+      Icon: {fileID: 21300000, guid: baddc6138b88d4615bbd843bb59d70c0, type: 3}
+  - RewardId: Winter_Collection
+    Icon: {fileID: 21300000, guid: ad6290e5e00b7b54c89272c27b5a5661, type: 3}
+    TotalAmountForUi: 1
+    Resources:
+    - ResourceId: Gold
+      Amount: 1000
+      Category: regular
+      Icon: {fileID: 21300000, guid: a90d15eca49af4c35a74467dea6c9c07, type: 3}
+    - ResourceId: Energy
+      Amount: 100
+      Category: regular
+      Icon: {fileID: 21300000, guid: d37846b1ca5494942a3b7328b7b99a42, type: 3}
+    - ResourceId: Gems
+      Amount: 10
+      Category: regular
+      Icon: {fileID: 21300000, guid: baddc6138b88d4615bbd843bb59d70c0, type: 3}
+  - RewardId: SmallPack
+    Icon: {fileID: 21300000, guid: ad6290e5e00b7b54c89272c27b5a5661, type: 3}
+    TotalAmountForUi: 1
+    Resources:
+    - ResourceId: Gold
+      Amount: 1000
+      Category: regular
+      Icon: {fileID: 21300000, guid: a90d15eca49af4c35a74467dea6c9c07, type: 3}
+    - ResourceId: Emerald_Pack
+      Amount: 1
+      Category: card_pack
+      Icon: {fileID: 21300000, guid: 1092e3bfb2feca44294c05bc48c5b989, type: 3}
+    - ResourceId: Gems
+      Amount: 10
+      Category: regular
+      Icon: {fileID: 21300000, guid: baddc6138b88d4615bbd843bb59d70c0, type: 3}
