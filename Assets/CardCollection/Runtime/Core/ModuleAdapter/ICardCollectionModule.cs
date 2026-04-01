@@ -26,7 +26,7 @@ namespace CardCollection.Core
     {
         UniTask<EventCardsSaveData> Load(CancellationToken ct = default);
         UniTask<HashSet<string>> GetMissingCardIdsAsync(List<CardDefinition> allCards, CancellationToken ct = default);
-        UniTask<int> GetCollectionPoints();
+        UniTask<int> GetCollectionPoints(CancellationToken ct = default);
     }
 
     public interface ICardCollectionUpdater

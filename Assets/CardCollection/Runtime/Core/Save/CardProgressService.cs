@@ -109,12 +109,12 @@ namespace CardCollection.Core
             return true;
         }
 
-        public async UniTask<int> GetPoints(string eventId)
+        public async UniTask<int> GetPoints(string eventId, CancellationToken ct = default)
         {
             if (string.IsNullOrEmpty(eventId))
                 return 0;
 
-            await EnsureInitializedAsync();
+            await EnsureInitializedAsync(ct);
             
             var points = _cache.TryGetValue(eventId, out var data) ? data.Points : 0;
             

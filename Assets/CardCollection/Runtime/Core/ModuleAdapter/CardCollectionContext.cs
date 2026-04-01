@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
@@ -7,16 +6,17 @@ namespace CardCollection.Core
 {
     /// <summary>
     /// Internal context that constructs and owns all core services.
-    /// Exposes delegation methods so callers never reach through to internal services (Law of Demeter).
+    /// Serves as a lifecycle owner and dependency holder for the module.
     /// </summary>
     internal sealed class CardCollectionContext : IDisposable
     {
         private readonly CardCollectionModuleConfig _config;
 
-        private readonly CardPackService _cardPackService;
-        private readonly PackBasedCardsRandomizer _cardRandomizer;
-        private readonly CardProgressService _cardProgressService;
-        private readonly IDuplicateCardPointsCalculator _duplicateCardPointsCalculator;
+        internal CardPackService CardPackService { get; }
+        internal PackBasedCardsRandomizer CardRandomizer { get; }
+        internal CardProgressService CardProgressService { get; }
+        internal IDuplicateCardPointsCalculator DuplicateCardPointsCalculator { get; }
+        internal ICardDefinitionProvider CardDefinitionProvider => _config.CardDefinitionProvider;
 
         public string EventId { get; }
 
@@ -30,81 +30,26 @@ namespace CardCollection.Core
             _config = config;
 
             EventId = _config.EventId;
-            _cardPackService = new CardPackService(_config.PackProvider);
-            _cardProgressService = new CardProgressService(_config.EventCardsStorage);
-            _cardRandomizer = new PackBasedCardsRandomizer(_config.CardSelector, _config.CardDefinitionProvider);
-            _duplicateCardPointsCalculator = new DuplicateCardPointsCalculator(_config.CardDefinitionProvider, _config.CardPointsCalculator);
+            CardPackService = new CardPackService(_config.PackProvider);
+            CardProgressService = new CardProgressService(_config.EventCardsStorage);
+            CardRandomizer = new PackBasedCardsRandomizer(_config.CardSelector, _config.CardDefinitionProvider);
+            DuplicateCardPointsCalculator = new DuplicateCardPointsCalculator(_config.CardDefinitionProvider, _config.CardPointsCalculator);
         }
 
         public async UniTask InitializeAsync(CancellationToken ct = default)
         {
-            await _cardPackService.InitializeAsync(ct);
-            await _cardProgressService.InitializeAsync(ct);
-            await _cardProgressService.LoadAsync(EventId, ct);
+            await CardPackService.InitializeAsync(ct);
+            await CardProgressService.InitializeAsync(ct);
+            await CardProgressService.LoadAsync(EventId, ct);
         }
-
-        // ── CardPackService delegation ──
-        
-        public CardPack GetPackById(string packId) => _cardPackService.GetPackById(packId);
-
-        // ── PackBasedCardsRandomizer delegation ──
-
-        public UniTask<List<string>> GetRandomNewCardsAsync(CardPack pack, CancellationToken ct = default)
-            => _cardRandomizer.GetRandomNewCardsAsync(pack, ct);
-
-        // ── CardProgressService delegation ──
-
-        public UniTask<EventCardsSaveData> LoadAsync(string eventId, CancellationToken ct = default)
-            => _cardProgressService.LoadAsync(eventId, ct);
-
-        public UniTask SaveAsync(EventCardsSaveData data, CancellationToken ct = default)
-            => _cardProgressService.SaveAsync(data, ct);
-
-        public UniTask UnlockCardAsync(string eventId, string cardId, CancellationToken ct = default)
-            => _cardProgressService.UnlockCardAsync(eventId, cardId, ct);
-
-        public UniTask UnlockCardsAsync(string eventId, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
-            => _cardProgressService.UnlockCardsAsync(eventId, cardIds, ct);
-
-        public UniTask<List<CardProgressData>> GetCardsByIdsAsync(string eventId, List<string> cardIds, CancellationToken ct = default)
-            => _cardProgressService.GetCardsByIdsAsync(eventId, cardIds, ct);
-        
-        public UniTask ResetNewFlagsAsync(string eventId, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
-            => _cardProgressService.ResetNewFlagsAsync(eventId, cardIds, ct);
-
-        public async UniTask<int> GetPoints(string eventId)
-            => await _cardProgressService.GetPoints(eventId);
-
-        public UniTask AddPointsAsync(string eventId, int pointsToAdd, CancellationToken ct = default)
-            => _cardProgressService.AddPointsAsync(eventId, pointsToAdd, ct);
-
-        public UniTask<bool> TrySpendPointsAsync(string eventId, int pointsToSpend, CancellationToken ct = default)
-            => _cardProgressService.TrySpendPointsAsync(eventId, pointsToSpend, ct);
-
-        public UniTask<HashSet<string>> GetMissingCardIdsAsync(string eventId, List<CardDefinition> allCards, CancellationToken ct = default)
-            => _cardProgressService.GetMissingCardIdsAsync(eventId, allCards, ct);
-
-        public UniTask ClearCollectionAsync(CancellationToken ct = default)
-            => _cardProgressService.ClearCollectionAsync(ct);
-
-        // ── DuplicateCardPointsCalculator delegation ──
-
-        public DuplicateCardPointsCalculation CalculateDuplicatePoints(
-            IReadOnlyList<string> openedCardIds,
-            IReadOnlyCollection<CardProgressData> openedCardsProgress)
-            => _duplicateCardPointsCalculator.Calculate(openedCardIds, openedCardsProgress);
-
-        // ── ICardDefinitionProvider delegation ──
-
-        public List<CardDefinition> GetCardDefinitions() => _config.CardDefinitionProvider.GetCardDefinitions();
 
         public void Dispose()
         {
             //TODO add clearCache to ICardGroupsConfigProvider
             //TODO add clearCache to ICardsConfigProvider
             _config.PackProvider.ClearCache();
-            _cardPackService.Dispose();
-            _cardProgressService.Dispose();
+            CardPackService.Dispose();
+            CardProgressService.Dispose();
         }
     }
 }

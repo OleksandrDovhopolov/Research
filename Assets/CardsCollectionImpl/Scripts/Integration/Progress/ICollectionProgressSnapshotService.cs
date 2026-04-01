@@ -1,4 +1,6 @@
-namespace CardCollection.Core
+using CardCollection.Core;
+
+namespace CardCollectionImpl
 {
     public interface ICollectionProgressSnapshotService
     {

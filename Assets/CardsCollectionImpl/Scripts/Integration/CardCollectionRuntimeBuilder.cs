@@ -4,57 +4,26 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Models;
-using Infrastructure;
-using Inventory.API;
-using Rewards;
-using UIShared;
-using UISystem;
-using UnityEngine;
 
 namespace CardCollectionImpl
 {
     public sealed class CardCollectionRuntimeBuilder : ICardCollectionRuntimeBuilder
     {
-        private readonly UIManager _uiManager;
-        private readonly IHUDService _hudService;
-        private readonly IRewardSpecProvider _rewardSpecProvider;
-        private readonly ExchangePacksConfig _exchangePacksConfig;
-        private readonly IRewardGrantService _rewardGrantService;
-        private readonly IItemCategoryRegistry _itemCategoryRegistry;
-        private readonly IInventoryUseHandlerStorage _inventoryUseHandlerStorage;
-
-        private readonly ICardPointsCalculator _cardPointsCalculator;
         private readonly ICardCollectionCacheService _cardCollectionCacheService;
-        private readonly ICardPackProvider _cardPackProvider;
-        private readonly ICardsConfigProvider _cardsConfigProvider;
-        private readonly ICardGroupsConfigProvider _cardGroupsConfigProvider;
+        private readonly ICardCollectionStaticDataLoader _staticDataLoader;
+        private readonly ICardCollectionModuleFactory _moduleFactory;
+        private readonly ICardCollectionSessionFactory _sessionFactory;
         
         public CardCollectionRuntimeBuilder(
-            UIManager uiManager,
-            IHUDService hudService,
-            ICardPackProvider cardPackProvider,
-            IRewardSpecProvider rewardSpecProvider,
-            ICardPointsCalculator pointsCalculator,
-            ICardsConfigProvider cardsConfigProvider,
-            ICardGroupsConfigProvider cardGroupsConfigProvider,
-            ExchangePacksConfig exchangePacksConfig,
-            IRewardGrantService rewardGrantService,
-            IItemCategoryRegistry  itemCategoryRegistry,
             ICardCollectionCacheService  cardCollectionCacheService,
-            IInventoryUseHandlerStorage inventoryUseHandlerStorage)
+            ICardCollectionStaticDataLoader staticDataLoader,
+            ICardCollectionModuleFactory moduleFactory,
+            ICardCollectionSessionFactory sessionFactory)
         {
-            _uiManager = uiManager;
-            _hudService = hudService;
-            _cardPackProvider = cardPackProvider;
-            _rewardSpecProvider = rewardSpecProvider;
-            _cardPointsCalculator = pointsCalculator;
-            _cardsConfigProvider = cardsConfigProvider;
-            _cardGroupsConfigProvider = cardGroupsConfigProvider;
-            _exchangePacksConfig = exchangePacksConfig;
-            _rewardGrantService = rewardGrantService;
-            _itemCategoryRegistry = itemCategoryRegistry;
-            _inventoryUseHandlerStorage = inventoryUseHandlerStorage;
             _cardCollectionCacheService = cardCollectionCacheService;
+            _staticDataLoader = staticDataLoader;
+            _moduleFactory = moduleFactory;
+            _sessionFactory = sessionFactory;
         }
         
         public async UniTask<CardCollectionSession> BuildAsync(CardCollectionEventModel model, CancellationToken ct)
@@ -65,141 +34,21 @@ namespace CardCollectionImpl
             {
                 throw new ArgumentNullException($"CardCollectionEventModel is null {nameof(model)}");
             }
-
-            try
-            {
-                //TODO migrate from resources load to addressabless and update this method
-                ValidateResources(model.CardPacksFileName, model.CardCollectionFileName, model.GroupsFileName);
-                
-                _cardsConfigProvider.ClearCache();
-                _cardGroupsConfigProvider.ClearCache();
-                _cardPackProvider.ClearCache();
-                
-                await UniTask.WhenAll(
-                    _cardPackProvider.LoadAsync(model.CardPacksFileName, ct),
-                    _cardsConfigProvider.LoadAsync(model.CardCollectionFileName, ct),
-                    _cardGroupsConfigProvider.LoadAsync(model.GroupsFileName, ct)
-                );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
-
-            var staticData = new CardCollectionStaticData 
-            {
-                Packs = _cardPackProvider.Data,
-                Cards = _cardsConfigProvider.Data,
-                Groups = _cardGroupsConfigProvider.Data
-            };
+            
+            var staticData = await _staticDataLoader.LoadAsync(model, ct);
 
             _cardCollectionCacheService.Initialize(staticData.Cards);
-            
-            var moduleConfig = CreateModuleConfig(staticData, model.EventId);
             CardCollectionModule module = null;
-            CardCollectionRewardsConfigSO rewardsConfig = null;
             
             try
             {
-                module = new CardCollectionModule(moduleConfig);
-
-                //TODO move all files load in 1 the same logic. eg ICardsConfigProvider / ICardsConfigProvider /etc
-                ct.ThrowIfCancellationRequested();
-                //TODO move it into separate interface
-                rewardsConfig = await ProdAddressablesWrapper
-                    .LoadAsync<CardCollectionRewardsConfigSO>(model.RewardsConfigAddress, ct)
-                    .AsUniTask();
-                ct.ThrowIfCancellationRequested();
-
-                if (rewardsConfig == null)
-                {
-                    Debug.LogError($"RewardsConfig not found with ID {model.RewardsConfigAddress}!");
-                }
-                
-                var rewardHandler = new CardCollectionRewardHandler(rewardsConfig, _rewardSpecProvider, _rewardGrantService);
-                var snapshotService = new CollectionProgressSnapshotService(_cardCollectionCacheService, staticData.Groups);
-                var exchangeOfferProvider = new ExchangeOfferProvider(_exchangePacksConfig, rewardHandler);
-                
-                var windowOpener = CreateCardPackWindowOpener(
-                    module,
-                    snapshotService,
-                    exchangeOfferProvider,
-                    rewardHandler,
-                    staticData);
-
-                var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
-                var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, windowOpener);
-                var context = new CardCollectionSessionContext(module, module, module, windowOpener);
-
-                return new CardCollectionSession(
-                    _uiManager,
-                    context,
-                    module,
-                    hudPresenter,
-                    rewardHandler,
-                    rewardsConfig,
-                    inventoryIntegration,
-                    snapshotService);
+                module = _moduleFactory.Create(staticData, model.EventId);
+                return await _sessionFactory.CreateAsync(model, staticData, module, ct);
             }
             catch
             {
-                if (rewardsConfig != null)
-                {
-                    ProdAddressablesWrapper.Release(rewardsConfig);
-                }
-
                 module?.Dispose();
                 throw;
-            }
-        }
-        
-        private ICardCollectionWindowOpener CreateCardPackWindowOpener(
-            CardCollectionModule module,
-            ICollectionProgressSnapshotService snapshotService,
-            IExchangeOfferProvider exchangeOfferProvider,
-            ICardCollectionRewardHandler rewardHandler,
-            CardCollectionStaticData staticData)
-        {
-            var cardCollectionWindowOpener = new CardCollectionWindowOpener(
-                _uiManager, 
-                module, 
-                module, 
-                module,
-                staticData.Cards,
-                staticData.Groups,
-                exchangeOfferProvider,
-                _rewardSpecProvider,
-                _cardCollectionCacheService,
-                snapshotService,
-                rewardHandler);
-            
-            return cardCollectionWindowOpener;
-        }
-        
-        private CardCollectionModuleConfig CreateModuleConfig(CardCollectionStaticData staticData, string eventId)
-        {
-            return new CardCollectionModuleConfig(
-                _cardPackProvider,
-                new JsonEventCardsStorage(),
-                new DefaultCardDefinitionProvider(staticData.Cards),
-                new RandomCardSelector(new DefaultPackStrategy()),
-                _cardPointsCalculator,
-                eventId);
-        }
-        
-        private void ValidateResources(params string[] paths)
-        {
-            foreach (var path in paths)
-            {
-                var asset = Resources.Load<TextAsset>(path);
-                if (asset == null)
-                {
-                    throw new System.IO.FileNotFoundException(
-                        $"[ConfigError] Файл не найден в Resources: {path}. " +
-                        "Убедитесь, что файл существует и вы НЕ указали расширение (.json)");
-                }
-        
-                Resources.UnloadAsset(asset);
             }
         }
     }

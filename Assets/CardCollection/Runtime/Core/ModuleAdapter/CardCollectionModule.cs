@@ -36,7 +36,7 @@ namespace CardCollection.Core
             await _context.InitializeAsync(ct);
 
             var progressData = await EnsureEventDataInitializedAsync(ct);
-            var allDefinitions = _context.GetCardDefinitions();
+            var allDefinitions = _context.CardDefinitionProvider.GetCardDefinitions();
             
             _groupCompletionTracker = new GroupCompletionTracker(allDefinitions, progressData);
             _isCollectionCompleted = _groupCompletionTracker.IsAllGroupsCompleted;
@@ -46,7 +46,7 @@ namespace CardCollection.Core
         {
             ct.ThrowIfCancellationRequested();
 
-            var data = await _context.LoadAsync(_context.EventId, ct);
+            var data = await _context.CardProgressService.LoadAsync(_context.EventId, ct);
 
             if (data != null && data.Cards != null && data.Cards.Count > 0)
             {
@@ -60,7 +60,7 @@ namespace CardCollection.Core
                 Points = data?.Points ?? 0,
                 Version = data?.Version ?? 1
             };
-            foreach (var cardDefinition in _context.GetCardDefinitions())
+            foreach (var cardDefinition in _context.CardDefinitionProvider.GetCardDefinitions())
             {
                 initializedData.Cards.Add(new CardProgressData
                 {
@@ -69,26 +69,26 @@ namespace CardCollection.Core
                 });
             }
 
-            await _context.SaveAsync(initializedData, ct);
+            await _context.CardProgressService.SaveAsync(initializedData, ct);
             return initializedData;
         }
 
-        public CardPack GetPackById(string packId) => _context.GetPackById(packId);
+        public CardPack GetPackById(string packId) => _context.CardPackService.GetPackById(packId);
 
         public async UniTask<List<string>> OpenPackAndUnlockAsync(string packId, CancellationToken ct = default)
         {
-            var pack = _context.GetPackById(packId);
+            var pack = _context.CardPackService.GetPackById(packId);
 
             if (pack == null)
             {
                 return new List<string>();
             }
             
-            var cardIds = await _context.GetRandomNewCardsAsync(pack, ct);
+            var cardIds = await _context.CardRandomizer.GetRandomNewCardsAsync(pack, ct);
             if (cardIds.Count > 0)
             {
                 await AwardDuplicateCardPointsAsync(pack, cardIds, ct);
-                await _context.UnlockCardsAsync(_context.EventId, cardIds, ct);
+                await _context.CardProgressService.UnlockCardsAsync(_context.EventId, cardIds, ct);
                 NotifyCompletedGroups(cardIds);
                 NotifyCollectionCompleted();
             }
@@ -103,8 +103,8 @@ namespace CardCollection.Core
                 return;
             }
 
-            var openedCardsProgress = await _context.GetCardsByIdsAsync(_context.EventId, openedCardIds, ct);
-            var duplicatePoints = _context.CalculateDuplicatePoints(openedCardIds, openedCardsProgress);
+            var openedCardsProgress = await _context.CardProgressService.GetCardsByIdsAsync(_context.EventId, openedCardIds, ct);
+            var duplicatePoints = _context.DuplicateCardPointsCalculator.Calculate(openedCardIds, openedCardsProgress);
             if (!duplicatePoints.HasPoints)
             {
                 return;
@@ -119,17 +119,17 @@ namespace CardCollection.Core
 
         public UniTask<List<CardProgressData>> GetCardsByIdsAsync(List<string> cardIds, CancellationToken ct = default)
         {
-            return _context.GetCardsByIdsAsync(_context.EventId, cardIds, ct);
+            return _context.CardProgressService.GetCardsByIdsAsync(_context.EventId, cardIds, ct);
         }
 
         public UniTask ResetNewFlagsAsync(IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
         {
-            return _context.ResetNewFlagsAsync(_context.EventId, cardIds, ct);
+            return _context.CardProgressService.ResetNewFlagsAsync(_context.EventId, cardIds, ct);
         }
 
         internal async UniTask AddPointsAsync(int pointsToAdd, CancellationToken ct = default)
         {
-            await _context.AddPointsAsync(_context.EventId, pointsToAdd, ct);
+            await _context.CardProgressService.AddPointsAsync(_context.EventId, pointsToAdd, ct);
         }
 
         public async UniTask<bool> TryAddPointsAsync(int pointsToAdd, CancellationToken ct = default)
@@ -140,7 +140,7 @@ namespace CardCollection.Core
 
         public UniTask<bool> TrySpendPointsAsync(int pointsToSpend, CancellationToken ct = default)
         {
-            return _context.TrySpendPointsAsync(_context.EventId, pointsToSpend, ct);
+            return _context.CardProgressService.TrySpendPointsAsync(_context.EventId, pointsToSpend, ct);
         }
         
         public void Dispose()
@@ -155,7 +155,7 @@ namespace CardCollection.Core
             //TODO add here duplicate points. move from OpenPackAndUnlockAsync ? 
             try
             {
-                await _context.UnlockCardAsync(_context.EventId, cardId, ct);
+                await _context.CardProgressService.UnlockCardAsync(_context.EventId, cardId, ct);
                 NotifyCompletedGroups(new[] { cardId });
                 NotifyCollectionCompleted();
             }
@@ -180,7 +180,7 @@ namespace CardCollection.Core
 
             try
             {
-                await _context.UnlockCardsAsync(_context.EventId, cardIds, ct);
+                await _context.CardProgressService.UnlockCardsAsync(_context.EventId, cardIds, ct);
                 NotifyCompletedGroups(cardIds);
                 NotifyCollectionCompleted();
             }
@@ -201,13 +201,13 @@ namespace CardCollection.Core
             {
                 var cardCollectionData = new EventCardsSaveData { EventId = _context.EventId };
 
-                foreach (var cardCollectionConfig in _context.GetCardDefinitions())
+                foreach (var cardCollectionConfig in _context.CardDefinitionProvider.GetCardDefinitions())
                 {
                     var cardData = new CardProgressData { CardId = cardCollectionConfig.Id, IsUnlocked = false };
                     cardCollectionData.Cards.Add(cardData);
                 }
 
-                await _context.SaveAsync(cardCollectionData, ct);
+                await _context.CardProgressService.SaveAsync(cardCollectionData, ct);
                 _groupCompletionTracker?.ResetFromProgress(cardCollectionData);
                 _isCollectionCompleted = _groupCompletionTracker?.IsAllGroupsCompleted == true;
             }
@@ -225,7 +225,7 @@ namespace CardCollection.Core
         {
             try
             {
-                return await _context.LoadAsync(_context.EventId, ct);
+                return await _context.CardProgressService.LoadAsync(_context.EventId, ct);
             }
             catch (OperationCanceledException)
             {
@@ -241,7 +241,7 @@ namespace CardCollection.Core
         {
             try
             {
-                return await _context.GetMissingCardIdsAsync(_context.EventId, allCards, ct);
+                return await _context.CardProgressService.GetMissingCardIdsAsync(_context.EventId, allCards, ct);
             }
             catch (OperationCanceledException)
             {
@@ -253,16 +253,16 @@ namespace CardCollection.Core
             }
         }
 
-        public async UniTask<int> GetCollectionPoints()
+        public async UniTask<int> GetCollectionPoints(CancellationToken ct = default)
         {
-            return await _context.GetPoints(_context.EventId);
+            return await _context.CardProgressService.GetPoints(_context.EventId, ct);
         }
 
         public async UniTask Clear(CancellationToken ct = default)
         {
             try
             {
-                await _context.ClearCollectionAsync(ct);
+                await _context.CardProgressService.ClearCollectionAsync(ct);
                 var emptyData = new EventCardsSaveData { EventId = _context.EventId };
                 _groupCompletionTracker?.ResetFromProgress(emptyData);
                 _isCollectionCompleted = _groupCompletionTracker?.IsAllGroupsCompleted == true;

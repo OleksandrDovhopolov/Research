@@ -19,8 +19,6 @@ namespace CardCollectionImpl
         private readonly IReadOnlyList<CardCollectionGroupConfig> _groups;
         private readonly ICardCollectionPointsAccount _pointsAccount;
         private readonly IExchangeOfferProvider _exchangeOfferProvider;
-        private readonly IRewardSpecProvider _rewardSpecProvider;
-        private readonly ICardCollectionCacheService _cardCollectionCacheService;
         private readonly ICardCollectionRewardHandler _rewardHandler;
         private readonly ICollectionProgressSnapshotService _collectionProgressSnapshotService;
 
@@ -31,8 +29,6 @@ namespace CardCollectionImpl
             IReadOnlyList<CardConfig> cards,
             IReadOnlyList<CardCollectionGroupConfig> groups,
             IExchangeOfferProvider exchangeOfferProvider,
-            IRewardSpecProvider rewardSpecProvider,
-            ICardCollectionCacheService cardCollectionCacheService,
             ICollectionProgressSnapshotService collectionProgressSnapshotService,
             ICardCollectionRewardHandler rewardHandler)
         {
@@ -44,8 +40,6 @@ namespace CardCollectionImpl
             _cards = cards ?? throw new ArgumentNullException(nameof(cards));
             _groups = groups ?? throw new ArgumentNullException(nameof(groups));
             _exchangeOfferProvider = exchangeOfferProvider ?? throw new ArgumentNullException(nameof(exchangeOfferProvider));
-            _rewardSpecProvider = rewardSpecProvider ?? throw new ArgumentNullException(nameof(rewardSpecProvider));
-            _cardCollectionCacheService = cardCollectionCacheService ?? throw new ArgumentNullException(nameof(cardCollectionCacheService));
             _collectionProgressSnapshotService = collectionProgressSnapshotService ?? throw new ArgumentNullException(nameof(collectionProgressSnapshotService));
         }
 
@@ -58,7 +52,7 @@ namespace CardCollectionImpl
                 return;
             }
 
-            var args = new NewCardArgs(_module.EventId, packId, _module, _reader, _cardCollectionCacheService);
+            var args = new NewCardArgs(_module.EventId, packId, _module, _reader);
             _uiManager.Show<NewCardController>(args);
         }
         
@@ -101,7 +95,6 @@ namespace CardCollectionImpl
                 newCardsData,
                 collectionData,
                 _exchangeOfferProvider,
-                _rewardSpecProvider, 
                 _rewardHandler,
                 _pointsAccount,
                 snapshot,

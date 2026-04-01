@@ -18,7 +18,6 @@ namespace CardCollectionImpl
         public readonly ICardCollectionPointsAccount CardCollectionPointsAccount;
         public readonly EventCardsSaveData EventCardsSaveData;
         public readonly IExchangeOfferProvider ExchangeOfferProvider;
-        public readonly IRewardSpecProvider RewardSpecProvider;
         public readonly CollectionProgressSnapshot CollectionProgressSnapshot;
         public readonly ICardCollectionRewardHandler RewardHandler;
         public readonly string ScheduleItemEventId;
@@ -26,7 +25,6 @@ namespace CardCollectionImpl
         public CardCollectionArgs(CardCollectionNewCardsDto newCardsData,
             EventCardsSaveData eventCardsSaveData,
             IExchangeOfferProvider exchangeOfferProvider,
-            IRewardSpecProvider rewardSpecProvider,
             ICardCollectionRewardHandler rewardHandler,
             ICardCollectionPointsAccount cardCollectionPointsAccount,
             CollectionProgressSnapshot collectionProgressSnapshot,
@@ -39,7 +37,6 @@ namespace CardCollectionImpl
             Groups = groups;
             EventCardsSaveData = eventCardsSaveData;
             ExchangeOfferProvider = exchangeOfferProvider;
-            RewardSpecProvider = rewardSpecProvider;
             CardCollectionPointsAccount = cardCollectionPointsAccount;
             RewardHandler = rewardHandler;
             CollectionProgressSnapshot = collectionProgressSnapshot;
@@ -52,6 +49,7 @@ namespace CardCollectionImpl
     {
         private IGlobalTimerService _globalTimerService;
         private IEventSpriteManager _eventSpriteManager;
+        private IRewardSpecProvider _rewardSpecProvider;
         private ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
         
         private CardCollectionArgs Args => (CardCollectionArgs) Arguments;
@@ -64,10 +62,12 @@ namespace CardCollectionImpl
         public void Install(
             IEventSpriteManager eventSpriteManager,
             IGlobalTimerService globalTimerService,
+            IRewardSpecProvider rewardSpecProvider,
             ICardCollectionCacheService cardCollectionCardCollectionCacheService)
         {
             _globalTimerService = globalTimerService;
             _eventSpriteManager = eventSpriteManager;
+            _rewardSpecProvider = rewardSpecProvider;
             _cardCollectionCardCollectionCacheService = cardCollectionCardCollectionCacheService;
         }
         
@@ -121,7 +121,7 @@ namespace CardCollectionImpl
 
         private void OnRewardChestClickedHandler(RectTransform rectTransform)
         {
-            if (Args.RewardSpecProvider.TryGet(Args.EventCardsSaveData.EventId, out var spec))
+            if (_rewardSpecProvider.TryGet(Args.EventCardsSaveData.EventId, out var spec))
             {
                 var contentWidgetData = spec.ToContentWidgetData();
                 var args = new ContentWidgetArgs(contentWidgetData, rectTransform);

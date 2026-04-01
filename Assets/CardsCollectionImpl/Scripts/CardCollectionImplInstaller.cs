@@ -24,6 +24,9 @@ namespace CardCollectionImpl
             builder.Register<ICardPackProvider, JsonCardPackProvider>(Lifetime.Singleton);
             builder.Register<ICardsConfigProvider, JsonCardsConfigProvider>(Lifetime.Singleton);
             builder.Register<ICardGroupsConfigProvider, JsonCardGroupsConfigProvider>(Lifetime.Singleton);
+            builder.Register<IEventCardsStorage, JsonEventCardsStorage>(Lifetime.Singleton);
+            builder.Register<IPackSelectionStrategy, DefaultPackStrategy>(Lifetime.Singleton);
+            builder.Register<ICardSelector, RandomCardSelector>(Lifetime.Singleton);
             // Points calculator
             builder.Register<ICardCollectionCacheService, CardCollectionCardCollectionCacheService>(Lifetime.Singleton);
             builder.Register<ICardPointsCalculator, CardsCollectionPointsCalculator>(Lifetime.Singleton);
@@ -32,6 +35,9 @@ namespace CardCollectionImpl
                 .As<System.IDisposable>();
             
             // Feature session builder
+            builder.Register<ICardCollectionStaticDataLoader, CardCollectionStaticDataLoader>(Lifetime.Singleton);
+            builder.Register<ICardCollectionModuleFactory, CardCollectionModuleFactory>(Lifetime.Singleton);
+            builder.Register<ICardCollectionSessionFactory, CardCollectionSessionFactory>(Lifetime.Singleton);
             builder.Register<ICardCollectionRuntimeBuilder, CardCollectionRuntimeBuilder>(Lifetime.Singleton);
             
             // Client code usage facade

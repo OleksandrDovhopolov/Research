@@ -178,7 +178,6 @@ namespace CardCollectionImpl
              * If the externalCt is cancelled, you might skip _hudPresenter.Unbind() or _inventoryIntegration.Detach(),
              * leaving "ghost" event listeners active in your game.
              */
-            ct.ThrowIfCancellationRequested();
             _isStarted = false;
 
             try
@@ -210,7 +209,6 @@ namespace CardCollectionImpl
 
             try
             {
-                ct.ThrowIfCancellationRequested();
                 _module?.Dispose();
             }
             catch (Exception e)
