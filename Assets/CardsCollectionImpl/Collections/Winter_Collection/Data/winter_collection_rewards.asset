@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33c00084291d27f4fa77d10fbada8bf2, type: 3}
   m_Name: winter_collection_rewards
   m_EditorClassIdentifier: 
-  GroupsJson: {fileID: 4900000, guid: 4b5a6ed8177a7494c8d89137d8c0b277, type: 3}
+  GroupsJson: {fileID: 4900000, guid: 08e0bea288a7137438da623ad221e591, type: 3}
   EventRewardsList:
   - GroupId: farming
     RewardId: Gold

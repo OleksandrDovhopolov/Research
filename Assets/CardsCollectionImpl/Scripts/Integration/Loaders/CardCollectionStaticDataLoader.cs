@@ -34,8 +34,6 @@ namespace CardCollectionImpl
                 throw new ArgumentNullException(nameof(model));
             }
 
-            ValidateResources(model.CardPacksFileName, model.CardCollectionFileName, model.GroupsFileName);
-
             _cardsConfigProvider.ClearCache();
             _cardGroupsConfigProvider.ClearCache();
             _cardPackProvider.ClearCache();
@@ -55,24 +53,6 @@ namespace CardCollectionImpl
                 Groups = _cardGroupsConfigProvider.Data,
                 Rewards = _eventRewardsConfigProvider.Data
             };
-        }
-
-        private static void ValidateResources(params string[] paths)
-        {
-            //TODO remove this method after firebase storage migration
-            return;
-            foreach (var path in paths)
-            {
-                var asset = Resources.Load<TextAsset>(path);
-                if (asset == null)
-                {
-                    throw new System.IO.FileNotFoundException(
-                        $"[ConfigError] File not found in Resources: {path}. " +
-                        "Ensure the file exists and extension (.json) is omitted.");
-                }
-
-                Resources.UnloadAsset(asset);
-            }
         }
     }
 }

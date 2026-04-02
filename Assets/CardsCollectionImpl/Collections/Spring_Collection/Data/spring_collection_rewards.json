@@ -1,0 +1,68 @@
+{
+  "rewards": [
+    {
+      "rewardId": "decor",
+      "rewardItemId": "Gems"
+    },
+    {
+      "rewardId": "snow_day",
+      "rewardItemId": "Energy"
+    },
+    {
+      "rewardId": "sports",
+      "rewardItemId": "Gold"
+    },
+    {
+      "rewardId": "cabin",
+      "rewardItemId": "Gems"
+    },
+    {
+      "rewardId": "crafts",
+      "rewardItemId": "Energy"
+    },
+    {
+      "rewardId": "lights",
+      "rewardItemId": "Gold"
+    },
+    {
+      "rewardId": "market",
+      "rewardItemId": "Gems"
+    },
+    {
+      "rewardId": "shopping",
+      "rewardItemId": "Energy"
+    },
+    {
+      "rewardId": "treats",
+      "rewardItemId": "Gold"
+    },
+    {
+      "rewardId": "caroling",
+      "rewardItemId": "Gems"
+    },
+    {
+      "rewardId": "interiors",
+      "rewardItemId": "Energy"
+    },
+    {
+      "rewardId": "outfits",
+      "rewardItemId": "Gems"
+    },
+    {
+      "rewardId": "travel",
+      "rewardItemId": "Energy"
+    },
+    {
+      "rewardId": "traditions",
+      "rewardItemId": "Gold"
+    },
+    {
+      "rewardId": "party",
+      "rewardItemId": "Gems"
+    },
+    {
+      "rewardId": "Spring_Collection",
+      "rewardItemId": "Spring_Collection"
+    }
+  ]
+}

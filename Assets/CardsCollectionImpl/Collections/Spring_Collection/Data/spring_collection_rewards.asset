@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33c00084291d27f4fa77d10fbada8bf2, type: 3}
   m_Name: spring_collection_rewards
   m_EditorClassIdentifier: 
-  GroupsJson: {fileID: 0}
+  GroupsJson: {fileID: 4900000, guid: a92b962ad2bac8349b5679017a3e8d41, type: 3}
   EventRewardsList:
   - GroupId: decor
     RewardId: Gems

@@ -1,13 +1,9 @@
-using System.Threading;
 using CardCollection.Core;
-using Cysharp.Threading.Tasks;
 using EventOrchestration.Models;
-using Infrastructure;
 using Inventory.API;
 using Rewards;
 using UIShared;
 using UISystem;
-using UnityEngine;
 
 namespace CardCollectionImpl
 {

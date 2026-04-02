@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using System.IO;
 
 namespace CardCollectionImpl.Editor
 {
@@ -22,6 +23,11 @@ namespace CardCollectionImpl.Editor
             if (GUILayout.Button("Sync Group Rewards From GroupsJson"))
             {
                 SyncRewards((CardEventRewardsConfigSO)target);
+            }
+
+            if (GUILayout.Button("Export Rewards Json TextAsset"))
+            {
+                ExportRewardsJson((CardEventRewardsConfigSO)target);
             }
         }
 
@@ -99,6 +105,74 @@ namespace CardCollectionImpl.Editor
             EditorUtility.SetDirty(config);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+        }
+
+        private static void ExportRewardsJson(CardEventRewardsConfigSO config)
+        {
+            if (config == null)
+            {
+                return;
+            }
+
+            // Generate JSON via CardEventRewardsConfigSO.ToString()
+            var json = config.ToString();
+            if (string.IsNullOrEmpty(json))
+            {
+                Debug.LogWarning("[CardCollectionRewardsConfigSOEditor] Generated JSON is empty.");
+                return;
+            }
+
+            // Find the folder where CardEventRewardsConfigSO.cs script is located
+            var scriptGuids = AssetDatabase.FindAssets("CardEventRewardsConfigSO t:Script");
+            string scriptsFolder = "Assets/CardsCollectionImpl/Scripts/Rewards/ScriptableObjects";
+            if (scriptGuids != null && scriptGuids.Length > 0)
+            {
+                var scriptPath = AssetDatabase.GUIDToAssetPath(scriptGuids[0]);
+                if (!string.IsNullOrEmpty(scriptPath))
+                {
+                    scriptsFolder = Path.GetDirectoryName(scriptPath)?.Replace('\\', '/')
+                        ?? scriptsFolder;
+                }
+            }
+
+            // Ensure folder exists
+            if (!AssetDatabase.IsValidFolder(scriptsFolder))
+            {
+                Debug.LogError($"[CardCollectionRewardsConfigSOEditor] Target folder does not exist: {scriptsFolder}");
+                return;
+            }
+
+            // Build file path and write contents
+            var fileName = "CardsEventRewardsConfig.json";
+            var assetPath = $"{scriptsFolder}/{fileName}";
+            var fullPath = Path.GetFullPath(assetPath);
+
+            try
+            {
+                File.WriteAllText(fullPath, json);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[CardCollectionRewardsConfigSOEditor] Failed to write JSON file: {e}");
+                return;
+            }
+
+            // Import or reimport, then assign to config.GroupsJson
+            AssetDatabase.ImportAsset(assetPath);
+            var textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(assetPath);
+            if (textAsset == null)
+            {
+                Debug.LogError("[CardCollectionRewardsConfigSOEditor] Failed to load created TextAsset.");
+                return;
+            }
+
+            Undo.RecordObject(config, "Export Rewards Json TextAsset");
+            config.GroupsJson = textAsset;
+            EditorUtility.SetDirty(config);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            Debug.Log($"[CardCollectionRewardsConfigSOEditor] Exported rewards JSON to: {assetPath}");
         }
     }
 }
