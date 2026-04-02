@@ -37,7 +37,7 @@ namespace Game.Cheat
         {
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Create test events", () =>
             {
-                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 10, 30);
+                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 10, 300);
                 //var first = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, 30, 120);
                 var second = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, first.EndTimeUtc, TimeSpan.FromSeconds(30));
                 
@@ -127,7 +127,7 @@ namespace Game.Cheat
                 CustomParams = new Dictionary<string, string>
                 {
                     ["eventId"] = eventId,
-                    ["rewardsConfigAddress"] = "winter_collection_rewards",
+                    ["rewardsConfigAddress"] = "winter_collection_rewards_test",
                     ["cardsCollectionAddress"] = "winter_collection_cards",
                     ["cardGroupsAddress"] = "winter_collection_groups",
                     ["cardPacksAddress"] = "shared_card_packs_config",
@@ -151,7 +151,7 @@ namespace Game.Cheat
                 CustomParams = new Dictionary<string, string>
                 {
                     ["eventId"] = eventId,
-                    ["rewardsConfigAddress"] = "spring_collection_rewards",
+                    ["rewardsConfigAddress"] = "spring_collection_rewards_test",
                     ["cardsCollectionAddress"] = "spring_collection_cards",
                     ["cardGroupsAddress"] = "spring_collection_groups",
                     ["cardPacksAddress"] = "shared_card_packs_config",

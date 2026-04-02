@@ -173,6 +173,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Winter_Collection
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c585dc95dbc4c864ca0089ae6c8e769f
+    m_Address: winter_collection_rewards_test
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Winter_Collection
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ca7c4a09d84b61c4d8846565a8ed01b7
     m_Address: winter_collection_rewards
     m_ReadOnly: 0

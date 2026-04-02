@@ -19,7 +19,9 @@ namespace CardCollectionImpl
         [Test]
         public void TryHandleCollectionCompleted_WhenRewardIdIsMissing_ReturnsTrue()
         {
-            var rewardGrantService = new FakeRewardGrantService();
+            Assert.IsTrue(false);
+            //TODO update this test
+            /*var rewardGrantService = new FakeRewardGrantService();
             var rewardSpecProvider = new FakeRewardSpecProvider();
             
             //TODO moving file to different folders would cause fail
@@ -39,13 +41,15 @@ namespace CardCollectionImpl
             }).GetAwaiter().GetResult();
 
             Assert.IsTrue(result);
-            Assert.AreEqual(1, rewardSpecProvider.CreateCollectionCallsCount);
+            Assert.AreEqual(1, rewardSpecProvider.CreateCollectionCallsCount);*/
         }
 
         [Test]
         public void TryHandleCollectionCompleted_WhenRewardIdMatchesEventId_ReturnsTrueAndSendsReward()
         {
-            var rewardGrantService = new FakeRewardGrantService();
+            Assert.IsTrue(false);
+            //TODO update this test
+            /*var rewardGrantService = new FakeRewardGrantService();
             var rewardSpecProvider = new FakeRewardSpecProvider();
             
             var config = ScriptableObject.CreateInstance<CardCollectionRewardsConfigSO>();
@@ -64,7 +68,7 @@ namespace CardCollectionImpl
             }).GetAwaiter().GetResult();
 
             Assert.IsTrue(result);
-            Assert.AreEqual(1, rewardSpecProvider.CreateCollectionCallsCount);
+            Assert.AreEqual(1, rewardSpecProvider.CreateCollectionCallsCount);*/
         }
 
         private sealed class FakeRewardGrantService : IRewardGrantService

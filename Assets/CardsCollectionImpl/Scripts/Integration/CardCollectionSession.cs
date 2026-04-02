@@ -18,7 +18,6 @@ namespace CardCollectionImpl
         private readonly CardCollectionHudPresenter _hudPresenter;
         private readonly CardCollectionInventoryIntegration _inventoryIntegration;
 
-        private CardCollectionRewardsConfigSO _rewardsConfig;
         private CardCollectionEventModel _cardCollectionEventModel;
 
         private CancellationTokenSource _cts;
@@ -33,7 +32,6 @@ namespace CardCollectionImpl
             ICardCollectionApplicationFacade facade,
             CardCollectionHudPresenter hudPresenter,
             ICardCollectionRewardHandler rewardHandler,
-            CardCollectionRewardsConfigSO rewardsConfig,
             CardCollectionInventoryIntegration inventoryIntegration)
         {
             Context = context;
@@ -41,7 +39,6 @@ namespace CardCollectionImpl
             _uiManager = uiManager;
             _hudPresenter = hudPresenter;
             _rewardHandler = rewardHandler;
-            _rewardsConfig = rewardsConfig;
             _inventoryIntegration = inventoryIntegration;
         }
 
@@ -281,17 +278,6 @@ namespace CardCollectionImpl
             {
                 Debug.LogError($"[CardCollectionRuntime] HUD dispose error: {e}");
             }
-
-            try
-            {
-                ProdAddressablesWrapper.Release(_rewardsConfig);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[CardCollectionRuntime] Addressables release error: {e}");
-            }
-
-            _rewardsConfig = null;
         }
 
         private void ThrowIfDisposed()

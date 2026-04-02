@@ -143,6 +143,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Spring_Collection
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a93b3c6ff8a94394db0b025981c1bb60
+    m_Address: spring_collection_rewards_test
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_Collection
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b729146ffe995c84e95ddd45a3d3e782
     m_Address: Spring_Collection/card_7
     m_ReadOnly: 0

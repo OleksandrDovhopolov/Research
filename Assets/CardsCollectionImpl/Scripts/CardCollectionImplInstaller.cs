@@ -21,9 +21,10 @@ namespace CardCollectionImpl
             //TODO this should be in CardCollectionImplInstaller. but CardCollectionController crashes because cant resolve 
             // dependencies from CardCollectionImplInstaller. Bug in WindowFactoryDI -  var controller = _diContainer.Resolve<T>();
             // Card collection feature storage
-            builder.Register<ICardPackProvider, JsonCardPackProvider>(Lifetime.Singleton);
-            builder.Register<ICardsConfigProvider, JsonCardsConfigProvider>(Lifetime.Singleton);
-            builder.Register<ICardGroupsConfigProvider, JsonCardGroupsConfigProvider>(Lifetime.Singleton);
+            builder.Register<ICardPackProvider, AddressablesCardPackProvider>(Lifetime.Singleton);
+            builder.Register<ICardsConfigProvider, AddressablesCardsConfigProvider>(Lifetime.Singleton);
+            builder.Register<ICardGroupsConfigProvider, AddressablesCardGroupsConfigProvider>(Lifetime.Singleton);
+            builder.Register<IEventRewardsConfigProvider, AddressablesEventRewardsProvider>(Lifetime.Singleton);
             builder.Register<IEventCardsStorage, JsonEventCardsStorage>(Lifetime.Singleton);
             builder.Register<IPackSelectionStrategy, DefaultPackStrategy>(Lifetime.Singleton);
             builder.Register<ICardSelector, RandomCardSelector>(Lifetime.Singleton);

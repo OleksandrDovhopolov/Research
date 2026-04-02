@@ -58,5 +58,6 @@ namespace CardCollectionImpl
         public IReadOnlyList<CardPackConfig> Packs { get; set; }
         public IReadOnlyList<CardConfig> Cards { get; set; }
         public IReadOnlyList<CardCollectionGroupConfig> Groups { get; set; }
+        public IReadOnlyList<RewardConfig> Rewards { get; set; }
     }
 }

@@ -50,7 +50,6 @@ namespace CardCollectionImpl
                 facade: null,
                 hudPresenter: null,
                 rewardHandler: null,
-                rewardsConfig: null,
                 inventoryIntegration: null);
         }
 

@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace CardCollectionImpl
 {
-    public sealed class JsonCardsConfigProvider : BaseAddressablesProvider<List<CardConfig>, TextAsset>, ICardsConfigProvider
+    public sealed class AddressablesCardsConfigProvider : BaseAddressablesProvider<List<CardConfig>, TextAsset>, ICardsConfigProvider
     {
         [Serializable]
         private class Wrapper
