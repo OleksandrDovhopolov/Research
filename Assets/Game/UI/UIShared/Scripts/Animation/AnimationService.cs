@@ -17,6 +17,7 @@ namespace UIShared
 
         public void Animate(Vector3 from, int amount, string resourceId, Sprite sprite)
         {
+            Debug.LogWarning($"Debug Animate resourceId {resourceId}, amount {amount}, sprite {sprite}");
             var animationTargetId = Enum.TryParse<ResourceType>(resourceId, true, out var resourceType) ? resourceType.ToString() : "Inventory";
             var animationArgs = new ArgAnimateCurrency(from, animationTargetId,  amount, sprite);
             _animateCurrency.Animate(animationArgs, OnAnimationCompleted);

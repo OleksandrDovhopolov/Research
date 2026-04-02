@@ -40,8 +40,9 @@ namespace Rewards
                 return true;
             }
 
-            Debug.LogWarning($"[RewardSpecProvider] failed to find reward with ID {rewardId}. Default reward returned");
-            return _rewardSpecsById.TryGetValue(DefaultRewardId, out spec);
+            Debug.LogError($"[RewardSpecProvider] failed to find reward with ID {rewardId}. Default reward returned");
+            return false;
+            //return _rewardSpecsById.TryGetValue(DefaultRewardId, out spec);
         }
     }
 }

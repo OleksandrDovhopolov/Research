@@ -1050,8 +1050,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b6ab2ce69d91f54a945515851286083, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  resourceType: 2
-  animationType: Gold
+  animationType: Gems
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -1401,8 +1400,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b6ab2ce69d91f54a945515851286083, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  resourceType: 1
-  animationType: Gold
+  animationType: Energy
 --- !u!1 &715535942 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6065141952834952046, guid: 400ea445297394f4d9ef534260f2f5ee, type: 3}
@@ -1420,7 +1418,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b6ab2ce69d91f54a945515851286083, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  resourceType: 0
   animationType: Gold
 --- !u!1 &802872358
 GameObject:
@@ -1697,7 +1694,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b6ab2ce69d91f54a945515851286083, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  resourceType: 0
   animationType: Inventory
 --- !u!1 &1180951366
 GameObject:
