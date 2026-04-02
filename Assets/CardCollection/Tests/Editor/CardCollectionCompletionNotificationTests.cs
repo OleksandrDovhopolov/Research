@@ -47,7 +47,7 @@ namespace CardCollection.Tests
                 receivedEventId = data.EventId;
             };
 
-            yield return _facade.UnlockCard("b2").ToCoroutine();
+            yield return _facade.UnlockCards(new[] { "b2" }).ToCoroutine();
 
             Assert.AreEqual(1, notificationsCount);
             Assert.AreEqual(eventId, receivedEventId);
@@ -71,8 +71,8 @@ namespace CardCollection.Tests
             int notificationsCount = 0;
             _facade.OnCollectionCompleted += _ => notificationsCount++;
 
-            yield return _facade.UnlockCard("a1").ToCoroutine();
-            yield return _facade.UnlockCard("a2").ToCoroutine();
+            yield return _facade.UnlockCards(new[] { "a1" }).ToCoroutine();
+            yield return _facade.UnlockCards(new[] { "a2" }).ToCoroutine();
 
             Assert.AreEqual(0, notificationsCount);
         }
@@ -95,8 +95,8 @@ namespace CardCollection.Tests
             int notificationsCount = 0;
             _facade.OnCollectionCompleted += _ => notificationsCount++;
 
-            yield return _facade.UnlockCard("a2").ToCoroutine();
-            yield return _facade.UnlockCard("a2").ToCoroutine();
+            yield return _facade.UnlockCards(new[] { "a2" }).ToCoroutine();
+            yield return _facade.UnlockCards(new[] { "a2" }).ToCoroutine();
 
             Assert.AreEqual(1, notificationsCount);
         }

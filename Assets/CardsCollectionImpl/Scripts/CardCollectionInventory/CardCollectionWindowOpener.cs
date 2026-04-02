@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using Rewards;
 using UISystem;
 using UnityEngine;
 
@@ -13,18 +12,16 @@ namespace CardCollectionImpl
     public sealed class CardCollectionWindowOpener : ICardCollectionWindowOpener
     {
         private readonly UIManager _uiManager;
-        private readonly ICardCollectionModule _module;
-        private readonly ICardCollectionReader _reader;
         private readonly IReadOnlyList<CardConfig> _cards;
-        private readonly IReadOnlyList<CardCollectionGroupConfig> _groups;
-        private readonly ICardCollectionPointsAccount _pointsAccount;
-        private readonly IExchangeOfferProvider _exchangeOfferProvider;
+        private readonly ICardCollectionModule _collectionModule;
         private readonly ICardCollectionRewardHandler _rewardHandler;
+        private readonly IExchangeOfferProvider _exchangeOfferProvider;
+        private readonly IReadOnlyList<CardCollectionGroupConfig> _groups;
+        private readonly ICardCollectionPointsAccount _collectionPointsAccount;
         private readonly ICollectionProgressSnapshotService _collectionProgressSnapshotService;
 
         public CardCollectionWindowOpener(UIManager uiManager,
             ICardCollectionModule module,
-            ICardCollectionReader reader,
             ICardCollectionPointsAccount pointsAccount,
             IReadOnlyList<CardConfig> cards,
             IReadOnlyList<CardCollectionGroupConfig> groups,
@@ -33,9 +30,8 @@ namespace CardCollectionImpl
             ICardCollectionRewardHandler rewardHandler)
         {
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
-            _module = module ?? throw new ArgumentNullException(nameof(module));
-            _reader = reader ?? throw new ArgumentNullException(nameof(reader));
-            _pointsAccount = pointsAccount ?? throw new ArgumentNullException(nameof(pointsAccount));
+            _collectionModule = module ?? throw new ArgumentNullException(nameof(module));
+            _collectionPointsAccount = pointsAccount ?? throw new ArgumentNullException(nameof(pointsAccount));
             _rewardHandler = rewardHandler ?? throw new ArgumentNullException(nameof(rewardHandler));
             _cards = cards ?? throw new ArgumentNullException(nameof(cards));
             _groups = groups ?? throw new ArgumentNullException(nameof(groups));
@@ -45,14 +41,14 @@ namespace CardCollectionImpl
 
         public void OpenNewCardWindow(string packId)
         {
-            var pack = _module.GetPackById(packId);
+            var pack = _collectionModule.GetPackById(packId);
             if (pack == null)
             {
                 Debug.LogError($"Failed to find pack with id {packId}");
                 return;
             }
 
-            var args = new NewCardArgs(_module.EventId, packId, _module, _reader);
+            var args = new NewCardArgs(_collectionModule.EventId, packId, _collectionModule, _collectionPointsAccount);
             _uiManager.Show<NewCardController>(args);
         }
         
@@ -71,39 +67,37 @@ namespace CardCollectionImpl
                 groupConfigs.Add(groupConfig);
             }
             
-            var collectionData = await _reader.Load(ct);
+            var collectionData = await _collectionModule.Load(ct);
             
-            var args = new CardGroupCollectionArgs(_module.EventId, collectionData, groupConfigs, _rewardHandler);
+            var args = new CardGroupCollectionArgs(_collectionModule.EventId, collectionData, groupConfigs, _rewardHandler);
             _uiManager.Show<CardGroupCompletedWindow>(args);
         }
         
         public async UniTask OpenCardCollectionWindow(CancellationToken ct)
         {
-            var collectionData = await _reader.Load(ct);
+            var collectionData = await _collectionModule.Load(ct);
             
             var newCardsData = CardCollectionNewCardsDto.Create(collectionData, _cards);
             var newCardIds = newCardsData.NewCardIds;
 
             if (newCardIds.Count > 0)
             {
-                //TODO check do i need here await
-                await _module.ResetNewFlagsAsync(newCardIds, ct);
+                await _collectionModule.ResetNewFlagsAsync(newCardIds, ct);
             }
 
             _collectionProgressSnapshotService.TryGetSnapshot(out var snapshot);
+            _collectionProgressSnapshotService.SetSnapshot(collectionData);
             var args = new CardCollectionArgs(
                 newCardsData,
                 collectionData,
                 _exchangeOfferProvider,
                 _rewardHandler,
-                _pointsAccount,
+                _collectionPointsAccount,
                 snapshot,
-                _module.EventId,
+                _collectionModule.EventId,
                 _cards,
                 _groups);
             _uiManager.Show<CardCollectionController>(args);
-
-            _collectionProgressSnapshotService.SetSnapshot(collectionData);
         }
     }
 }

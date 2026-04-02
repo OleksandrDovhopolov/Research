@@ -12,23 +12,14 @@ namespace CardCollection.Core
         UniTask<List<string>> OpenPackAndUnlockAsync(string packId, CancellationToken ct = default);
         UniTask<List<CardProgressData>> GetCardsByIdsAsync(List<string> cardIds, CancellationToken ct = default);
         UniTask ResetNewFlagsAsync(IReadOnlyCollection<string> cardIds, CancellationToken ct = default);
+        UniTask UnlockCards(IReadOnlyCollection<string> cardIds, CancellationToken ct = default);
+        UniTask<EventCardsSaveData> Load(CancellationToken ct = default);
     }
 
     public interface ICardCollectionPointsAccount
     {
         UniTask<bool> TryAddPointsAsync(int pointsToAdd, CancellationToken ct = default);
         UniTask<bool> TrySpendPointsAsync(int pointsToSpend, CancellationToken ct = default);
-    }
-    
-    public interface ICardCollectionReader
-    {
-        UniTask<EventCardsSaveData> Load(CancellationToken ct = default);
         UniTask<int> GetCollectionPoints(CancellationToken ct = default);
-    }
-
-    public interface ICardCollectionUpdater
-    {
-        UniTask UnlockCard(string cardId, CancellationToken ct = default);
-        UniTask UnlockCards(IReadOnlyCollection<string> cardIds, CancellationToken ct = default);
     }
 }

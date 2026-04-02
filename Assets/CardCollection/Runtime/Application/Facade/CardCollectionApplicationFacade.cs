@@ -88,12 +88,6 @@ namespace CardCollection.Core
             return _pointsAccountService.TrySpendAsync(_eventId, pointsToSpend, ct);
         }
 
-        public async UniTask UnlockCard(string cardId, CancellationToken ct = default)
-        {
-            var result = await _unlockCardsUseCase.ExecuteAsync(_eventId, new[] { cardId }, ct);
-            PublishCompletion(result.NewlyCompletedGroupIds, result.CollectionCompleted);
-        }
-
         public async UniTask UnlockCards(IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
         {
             var result = await _unlockCardsUseCase.ExecuteAsync(_eventId, cardIds, ct);

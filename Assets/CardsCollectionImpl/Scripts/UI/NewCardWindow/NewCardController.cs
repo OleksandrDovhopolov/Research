@@ -11,19 +11,18 @@ namespace CardCollectionImpl
         public readonly string EventId;
         public readonly string PackId;
         public readonly ICardCollectionModule CollectionModule;
-        public readonly ICardCollectionReader CollectionReader;
+        public readonly ICardCollectionPointsAccount CollectionPointsAccount;
 
         public NewCardArgs(
             string eventId,
             string packId,
             ICardCollectionModule collectionModule,
-            ICardCollectionReader collectionReader)
+            ICardCollectionPointsAccount cardCollectionPointsAccount)
         {
             EventId =  eventId;
             PackId = packId;
             CollectionModule = collectionModule;
-            CollectionReader = collectionReader;
-            CollectionReader = collectionReader;
+            CollectionPointsAccount = cardCollectionPointsAccount;
         }
     }
 
@@ -52,7 +51,7 @@ namespace CardCollectionImpl
 
         private async UniTask GetNewCardsAsync(CancellationToken ct)
         {
-            var collectionPoints = await Args.CollectionReader.GetCollectionPoints();
+            var collectionPoints = await Args.CollectionPointsAccount.GetCollectionPoints(ct);
             View.UpdatePointsAmount(collectionPoints);
             
             var cardsIdList = await Args.CollectionModule.OpenPackAndUnlockAsync(Args.PackId, ct);

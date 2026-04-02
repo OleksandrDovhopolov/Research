@@ -10,11 +10,9 @@ namespace CardCollectionImpl
         CardCollectionSessionContext FeatureContext { get; }
 
         void SetActiveSession(CardCollectionSessionContext sessionContext);
-        void ClearSession();
-        bool TryGetCollectionUpdater(out ICardCollectionUpdater updater);
-        bool TryGetCollectionReader(out ICardCollectionReader reader);
+        bool TryGetCollectionModule(out ICardCollectionModule module);
         bool TryGetCollectionPointsAccount(out ICardCollectionPointsAccount pointsAccount);
-        UniTask ShowCardCollectionWindow(CancellationToken ct);
         UniTask ShowNewCardWindow(string packId, CancellationToken ct);
+        void ClearSession();
     }
 }

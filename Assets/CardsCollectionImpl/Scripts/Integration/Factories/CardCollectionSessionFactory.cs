@@ -68,7 +68,6 @@ namespace CardCollectionImpl
                 _uiManager,
                 facade,
                 facade,
-                facade,
                 staticData.Cards,
                 staticData.Groups,
                 exchangeOfferProvider,
@@ -77,7 +76,7 @@ namespace CardCollectionImpl
 
             var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
             var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, windowOpener);
-            var context = new CardCollectionSessionContext(facade, facade, facade, windowOpener);
+            var context = new CardCollectionSessionContext(facade, facade, windowOpener);
 
             return new CardCollectionSession(
                 _uiManager,

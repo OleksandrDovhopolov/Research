@@ -81,8 +81,6 @@ namespace CardCollection.Core
 
     public interface ICardCollectionApplicationFacade :
         ICardCollectionModule,
-        ICardCollectionReader,
-        ICardCollectionUpdater,
         ICardCollectionPointsAccount,
         ICardGroupCompletionNotifier,
         ICardCollectionCompletionNotifier,
