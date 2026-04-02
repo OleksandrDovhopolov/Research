@@ -104,7 +104,7 @@ namespace CardCollection.Core
             {
                 pack.OnPurchased();
                 OnPackPurchasedEvent?.Invoke(pack);
-                Debug.Log($"[CardCollectionService] Pack purchased: {pack.PackName}");
+                Debug.Log($"[CardCollectionService] Pack purchased: {pack.PackId}");
             }
         }
 

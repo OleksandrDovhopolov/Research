@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using CardCollection.Core;
 using Newtonsoft.Json;
+using UnityEngine;
 
 namespace CardCollectionImpl
 {
-    public class JsonCardsConfigProvider : BaseJsonProvider<List<CardConfig>>, ICardsConfigProvider
+    public sealed class JsonCardsConfigProvider : BaseAddressablesProvider<List<CardConfig>, TextAsset>, ICardsConfigProvider
     {
         [Serializable]
         private class Wrapper
@@ -13,11 +14,9 @@ namespace CardCollectionImpl
             public List<CardConfig> cards;
         }
         
-        protected override List<CardConfig> ParseJson(string json)
+        protected override List<CardConfig> ParseAsset(TextAsset asset)
         {
-            return JsonConvert.DeserializeObject<Wrapper>(json).cards;
+            return JsonConvert.DeserializeObject<Wrapper>(asset.text).cards;
         }
-
-        protected override List<CardConfig> CreateDefault() => new();
     }
 }

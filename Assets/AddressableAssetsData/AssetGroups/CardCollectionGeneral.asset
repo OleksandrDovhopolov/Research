@@ -42,6 +42,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 239c02c7d31c5984980722e6e67e7207
+    m_Address: shared_card_packs_config
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2d7a41fb5aea44a4db537ecdc7c0d25a
     m_Address: CardGroupWindow
     m_ReadOnly: 0

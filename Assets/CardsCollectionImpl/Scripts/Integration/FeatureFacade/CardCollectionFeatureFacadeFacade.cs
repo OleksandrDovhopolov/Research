@@ -21,8 +21,7 @@ namespace CardCollectionImpl
         public void ClearSession()
         {
             Debug.LogWarning($"[CardCollectionRuntime] ClearSession");
-            FeatureContext = null;
-            IsActive = false;
+            Dispose();
         }
 
         public bool TryGetCollectionModule(out ICardCollectionModule module)
@@ -53,7 +52,8 @@ namespace CardCollectionImpl
         
         public void Dispose()
         {
-            // TODO release managed resources here
+            FeatureContext = null;
+            IsActive = false;
         }
     }
 }

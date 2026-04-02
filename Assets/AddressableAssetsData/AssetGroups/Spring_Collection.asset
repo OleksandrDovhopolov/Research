@@ -71,6 +71,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Spring_Collection
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 55bf0528dfc32be45aa54db8e9346dd2
+    m_Address: spring_collection_groups
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_Collection
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 638e04498675fd743a6574fb350cd7c8
     m_Address: Spring_Collection/Icon_Magnetic
     m_ReadOnly: 0
@@ -97,6 +103,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7583240dcc064e149bc4d068209e6cf4
     m_Address: Spring_Collection/card_2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Spring_Collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7940ee88cb0dffb479111cf3855f50e0
+    m_Address: spring_collection_cards
     m_ReadOnly: 0
     m_SerializedLabels:
     - Spring_Collection

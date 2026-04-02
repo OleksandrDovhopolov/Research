@@ -65,6 +65,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Winter_Collection
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2c357afeec4b019428b26d1b61b25c27
+    m_Address: winter_collection_cards
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Winter_Collection
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 36b90eee0f43a0143871654a95c9e79d
     m_Address: Winter_Collection/card_10
     m_ReadOnly: 0
@@ -109,6 +115,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 489ed91ed2ef77644a3faa9312b520b6
     m_Address: Winter_Collection/card_9
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Winter_Collection
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4b5a6ed8177a7494c8d89137d8c0b277
+    m_Address: winter_collection_groups
     m_ReadOnly: 0
     m_SerializedLabels:
     - Winter_Collection

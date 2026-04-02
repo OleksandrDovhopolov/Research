@@ -95,7 +95,6 @@ namespace CardCollectionImpl
             HideEventWindows();
             SafeStopInternal(externalCt);
             
-            //TODO add collection name
             var args = new CollectionCompletedArgs(_cardCollectionEventModel.EventId, _cardCollectionEventModel.CollectionName);
             _uiManager.Show<CollectionCompletedController>(args);
 
@@ -104,15 +103,6 @@ namespace CardCollectionImpl
 
         private void HideEventWindows()
         {
-            /*if (_uiManager.IsWindowSpawned<CardGroupController>())
-            {
-                var window = _uiManager.GetWindowSync<CardGroupController>();
-                if (window.IsShown)
-                {
-                    _uiManager.Hide<CardGroupController>(true);
-                }
-            }*/
-            
             if (_uiManager.IsWindowSpawned<CardCollectionController>())
             {
                 var window = _uiManager.GetWindowSync<CardCollectionController>();
@@ -130,8 +120,6 @@ namespace CardCollectionImpl
                 {
                     _uiManager.Hide<NewCardController>();
                 }
-                //TODO release resources
-                //window.ReleaseSprites();
             }
             
             if (_uiManager.IsWindowSpawned<CollectionStartedController>())
@@ -142,12 +130,6 @@ namespace CardCollectionImpl
                     _uiManager.Hide<CollectionStartedController>(true);
                 }
             }
-            
-            //TODO uncomment this when new window created
-            /*if (_uiManager.IsWindowShown<CardGroupRewardController>())
-            {
-                _uiManager.Hide<CardGroupRewardController>();
-            }*/
         }
         
         public UniTask SettleAsync(CancellationToken ct)
@@ -163,13 +145,6 @@ namespace CardCollectionImpl
             if (!_isStarted)
                 return;
 
-            /*
-             TODO check this hint
-             * One Small Bug in your SafeStopInternal:You have ct.ThrowIfCancellationRequested(); inside your cleanup logic.
-             * Warning: Usually, you should not throw inside a cleanup/internal stop method.
-             * If the externalCt is cancelled, you might skip _hudPresenter.Unbind() or _inventoryIntegration.Detach(),
-             * leaving "ghost" event listeners active in your game.
-             */
             _isStarted = false;
 
             try
@@ -239,7 +214,6 @@ namespace CardCollectionImpl
                 return;
             }
 
-            Debug.LogWarning($"Test data {data.Groups.Count}");
             var rewardTasks = data.Groups
                 .Select(group => _rewardHandler.TryHandleGroupCompleted(group, ct))
                 .ToArray();

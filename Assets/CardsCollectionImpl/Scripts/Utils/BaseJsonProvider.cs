@@ -3,6 +3,7 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.ResourceManagement.Exceptions;
 
 namespace CardCollectionImpl
 {
@@ -28,15 +29,7 @@ namespace CardCollectionImpl
             ct.ThrowIfCancellationRequested();
 
             string jsonText = await LoadRawJsonAsync(fileName, ct);
-
-            if (string.IsNullOrEmpty(jsonText))
-            {
-                _cachedData = CreateDefault();
-                _isInitialized = true;
-                _loadedFileName = fileName;
-                return _cachedData;
-            }
-
+            
             try
             {
                 _cachedData = ParseJson(jsonText);
@@ -46,11 +39,7 @@ namespace CardCollectionImpl
             }
             catch (Exception ex)
             {
-                //TODO remove CreateDefault and _isInitialized. only throw error 
-                Debug.LogError($"[{GetType().Name}] Error parsing {fileName}: {ex.Message}");
-                _cachedData = CreateDefault();
-                _isInitialized = true;
-                _loadedFileName = fileName;
+                throw new OperationException(($"[{GetType().Name}] Error parsing {fileName}: {ex.Message}"));
             }
             
             return _cachedData;
@@ -71,7 +60,6 @@ namespace CardCollectionImpl
         }
 
         protected abstract T ParseJson(string json);
-        protected abstract T CreateDefault();
 
         public void ClearCache()
         {

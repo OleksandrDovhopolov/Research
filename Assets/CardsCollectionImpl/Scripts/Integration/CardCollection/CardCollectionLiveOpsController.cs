@@ -74,7 +74,6 @@ namespace CardCollectionImpl
         {
             ct.ThrowIfCancellationRequested();
             Debug.LogWarning($"[CardCollectionRuntime] Settle: {model.EventId}");
-            //TODO delete save file and make new with general data
             return _cardCollectionSession?.SettleAsync(ct) ?? UniTask.CompletedTask;
         }
         

@@ -52,6 +52,8 @@ namespace CardCollectionImpl
 
         private static void ValidateResources(params string[] paths)
         {
+            //TODO remove this method after firebase storage migration
+            return;
             foreach (var path in paths)
             {
                 var asset = Resources.Load<TextAsset>(path);
