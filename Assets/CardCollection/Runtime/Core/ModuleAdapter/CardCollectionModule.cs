@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using UnityEngine;
 
 namespace CardCollection.Core
 {
@@ -46,7 +45,7 @@ namespace CardCollection.Core
         {
             ct.ThrowIfCancellationRequested();
 
-            var data = await _context.CardProgressService.LoadAsync(_context.EventId, ct);
+            var data = await _context.ProgressQueryService.LoadAsync(_context.EventId, ct);
 
             if (data != null && data.Cards != null && data.Cards.Count > 0)
             {
@@ -77,49 +76,19 @@ namespace CardCollection.Core
 
         public async UniTask<List<string>> OpenPackAndUnlockAsync(string packId, CancellationToken ct = default)
         {
-            var pack = _context.CardPackService.GetPackById(packId);
-
-            if (pack == null)
+            var result = await _context.OpenPackUseCase.ExecuteAsync(_context.EventId, packId, ct);
+            if (result.OpenedCardIds.Count > 0)
             {
-                return new List<string>();
-            }
-            
-            var cardIds = await _context.CardRandomizer.GetRandomNewCardsAsync(pack, ct);
-            if (cardIds.Count > 0)
-            {
-                await AwardDuplicateCardPointsAsync(pack, cardIds, ct);
-                await _context.CardProgressService.UnlockCardsAsync(_context.EventId, cardIds, ct);
-                NotifyCompletedGroups(cardIds);
+                NotifyCompletedGroups(result.OpenedCardIds);
                 NotifyCollectionCompleted();
             }
 
-            return cardIds;
-        }
-
-        private async UniTask AwardDuplicateCardPointsAsync(CardPack cardPack, List<string> openedCardIds, CancellationToken ct)
-        {
-            if (openedCardIds == null || openedCardIds.Count == 0)
-            {
-                return;
-            }
-
-            var openedCardsProgress = await _context.CardProgressService.GetCardsByIdsAsync(_context.EventId, openedCardIds, ct);
-            var duplicatePoints = _context.DuplicateCardPointsCalculator.Calculate(openedCardIds, openedCardsProgress);
-            if (!duplicatePoints.HasPoints)
-            {
-                return;
-            }
-
-            await AddPointsAsync(duplicatePoints.TotalPoints, ct);
-
-            Debug.Log(
-                $"[CardCollectionModule] Added {duplicatePoints.TotalPoints} duplicate-card points after opening pack '{cardPack.PackId}'. " +
-                $"Cards: {string.Join(", ", duplicatePoints.AwardedCards)}");
+            return result.OpenedCardIds.ToList();
         }
 
         public UniTask<List<CardProgressData>> GetCardsByIdsAsync(List<string> cardIds, CancellationToken ct = default)
         {
-            return _context.CardProgressService.GetCardsByIdsAsync(_context.EventId, cardIds, ct);
+            return _context.ProgressQueryService.GetCardsByIdsAsync(_context.EventId, cardIds, ct);
         }
 
         public UniTask ResetNewFlagsAsync(IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
@@ -129,7 +98,7 @@ namespace CardCollection.Core
 
         internal async UniTask AddPointsAsync(int pointsToAdd, CancellationToken ct = default)
         {
-            await _context.CardProgressService.AddPointsAsync(_context.EventId, pointsToAdd, ct);
+            await _context.PointsAccountService.TryAddAsync(_context.EventId, pointsToAdd, ct);
         }
 
         public async UniTask<bool> TryAddPointsAsync(int pointsToAdd, CancellationToken ct = default)
@@ -140,7 +109,7 @@ namespace CardCollection.Core
 
         public UniTask<bool> TrySpendPointsAsync(int pointsToSpend, CancellationToken ct = default)
         {
-            return _context.CardProgressService.TrySpendPointsAsync(_context.EventId, pointsToSpend, ct);
+            return _context.PointsAccountService.TrySpendAsync(_context.EventId, pointsToSpend, ct);
         }
         
         public void Dispose()
@@ -155,8 +124,8 @@ namespace CardCollection.Core
             //TODO add here duplicate points. move from OpenPackAndUnlockAsync ? 
             try
             {
-                await _context.CardProgressService.UnlockCardAsync(_context.EventId, cardId, ct);
-                NotifyCompletedGroups(new[] { cardId });
+                var result = await _context.UnlockCardsUseCase.ExecuteAsync(_context.EventId, new[] { cardId }, ct);
+                NotifyCompletedGroups(result.NewlyUnlockedCardIds);
                 NotifyCollectionCompleted();
             }
             catch (OperationCanceledException)
@@ -180,8 +149,8 @@ namespace CardCollection.Core
 
             try
             {
-                await _context.CardProgressService.UnlockCardsAsync(_context.EventId, cardIds, ct);
-                NotifyCompletedGroups(cardIds);
+                var result = await _context.UnlockCardsUseCase.ExecuteAsync(_context.EventId, cardIds, ct);
+                NotifyCompletedGroups(result.NewlyUnlockedCardIds);
                 NotifyCollectionCompleted();
             }
             catch (OperationCanceledException)
@@ -225,7 +194,7 @@ namespace CardCollection.Core
         {
             try
             {
-                return await _context.CardProgressService.LoadAsync(_context.EventId, ct);
+                return await _context.ProgressQueryService.LoadAsync(_context.EventId, ct);
             }
             catch (OperationCanceledException)
             {
@@ -241,7 +210,7 @@ namespace CardCollection.Core
         {
             try
             {
-                return await _context.CardProgressService.GetMissingCardIdsAsync(_context.EventId, allCards, ct);
+                return await _context.ProgressQueryService.GetMissingCardIdsAsync(_context.EventId, allCards, ct);
             }
             catch (OperationCanceledException)
             {
@@ -255,7 +224,7 @@ namespace CardCollection.Core
 
         public async UniTask<int> GetCollectionPoints(CancellationToken ct = default)
         {
-            return await _context.CardProgressService.GetPoints(_context.EventId, ct);
+            return await _context.PointsAccountService.GetBalanceAsync(_context.EventId, ct);
         }
 
         public async UniTask Clear(CancellationToken ct = default)

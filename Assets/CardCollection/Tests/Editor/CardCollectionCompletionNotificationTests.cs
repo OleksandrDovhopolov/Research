@@ -109,12 +109,26 @@ namespace CardCollection.Tests
             List<CardDefinition> definitions,
             EventCardsSaveData initialData)
         {
+            var packProvider = new StubPackProvider();
+            var storage = new InMemoryEventCardsStorage(initialData);
+            var definitionProvider = new StubCardDefinitionProvider(definitions);
+            var selector = new StubCardSelector();
+            var pointsCalculator = new CardCollectionDuplicatePointsTests.MockCardPointsCalculator();
+            var cardPackService = new CardPackService(packProvider);
+            var cardRandomizer = new PackBasedCardsRandomizer(selector, definitionProvider);
+            var cardProgressService = new CardProgressService(storage);
+            var duplicateCalculator = new DuplicateCardPointsCalculator(definitionProvider, pointsCalculator);
+
             var config = new CardCollectionModuleConfig(
-                new StubPackProvider(),
-                new InMemoryEventCardsStorage(initialData),
-                new StubCardDefinitionProvider(definitions),
-                new StubCardSelector(),
-                new CardCollectionDuplicatePointsTests.MockCardPointsCalculator(),
+                packProvider,
+                storage,
+                definitionProvider,
+                selector,
+                pointsCalculator,
+                new OpenPackUseCase(cardPackService, cardRandomizer, cardProgressService, duplicateCalculator),
+                new UnlockCardsUseCase(cardProgressService),
+                new PointsAccountService(cardProgressService),
+                new CollectionProgressQueryService(cardProgressService),
                 eventId);
 
             return new CardCollectionModule(config);

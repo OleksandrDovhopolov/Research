@@ -145,6 +145,10 @@ namespace CardCollection.Tests
             var definitionProvider = new StubCardDefinitionProvider(new List<CardDefinition>());
             var selector = new StubCardSelector();
             var pointsCalculator = new CardCollectionDuplicatePointsTests.MockCardPointsCalculator();
+            var cardPackService = new CardPackService(packProvider);
+            var cardRandomizer = new PackBasedCardsRandomizer(selector, definitionProvider);
+            var cardProgressService = new CardProgressService(storage);
+            var duplicateCalculator = new DuplicateCardPointsCalculator(definitionProvider, pointsCalculator);
 
             var config = new CardCollectionModuleConfig(
                 packProvider,
@@ -152,6 +156,10 @@ namespace CardCollection.Tests
                 definitionProvider,
                 selector,
                 pointsCalculator,
+                new OpenPackUseCase(cardPackService, cardRandomizer, cardProgressService, duplicateCalculator),
+                new UnlockCardsUseCase(cardProgressService),
+                new PointsAccountService(cardProgressService),
+                new CollectionProgressQueryService(cardProgressService),
                 eventId);
 
             return new CardCollectionModule(config);

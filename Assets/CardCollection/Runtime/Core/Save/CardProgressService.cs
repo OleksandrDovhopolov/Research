@@ -255,7 +255,7 @@ namespace CardCollection.Core
             }
         }
 
-        internal async UniTask<HashSet<string>> GetMissingCardIdsAsync(string eventId, List<CardDefinition> allCards, CancellationToken ct = default)
+        public async UniTask<HashSet<string>> GetMissingCardIdsAsync(string eventId, List<CardDefinition> allCards, CancellationToken ct = default)
         {
             if (string.IsNullOrEmpty(eventId))
                 throw new ArgumentException("Event ID cannot be null or empty", nameof(eventId));

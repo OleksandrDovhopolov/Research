@@ -1,14 +1,11 @@
 {
-    "name": "CardCollection.Tests.Editor",
+    "name": "CardCollection.Application",
     "rootNamespace": "",
     "references": [
-        "CardCollection.Application",
         "GUID:783a0a365a6774210bf7eccf0f6f237a",
         "GUID:f51ebe6a0ceec4240a699833d6309b23"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

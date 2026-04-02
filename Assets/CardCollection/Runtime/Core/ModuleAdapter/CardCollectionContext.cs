@@ -17,6 +17,10 @@ namespace CardCollection.Core
         internal CardProgressService CardProgressService { get; }
         internal IDuplicateCardPointsCalculator DuplicateCardPointsCalculator { get; }
         internal ICardDefinitionProvider CardDefinitionProvider => _config.CardDefinitionProvider;
+        internal IOpenPackUseCase OpenPackUseCase => _config.OpenPackUseCase;
+        internal IUnlockCardsUseCase UnlockCardsUseCase => _config.UnlockCardsUseCase;
+        internal IPointsAccountService PointsAccountService => _config.PointsAccountService;
+        internal ICollectionProgressQueryService ProgressQueryService => _config.ProgressQueryService;
 
         public string EventId { get; }
 
@@ -30,10 +34,11 @@ namespace CardCollection.Core
             _config = config;
 
             EventId = _config.EventId;
-            CardPackService = new CardPackService(_config.PackProvider);
-            CardProgressService = new CardProgressService(_config.EventCardsStorage);
-            CardRandomizer = new PackBasedCardsRandomizer(_config.CardSelector, _config.CardDefinitionProvider);
-            DuplicateCardPointsCalculator = new DuplicateCardPointsCalculator(_config.CardDefinitionProvider, _config.CardPointsCalculator);
+            CardPackService = _config.SharedCardPackService ?? new CardPackService(_config.PackProvider);
+            CardProgressService = _config.SharedCardProgressService ?? new CardProgressService(_config.EventCardsStorage);
+            CardRandomizer = _config.SharedCardRandomizer ?? new PackBasedCardsRandomizer(_config.CardSelector, _config.CardDefinitionProvider);
+            DuplicateCardPointsCalculator = _config.SharedDuplicateCardPointsCalculator ??
+                                            new DuplicateCardPointsCalculator(_config.CardDefinitionProvider, _config.CardPointsCalculator);
         }
 
         public async UniTask InitializeAsync(CancellationToken ct = default)

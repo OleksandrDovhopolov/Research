@@ -23,13 +23,27 @@ namespace CardCollectionImpl
 
         public CardCollectionModule Create(CardCollectionStaticData staticData, string eventId)
         {
+            var cardDefinitionProvider = new DefaultCardDefinitionProvider(staticData.Cards);
+            var cardPackService = new CardPackService(_cardPackProvider);
+            var cardProgressService = new CardProgressService(_eventCardsStorage);
+            var cardRandomizer = new PackBasedCardsRandomizer(_cardSelector, cardDefinitionProvider);
+            var duplicatePointsCalculator = new DuplicateCardPointsCalculator(cardDefinitionProvider, _cardPointsCalculator);
+
             var moduleConfig = new CardCollectionModuleConfig(
                 _cardPackProvider,
                 _eventCardsStorage,
-                new DefaultCardDefinitionProvider(staticData.Cards),
+                cardDefinitionProvider,
                 _cardSelector,
                 _cardPointsCalculator,
-                eventId);
+                new OpenPackUseCase(cardPackService, cardRandomizer, cardProgressService, duplicatePointsCalculator),
+                new UnlockCardsUseCase(cardProgressService),
+                new PointsAccountService(cardProgressService),
+                new CollectionProgressQueryService(cardProgressService),
+                eventId,
+                cardPackService,
+                cardProgressService,
+                cardRandomizer,
+                duplicatePointsCalculator);
 
             return new CardCollectionModule(moduleConfig);
         }

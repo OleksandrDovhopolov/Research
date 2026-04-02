@@ -9,6 +9,14 @@ namespace CardCollection.Core
         public IEventCardsStorage EventCardsStorage { get; }
         public ICardDefinitionProvider CardDefinitionProvider { get; }
         public ICardPointsCalculator CardPointsCalculator { get; }
+        public IOpenPackUseCase OpenPackUseCase { get; }
+        public IUnlockCardsUseCase UnlockCardsUseCase { get; }
+        public IPointsAccountService PointsAccountService { get; }
+        public ICollectionProgressQueryService ProgressQueryService { get; }
+        public CardPackService SharedCardPackService { get; }
+        public CardProgressService SharedCardProgressService { get; }
+        public PackBasedCardsRandomizer SharedCardRandomizer { get; }
+        public IDuplicateCardPointsCalculator SharedDuplicateCardPointsCalculator { get; }
         public string EventId { get; }
 
         public CardCollectionModuleConfig (
@@ -17,7 +25,15 @@ namespace CardCollection.Core
             ICardDefinitionProvider cardDefinitionProvider,
             ICardSelector cardSelector,
             ICardPointsCalculator cardPointsCalculator,
-            string eventId = "default")
+            IOpenPackUseCase openPackUseCase,
+            IUnlockCardsUseCase unlockCardsUseCase,
+            IPointsAccountService pointsAccountService,
+            ICollectionProgressQueryService progressQueryService,
+            string eventId = "default",
+            CardPackService sharedCardPackService = null,
+            CardProgressService sharedCardProgressService = null,
+            PackBasedCardsRandomizer sharedCardRandomizer = null,
+            IDuplicateCardPointsCalculator sharedDuplicateCardPointsCalculator = null)
         {
             EventId = eventId;
             PackProvider = packProvider ?? throw new ArgumentNullException(nameof(packProvider));
@@ -25,6 +41,14 @@ namespace CardCollection.Core
             CardDefinitionProvider = cardDefinitionProvider ?? throw new ArgumentNullException(nameof(cardDefinitionProvider));
             CardSelector = cardSelector ?? throw new ArgumentNullException(nameof(cardSelector));
             CardPointsCalculator = cardPointsCalculator ?? throw new ArgumentNullException(nameof(cardPointsCalculator));
+            OpenPackUseCase = openPackUseCase ?? throw new ArgumentNullException(nameof(openPackUseCase));
+            UnlockCardsUseCase = unlockCardsUseCase ?? throw new ArgumentNullException(nameof(unlockCardsUseCase));
+            PointsAccountService = pointsAccountService ?? throw new ArgumentNullException(nameof(pointsAccountService));
+            ProgressQueryService = progressQueryService ?? throw new ArgumentNullException(nameof(progressQueryService));
+            SharedCardPackService = sharedCardPackService;
+            SharedCardProgressService = sharedCardProgressService;
+            SharedCardRandomizer = sharedCardRandomizer;
+            SharedDuplicateCardPointsCalculator = sharedDuplicateCardPointsCalculator;
         }
     }
 }
