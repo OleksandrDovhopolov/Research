@@ -11,13 +11,13 @@ namespace CardCollection.Tests
 {
     public class CardCollectionDuplicatePointsTests
     {
-        private CardCollectionModule _module;
+        private ICardCollectionApplicationFacade _facade;
 
         [TearDown]
         public void TearDown()
         {
-            _module?.Dispose();
-            _module = null;
+            _facade?.Dispose();
+            _facade = null;
         }
 
         [UnityTest]
@@ -45,13 +45,12 @@ namespace CardCollection.Tests
                 ("5", true),
                 ("6", true));
 
-            _module = CreateModule(eventId, packId, openedCardIds.Count, cardDefinitions, openedCardIds, initialData);
-
-            yield return _module.InitializeAsync().ToCoroutine();
-            yield return _module.OpenPackAndUnlockAsync(packId).ToCoroutine(_ => { });
+            yield return CreateFacadeInitialized(eventId, packId, openedCardIds.Count, cardDefinitions, openedCardIds, initialData)
+                .ToCoroutine(result => _facade = result);
+            yield return _facade.OpenPackAndUnlockAsync(packId).ToCoroutine(_ => { });
 
             EventCardsSaveData updatedData = null;
-            yield return _module.Load().ToCoroutine(result => updatedData = result);
+            yield return _facade.Load().ToCoroutine(result => updatedData = result);
 
             Assert.NotNull(updatedData);
             Assert.AreEqual(31, updatedData.Points, "Expected duplicate points: 1+2+3+5+10+10 = 31");
@@ -76,13 +75,12 @@ namespace CardCollection.Tests
                 ("10", true),
                 ("150", false));
 
-            _module = CreateModule(eventId, packId, openedCardIds.Count, cardDefinitions, openedCardIds, initialData);
-
-            yield return _module.InitializeAsync().ToCoroutine();
-            yield return _module.OpenPackAndUnlockAsync(packId).ToCoroutine(_ => { });
+            yield return CreateFacadeInitialized(eventId, packId, openedCardIds.Count, cardDefinitions, openedCardIds, initialData)
+                .ToCoroutine(result => _facade = result);
+            yield return _facade.OpenPackAndUnlockAsync(packId).ToCoroutine(_ => { });
 
             EventCardsSaveData updatedData = null;
-            yield return _module.Load().ToCoroutine(result => updatedData = result);
+            yield return _facade.Load().ToCoroutine(result => updatedData = result);
 
             Assert.NotNull(updatedData);
             Assert.AreEqual(10, updatedData.Points, "Expected only card 5 and 10 to add points: 7 + 1 + 2 = 10");
@@ -92,7 +90,20 @@ namespace CardCollection.Tests
             Assert.IsTrue(newlyOpenedCard.IsUnlocked);
         }
 
-        private static CardCollectionModule CreateModule(
+        private static async UniTask<ICardCollectionApplicationFacade> CreateFacadeInitialized(
+            string eventId,
+            string packId,
+            int packCardCount,
+            List<CardDefinition> cardDefinitions,
+            List<string> openedCardIds,
+            EventCardsSaveData initialData)
+        {
+            var facade = CreateFacade(eventId, packId, packCardCount, cardDefinitions, openedCardIds, initialData);
+            await facade.InitializeAsync(CancellationToken.None);
+            return facade;
+        }
+
+        private static CardCollectionApplicationFacade CreateFacade(
             string eventId,
             string packId,
             int packCardCount,
@@ -110,19 +121,19 @@ namespace CardCollection.Tests
             var cardProgressService = new CardProgressService(storage);
             var duplicateCalculator = new DuplicateCardPointsCalculator(definitionProvider, pointsCalculator);
 
-            var config = new CardCollectionModuleConfig(
-                packProvider,
-                storage,
+            var openUseCase = new OpenPackUseCase(cardPackService, cardRandomizer, cardProgressService, duplicateCalculator, definitionProvider);
+            var unlockUseCase = new UnlockCardsUseCase(cardProgressService, definitionProvider);
+            var pointsService = new PointsAccountService(cardProgressService);
+            var queryService = new CollectionProgressQueryService(cardProgressService);
+            return new CardCollectionApplicationFacade(
+                eventId,
                 definitionProvider,
-                selector,
-                pointsCalculator,
-                new OpenPackUseCase(cardPackService, cardRandomizer, cardProgressService, duplicateCalculator),
-                new UnlockCardsUseCase(cardProgressService),
-                new PointsAccountService(cardProgressService),
-                new CollectionProgressQueryService(cardProgressService),
-                eventId);
-
-            return new CardCollectionModule(config);
+                cardPackService,
+                cardProgressService,
+                openUseCase,
+                unlockUseCase,
+                pointsService,
+                queryService);
         }
 
         private static EventCardsSaveData CreateSaveData(

@@ -13,7 +13,7 @@ namespace CardCollectionImpl
     public sealed class CardCollectionSession : IDisposable
     {
         private readonly UIManager _uiManager;
-        private readonly CardCollectionModule _module;
+        private readonly ICardCollectionApplicationFacade _facade;
         private readonly ICardCollectionRewardHandler _rewardHandler;
         private readonly CardCollectionHudPresenter _hudPresenter;
         private readonly CardCollectionInventoryIntegration _inventoryIntegration;
@@ -31,7 +31,7 @@ namespace CardCollectionImpl
         public CardCollectionSession(
             UIManager uiManager,
             CardCollectionSessionContext context,
-            CardCollectionModule module,
+            ICardCollectionApplicationFacade facade,
             CardCollectionHudPresenter hudPresenter,
             ICardCollectionRewardHandler rewardHandler,
             CardCollectionRewardsConfigSO rewardsConfig,
@@ -39,7 +39,7 @@ namespace CardCollectionImpl
             ICollectionProgressSnapshotService snapshotService)
         {
             Context = context;
-            _module = module;
+            _facade = facade;
             _uiManager = uiManager;
             _hudPresenter = hudPresenter;
             _rewardHandler = rewardHandler;
@@ -62,13 +62,11 @@ namespace CardCollectionImpl
             
             try
             {
-                await _module.InitializeAsync(ct);
-
-                var data = await _module.Load(ct);
+                var data = await _facade.Load(ct);
                 _snapshotService.SetSnapshot(data);
 
-                _module.OnGroupCompleted += OnGroupCompleted;
-                _module.OnCollectionCompleted += OnCollectionCompleted;
+                _facade.OnGroupCompleted += OnGroupCompleted;
+                _facade.OnCollectionCompleted += OnCollectionCompleted;
 
                 _inventoryIntegration.Attach();
                 _hudPresenter.Bind(scheduleItem, ct);
@@ -186,8 +184,8 @@ namespace CardCollectionImpl
             }
             catch { /* ignore */ }
 
-            _module.OnGroupCompleted -= OnGroupCompleted;
-            _module.OnCollectionCompleted -= OnCollectionCompleted;
+            _facade.OnGroupCompleted -= OnGroupCompleted;
+            _facade.OnCollectionCompleted -= OnCollectionCompleted;
 
             try
             {
@@ -209,7 +207,7 @@ namespace CardCollectionImpl
 
             try
             {
-                _module?.Dispose();
+                _facade?.Dispose();
             }
             catch (Exception e)
             {

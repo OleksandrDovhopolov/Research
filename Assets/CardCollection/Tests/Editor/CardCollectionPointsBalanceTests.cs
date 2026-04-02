@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
@@ -12,64 +11,48 @@ namespace CardCollection.Tests
 {
     public class CardCollectionPointsBalanceTests
     {
-        private CardCollectionModule _module;
+        private ICardCollectionApplicationFacade _facade;
 
         [TearDown]
         public void TearDown()
         {
-            _module?.Dispose();
-            _module = null;
+            _facade?.Dispose();
+            _facade = null;
         }
 
         [UnityTest]
         public IEnumerator AddPointsAsync_InternalMethod_AddsPointsToCollectionBalance()
         {
-            _module = CreateModule(points: 5);
-
-            yield return _module.InitializeAsync().ToCoroutine();
-
-            var addPointsMethod = typeof(CardCollectionModule).GetMethod("AddPointsAsync", BindingFlags.Instance | BindingFlags.NonPublic);
-            Assert.NotNull(addPointsMethod, "Expected internal AddPointsAsync method on CardCollectionModule.");
-
-            var addTask = (UniTask)addPointsMethod.Invoke(_module, new object[] { 7, CancellationToken.None });
-            yield return addTask.ToCoroutine();
+            yield return CreateFacadeInitialized(points: 5).ToCoroutine(result => _facade = result);
+            yield return _facade.TryAddPointsAsync(7, CancellationToken.None).ToCoroutine(_ => { });
 
             int points = 0;
-            yield return _module.GetCollectionPoints().ToCoroutine(result => points = result);
+            yield return _facade.GetCollectionPoints().ToCoroutine(result => points = result);
             Assert.AreEqual(12, points);
         }
 
         [UnityTest]
         public IEnumerator AddPointsAsync_InternalMethod_CanBeAppliedMultipleTimes()
         {
-            _module = CreateModule(points: 2);
-            yield return _module.InitializeAsync().ToCoroutine();
-
-            var addPointsMethod = typeof(CardCollectionModule).GetMethod("AddPointsAsync", BindingFlags.Instance | BindingFlags.NonPublic);
-            Assert.NotNull(addPointsMethod, "Expected internal AddPointsAsync method on CardCollectionModule.");
-
-            var firstAddTask = (UniTask)addPointsMethod.Invoke(_module, new object[] { 3, CancellationToken.None });
-            yield return firstAddTask.ToCoroutine();
-
-            var secondAddTask = (UniTask)addPointsMethod.Invoke(_module, new object[] { 4, CancellationToken.None });
-            yield return secondAddTask.ToCoroutine();
+            yield return CreateFacadeInitialized(points: 2).ToCoroutine(result => _facade = result);
+            yield return _facade.TryAddPointsAsync(3, CancellationToken.None).ToCoroutine(_ => { });
+            yield return _facade.TryAddPointsAsync(4, CancellationToken.None).ToCoroutine(_ => { });
 
             int points = 0;
-            yield return _module.GetCollectionPoints().ToCoroutine(result => points = result);
+            yield return _facade.GetCollectionPoints().ToCoroutine(result => points = result);
             Assert.AreEqual(9, points);
         }
 
         [UnityTest]
         public IEnumerator TrySpendPointsAsync_WhenEnoughPoints_ReturnsTrueAndDecreasesBalance()
         {
-            _module = CreateModule(points: 10);
-            yield return _module.InitializeAsync().ToCoroutine();
+            yield return CreateFacadeInitialized(points: 10).ToCoroutine(result => _facade = result);
 
             bool spendResult = false;
-            yield return _module.TrySpendPointsAsync(6).ToCoroutine(result => spendResult = result);
+            yield return _facade.TrySpendPointsAsync(6).ToCoroutine(result => spendResult = result);
 
             int points = 0;
-            yield return _module.GetCollectionPoints().ToCoroutine(result => points = result);
+            yield return _facade.GetCollectionPoints().ToCoroutine(result => points = result);
 
             Assert.IsTrue(spendResult);
             Assert.AreEqual(4, points);
@@ -78,14 +61,13 @@ namespace CardCollection.Tests
         [UnityTest]
         public IEnumerator TrySpendPointsAsync_WhenNotEnoughPoints_ReturnsFalseAndKeepsBalance()
         {
-            _module = CreateModule(points: 3);
-            yield return _module.InitializeAsync().ToCoroutine();
+            yield return CreateFacadeInitialized(points: 3).ToCoroutine(result => _facade = result);
 
             bool spendResult = true;
-            yield return _module.TrySpendPointsAsync(5).ToCoroutine(result => spendResult = result);
+            yield return _facade.TrySpendPointsAsync(5).ToCoroutine(result => spendResult = result);
 
             int points = 0;
-            yield return _module.GetCollectionPoints().ToCoroutine(result => points = result);
+            yield return _facade.GetCollectionPoints().ToCoroutine(result => points = result);
 
             Assert.IsFalse(spendResult);
             Assert.AreEqual(3, points);
@@ -94,20 +76,14 @@ namespace CardCollection.Tests
         [UnityTest]
         public IEnumerator AddAndSpendPoints_WithZeroValues_KeepBalanceUnchanged()
         {
-            _module = CreateModule(points: 8);
-            yield return _module.InitializeAsync().ToCoroutine();
-
-            var addPointsMethod = typeof(CardCollectionModule).GetMethod("AddPointsAsync", BindingFlags.Instance | BindingFlags.NonPublic);
-            Assert.NotNull(addPointsMethod, "Expected internal AddPointsAsync method on CardCollectionModule.");
-
-            var addTask = (UniTask)addPointsMethod.Invoke(_module, new object[] { 0, CancellationToken.None });
-            yield return addTask.ToCoroutine();
+            yield return CreateFacadeInitialized(points: 8).ToCoroutine(result => _facade = result);
+            yield return _facade.TryAddPointsAsync(0, CancellationToken.None).ToCoroutine(_ => { });
 
             bool spendResult = false;
-            yield return _module.TrySpendPointsAsync(0).ToCoroutine(result => spendResult = result);
+            yield return _facade.TrySpendPointsAsync(0).ToCoroutine(result => spendResult = result);
 
             int points = 0;
-            yield return _module.GetCollectionPoints().ToCoroutine(result => points = result);
+            yield return _facade.GetCollectionPoints().ToCoroutine(result => points = result);
 
             Assert.IsTrue(spendResult);
             Assert.AreEqual(8, points);
@@ -116,31 +92,31 @@ namespace CardCollection.Tests
         [UnityTest]
         public IEnumerator AddAndSpendPoints_WithNegativeValues_KeepBalanceUnchanged()
         {
-            _module = CreateModule(points: 8);
-            yield return _module.InitializeAsync().ToCoroutine();
-
-            var addPointsMethod = typeof(CardCollectionModule).GetMethod("AddPointsAsync", BindingFlags.Instance | BindingFlags.NonPublic);
-            Assert.NotNull(addPointsMethod, "Expected internal AddPointsAsync method on CardCollectionModule.");
-
-            var addTask = (UniTask)addPointsMethod.Invoke(_module, new object[] { -5, CancellationToken.None });
-            yield return addTask.ToCoroutine();
+            yield return CreateFacadeInitialized(points: 8).ToCoroutine(result => _facade = result);
+            yield return _facade.TryAddPointsAsync(-5, CancellationToken.None).ToCoroutine(_ => { });
 
             bool spendResult = false;
-            yield return _module.TrySpendPointsAsync(-3).ToCoroutine(result => spendResult = result);
+            yield return _facade.TrySpendPointsAsync(-3).ToCoroutine(result => spendResult = result);
 
             int points = 0;
-            yield return _module.GetCollectionPoints().ToCoroutine(result => points = result);
+            yield return _facade.GetCollectionPoints().ToCoroutine(result => points = result);
 
             Assert.IsTrue(spendResult);
             Assert.AreEqual(8, points);
         }
 
-        private static CardCollectionModule CreateModule(int points)
+        private static async UniTask<ICardCollectionApplicationFacade> CreateFacadeInitialized(int points)
+        {
+            var facade = CreateFacade(points);
+            await facade.InitializeAsync(CancellationToken.None);
+            return facade;
+        }
+
+        private static CardCollectionApplicationFacade CreateFacade(int points)
         {
             const string eventId = "test";
-            const string packId = "test_pack";
 
-            var packProvider = new StubPackProvider(packId);
+            var packProvider = new StubPackProvider("test_pack");
             var storage = new InMemoryEventCardsStorage(CreateSaveData(eventId, points));
             var definitionProvider = new StubCardDefinitionProvider(new List<CardDefinition>());
             var selector = new StubCardSelector();
@@ -149,20 +125,19 @@ namespace CardCollection.Tests
             var cardRandomizer = new PackBasedCardsRandomizer(selector, definitionProvider);
             var cardProgressService = new CardProgressService(storage);
             var duplicateCalculator = new DuplicateCardPointsCalculator(definitionProvider, pointsCalculator);
-
-            var config = new CardCollectionModuleConfig(
-                packProvider,
-                storage,
+            var openUseCase = new OpenPackUseCase(cardPackService, cardRandomizer, cardProgressService, duplicateCalculator, definitionProvider);
+            var unlockUseCase = new UnlockCardsUseCase(cardProgressService, definitionProvider);
+            var pointsService = new PointsAccountService(cardProgressService);
+            var queryService = new CollectionProgressQueryService(cardProgressService);
+            return new CardCollectionApplicationFacade(
+                eventId,
                 definitionProvider,
-                selector,
-                pointsCalculator,
-                new OpenPackUseCase(cardPackService, cardRandomizer, cardProgressService, duplicateCalculator),
-                new UnlockCardsUseCase(cardProgressService),
-                new PointsAccountService(cardProgressService),
-                new CollectionProgressQueryService(cardProgressService),
-                eventId);
-
-            return new CardCollectionModule(config);
+                cardPackService,
+                cardProgressService,
+                openUseCase,
+                unlockUseCase,
+                pointsService,
+                queryService);
         }
 
         private static EventCardsSaveData CreateSaveData(string eventId, int points)

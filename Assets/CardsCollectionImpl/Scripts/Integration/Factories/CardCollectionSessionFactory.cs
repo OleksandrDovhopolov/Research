@@ -45,7 +45,7 @@ namespace CardCollectionImpl
         public async UniTask<CardCollectionSession> CreateAsync(
             CardCollectionEventModel model,
             CardCollectionStaticData staticData,
-            CardCollectionModule module,
+            ICardCollectionApplicationFacade facade,
             CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
@@ -66,9 +66,9 @@ namespace CardCollectionImpl
 
             var windowOpener = new CardCollectionWindowOpener(
                 _uiManager,
-                module,
-                module,
-                module,
+                facade,
+                facade,
+                facade,
                 staticData.Cards,
                 staticData.Groups,
                 exchangeOfferProvider,
@@ -77,12 +77,12 @@ namespace CardCollectionImpl
 
             var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
             var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, windowOpener);
-            var context = new CardCollectionSessionContext(module, module, module, windowOpener);
+            var context = new CardCollectionSessionContext(facade, facade, facade, windowOpener);
 
             return new CardCollectionSession(
                 _uiManager,
                 context,
-                module,
+                facade,
                 hudPresenter,
                 rewardHandler,
                 rewardsConfig,

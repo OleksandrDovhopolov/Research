@@ -10,7 +10,7 @@ namespace CardCollectionImpl
         UniTask<CardCollectionSession> CreateAsync(
             CardCollectionEventModel model,
             CardCollectionStaticData staticData,
-            CardCollectionModule module,
+            ICardCollectionApplicationFacade facade,
             CancellationToken ct);
     }
 }

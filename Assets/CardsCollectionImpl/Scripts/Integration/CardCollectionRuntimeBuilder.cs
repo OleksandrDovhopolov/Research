@@ -11,18 +11,18 @@ namespace CardCollectionImpl
     {
         private readonly ICardCollectionCacheService _cardCollectionCacheService;
         private readonly ICardCollectionStaticDataLoader _staticDataLoader;
-        private readonly ICardCollectionModuleFactory _moduleFactory;
+        private readonly ICardCollectionApplicationFacadeFactory _facadeFactory;
         private readonly ICardCollectionSessionFactory _sessionFactory;
         
         public CardCollectionRuntimeBuilder(
             ICardCollectionCacheService  cardCollectionCacheService,
             ICardCollectionStaticDataLoader staticDataLoader,
-            ICardCollectionModuleFactory moduleFactory,
+            ICardCollectionApplicationFacadeFactory facadeFactory,
             ICardCollectionSessionFactory sessionFactory)
         {
             _cardCollectionCacheService = cardCollectionCacheService;
             _staticDataLoader = staticDataLoader;
-            _moduleFactory = moduleFactory;
+            _facadeFactory = facadeFactory;
             _sessionFactory = sessionFactory;
         }
         
@@ -38,16 +38,16 @@ namespace CardCollectionImpl
             var staticData = await _staticDataLoader.LoadAsync(model, ct);
 
             _cardCollectionCacheService.Initialize(staticData.Cards);
-            CardCollectionModule module = null;
+            ICardCollectionApplicationFacade facade = null;
             
             try
             {
-                module = _moduleFactory.Create(staticData, model.EventId);
-                return await _sessionFactory.CreateAsync(model, staticData, module, ct);
+                facade = await _facadeFactory.CreateInitializedAsync(staticData, model.EventId, ct);
+                return await _sessionFactory.CreateAsync(model, staticData, facade, ct);
             }
             catch
             {
-                module?.Dispose();
+                facade?.Dispose();
                 throw;
             }
         }

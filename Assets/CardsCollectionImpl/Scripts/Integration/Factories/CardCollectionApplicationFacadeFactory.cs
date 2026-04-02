@@ -1,15 +1,17 @@
+using System.Threading;
 using CardCollection.Core;
+using Cysharp.Threading.Tasks;
 
 namespace CardCollectionImpl
 {
-    public sealed class CardCollectionModuleFactory : ICardCollectionModuleFactory
+    public sealed class CardCollectionApplicationFacadeFactory : ICardCollectionApplicationFacadeFactory
     {
         private readonly ICardPackProvider _cardPackProvider;
         private readonly IEventCardsStorage _eventCardsStorage;
         private readonly ICardSelector _cardSelector;
         private readonly ICardPointsCalculator _cardPointsCalculator;
 
-        public CardCollectionModuleFactory(
+        public CardCollectionApplicationFacadeFactory(
             ICardPackProvider cardPackProvider,
             IEventCardsStorage eventCardsStorage,
             ICardSelector cardSelector,
@@ -21,31 +23,37 @@ namespace CardCollectionImpl
             _cardPointsCalculator = cardPointsCalculator;
         }
 
-        public CardCollectionModule Create(CardCollectionStaticData staticData, string eventId)
+        public async UniTask<ICardCollectionApplicationFacade> CreateInitializedAsync(
+            CardCollectionStaticData staticData,
+            string eventId,
+            CancellationToken ct)
         {
             var cardDefinitionProvider = new DefaultCardDefinitionProvider(staticData.Cards);
             var cardPackService = new CardPackService(_cardPackProvider);
             var cardProgressService = new CardProgressService(_eventCardsStorage);
             var cardRandomizer = new PackBasedCardsRandomizer(_cardSelector, cardDefinitionProvider);
             var duplicatePointsCalculator = new DuplicateCardPointsCalculator(cardDefinitionProvider, _cardPointsCalculator);
+            var openPackUseCase = new OpenPackUseCase(
+                cardPackService,
+                cardRandomizer,
+                cardProgressService,
+                duplicatePointsCalculator,
+                cardDefinitionProvider);
+            var unlockCardsUseCase = new UnlockCardsUseCase(cardProgressService, cardDefinitionProvider);
+            var pointsAccountService = new PointsAccountService(cardProgressService);
+            var progressQueryService = new CollectionProgressQueryService(cardProgressService);
 
-            var moduleConfig = new CardCollectionModuleConfig(
-                _cardPackProvider,
-                _eventCardsStorage,
-                cardDefinitionProvider,
-                _cardSelector,
-                _cardPointsCalculator,
-                new OpenPackUseCase(cardPackService, cardRandomizer, cardProgressService, duplicatePointsCalculator),
-                new UnlockCardsUseCase(cardProgressService),
-                new PointsAccountService(cardProgressService),
-                new CollectionProgressQueryService(cardProgressService),
+            var facade = new CardCollectionApplicationFacade(
                 eventId,
+                cardDefinitionProvider,
                 cardPackService,
                 cardProgressService,
-                cardRandomizer,
-                duplicatePointsCalculator);
-
-            return new CardCollectionModule(moduleConfig);
+                openPackUseCase,
+                unlockCardsUseCase,
+                pointsAccountService,
+                progressQueryService);
+            await facade.InitializeAsync(ct);
+            return facade;
         }
     }
 }

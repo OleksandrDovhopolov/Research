@@ -36,7 +36,7 @@ namespace CardCollectionImpl
             
             // Feature session builder
             builder.Register<ICardCollectionStaticDataLoader, CardCollectionStaticDataLoader>(Lifetime.Singleton);
-            builder.Register<ICardCollectionModuleFactory, CardCollectionModuleFactory>(Lifetime.Singleton);
+            builder.Register<ICardCollectionApplicationFacadeFactory, CardCollectionApplicationFacadeFactory>(Lifetime.Singleton);
             builder.Register<ICardCollectionSessionFactory, CardCollectionSessionFactory>(Lifetime.Singleton);
             builder.Register<ICardCollectionRuntimeBuilder, CardCollectionRuntimeBuilder>(Lifetime.Singleton);
             

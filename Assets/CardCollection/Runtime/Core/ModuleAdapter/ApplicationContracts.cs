@@ -4,40 +4,66 @@ using Cysharp.Threading.Tasks;
 
 namespace CardCollection.Core
 {
-    public readonly struct OpenPackResult
+    public readonly struct OpenPackResultDto
     {
-        public static readonly OpenPackResult Empty = new(System.Array.Empty<string>(), 0);
+        public static readonly OpenPackResultDto Empty = new(
+            System.Array.Empty<string>(),
+            System.Array.Empty<string>(),
+            false,
+            0);
 
-        public IReadOnlyList<string> OpenedCardIds { get; }
-        public int DuplicatePointsAwarded { get; }
+        public IReadOnlyList<string> UnlockedCardIds { get; }
+        public IReadOnlyList<string> NewlyCompletedGroupIds { get; }
+        public bool CollectionCompleted { get; }
+        public int AwardedDuplicatePoints { get; }
 
-        public OpenPackResult(IReadOnlyList<string> openedCardIds, int duplicatePointsAwarded)
+        public OpenPackResultDto(
+            IReadOnlyList<string> unlockedCardIds,
+            IReadOnlyList<string> newlyCompletedGroupIds,
+            bool collectionCompleted,
+            int awardedDuplicatePoints)
         {
-            OpenedCardIds = openedCardIds ?? System.Array.Empty<string>();
-            DuplicatePointsAwarded = duplicatePointsAwarded;
+            UnlockedCardIds = unlockedCardIds ?? System.Array.Empty<string>();
+            NewlyCompletedGroupIds = newlyCompletedGroupIds ?? System.Array.Empty<string>();
+            CollectionCompleted = collectionCompleted;
+            AwardedDuplicatePoints = awardedDuplicatePoints;
         }
     }
 
-    public readonly struct UnlockCardsResult
+    public readonly struct UnlockCardsResultDto
     {
-        public static readonly UnlockCardsResult Empty = new(System.Array.Empty<string>());
+        public static readonly UnlockCardsResultDto Empty = new(
+            System.Array.Empty<string>(),
+            System.Array.Empty<string>(),
+            false,
+            0);
 
-        public IReadOnlyList<string> NewlyUnlockedCardIds { get; }
+        public IReadOnlyList<string> UnlockedCardIds { get; }
+        public IReadOnlyList<string> NewlyCompletedGroupIds { get; }
+        public bool CollectionCompleted { get; }
+        public int AwardedDuplicatePoints { get; }
 
-        public UnlockCardsResult(IReadOnlyList<string> newlyUnlockedCardIds)
+        public UnlockCardsResultDto(
+            IReadOnlyList<string> unlockedCardIds,
+            IReadOnlyList<string> newlyCompletedGroupIds,
+            bool collectionCompleted,
+            int awardedDuplicatePoints)
         {
-            NewlyUnlockedCardIds = newlyUnlockedCardIds ?? System.Array.Empty<string>();
+            UnlockedCardIds = unlockedCardIds ?? System.Array.Empty<string>();
+            NewlyCompletedGroupIds = newlyCompletedGroupIds ?? System.Array.Empty<string>();
+            CollectionCompleted = collectionCompleted;
+            AwardedDuplicatePoints = awardedDuplicatePoints;
         }
     }
 
     public interface IOpenPackUseCase
     {
-        UniTask<OpenPackResult> ExecuteAsync(string eventId, string packId, CancellationToken ct = default);
+        UniTask<OpenPackResultDto> ExecuteAsync(string eventId, string packId, CancellationToken ct = default);
     }
 
     public interface IUnlockCardsUseCase
     {
-        UniTask<UnlockCardsResult> ExecuteAsync(string eventId, IReadOnlyCollection<string> cardIds, CancellationToken ct = default);
+        UniTask<UnlockCardsResultDto> ExecuteAsync(string eventId, IReadOnlyCollection<string> cardIds, CancellationToken ct = default);
     }
 
     public interface IPointsAccountService
@@ -52,5 +78,16 @@ namespace CardCollection.Core
         UniTask<EventCardsSaveData> LoadAsync(string eventId, CancellationToken ct = default);
         UniTask<List<CardProgressData>> GetCardsByIdsAsync(string eventId, List<string> cardIds, CancellationToken ct = default);
         UniTask<HashSet<string>> GetMissingCardIdsAsync(string eventId, List<CardDefinition> allCards, CancellationToken ct = default);
+    }
+
+    public interface ICardCollectionApplicationFacade :
+        ICardCollectionModule,
+        ICardCollectionReader,
+        ICardCollectionUpdater,
+        ICardCollectionPointsAccount,
+        ICardGroupCompletionNotifier,
+        ICardCollectionCompletionNotifier,
+        System.IDisposable
+    {
     }
 }
