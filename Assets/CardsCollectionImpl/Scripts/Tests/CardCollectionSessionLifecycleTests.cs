@@ -51,8 +51,7 @@ namespace CardCollectionImpl
                 hudPresenter: null,
                 rewardHandler: null,
                 rewardsConfig: null,
-                inventoryIntegration: null,
-                snapshotService: null);
+                inventoryIntegration: null);
         }
 
         private static void SetPrivateField<T>(object target, string fieldName, T value)

@@ -3,39 +3,29 @@ using CardCollection.Core;
 
 namespace CardCollectionImpl
 {
-    public sealed class CollectionProgressSnapshotService : ICollectionProgressSnapshotService
+    public sealed class CollectionProgressSnapshotBuilder : ICollectionProgressSnapshotBuilder
     {
-        private bool _hasSnapshot;
-        private CollectionProgressSnapshot _snapshot;
-
         private readonly ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
         private readonly IReadOnlyList<CardCollectionGroupConfig> _cardCollectionGroupConfigs;
         
-        public CollectionProgressSnapshotService(ICardCollectionCacheService cardCollectionCacheService, IReadOnlyList<CardCollectionGroupConfig> groupsConfig)
+        public CollectionProgressSnapshotBuilder(ICardCollectionCacheService cardCollectionCacheService, IReadOnlyList<CardCollectionGroupConfig> groupsConfig)
         {
             _cardCollectionCardCollectionCacheService = cardCollectionCacheService;
             _cardCollectionGroupConfigs = groupsConfig;
         }
         
-        public bool TryGetSnapshot(out CollectionProgressSnapshot snapshot)
-        {
-            snapshot = _snapshot;
-            return _hasSnapshot;
-        }
-
-        public void SetSnapshot(EventCardsSaveData collectionData)
+        public CollectionProgressSnapshot Build(EventCardsSaveData collectionData)
         {
             if (collectionData == null)
             {
-                return;
+                return default;
             }
 
             var groupProgress = BuildGroupProgress(collectionData);
-            _snapshot = new CollectionProgressSnapshot(
+            return new CollectionProgressSnapshot(
                 collectionData.GetCollectedCardsAmount(),
                 collectionData.Cards?.Count ?? 0,
                 groupProgress);
-            _hasSnapshot = true;
         }
 
         private List<CollectionProgressSnapshot.GroupProgressSnapshot> BuildGroupProgress(EventCardsSaveData collectionData)

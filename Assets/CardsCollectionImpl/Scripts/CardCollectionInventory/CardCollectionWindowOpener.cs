@@ -18,7 +18,7 @@ namespace CardCollectionImpl
         private readonly IExchangeOfferProvider _exchangeOfferProvider;
         private readonly IReadOnlyList<CardCollectionGroupConfig> _groups;
         private readonly ICardCollectionPointsAccount _collectionPointsAccount;
-        private readonly ICollectionProgressSnapshotService _collectionProgressSnapshotService;
+        private readonly ICollectionProgressSnapshotBuilder _collectionProgressSnapshotBuilder;
 
         public CardCollectionWindowOpener(UIManager uiManager,
             ICardCollectionModule module,
@@ -26,7 +26,7 @@ namespace CardCollectionImpl
             IReadOnlyList<CardConfig> cards,
             IReadOnlyList<CardCollectionGroupConfig> groups,
             IExchangeOfferProvider exchangeOfferProvider,
-            ICollectionProgressSnapshotService collectionProgressSnapshotService,
+            ICollectionProgressSnapshotBuilder collectionProgressSnapshotBuilder,
             ICardCollectionRewardHandler rewardHandler)
         {
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
@@ -36,7 +36,7 @@ namespace CardCollectionImpl
             _cards = cards ?? throw new ArgumentNullException(nameof(cards));
             _groups = groups ?? throw new ArgumentNullException(nameof(groups));
             _exchangeOfferProvider = exchangeOfferProvider ?? throw new ArgumentNullException(nameof(exchangeOfferProvider));
-            _collectionProgressSnapshotService = collectionProgressSnapshotService ?? throw new ArgumentNullException(nameof(collectionProgressSnapshotService));
+            _collectionProgressSnapshotBuilder = collectionProgressSnapshotBuilder ?? throw new ArgumentNullException(nameof(collectionProgressSnapshotBuilder));
         }
 
         public void OpenNewCardWindow(string packId)
@@ -75,25 +75,25 @@ namespace CardCollectionImpl
         
         public async UniTask OpenCardCollectionWindow(CancellationToken ct)
         {
-            var collectionData = await _collectionModule.Load(ct);
+            ct.ThrowIfCancellationRequested();
+            var beforeResetData = await _collectionModule.Load(ct);
+            var snapshotBeforeReset = _collectionProgressSnapshotBuilder.Build(beforeResetData);
             
-            var newCardsData = CardCollectionNewCardsDto.Create(collectionData, _cards);
+            var newCardsData = CardCollectionNewCardsDto.Create(beforeResetData, _cards);
             var newCardIds = newCardsData.NewCardIds;
-
             if (newCardIds.Count > 0)
             {
                 await _collectionModule.ResetNewFlagsAsync(newCardIds, ct);
             }
-
-            _collectionProgressSnapshotService.TryGetSnapshot(out var snapshot);
-            _collectionProgressSnapshotService.SetSnapshot(collectionData);
+            var afterResetData = await _collectionModule.Load(ct);
+            
             var args = new CardCollectionArgs(
                 newCardsData,
-                collectionData,
+                afterResetData,
                 _exchangeOfferProvider,
                 _rewardHandler,
                 _collectionPointsAccount,
-                snapshot,
+                snapshotBeforeReset,
                 _collectionModule.EventId,
                 _cards,
                 _groups);

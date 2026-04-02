@@ -52,7 +52,9 @@ namespace CardCollectionImpl
                 unlockCardsUseCase,
                 pointsAccountService,
                 progressQueryService);
+            
             await facade.InitializeAsync(ct);
+            
             return facade;
         }
     }

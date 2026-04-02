@@ -61,7 +61,7 @@ namespace CardCollectionImpl
             }
 
             var rewardHandler = new CardCollectionRewardHandler(rewardsConfig, _rewardSpecProvider, _rewardGrantService);
-            var snapshotService = new CollectionProgressSnapshotService(_cardCollectionCacheService, staticData.Groups);
+            var snapshotBuilder = new CollectionProgressSnapshotBuilder(_cardCollectionCacheService, staticData.Groups);
             var exchangeOfferProvider = new ExchangeOfferProvider(_exchangePacksConfig, rewardHandler);
 
             var windowOpener = new CardCollectionWindowOpener(
@@ -71,7 +71,7 @@ namespace CardCollectionImpl
                 staticData.Cards,
                 staticData.Groups,
                 exchangeOfferProvider,
-                snapshotService,
+                snapshotBuilder,
                 rewardHandler);
 
             var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
@@ -85,8 +85,7 @@ namespace CardCollectionImpl
                 hudPresenter,
                 rewardHandler,
                 rewardsConfig,
-                inventoryIntegration,
-                snapshotService);
+                inventoryIntegration);
         }
     }
 }

@@ -4,38 +4,37 @@ using NUnit.Framework;
 
 namespace CardCollectionImpl
 {
-    public class CollectionProgressSnapshotServiceTests
+    public class CollectionProgressSnapshotBuilderTests
     {
         [Test]
-        public void TryGetSnapshot_WithoutSet_ReturnsFalse()
+        public void Build_WithNullData_ReturnsDefaultSnapshot()
         {
-            var service = CreateService(new Dictionary<string, (int collected, int total)>());
+            var builder = CreateBuilder(new Dictionary<string, (int collected, int total)>());
 
-            var hasSnapshot = service.TryGetSnapshot(out _);
-
-            Assert.False(hasSnapshot);
+            var snapshot = builder.Build(null);
+            Assert.AreEqual(0, snapshot.CollectedAmount);
+            Assert.AreEqual(0, snapshot.TotalAmount);
+            Assert.IsNull(snapshot.GroupProgress);
         }
 
         [Test]
-        public void SetSnapshot_SetsTotalAndCollectedAmounts()
+        public void Build_SetsTotalAndCollectedAmounts()
         {
-            var service = CreateService(new Dictionary<string, (int collected, int total)>());
+            var builder = CreateBuilder(new Dictionary<string, (int collected, int total)>());
             var data = new EventCardsSaveData();
             data.Cards.Add(new CardProgressData { CardId = "a1", IsUnlocked = true });
             data.Cards.Add(new CardProgressData { CardId = "a2", IsUnlocked = false });
 
-            service.SetSnapshot(data);
-            var hasSnapshot = service.TryGetSnapshot(out var snapshot);
+            var snapshot = builder.Build(data);
 
-            Assert.True(hasSnapshot);
             Assert.AreEqual(1, snapshot.CollectedAmount);
             Assert.AreEqual(2, snapshot.TotalAmount);
         }
 
         [Test]
-        public void SetSnapshot_BuildsPerGroupProgress()
+        public void Build_BuildsPerGroupProgress()
         {
-            var service = CreateService(new Dictionary<string, (int collected, int total)>
+            var builder = CreateBuilder(new Dictionary<string, (int collected, int total)>
             {
                 ["g1"] = (1, 2)
             });
@@ -43,8 +42,7 @@ namespace CardCollectionImpl
             data.Cards.Add(new CardProgressData { CardId = "card-g1-1", IsUnlocked = true });
             data.Cards.Add(new CardProgressData { CardId = "card-g1-2", IsUnlocked = false });
 
-            service.SetSnapshot(data);
-            service.TryGetSnapshot(out var snapshot);
+            var snapshot = builder.Build(data);
 
             Assert.AreEqual(1, snapshot.GroupProgress.Count);
             Assert.AreEqual("g1", snapshot.GroupProgress[0].GroupType);
@@ -53,7 +51,7 @@ namespace CardCollectionImpl
             Assert.AreEqual(2, snapshot.GroupProgress[0].TotalAmount);
         }
 
-        private static CollectionProgressSnapshotService CreateService(
+        private static CollectionProgressSnapshotBuilder CreateBuilder(
             Dictionary<string, (int collected, int total)> byGroupType)
         {
             var cache = new FakeCardCollectionCacheService(byGroupType);
@@ -66,7 +64,7 @@ namespace CardCollectionImpl
                 }
             };
 
-            return new CollectionProgressSnapshotService(cache, groups);
+            return new CollectionProgressSnapshotBuilder(cache, groups);
         }
 
         private sealed class FakeCardCollectionCacheService : ICardCollectionCacheService

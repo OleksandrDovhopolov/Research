@@ -12,15 +12,18 @@ namespace CardCollectionImpl
 {
     public class CardCollectionArgs : WindowArgs
     {
+        public readonly string ScheduleItemEventId;
+        
+        public readonly EventCardsSaveData EventCardsSaveData;
         public readonly CardCollectionNewCardsDto NewCardsData;
+        public readonly CollectionProgressSnapshot CollectionProgressSnapshot;
+        
         public readonly IReadOnlyList<CardConfig> Cards;
         public readonly IReadOnlyList<CardCollectionGroupConfig> Groups;
-        public readonly ICardCollectionPointsAccount CardCollectionPointsAccount;
-        public readonly EventCardsSaveData EventCardsSaveData;
-        public readonly IExchangeOfferProvider ExchangeOfferProvider;
-        public readonly CollectionProgressSnapshot CollectionProgressSnapshot;
+        
         public readonly ICardCollectionRewardHandler RewardHandler;
-        public readonly string ScheduleItemEventId;
+        public readonly IExchangeOfferProvider ExchangeOfferProvider;
+        public readonly ICardCollectionPointsAccount CardCollectionPointsAccount;
 
         public CardCollectionArgs(CardCollectionNewCardsDto newCardsData,
             EventCardsSaveData eventCardsSaveData,

@@ -17,7 +17,6 @@ namespace CardCollectionImpl
         private readonly ICardCollectionRewardHandler _rewardHandler;
         private readonly CardCollectionHudPresenter _hudPresenter;
         private readonly CardCollectionInventoryIntegration _inventoryIntegration;
-        private readonly ICollectionProgressSnapshotService _snapshotService;
 
         private CardCollectionRewardsConfigSO _rewardsConfig;
         private CardCollectionEventModel _cardCollectionEventModel;
@@ -35,8 +34,7 @@ namespace CardCollectionImpl
             CardCollectionHudPresenter hudPresenter,
             ICardCollectionRewardHandler rewardHandler,
             CardCollectionRewardsConfigSO rewardsConfig,
-            CardCollectionInventoryIntegration inventoryIntegration,
-            ICollectionProgressSnapshotService snapshotService)
+            CardCollectionInventoryIntegration inventoryIntegration)
         {
             Context = context;
             _facade = facade;
@@ -45,7 +43,6 @@ namespace CardCollectionImpl
             _rewardHandler = rewardHandler;
             _rewardsConfig = rewardsConfig;
             _inventoryIntegration = inventoryIntegration;
-            _snapshotService = snapshotService;
         }
 
         public async UniTask StartAsync(CardCollectionEventModel model, ScheduleItem scheduleItem, CancellationToken externalCt)
@@ -62,9 +59,6 @@ namespace CardCollectionImpl
             
             try
             {
-                var data = await _facade.Load(ct);
-                _snapshotService.SetSnapshot(data);
-
                 _facade.OnGroupCompleted += OnGroupCompleted;
                 _facade.OnCollectionCompleted += OnCollectionCompleted;
 
