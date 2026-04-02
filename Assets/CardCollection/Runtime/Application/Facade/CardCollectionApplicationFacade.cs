@@ -100,41 +100,14 @@ namespace CardCollection.Core
             PublishCompletion(result.NewlyCompletedGroupIds, result.CollectionCompleted);
         }
 
-        public async UniTask Save(CancellationToken ct = default)
-        {
-            var cardCollectionData = new EventCardsSaveData { EventId = _eventId };
-            foreach (var cardCollectionConfig in _cardDefinitionProvider.GetCardDefinitions())
-            {
-                cardCollectionData.Cards.Add(new CardProgressData
-                {
-                    CardId = cardCollectionConfig.Id,
-                    IsUnlocked = false
-                });
-            }
-
-            await _cardProgressService.SaveAsync(cardCollectionData, ct);
-            _isCollectionCompleted = false;
-        }
-
         public UniTask<EventCardsSaveData> Load(CancellationToken ct = default)
         {
             return _progressQueryService.LoadAsync(_eventId, ct);
         }
 
-        public UniTask<HashSet<string>> GetMissingCardIdsAsync(List<CardDefinition> allCards, CancellationToken ct = default)
-        {
-            return _progressQueryService.GetMissingCardIdsAsync(_eventId, allCards, ct);
-        }
-
         public UniTask<int> GetCollectionPoints(CancellationToken ct = default)
         {
             return _pointsAccountService.GetBalanceAsync(_eventId, ct);
-        }
-
-        public async UniTask Clear(CancellationToken ct = default)
-        {
-            await _cardProgressService.ClearCollectionAsync(ct);
-            _isCollectionCompleted = false;
         }
 
         public void Dispose()

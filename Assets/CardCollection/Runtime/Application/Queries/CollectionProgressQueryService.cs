@@ -23,10 +23,5 @@ namespace CardCollection.Core
         {
             return _cardProgressService.GetCardsByIdsAsync(eventId, cardIds, ct);
         }
-
-        public UniTask<HashSet<string>> GetMissingCardIdsAsync(string eventId, List<CardDefinition> allCards, CancellationToken ct = default)
-        {
-            return _cardProgressService.GetMissingCardIdsAsync(eventId, allCards, ct);
-        }
     }
 }

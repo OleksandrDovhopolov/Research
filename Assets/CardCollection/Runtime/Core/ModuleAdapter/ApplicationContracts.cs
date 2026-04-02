@@ -77,7 +77,6 @@ namespace CardCollection.Core
     {
         UniTask<EventCardsSaveData> LoadAsync(string eventId, CancellationToken ct = default);
         UniTask<List<CardProgressData>> GetCardsByIdsAsync(string eventId, List<string> cardIds, CancellationToken ct = default);
-        UniTask<HashSet<string>> GetMissingCardIdsAsync(string eventId, List<CardDefinition> allCards, CancellationToken ct = default);
     }
 
     public interface ICardCollectionApplicationFacade :

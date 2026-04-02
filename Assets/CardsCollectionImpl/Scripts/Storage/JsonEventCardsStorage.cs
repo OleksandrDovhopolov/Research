@@ -93,49 +93,6 @@ namespace CardCollectionImpl
 
             await SaveAsync(data, ct);
         }
-        
-        public async UniTask ClearCollectionAsync(CancellationToken ct = default)
-        {
-            if (string.IsNullOrEmpty(_rootPath))
-            {
-                Debug.LogWarning("[JsonEventCardsStorage] ClearCollectionAsync called before InitializeAsync");
-                return;
-            }
-
-            if (!Directory.Exists(_rootPath))
-            {
-                return;
-            }
-
-            try
-            {
-                var files = Directory.GetFiles(_rootPath, "*.json");
-                
-                var deleteTasks = files.Select(file => 
-                    UniTask.RunOnThreadPool(() => 
-                    {
-                        try
-                        {
-                            File.Delete(file);
-                        }
-                        catch (Exception e)
-                        {
-                            Debug.LogWarning($"[JsonEventCardsStorage] Failed to delete file {file}: {e}");
-                        }
-                    }, cancellationToken: ct)
-                );
-
-                await UniTask.WhenAll(deleteTasks);
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[JsonEventCardsStorage] ClearCollectionAsync failed: {e}");
-            }
-        }
 
         private string GetFilePath(string eventId)
         {

@@ -23,7 +23,6 @@ namespace CardCollection.Core
     public interface ICardCollectionReader
     {
         UniTask<EventCardsSaveData> Load(CancellationToken ct = default);
-        UniTask<HashSet<string>> GetMissingCardIdsAsync(List<CardDefinition> allCards, CancellationToken ct = default);
         UniTask<int> GetCollectionPoints(CancellationToken ct = default);
     }
 
@@ -31,7 +30,5 @@ namespace CardCollection.Core
     {
         UniTask UnlockCard(string cardId, CancellationToken ct = default);
         UniTask UnlockCards(IReadOnlyCollection<string> cardIds, CancellationToken ct = default);
-        UniTask Save(CancellationToken ct = default);
-        UniTask Clear(CancellationToken ct = default);
     }
 }
