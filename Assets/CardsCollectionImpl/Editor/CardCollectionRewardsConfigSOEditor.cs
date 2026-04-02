@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace CardCollectionImpl.Editor
 {
-    [CustomEditor(typeof(CardCollectionRewardsConfigSO))]
+    [CustomEditor(typeof(CardEventRewardsConfigSO))]
     public class CardCollectionRewardsConfigSOEditor : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
@@ -16,16 +16,16 @@ namespace CardCollectionImpl.Editor
             EditorGUILayout.Space();
             if (GUILayout.Button("Clear Group Rewards"))
             {
-                ClearRewards((CardCollectionRewardsConfigSO)target);
+                ClearRewards((CardEventRewardsConfigSO)target);
             }
 
             if (GUILayout.Button("Sync Group Rewards From GroupsJson"))
             {
-                SyncRewards((CardCollectionRewardsConfigSO)target);
+                SyncRewards((CardEventRewardsConfigSO)target);
             }
         }
 
-        private static void ClearRewards(CardCollectionRewardsConfigSO config)
+        private static void ClearRewards(CardEventRewardsConfigSO config)
         {
             if (config == null)
             {
@@ -33,13 +33,13 @@ namespace CardCollectionImpl.Editor
             }
 
             Undo.RecordObject(config, "Clear Card Collection Group Rewards");
-            config.GroupRewards = new CollectionCompletionRewardConfig[0];
+            config.EventRewardsList = new CollectionCompletionRewardConfig[0];
             EditorUtility.SetDirty(config);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
         }
 
-        private static void SyncRewards(CardCollectionRewardsConfigSO config)
+        private static void SyncRewards(CardEventRewardsConfigSO config)
         {
             if (config == null)
             {
@@ -60,9 +60,9 @@ namespace CardCollectionImpl.Editor
             }
 
             var existingByGroupId = new Dictionary<string, CollectionCompletionRewardConfig>();
-            if (config.GroupRewards != null)
+            if (config.EventRewardsList != null)
             {
-                foreach (var existing in config.GroupRewards)
+                foreach (var existing in config.EventRewardsList)
                 {
                     if (!string.IsNullOrWhiteSpace(existing.GroupId))
                     {
@@ -95,7 +95,7 @@ namespace CardCollectionImpl.Editor
             }
 
             Undo.RecordObject(config, "Sync Card Collection Group Rewards");
-            config.GroupRewards = rewards;
+            config.EventRewardsList = rewards;
             EditorUtility.SetDirty(config);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();

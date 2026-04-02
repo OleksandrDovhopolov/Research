@@ -62,11 +62,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4673902ec1e84e64b84f93d6221f6cb7
-    m_Address: CardCollectionRewardsConfig
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 46806fdc6ca128d46972600a49df3ffc
     m_Address: Sapphire_Pack
     m_ReadOnly: 0

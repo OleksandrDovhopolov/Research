@@ -14,11 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Events:
   - EventName: Spring_Collection
-    GroupsJson: {fileID: 4900000, guid: d4110d982dc5e004182914ee82b8a02b, type: 3}
-    RewardsConfig: {fileID: 11400000, guid: 85bd7851c2bd916448a6a37cda369db6, type: 2}
+    GroupsJson: {fileID: 4900000, guid: 55bf0528dfc32be45aa54db8e9346dd2, type: 3}
+    RewardsConfig: {fileID: 11400000, guid: a93b3c6ff8a94394db0b025981c1bb60, type: 2}
   - EventName: Winter_Collection
-    GroupsJson: {fileID: 4900000, guid: 87734e1c7d1144a81b621f28d2e3ec2b, type: 3}
-    RewardsConfig: {fileID: 11400000, guid: ca7c4a09d84b61c4d8846565a8ed01b7, type: 2}
-  - EventName: test_event
-    GroupsJson: {fileID: 4900000, guid: 555a32c3819194fabbdf36d95770f457, type: 3}
-    RewardsConfig: {fileID: 11400000, guid: 4673902ec1e84e64b84f93d6221f6cb7, type: 2}
+    GroupsJson: {fileID: 4900000, guid: 4b5a6ed8177a7494c8d89137d8c0b277, type: 3}
+    RewardsConfig: {fileID: 11400000, guid: c585dc95dbc4c864ca0089ae6c8e769f, type: 2}

@@ -43,7 +43,7 @@ namespace CardCollectionImpl
             try
             {
                 facade = await _facadeFactory.CreateInitializedAsync(staticData, model.EventId, ct);
-                return await _sessionFactory.CreateAsync(model, staticData, facade, ct);
+                return _sessionFactory.Create(model, staticData, facade);
             }
             catch
             {

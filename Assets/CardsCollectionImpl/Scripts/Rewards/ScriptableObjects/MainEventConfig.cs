@@ -40,7 +40,7 @@ namespace CardCollectionImpl
             var jsonContent = JsonUtility.FromJson<GroupsRoot>(entry.GroupsJson.text);
             var jsonIds = jsonContent.groups.Select(g => g.groupType).ToHashSet();
 
-            var soIds = entry.RewardsConfig.GroupRewards.Select(r => r.GroupId).ToHashSet();
+            var soIds = entry.RewardsConfig.EventRewardsList.Select(r => r.GroupId).ToHashSet();
             var hasErrors = false;
 
             foreach (var id in jsonIds)
@@ -77,6 +77,6 @@ namespace CardCollectionImpl
     {
         public string EventName;
         public TextAsset GroupsJson;
-        public CardCollectionRewardsConfigSO RewardsConfig;
+        public CardEventRewardsConfigSO RewardsConfig;
     }
 }

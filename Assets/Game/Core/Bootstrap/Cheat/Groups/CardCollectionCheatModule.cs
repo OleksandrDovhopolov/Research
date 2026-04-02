@@ -127,7 +127,7 @@ namespace Game.Cheat
                 CustomParams = new Dictionary<string, string>
                 {
                     ["eventId"] = eventId,
-                    ["rewardsConfigAddress"] = "winter_collection_rewards_test",
+                    ["rewardsConfigAddress"] = "winter_collection_rewards",
                     ["cardsCollectionAddress"] = "winter_collection_cards",
                     ["cardGroupsAddress"] = "winter_collection_groups",
                     ["cardPacksAddress"] = "shared_card_packs_config",
@@ -151,7 +151,7 @@ namespace Game.Cheat
                 CustomParams = new Dictionary<string, string>
                 {
                     ["eventId"] = eventId,
-                    ["rewardsConfigAddress"] = "spring_collection_rewards_test",
+                    ["rewardsConfigAddress"] = "spring_collection_rewards",
                     ["cardsCollectionAddress"] = "spring_collection_cards",
                     ["cardGroupsAddress"] = "spring_collection_groups",
                     ["cardPacksAddress"] = "shared_card_packs_config",

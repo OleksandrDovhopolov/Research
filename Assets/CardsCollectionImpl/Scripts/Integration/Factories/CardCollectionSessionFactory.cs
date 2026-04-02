@@ -42,24 +42,11 @@ namespace CardCollectionImpl
             _cardCollectionCacheService = cardCollectionCacheService;
         }
 
-        public async UniTask<CardCollectionSession> CreateAsync(
+        public CardCollectionSession Create(
             CardCollectionEventModel model,
             CardCollectionStaticData staticData,
-            ICardCollectionApplicationFacade facade,
-            CancellationToken ct)
+            ICardCollectionApplicationFacade facade)
         {
-            ct.ThrowIfCancellationRequested();
-
-            /*var rewardsConfig = await ProdAddressablesWrapper
-                .LoadAsync<CardCollectionRewardsConfigSO>(model.RewardsConfigAddress, ct)
-                .AsUniTask();
-            ct.ThrowIfCancellationRequested();
-
-            if (rewardsConfig == null)
-            {
-                Debug.LogError($"RewardsConfig not found with ID {model.RewardsConfigAddress}!");
-            }*/
-
             var rewardHandler = new CardCollectionRewardHandler(staticData, _rewardSpecProvider, _rewardGrantService);
             var snapshotBuilder = new CollectionProgressSnapshotBuilder(_cardCollectionCacheService, staticData.Groups);
             var exchangeOfferProvider = new ExchangeOfferProvider(_exchangePacksConfig, rewardHandler);
