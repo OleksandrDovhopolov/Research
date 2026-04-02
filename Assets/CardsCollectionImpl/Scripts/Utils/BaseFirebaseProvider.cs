@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using Infrastructure;
+using Firebase.RemoteConfig;
 using UnityEngine;
 using UnityEngine.ResourceManagement.Exceptions;
 using Object = UnityEngine.Object;
@@ -14,7 +14,6 @@ namespace CardCollectionImpl
         private T _cachedData;
         private bool _isInitialized;
         private string _loadedAddress;
-        private TK _loadedAsset;
 
         public T Data => _isInitialized
             ? _cachedData
@@ -37,7 +36,6 @@ namespace CardCollectionImpl
             ct.ThrowIfCancellationRequested();
 
             var loadedAsset = await LoadRawAssetAsync(address, ct);
-            _loadedAsset = loadedAsset;
             
             try
             {
@@ -56,15 +54,19 @@ namespace CardCollectionImpl
 
         private static async UniTask<TK> LoadRawAssetAsync(string address, CancellationToken ct)
         {
-            try
+            ct.ThrowIfCancellationRequested();
+
+            var value = FirebaseRemoteConfig.DefaultInstance.GetValue(address);
+            var json = value.StringValue;
+
+            if (string.IsNullOrEmpty(json))
             {
-                return await ProdAddressablesWrapper.LoadAsync<TK>(address, ct).AsUniTask();
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Asset not found in Addressables: {address}. Error: {ex.Message}");
+                Debug.LogError($"[{nameof(BaseFirebaseProvider<T, TK>)}] Remote Config value for key '{address}' is empty.");
                 return null;
             }
+
+            var textAsset = new TextAsset(json);
+            return textAsset as TK;
         }
 
         protected abstract T ParseAsset(TK asset);
@@ -76,12 +78,6 @@ namespace CardCollectionImpl
 
         private void Dispose()
         {
-            if (_loadedAsset != null)
-            {
-                ProdAddressablesWrapper.Release(_loadedAsset);
-                _loadedAsset = null;
-            }
-
             _cachedData = default;
             _isInitialized = false;
             _loadedAddress = null;
