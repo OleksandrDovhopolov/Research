@@ -1,8 +1,11 @@
+using System.Threading;
+using Cysharp.Threading.Tasks;
+
 namespace UIShared
 {
     public interface IHUDService
     {
-        IEventButton SpawnEventButton(string eventId, string spriteName);
+        UniTask<IEventButton> SpawnEventButtonAsync(string spriteAddress, CancellationToken ct);
         void RemoveEventButton(string eventId);
     }
 }

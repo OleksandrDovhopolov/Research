@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using CardCollection.Core;
@@ -12,6 +13,8 @@ namespace CardCollectionImpl
 {
     public sealed class CardCollectionSession : IDisposable
     {
+        private const int SessionWarmupSpritesCount = 30;
+        
         private readonly UIManager _uiManager;
         private readonly ICardCollectionApplicationFacade _facade;
         private readonly ICardCollectionRewardHandler _rewardHandler;
@@ -20,9 +23,10 @@ namespace CardCollectionImpl
 
         private CardCollectionEventModel _cardCollectionEventModel;
 
-        private CancellationTokenSource _cts;
         private bool _isStarted;
         private bool _isDisposed;
+        private CancellationTokenSource _cts;
+        private IReadOnlyList<string> _sessionWarmedAddresses = Array.Empty<string>();
 
         public CardCollectionSessionContext Context { get; }
 
@@ -58,12 +62,16 @@ namespace CardCollectionImpl
             {
                 _facade.OnGroupCompleted += OnGroupCompleted;
                 _facade.OnCollectionCompleted += OnCollectionCompleted;
-
                 _inventoryIntegration.Attach();
-                _hudPresenter.Bind(scheduleItem, ct);
 
-                var args = new CollectionStartedArgs(_cardCollectionEventModel.EventId, _cardCollectionEventModel.CollectionName);
+                await EnsureEventAssetsReadyAsync(scheduleItem, ct);
+                
+                var spriteAddress = model.EventId + "/" + CardCollectionGeneralConfig.CollectionBackground;
+                var previewSprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, externalCt);
+                var args = new CollectionStartedArgs(_cardCollectionEventModel.EventId, _cardCollectionEventModel.CollectionName, previewSprite);
                 _uiManager.Show<CollectionStartedController>(args, UIShowCommand.UIShowType.Ordered);
+                
+                await _hudPresenter.Bind(scheduleItem, ct);
                 
                 _isStarted = true;
             }
@@ -73,7 +81,19 @@ namespace CardCollectionImpl
                 throw;
             }
         }
+        
+        private async UniTask EnsureEventAssetsReadyAsync(ScheduleItem scheduleItem, CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (scheduleItem == null || string.IsNullOrWhiteSpace(scheduleItem.Id))
+                throw new ArgumentException("Schedule item is null or invalid.", nameof(scheduleItem));
 
+            await ProdAddressablesWrapper.DownloadDependenciesByLabelAsync(scheduleItem.Id, ct);
+            ct.ThrowIfCancellationRequested();
+
+            _sessionWarmedAddresses = await ProdAddressablesWrapper.WarmupGroupByLabelAsync<Sprite>(scheduleItem.Id, ct, SessionWarmupSpritesCount) ?? Array.Empty<string>();
+        }
+        
         public UniTask UpdateAsync(CancellationToken ct)
         {
             if (!_isStarted || _isDisposed)
@@ -277,6 +297,12 @@ namespace CardCollectionImpl
             catch (Exception e)
             {
                 Debug.LogError($"[CardCollectionRuntime] HUD dispose error: {e}");
+            }
+            
+            if (_sessionWarmedAddresses is { Count: > 0 })
+            {
+                ProdAddressablesWrapper.ReleaseGroup(_sessionWarmedAddresses);
+                _sessionWarmedAddresses = Array.Empty<string>();
             }
         }
 

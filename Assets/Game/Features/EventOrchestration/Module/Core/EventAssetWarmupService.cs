@@ -82,8 +82,6 @@ namespace EventOrchestration.Core
             {
                 ct.ThrowIfCancellationRequested();
 
-                //TODO Problem: If two events are scheduled to start within 5 seconds of each other,
-                //the second one may only start to warm up once the first one has already started.
                 var item = _orchestrator.GetNextUpcomingEvent();
                 if (item == null || string.IsNullOrWhiteSpace(item.Id))
                     return;

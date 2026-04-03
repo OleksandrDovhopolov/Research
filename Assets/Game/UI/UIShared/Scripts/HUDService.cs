@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using Infrastructure;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -19,9 +22,9 @@ namespace UIShared
             _resolver = resolver;
         }
 
-        public IEventButton SpawnEventButton(string eventId, string spriteAddress)
+        public async UniTask<IEventButton> SpawnEventButtonAsync(string spriteAddress, CancellationToken ct)
         {
-            if (_activeButtons.TryGetValue(eventId, out var button))
+            if (_activeButtons.TryGetValue(spriteAddress, out var button))
             {
                 return button.GetComponent<IEventButton>();
             }
@@ -29,6 +32,8 @@ namespace UIShared
             var wasPrefabActive = _buttonPrefab.activeSelf;
             _buttonPrefab.SetActive(false);
 
+            var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, ct);
+            
             var btnObj = Instantiate(_buttonPrefab, _eventsContainer);
             _buttonPrefab.SetActive(wasPrefabActive);
 
@@ -36,16 +41,17 @@ namespace UIShared
             btnObj.SetActive(wasPrefabActive);
 
             var eventButton = btnObj.GetComponent<EventButton>();
-            eventButton.LoadSprite(eventId, spriteAddress);
-            _activeButtons.Add(eventId, eventButton);
+            eventButton.SetSprite(sprite);
+            _activeButtons.Add(spriteAddress, eventButton);
 
             return eventButton;
         }
-
+        
         public void RemoveEventButton(string eventId)
         {
             if (_activeButtons.TryGetValue(eventId, out var eventButton))
             {
+                ProdAddressablesWrapper.Release(eventId);
                 Destroy(eventButton.gameObject);
                 _activeButtons.Remove(eventId);
             }

@@ -1,9 +1,7 @@
 using System;
 using System.Threading;
-using Cysharp.Threading.Tasks;
 using EventOrchestration;
 using EventOrchestration.Models;
-using Infrastructure;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
@@ -41,19 +39,10 @@ namespace UIShared
         {
             _image.sprite = null;
             _button.onClick.RemoveAllListeners();
-            ProdAddressablesWrapper.Release(_spriteAddress);
         }
         
-        private string _spriteAddress = "";
-        public void LoadSprite(string eventId, string spriteAddress)
+        public void SetSprite(Sprite sprite)
         {
-            _spriteAddress = spriteAddress;
-            LoadSpriteASync(_spriteAddress).Forget();
-        }
-
-        public async UniTask LoadSpriteASync(string spriteAddress)
-        {
-            var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(_spriteAddress, this.GetCancellationTokenOnDestroy());
             _image.sprite = sprite;
         }
     }

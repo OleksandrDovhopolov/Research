@@ -9,7 +9,7 @@ namespace CardCollectionImpl
 {
     public class CardCollectionHudPresenter : IDisposable
     {
-        private const string CardCollectionButtonId = "CardCollection";
+        private const string CardCollectionButtonId = "CardCollection" + "/" + CardCollectionGeneralConfig.CollectionEventButton;
         
         private readonly IHUDService _hudService;
         private readonly ICardCollectionWindowOpener _cardCollectionWindowOpener;
@@ -22,10 +22,9 @@ namespace CardCollectionImpl
             _cardCollectionWindowOpener = cardCollectionWindowOpener ?? throw new ArgumentNullException(nameof(cardCollectionWindowOpener));
         }
 
-        public void Bind(ScheduleItem config, CancellationToken ct)
+        public async UniTask Bind(ScheduleItem config, CancellationToken ct)
         {
-            var spriteAddress = CardCollectionButtonId + "/" + CardCollectionGeneralConfig.CollectionEventButton;
-            var entryButton = _hudService.SpawnEventButton(CardCollectionButtonId, spriteAddress);
+            var entryButton = await _hudService.SpawnEventButtonAsync(CardCollectionButtonId, ct);
 
             if (entryButton == null)
             {
