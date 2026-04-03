@@ -9,7 +9,7 @@ namespace CardCollection.Core
 {
     public class CardPackService
     {
-        private readonly ICardPackProvider _cardPackProvider;
+        private readonly IReadOnlyList<CardPackConfig> _packs;
         private readonly Dictionary<string, CardPack> _packsByIdCache;
         private List<CardPack> _allPacks;
         private bool _isInitialized;
@@ -18,10 +18,10 @@ namespace CardCollection.Core
         public event Action OnInitialized;
 
         public bool IsInitialized => _isInitialized;
-
-        public CardPackService(ICardPackProvider cardPackProvider)
+        
+        public CardPackService(IReadOnlyList<CardPackConfig> packConfigs)
         {
-            _cardPackProvider = cardPackProvider ?? throw new ArgumentNullException(nameof(cardPackProvider));
+            _packs =  packConfigs ?? throw new ArgumentNullException(nameof(packConfigs));
             _packsByIdCache = new Dictionary<string, CardPack>();
             _allPacks = new List<CardPack>();
         }
@@ -38,12 +38,9 @@ namespace CardCollection.Core
             {
                 Debug.Log("[CardCollectionService] Initializing...");
 
-                //var packConfigs = await _cardPackProvider.GetCardConfigsAsync(ct);
-                //TODO remove async
                 await UniTask.CompletedTask;
-                var packConfigs = _cardPackProvider.Data;
 
-                _allPacks = packConfigs.Select(config => new CardPack(config)).ToList();
+                _allPacks = _packs.Select(config => new CardPack(config)).ToList();
 
                 _packsByIdCache.Clear();
                 foreach (var pack in _allPacks)

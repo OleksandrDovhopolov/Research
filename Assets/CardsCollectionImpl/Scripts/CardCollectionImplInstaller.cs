@@ -18,10 +18,7 @@ namespace CardCollectionImpl
 
             builder.RegisterInstance(exchangePacksConfig);
             
-            builder.Register<ICardPackProvider, AddressablesCardPackProvider>(Lifetime.Singleton);
-            
             builder.Register<IEventConfigProvider, FirebaseEventConfigProvider>(Lifetime.Singleton);
-            
             
             builder.Register<IEventCardsStorage, JsonEventCardsStorage>(Lifetime.Singleton);
             builder.Register<IPackSelectionStrategy, DefaultPackStrategy>(Lifetime.Singleton);

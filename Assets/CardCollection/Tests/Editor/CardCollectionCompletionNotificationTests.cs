@@ -121,7 +121,7 @@ namespace CardCollection.Tests
             var definitionProvider = new StubCardDefinitionProvider(definitions);
             var selector = new StubCardSelector();
             var pointsCalculator = new CardCollectionDuplicatePointsTests.MockCardPointsCalculator();
-            var cardPackService = new CardPackService(packProvider);
+            var cardPackService = new CardPackService(packProvider.Data);
             var cardRandomizer = new PackBasedCardsRandomizer(selector, definitionProvider);
             var cardProgressService = new CardProgressService(storage);
             var duplicateCalculator = new DuplicateCardPointsCalculator(definitionProvider, pointsCalculator);
@@ -172,7 +172,7 @@ namespace CardCollection.Tests
             return data;
         }
 
-        private sealed class StubPackProvider : ICardPackProvider
+        private sealed class StubPackProvider : IStaticDataProvider<List<CardPackConfig>>
         {
             private static readonly List<CardPackConfig> EmptyPacks = new();
 

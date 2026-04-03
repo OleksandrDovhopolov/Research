@@ -47,7 +47,8 @@ namespace CardCollection.Tests
             var progress = new CardProgressService(storage);
             var points = new PointsAccountService(progress);
             var query = new CollectionProgressQueryService(progress);
-            var cardPackService = new CardPackService(new StubPackProvider());
+            var packProvider = new StubPackProvider();
+            var cardPackService = new CardPackService(packProvider.Data);
 
             var facade = new CardCollectionApplicationFacade(
                 eventId,
@@ -94,7 +95,7 @@ namespace CardCollection.Tests
             }
         }
 
-        private sealed class StubPackProvider : ICardPackProvider
+        private sealed class StubPackProvider : IStaticDataProvider<List<CardPackConfig>>
         {
             public List<CardPackConfig> Data => new();
             public UniTask<List<CardPackConfig>> LoadAsync(string fileName, CancellationToken ct = default) => UniTask.FromResult(new List<CardPackConfig>());

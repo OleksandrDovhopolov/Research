@@ -8,16 +8,11 @@ namespace CardCollectionImpl
 {
     public sealed class CardCollectionStaticDataLoader : ICardCollectionStaticDataLoader
     {
-        private readonly ICardPackProvider _cardPackProvider;
-        
         private readonly IEventConfigProvider _eventConfigProvider;
 
-        public CardCollectionStaticDataLoader(
-            IEventConfigProvider eventConfigProvider,
-            ICardPackProvider cardPackProvider)
+        public CardCollectionStaticDataLoader(IEventConfigProvider eventConfigProvider)
         {
             _eventConfigProvider = eventConfigProvider;
-            _cardPackProvider = cardPackProvider;
         }
 
         public async UniTask<CardCollectionStaticData> LoadAsync(CardCollectionEventModel model, CancellationToken ct)
@@ -29,19 +24,11 @@ namespace CardCollectionImpl
             }
             
             _eventConfigProvider.ClearCache();
-            
-            _cardPackProvider.ClearCache();
-
-            await UniTask.WhenAll(
-                _cardPackProvider.LoadAsync(model.CardPacksFileName, ct),
-                
-                _eventConfigProvider.LoadAsync(model.EventConfigAddress, ct)
-                );
+            await _eventConfigProvider.LoadAsync(model.EventConfigAddress, ct);
 
             return new CardCollectionStaticData
             {
                 EventConfig = _eventConfigProvider.Data,
-                Packs = _cardPackProvider.Data,
             };
         }
     }

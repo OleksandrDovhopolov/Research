@@ -9,7 +9,7 @@ namespace CardCollection.Core
         public List<CardConfig> cards;
         public List<CardCollectionGroupConfig> groups;
         public List<RewardConfig> rewards;
-        //public List<PackData> packs;
+        public List<CardPackConfig> packs;
         //public List<OfferData> offers;
     }
 }

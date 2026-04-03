@@ -10,7 +10,6 @@ namespace CardCollection.Core
     {
         private readonly IEventCardsStorage _storage;
         private readonly Dictionary<string, EventCardsSaveData> _cache = new();
-        private readonly Dictionary<string, HashSet<string>> _unlockedCardIdsCache = new();
         private bool _isInitialized;
         private bool _disposed;
 
@@ -25,10 +24,6 @@ namespace CardCollection.Core
             _isInitialized = true;
         }
 
-        /// <summary>
-        /// Ensures that the underlying storage is initialized.
-        /// Does NOT create storage or the service – it only runs initialization once.
-        /// </summary>
         private async UniTask EnsureInitializedAsync(CancellationToken ct = default)
         {
             if (_isInitialized)
@@ -66,9 +61,6 @@ namespace CardCollection.Core
             await _storage.SaveAsync(data, ct);
             
             _cache[data.EventId] = data;
-            
-            // Invalidate unlocked card IDs cache for this event since save might change unlock status
-            _unlockedCardIdsCache.Remove(data.EventId);
         }
 
         public async UniTask AddPointsAsync(string eventId, int pointsToAdd, CancellationToken ct = default)
@@ -135,11 +127,6 @@ namespace CardCollection.Core
                 await _storage.UnlockCardsAsync(currentData, cardsToUnlock, ct);
                 
                 ApplyUnlockToCache(currentData, cardsToUnlock);
-                
-                if (_unlockedCardIdsCache.TryGetValue(eventId, out var unlockedIds))
-                {
-                    unlockedIds.UnionWith(cardsToUnlock);
-                }
             }
         }
         
@@ -175,13 +162,6 @@ namespace CardCollection.Core
                 .ToList();
         }
         
-        /// <summary>
-        /// Gets cards by their IDs from the specified event.
-        /// </summary>
-        /// <param name="eventId">The event identifier</param>
-        /// <param name="cardIds">List of card IDs to retrieve</param>
-        /// <param name="ct">Cancellation token for cooperative cancellation</param>
-        /// <returns>List of CardProgressData matching the card IDs</returns>
         public async UniTask<List<CardProgressData>> GetCardsByIdsAsync(string eventId, List<string> cardIds, CancellationToken ct = default)
         {
             if (string.IsNullOrEmpty(eventId))
@@ -246,7 +226,6 @@ namespace CardCollection.Core
             _disposed = true;
 
             _cache.Clear();
-            _unlockedCardIdsCache.Clear();
             _storage.Dispose();
         }
     }

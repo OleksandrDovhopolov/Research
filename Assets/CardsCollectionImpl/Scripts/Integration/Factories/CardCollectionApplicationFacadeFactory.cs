@@ -6,30 +6,24 @@ namespace CardCollectionImpl
 {
     public sealed class CardCollectionApplicationFacadeFactory : ICardCollectionApplicationFacadeFactory
     {
-        private readonly ICardPackProvider _cardPackProvider;
-        private readonly IEventCardsStorage _eventCardsStorage;
         private readonly ICardSelector _cardSelector;
+        private readonly IEventCardsStorage _eventCardsStorage;
         private readonly ICardPointsCalculator _cardPointsCalculator;
 
         public CardCollectionApplicationFacadeFactory(
-            ICardPackProvider cardPackProvider,
-            IEventCardsStorage eventCardsStorage,
             ICardSelector cardSelector,
+            IEventCardsStorage eventCardsStorage,
             ICardPointsCalculator cardPointsCalculator)
         {
-            _cardPackProvider = cardPackProvider;
-            _eventCardsStorage = eventCardsStorage;
             _cardSelector = cardSelector;
+            _eventCardsStorage = eventCardsStorage;
             _cardPointsCalculator = cardPointsCalculator;
         }
 
-        public async UniTask<ICardCollectionApplicationFacade> CreateInitializedAsync(
-            CardCollectionStaticData staticData,
-            string eventId,
-            CancellationToken ct)
+        public async UniTask<ICardCollectionApplicationFacade> CreateInitializedAsync(CardCollectionStaticData staticData, string eventId, CancellationToken ct)
         {
             var cardDefinitionProvider = new DefaultCardDefinitionProvider(staticData.Cards);
-            var cardPackService = new CardPackService(_cardPackProvider);
+            var cardPackService = new CardPackService(staticData.Packs);
             var cardProgressService = new CardProgressService(_eventCardsStorage);
             var cardRandomizer = new PackBasedCardsRandomizer(_cardSelector, cardDefinitionProvider);
             var duplicatePointsCalculator = new DuplicateCardPointsCalculator(cardDefinitionProvider, _cardPointsCalculator);
