@@ -37,9 +37,9 @@ namespace Game.Cheat
         {
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Create test events", () =>
             {
-                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 10, 500);
+                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 10, 30);
                 //var first = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, 30, 120);
-                var second = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, first.EndTimeUtc, TimeSpan.FromSeconds(120));
+                var second = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, first.EndTimeUtc, TimeSpan.FromSeconds(30));
                 
                 _orchestratorRunner.AddDebugCardCollectionEventNextMinute(first);
                 _orchestratorRunner.AddDebugCardCollectionEventNextMinute(second);
@@ -67,13 +67,13 @@ namespace Game.Cheat
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<string>("Open card ID(str)", cardId =>
             {
-                if (_featureFacade.TryGetCollectionUpdater(out var updater))
+                if (_featureFacade.TryGetCollectionModule(out var module))
                 {
-                    updater.UnlockCard(cardId, _ct).Forget();
+                    module.UnlockCards(new[] { cardId }, _ct).Forget();
                 }
                 else
                 {
-                    Debug.LogWarning("[Cheat] CardCollection updater is unavailable.");
+                    Debug.LogWarning("[Cheat] CardCollection module is unavailable.");
                 }
             }).WithGroup(CardCollectionGroup));
             
@@ -127,11 +127,8 @@ namespace Game.Cheat
                 CustomParams = new Dictionary<string, string>
                 {
                     ["eventId"] = eventId,
-                    ["rewardsConfigAddress"] = "winter_collection_rewards",
-                    ["cardsCollectionAddress"] = "winter_collection_cards",
-                    ["cardGroupsAddress"] = "winter_collection_groups",
-                    ["cardPacksAddress"] = "shared_card_packs_config",
                     ["collectionName"] = eventName,
+                    ["eventConfigAddress"] = "event_winter_collection_config",
                 },
             };
         }
@@ -151,11 +148,8 @@ namespace Game.Cheat
                 CustomParams = new Dictionary<string, string>
                 {
                     ["eventId"] = eventId,
-                    ["rewardsConfigAddress"] = "spring_collection_rewards",
-                    ["cardsCollectionAddress"] = "spring_collection_cards",
-                    ["cardGroupsAddress"] = "spring_collection_groups",
-                    ["cardPacksAddress"] = "shared_card_packs_config",
                     ["collectionName"] = eventName,
+                    ["eventConfigAddress"] = "event_spring_collection_config",
                 },
             };
         }
@@ -207,13 +201,13 @@ namespace Game.Cheat
             foreach (var cardId in cardIds)
             {
                 ct.ThrowIfCancellationRequested();
-                if (_featureFacade.TryGetCollectionUpdater(out var updater))
+                if (_featureFacade.TryGetCollectionModule(out var module))
                 {
-                    await updater.UnlockCard(cardId, ct);
+                    await module.UnlockCards(new[] { cardId }, ct);
                 }
                 else
                 {
-                    Debug.LogWarning("[Cheat] CardCollection updater is unavailable.");
+                    Debug.LogWarning("[Cheat] CardCollection module is unavailable.");
                     return;
                 }
             }
@@ -230,14 +224,14 @@ namespace Game.Cheat
                 return;
             }
 
-            if (!_featureFacade.TryGetCollectionUpdater(out var updater))
+            if (!_featureFacade.TryGetCollectionModule(out var module))
             {
-                Debug.LogWarning("[Cheat] CardCollection updater is unavailable.");
+                Debug.LogWarning("[Cheat] CardCollection module is unavailable.");
                 return;
             }
 
             var unlockIds = cardIds.Take(cardIds.Count - 1).ToList();
-            await updater.UnlockCards(unlockIds, ct);
+            await module.UnlockCards(unlockIds, ct);
         }
         
         private async UniTask UnlockGroupByInt(int groupIndex, CancellationToken ct)
@@ -269,29 +263,29 @@ namespace Game.Cheat
                 return;
             }
 
-            if (!_featureFacade.TryGetCollectionUpdater(out var updater))
+            if (!_featureFacade.TryGetCollectionModule(out var module))
             {
-                Debug.LogWarning("[Cheat] CardCollection updater is unavailable.");
+                Debug.LogWarning("[Cheat] CardCollection module is unavailable.");
                 return;
             }
 
             foreach (var cardId in groupCardIds)
             {
                 ct.ThrowIfCancellationRequested();
-                await updater.UnlockCard(cardId, ct);
+                await module.UnlockCards(new[] { cardId }, ct);
             }
         }
 
         private async UniTask<List<string>> GetAllCardIdsAsync(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
-            if (!_featureFacade.TryGetCollectionReader(out var reader))
+            if (!_featureFacade.TryGetCollectionModule(out var module))
             {
                 Debug.LogWarning("[Cheat] CardCollection reader is unavailable.");
                 return new List<string>();
             }
 
-            var data = await reader.Load(ct);
+            var data = await module.Load(ct);
 
             var result = new List<string>();
             var seen = new HashSet<string>();

@@ -11,39 +11,37 @@ namespace CardCollectionImpl
     {
         private readonly ICardCollectionRewardHandler _cardCollectionRewardHandler;
         
-        private readonly Dictionary<string, ExchangePackEntry> _packById;
+        private readonly Dictionary<string, CardCollectionOfferConfig> _packById;
         
-        public ExchangeOfferProvider(ExchangePacksConfig packsConfig, ICardCollectionRewardHandler cardCollectionRewardHandler)
+        public ExchangeOfferProvider(IReadOnlyList<CardCollectionOfferConfig> offerConfigs, ICardCollectionRewardHandler cardCollectionRewardHandler)
         {
-            _packById = new Dictionary<string, ExchangePackEntry>();
+            _packById = new Dictionary<string, CardCollectionOfferConfig>();
             _cardCollectionRewardHandler = cardCollectionRewardHandler;
 
-            if (packsConfig == null || packsConfig.Packs == null)
+            if (offerConfigs == null )
             {
                 return;
             }
 
-            foreach (var pack in packsConfig.Packs)
+            foreach (var pack in offerConfigs)
             {
-                if (pack == null || string.IsNullOrWhiteSpace(pack.Id))
+                if (pack == null || string.IsNullOrWhiteSpace(pack.id))
                 {
                     continue;
                 }
 
-                _packById[pack.Id] = pack;
+                _packById[pack.id] = pack;
             }
         }
 
-        public IReadOnlyCollection<ExchangeOfferData> GetAllOffers()
+        public IReadOnlyCollection<CardCollectionOfferConfig> GetAllOffers()
         {
-            return _packById.Values
-                .Select(pack => new ExchangeOfferData(pack.Id, pack.Sprite, pack.PackPrice))
-                .ToArray();
+            return _packById.Values.ToArray();
         }
 
         public int GetOfferPrice(string offerPackId)
         {
-            return TryGetPackEntry(offerPackId, out var pack) ? pack.PackPrice : 0;
+            return TryGetPackEntry(offerPackId, out var pack) ? pack.packPrice : 0;
         }
 
         public async UniTask<bool> ReceiveOfferContent(string offerPackId, CancellationToken ct = default)
@@ -53,7 +51,7 @@ namespace CardCollectionImpl
             return await _cardCollectionRewardHandler.TryHandleBuyPointsOffer(offerPackId, ct);
         }
 
-        private bool TryGetPackEntry(string packId, out ExchangePackEntry pack)
+        private bool TryGetPackEntry(string packId, out CardCollectionOfferConfig pack)
         {
             if (string.IsNullOrWhiteSpace(packId))
             {

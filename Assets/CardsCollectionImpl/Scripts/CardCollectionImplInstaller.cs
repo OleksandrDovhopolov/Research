@@ -8,22 +8,13 @@ namespace CardCollectionImpl
 {
     public static class CardCollectionImplInstaller
     {
-        public static void RegisterCardCollectionImpl(this IContainerBuilder builder, ExchangePacksConfig exchangePacksConfig)
+        public static void RegisterCardCollectionImpl(this IContainerBuilder builder)
         {
-            if (exchangePacksConfig == null)
-            {
-                throw new MissingReferenceException(
-                    $"{nameof(ExchangePacksConfig)} is not assigned on {nameof(CardCollectionImplInstaller)}.");
-            }
-
-            builder.RegisterInstance(exchangePacksConfig);
+            builder.Register<IEventConfigProvider, FirebaseEventConfigProvider>(Lifetime.Singleton);
             
-            //TODO this should be in CardCollectionImplInstaller. but CardCollectionController crashes because cant resolve 
-            // dependencies from CardCollectionImplInstaller. Bug in WindowFactoryDI -  var controller = _diContainer.Resolve<T>();
-            // Card collection feature storage
-            builder.Register<ICardPackProvider, JsonCardPackProvider>(Lifetime.Singleton);
-            builder.Register<ICardsConfigProvider, JsonCardsConfigProvider>(Lifetime.Singleton);
-            builder.Register<ICardGroupsConfigProvider, JsonCardGroupsConfigProvider>(Lifetime.Singleton);
+            builder.Register<IEventCardsStorage, JsonEventCardsStorage>(Lifetime.Singleton);
+            builder.Register<IPackSelectionStrategy, DefaultPackStrategy>(Lifetime.Singleton);
+            builder.Register<ICardSelector, RandomCardSelector>(Lifetime.Singleton);
             // Points calculator
             builder.Register<ICardCollectionCacheService, CardCollectionCardCollectionCacheService>(Lifetime.Singleton);
             builder.Register<ICardPointsCalculator, CardsCollectionPointsCalculator>(Lifetime.Singleton);
@@ -32,6 +23,9 @@ namespace CardCollectionImpl
                 .As<System.IDisposable>();
             
             // Feature session builder
+            builder.Register<ICardCollectionStaticDataLoader, CardCollectionStaticDataLoader>(Lifetime.Singleton);
+            builder.Register<ICardCollectionApplicationFacadeFactory, CardCollectionApplicationFacadeFactory>(Lifetime.Singleton);
+            builder.Register<ICardCollectionSessionFactory, CardCollectionSessionFactory>(Lifetime.Singleton);
             builder.Register<ICardCollectionRuntimeBuilder, CardCollectionRuntimeBuilder>(Lifetime.Singleton);
             
             // Client code usage facade

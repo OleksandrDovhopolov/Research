@@ -11,13 +11,13 @@ namespace CardCollection.Tests
 {
     public class CardCollectionCompletionNotificationTests
     {
-        private CardCollectionModule _module;
+        private ICardCollectionApplicationFacade _facade;
 
         [TearDown]
         public void TearDown()
         {
-            _module?.Dispose();
-            _module = null;
+            _facade?.Dispose();
+            _facade = null;
         }
 
         [UnityTest]
@@ -25,7 +25,7 @@ namespace CardCollection.Tests
         {
             const string eventId = "event-test";
 
-            _module = CreateModule(
+            yield return CreateFacadeInitialized(
                 eventId,
                 CreateDefinitions(
                     ("a1", "group-a"),
@@ -37,18 +37,17 @@ namespace CardCollection.Tests
                     ("a1", true),
                     ("a2", true),
                     ("b1", true),
-                    ("b2", false)));
+                    ("b2", false))).ToCoroutine(result => _facade = result);
 
             int notificationsCount = 0;
             string receivedEventId = null;
-            _module.OnCollectionCompleted += data =>
+            _facade.OnCollectionCompleted += data =>
             {
                 notificationsCount++;
                 receivedEventId = data.EventId;
             };
 
-            yield return _module.InitializeAsync().ToCoroutine();
-            yield return _module.UnlockCard("b2").ToCoroutine();
+            yield return _facade.UnlockCards(new[] { "b2" }).ToCoroutine();
 
             Assert.AreEqual(1, notificationsCount);
             Assert.AreEqual(eventId, receivedEventId);
@@ -59,7 +58,7 @@ namespace CardCollection.Tests
         {
             const string eventId = "event-test";
 
-            _module = CreateModule(
+            yield return CreateFacadeInitialized(
                 eventId,
                 CreateDefinitions(
                     ("a1", "group-a"),
@@ -67,14 +66,13 @@ namespace CardCollection.Tests
                 CreateSaveData(
                     eventId,
                     ("a1", true),
-                    ("a2", true)));
+                    ("a2", true))).ToCoroutine(result => _facade = result);
 
             int notificationsCount = 0;
-            _module.OnCollectionCompleted += _ => notificationsCount++;
+            _facade.OnCollectionCompleted += _ => notificationsCount++;
 
-            yield return _module.InitializeAsync().ToCoroutine();
-            yield return _module.UnlockCard("a1").ToCoroutine();
-            yield return _module.UnlockCard("a2").ToCoroutine();
+            yield return _facade.UnlockCards(new[] { "a1" }).ToCoroutine();
+            yield return _facade.UnlockCards(new[] { "a2" }).ToCoroutine();
 
             Assert.AreEqual(0, notificationsCount);
         }
@@ -84,7 +82,7 @@ namespace CardCollection.Tests
         {
             const string eventId = "event-test";
 
-            _module = CreateModule(
+            yield return CreateFacadeInitialized(
                 eventId,
                 CreateDefinitions(
                     ("a1", "group-a"),
@@ -92,32 +90,55 @@ namespace CardCollection.Tests
                 CreateSaveData(
                     eventId,
                     ("a1", true),
-                    ("a2", false)));
+                    ("a2", false))).ToCoroutine(result => _facade = result);
 
             int notificationsCount = 0;
-            _module.OnCollectionCompleted += _ => notificationsCount++;
+            _facade.OnCollectionCompleted += _ => notificationsCount++;
 
-            yield return _module.InitializeAsync().ToCoroutine();
-            yield return _module.UnlockCard("a2").ToCoroutine();
-            yield return _module.UnlockCard("a2").ToCoroutine();
+            yield return _facade.UnlockCards(new[] { "a2" }).ToCoroutine();
+            yield return _facade.UnlockCards(new[] { "a2" }).ToCoroutine();
 
             Assert.AreEqual(1, notificationsCount);
         }
 
-        private static CardCollectionModule CreateModule(
+        private static async UniTask<ICardCollectionApplicationFacade> CreateFacadeInitialized(
             string eventId,
             List<CardDefinition> definitions,
             EventCardsSaveData initialData)
         {
-            var config = new CardCollectionModuleConfig(
-                new StubPackProvider(),
-                new InMemoryEventCardsStorage(initialData),
-                new StubCardDefinitionProvider(definitions),
-                new StubCardSelector(),
-                new CardCollectionDuplicatePointsTests.MockCardPointsCalculator(),
-                eventId);
+            var facade = CreateFacade(eventId, definitions, initialData);
+            await facade.InitializeAsync(CancellationToken.None);
+            return facade;
+        }
 
-            return new CardCollectionModule(config);
+        private static CardCollectionApplicationFacade CreateFacade(
+            string eventId,
+            List<CardDefinition> definitions,
+            EventCardsSaveData initialData)
+        {
+            var packProvider = new StubPackProvider();
+            var storage = new InMemoryEventCardsStorage(initialData);
+            var definitionProvider = new StubCardDefinitionProvider(definitions);
+            var selector = new StubCardSelector();
+            var pointsCalculator = new CardCollectionDuplicatePointsTests.MockCardPointsCalculator();
+            var cardPackService = new CardPackService(packProvider.Data);
+            var cardRandomizer = new PackBasedCardsRandomizer(selector, definitionProvider);
+            var cardProgressService = new CardProgressService(storage);
+            var duplicateCalculator = new DuplicateCardPointsCalculator(definitionProvider, pointsCalculator);
+
+            var openUseCase = new OpenPackUseCase(cardPackService, cardRandomizer, cardProgressService, duplicateCalculator, definitionProvider);
+            var unlockUseCase = new UnlockCardsUseCase(cardProgressService, definitionProvider);
+            var pointsService = new PointsAccountService(cardProgressService);
+            var queryService = new CollectionProgressQueryService(cardProgressService);
+            return new CardCollectionApplicationFacade(
+                eventId,
+                definitionProvider,
+                cardPackService,
+                cardProgressService,
+                openUseCase,
+                unlockUseCase,
+                pointsService,
+                queryService);
         }
 
         private static List<CardDefinition> CreateDefinitions(params (string id, string groupId)[] cards)
@@ -151,7 +172,7 @@ namespace CardCollection.Tests
             return data;
         }
 
-        private sealed class StubPackProvider : ICardPackProvider
+        private sealed class StubPackProvider : IStaticDataProvider<List<CardPackConfig>>
         {
             private static readonly List<CardPackConfig> EmptyPacks = new();
 

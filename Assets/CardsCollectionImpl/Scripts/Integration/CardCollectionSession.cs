@@ -13,13 +13,11 @@ namespace CardCollectionImpl
     public sealed class CardCollectionSession : IDisposable
     {
         private readonly UIManager _uiManager;
-        private readonly CardCollectionModule _module;
+        private readonly ICardCollectionApplicationFacade _facade;
         private readonly ICardCollectionRewardHandler _rewardHandler;
         private readonly CardCollectionHudPresenter _hudPresenter;
         private readonly CardCollectionInventoryIntegration _inventoryIntegration;
-        private readonly ICollectionProgressSnapshotService _snapshotService;
 
-        private CardCollectionRewardsConfigSO _rewardsConfig;
         private CardCollectionEventModel _cardCollectionEventModel;
 
         private CancellationTokenSource _cts;
@@ -31,21 +29,17 @@ namespace CardCollectionImpl
         public CardCollectionSession(
             UIManager uiManager,
             CardCollectionSessionContext context,
-            CardCollectionModule module,
+            ICardCollectionApplicationFacade facade,
             CardCollectionHudPresenter hudPresenter,
             ICardCollectionRewardHandler rewardHandler,
-            CardCollectionRewardsConfigSO rewardsConfig,
-            CardCollectionInventoryIntegration inventoryIntegration,
-            ICollectionProgressSnapshotService snapshotService)
+            CardCollectionInventoryIntegration inventoryIntegration)
         {
             Context = context;
-            _module = module;
+            _facade = facade;
             _uiManager = uiManager;
             _hudPresenter = hudPresenter;
             _rewardHandler = rewardHandler;
-            _rewardsConfig = rewardsConfig;
             _inventoryIntegration = inventoryIntegration;
-            _snapshotService = snapshotService;
         }
 
         public async UniTask StartAsync(CardCollectionEventModel model, ScheduleItem scheduleItem, CancellationToken externalCt)
@@ -62,13 +56,8 @@ namespace CardCollectionImpl
             
             try
             {
-                await _module.InitializeAsync(ct);
-
-                var data = await _module.Load(ct);
-                _snapshotService.SetSnapshot(data);
-
-                _module.OnGroupCompleted += OnGroupCompleted;
-                _module.OnCollectionCompleted += OnCollectionCompleted;
+                _facade.OnGroupCompleted += OnGroupCompleted;
+                _facade.OnCollectionCompleted += OnCollectionCompleted;
 
                 _inventoryIntegration.Attach();
                 _hudPresenter.Bind(scheduleItem, ct);
@@ -103,7 +92,6 @@ namespace CardCollectionImpl
             HideEventWindows();
             SafeStopInternal(externalCt);
             
-            //TODO add collection name
             var args = new CollectionCompletedArgs(_cardCollectionEventModel.EventId, _cardCollectionEventModel.CollectionName);
             _uiManager.Show<CollectionCompletedController>(args);
 
@@ -112,15 +100,6 @@ namespace CardCollectionImpl
 
         private void HideEventWindows()
         {
-            /*if (_uiManager.IsWindowSpawned<CardGroupController>())
-            {
-                var window = _uiManager.GetWindowSync<CardGroupController>();
-                if (window.IsShown)
-                {
-                    _uiManager.Hide<CardGroupController>(true);
-                }
-            }*/
-            
             if (_uiManager.IsWindowSpawned<CardCollectionController>())
             {
                 var window = _uiManager.GetWindowSync<CardCollectionController>();
@@ -138,8 +117,6 @@ namespace CardCollectionImpl
                 {
                     _uiManager.Hide<NewCardController>();
                 }
-                //TODO release resources
-                //window.ReleaseSprites();
             }
             
             if (_uiManager.IsWindowSpawned<CollectionStartedController>())
@@ -150,12 +127,6 @@ namespace CardCollectionImpl
                     _uiManager.Hide<CollectionStartedController>(true);
                 }
             }
-            
-            //TODO uncomment this when new window created
-            /*if (_uiManager.IsWindowShown<CardGroupRewardController>())
-            {
-                _uiManager.Hide<CardGroupRewardController>();
-            }*/
         }
         
         public UniTask SettleAsync(CancellationToken ct)
@@ -171,14 +142,6 @@ namespace CardCollectionImpl
             if (!_isStarted)
                 return;
 
-            /*
-             TODO check this hint
-             * One Small Bug in your SafeStopInternal:You have ct.ThrowIfCancellationRequested(); inside your cleanup logic.
-             * Warning: Usually, you should not throw inside a cleanup/internal stop method.
-             * If the externalCt is cancelled, you might skip _hudPresenter.Unbind() or _inventoryIntegration.Detach(),
-             * leaving "ghost" event listeners active in your game.
-             */
-            ct.ThrowIfCancellationRequested();
             _isStarted = false;
 
             try
@@ -187,8 +150,8 @@ namespace CardCollectionImpl
             }
             catch { /* ignore */ }
 
-            _module.OnGroupCompleted -= OnGroupCompleted;
-            _module.OnCollectionCompleted -= OnCollectionCompleted;
+            _facade.OnGroupCompleted -= OnGroupCompleted;
+            _facade.OnCollectionCompleted -= OnCollectionCompleted;
 
             try
             {
@@ -210,8 +173,7 @@ namespace CardCollectionImpl
 
             try
             {
-                ct.ThrowIfCancellationRequested();
-                _module?.Dispose();
+                _facade?.Dispose();
             }
             catch (Exception e)
             {
@@ -249,7 +211,6 @@ namespace CardCollectionImpl
                 return;
             }
 
-            Debug.LogWarning($"Test data {data.Groups.Count}");
             var rewardTasks = data.Groups
                 .Select(group => _rewardHandler.TryHandleGroupCompleted(group, ct))
                 .ToArray();
@@ -317,17 +278,6 @@ namespace CardCollectionImpl
             {
                 Debug.LogError($"[CardCollectionRuntime] HUD dispose error: {e}");
             }
-
-            try
-            {
-                ProdAddressablesWrapper.Release(_rewardsConfig);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[CardCollectionRuntime] Addressables release error: {e}");
-            }
-
-            _rewardsConfig = null;
         }
 
         private void ThrowIfDisposed()

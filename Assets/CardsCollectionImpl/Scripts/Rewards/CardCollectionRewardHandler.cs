@@ -13,11 +13,11 @@ namespace CardCollectionImpl
     {
         private readonly IRewardSpecProvider _rewardSpecProvider;
         private readonly IRewardGrantService _rewardGrantService;
-        private readonly CardCollectionRewardsConfigSO _cardCollectionRewardsConfigSo;
+        private readonly CardCollectionStaticData _collectionStaticData;
         
-        public CardCollectionRewardHandler(CardCollectionRewardsConfigSO configSo, IRewardSpecProvider rewardSpecProvider, IRewardGrantService rewardGrantService)
+        public CardCollectionRewardHandler(CardCollectionStaticData collectionStaticData, IRewardSpecProvider rewardSpecProvider, IRewardGrantService rewardGrantService)
         {
-            _cardCollectionRewardsConfigSo = configSo;
+            _collectionStaticData = collectionStaticData;
             _rewardGrantService = rewardGrantService;
             _rewardSpecProvider =  rewardSpecProvider;
         }
@@ -26,17 +26,17 @@ namespace CardCollectionImpl
         {
             ct.ThrowIfCancellationRequested();
             
-            var groupRewardConfig = _cardCollectionRewardsConfigSo.GroupRewards.FirstOrDefault(group => group.GroupId == groupCompletedData.GroupType);
-            
-            if (string.IsNullOrEmpty(groupRewardConfig.GroupId))
+            var groupRewardConfig = _collectionStaticData.Rewards.FirstOrDefault(group => group.rewardId == groupCompletedData.GroupType);
+
+            if (groupRewardConfig == null || string.IsNullOrEmpty(groupRewardConfig.rewardId))
             {
                 Debug.LogWarning($"Failed to find GroupRewardDefinition for group with ID {groupCompletedData.GroupType}");
                 return false;
             }
             
-            if (!_rewardSpecProvider.TryGet(groupRewardConfig.RewardId, out var spec))
+            if (!_rewardSpecProvider.TryGet(groupRewardConfig.rewardItemId, out var spec))
             {
-                throw new Exception($"Unknown reward id: {groupRewardConfig.RewardId}");
+                throw new Exception($"Unknown reward id: {groupRewardConfig.rewardItemId}");
             }
             
             return await ReceiveRewardsAsync(spec, ct);
@@ -46,8 +46,14 @@ namespace CardCollectionImpl
         {
             ct.ThrowIfCancellationRequested();
             
-            var collectionRewardDefinition = _cardCollectionRewardsConfigSo.FullCollectionReward; 
-            var rewardId = collectionRewardDefinition.RewardId; 
+            var groupRewardConfig = _collectionStaticData.Rewards.FirstOrDefault(group => group.rewardId == collectionCompletedData.EventId);
+            if (groupRewardConfig == null || string.IsNullOrEmpty(groupRewardConfig.rewardId))
+            {
+                Debug.LogWarning($"Failed to find GroupRewardDefinition for group with ID {collectionCompletedData.EventId}");
+                return false;
+            }
+            //var collectionRewardDefinition = _cardCollectionRewardsConfigSo.FullCollectionReward; 
+            var rewardId = groupRewardConfig.rewardItemId; 
             
             if (!_rewardSpecProvider.TryGet(rewardId, out var spec))
             {
@@ -114,18 +120,18 @@ namespace CardCollectionImpl
         
         public RewardViewData CreateRewardViewData(string groupType)
         {
-            if (string.IsNullOrEmpty(groupType) || _cardCollectionRewardsConfigSo.GroupRewards == null)
+            if (string.IsNullOrEmpty(groupType) || _collectionStaticData.Rewards == null)
                 return RewardViewData.Empty;
 
-            foreach (var groupReward in _cardCollectionRewardsConfigSo.GroupRewards)
+            foreach (var groupReward in _collectionStaticData.Rewards)
             {
-                if (!string.Equals(groupReward.GroupId, groupType, StringComparison.Ordinal))
+                if (!string.Equals(groupReward.rewardId, groupType, StringComparison.Ordinal))
                     continue;
 
-                if (!_rewardSpecProvider.TryGet(groupReward.RewardId, out var spec))
+                if (!_rewardSpecProvider.TryGet(groupReward.rewardItemId, out var spec))
                     return RewardViewData.Empty;
 
-                return new RewardViewData(groupReward.RewardId, spec.Icon, spec.TotalAmountForUi);
+                return new RewardViewData(groupReward.rewardItemId, spec.Icon, spec.TotalAmountForUi);
             }
 
             return RewardViewData.Empty;

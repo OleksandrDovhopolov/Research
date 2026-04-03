@@ -17,7 +17,6 @@ namespace Game.Bootstrap
         [SerializeField] private UIManager _uiManager;
         [SerializeField] private HUDService _hudService;
         [SerializeField] private GlobalTimerService _globalTimerService;
-        [SerializeField] private ExchangePacksConfig _exchangePacksConfig;
         [SerializeField] private RewardSpecsConfigSO _rewardSpecsConfigSo;
         [SerializeField] private string _cardCollectionScheduleFile = "card_collection_schedule.json";
         
@@ -37,11 +36,6 @@ namespace Game.Bootstrap
             {
                 throw new MissingReferenceException($"{nameof(GlobalTimerService)} is not assigned on {nameof(GameInstaller)}.");
             }
-            
-            if (_exchangePacksConfig == null)
-            {
-                throw new MissingReferenceException($"{nameof(ExchangePacksConfig)} is not assigned on {nameof(GameInstaller)}.");
-            }
 
             builder.RegisterInstance(_uiManager);
             builder.RegisterInstance<IHUDService>(_hudService);
@@ -51,7 +45,7 @@ namespace Game.Bootstrap
             builder.Register<IAnimationService, AnimationService>(Lifetime.Singleton);
             
             builder.RegisterInventoryService();
-            builder.RegisterCardCollectionImpl(_exchangePacksConfig);
+            builder.RegisterCardCollectionImpl();
             
             builder.RegisterComponentInHierarchy<AnimateCurrency>();
             

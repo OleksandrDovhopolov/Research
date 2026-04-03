@@ -21,38 +21,19 @@ namespace CardCollectionImpl
         public void ClearSession()
         {
             Debug.LogWarning($"[CardCollectionRuntime] ClearSession");
-            FeatureContext = null;
-            IsActive = false;
+            Dispose();
         }
 
-        public bool TryGetCollectionUpdater(out ICardCollectionUpdater updater)
+        public bool TryGetCollectionModule(out ICardCollectionModule module)
         {
-            updater = FeatureContext?.Updater;
-            return updater != null;
-        }
-
-        public bool TryGetCollectionReader(out ICardCollectionReader reader)
-        {
-            reader = FeatureContext?.Reader;
-            return reader != null;
+            module = FeatureContext?.Module;
+            return module != null;
         }
 
         public bool TryGetCollectionPointsAccount(out ICardCollectionPointsAccount pointsAccount)
         {
             pointsAccount = FeatureContext?.PointsAccount;
             return pointsAccount != null;
-        }
-
-        public UniTask ShowCardCollectionWindow(CancellationToken ct)
-        {
-            if (FeatureContext == null)
-            {
-                Debug.LogWarning("[CardCollectionRuntime] ShowCardCollectionWindow skipped: session context is null.");
-                return UniTask.CompletedTask;
-            }
-
-            Debug.LogWarning($"[CardCollectionRuntime] ShowCardCollectionWindow");
-            return UniTask.CompletedTask;
         }
 
         public UniTask ShowNewCardWindow(string packId, CancellationToken ct)
@@ -71,7 +52,8 @@ namespace CardCollectionImpl
         
         public void Dispose()
         {
-            // TODO release managed resources here
+            FeatureContext = null;
+            IsActive = false;
         }
     }
 }

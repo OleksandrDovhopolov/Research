@@ -13,7 +13,23 @@ MonoBehaviour:
   m_Name: RewardSpecsConfig
   m_EditorClassIdentifier: 
   RewardSpecs:
-  - RewardId: test
+  - RewardId: Energy
+    Icon: {fileID: 21300000, guid: d37846b1ca5494942a3b7328b7b99a42, type: 3}
+    TotalAmountForUi: 100
+    Resources:
+    - ResourceId: Energy
+      Amount: 100
+      Category: regular
+      Icon: {fileID: 21300000, guid: d37846b1ca5494942a3b7328b7b99a42, type: 3}
+  - RewardId: Gold
+    Icon: {fileID: 21300000, guid: a90d15eca49af4c35a74467dea6c9c07, type: 3}
+    TotalAmountForUi: 100
+    Resources:
+    - ResourceId: Gold
+      Amount: 100
+      Category: regular
+      Icon: {fileID: 21300000, guid: a90d15eca49af4c35a74467dea6c9c07, type: 3}
+  - RewardId: Gems
     Icon: {fileID: 21300000, guid: baddc6138b88d4615bbd843bb59d70c0, type: 3}
     TotalAmountForUi: 100
     Resources:
@@ -21,14 +37,6 @@ MonoBehaviour:
       Amount: 100
       Category: regular
       Icon: {fileID: 21300000, guid: baddc6138b88d4615bbd843bb59d70c0, type: 3}
-  - RewardId: default
-    Icon: {fileID: 21300000, guid: a90d15eca49af4c35a74467dea6c9c07, type: 3}
-    TotalAmountForUi: 1
-    Resources:
-    - ResourceId: Gold
-      Amount: 1
-      Category: regular
-      Icon: {fileID: 21300000, guid: a90d15eca49af4c35a74467dea6c9c07, type: 3}
   - RewardId: Spring_Collection
     Icon: {fileID: 21300000, guid: c18565495745b3445a73b61b12bea321, type: 3}
     TotalAmountForUi: 1

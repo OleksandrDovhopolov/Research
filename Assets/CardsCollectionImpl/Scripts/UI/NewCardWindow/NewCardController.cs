@@ -11,22 +11,18 @@ namespace CardCollectionImpl
         public readonly string EventId;
         public readonly string PackId;
         public readonly ICardCollectionModule CollectionModule;
-        public readonly ICardCollectionReader CollectionReader;
-        public readonly ICardCollectionCacheService CardCollectionCacheService;
+        public readonly ICardCollectionPointsAccount CollectionPointsAccount;
 
         public NewCardArgs(
             string eventId,
             string packId,
             ICardCollectionModule collectionModule,
-            ICardCollectionReader collectionReader,
-            ICardCollectionCacheService cardCollectionCacheService)
+            ICardCollectionPointsAccount cardCollectionPointsAccount)
         {
             EventId =  eventId;
             PackId = packId;
             CollectionModule = collectionModule;
-            CollectionReader = collectionReader;
-            CollectionReader = collectionReader;
-            CardCollectionCacheService = cardCollectionCacheService;
+            CollectionPointsAccount = cardCollectionPointsAccount;
         }
     }
 
@@ -34,14 +30,16 @@ namespace CardCollectionImpl
     public class NewCardController : WindowController<NewCardView>
     {
         private IEventSpriteManager _eventSpriteManager;
+        private ICardCollectionCacheService _cardCollectionCacheService;
         
         private NewCardArgs Args => (NewCardArgs)Arguments;
         private CancellationTokenSource _cts;
 
         [Inject]
-        private void Construct(IEventSpriteManager eventSpriteManager)
+        private void Construct(IEventSpriteManager eventSpriteManager, ICardCollectionCacheService cardCollectionCacheService)
         {
             _eventSpriteManager = eventSpriteManager;
+            _cardCollectionCacheService = cardCollectionCacheService;
         }
         
         protected override void OnShowStart()
@@ -53,12 +51,12 @@ namespace CardCollectionImpl
 
         private async UniTask GetNewCardsAsync(CancellationToken ct)
         {
-            var collectionPoints = await Args.CollectionReader.GetCollectionPoints();
+            var collectionPoints = await Args.CollectionPointsAccount.GetCollectionPoints(ct);
             View.UpdatePointsAmount(collectionPoints);
             
             var cardsIdList = await Args.CollectionModule.OpenPackAndUnlockAsync(Args.PackId, ct);
             var cardsData = await Args.CollectionModule.GetCardsByIdsAsync(cardsIdList, ct);
-            var displayData = Args.CardCollectionCacheService.ToNewCardDisplayData(cardsData);
+            var displayData = _cardCollectionCacheService.ToNewCardDisplayData(cardsData);
             
             View.CreateNewCards(Args.EventId, displayData);
         }

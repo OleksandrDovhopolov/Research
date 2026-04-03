@@ -26,6 +26,7 @@ namespace Game.Bootstrap
         
         private IObjectResolver _resolver;
         private ResourceManager _resourceManager;
+        private RemoteConfigLoader _remoteConfigLoader;
         
         [Inject]
         private void Construct(ResourceManager resourceManager, IObjectResolver resolver)
@@ -45,7 +46,6 @@ namespace Game.Bootstrap
             Debug.LogWarning($"[Debug] Start {GetType().Name}");
             WindowFactoryBase windowFactoryBase = new WindowFactoryDI(_uiManager, _resolver);
             UIManagerEventHandlerBase eventHandler = new UIManagerSignalHandler();
-
             _uiManager.Configurate(windowFactoryBase, eventHandler);
 
             _cheatButton.onClick.AddListener(OpenCheatsPanel);
@@ -56,6 +56,9 @@ namespace Game.Bootstrap
         private async UniTask Init(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
+            
+            _remoteConfigLoader = new RemoteConfigLoader();
+            _remoteConfigLoader.Init();
             
             await LoadAddressables(ct);
             await LoadConfig(ct); 

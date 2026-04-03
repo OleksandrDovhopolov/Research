@@ -47,12 +47,10 @@ namespace CardCollectionImpl
             return new CardCollectionSession(
                 uiManager: null,
                 context: null,
-                module: null,
+                facade: null,
                 hudPresenter: null,
                 rewardHandler: null,
-                rewardsConfig: null,
-                inventoryIntegration: null,
-                snapshotService: null);
+                inventoryIntegration: null);
         }
 
         private static void SetPrivateField<T>(object target, string fieldName, T value)

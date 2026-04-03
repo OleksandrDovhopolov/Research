@@ -57,11 +57,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4673902ec1e84e64b84f93d6221f6cb7
-    m_Address: CardCollectionRewardsConfig
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 46806fdc6ca128d46972600a49df3ffc
     m_Address: Sapphire_Pack
     m_ReadOnly: 0
@@ -82,8 +77,28 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a34d6b812b764a24eb44ab4b3984a37d
+    m_Address: chest01_closed
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ad6290e5e00b7b54c89272c27b5a5661
+    m_Address: chest03_closed
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c18565495745b3445a73b61b12bea321
+    m_Address: chest04_closed
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c517bcceb2b91964a92ecf296c189e69
     m_Address: CollectionCompletedWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d06ab8344710c644486d412f858a3c67
+    m_Address: chest02_closed
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -1,5 +1,7 @@
 using System;
 using CardCollection.Core;
+using Cysharp.Threading.Tasks;
+using Infrastructure;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,7 +19,7 @@ namespace CardCollectionImpl
         [SerializeField] private Sprite _enabledBackgroundSprite;
         [SerializeField] private RectTransform _rectTransform;
 
-        private ExchangeOfferData _packEntry;
+        private CardCollectionOfferConfig _packEntry;
         public event Action<string, RectTransform> OnButtonClicked;
         public event Action<string, RectTransform> OnPackClicked;
 
@@ -29,24 +31,33 @@ namespace CardCollectionImpl
 
         private void OnBuyButtonClickHandler()
         {
-            OnButtonClicked?.Invoke(_packEntry.OfferId, _rectTransform);
+            OnButtonClicked?.Invoke(_packEntry.id, _rectTransform);
         }
 
         private void OnInfoButtonClickHandler()
         {
-            OnPackClicked?.Invoke(_packEntry.OfferId, _rectTransform);
+            OnPackClicked?.Invoke(_packEntry.id, _rectTransform);
         }
 
-        public void SetData(int starsAmount, ExchangeOfferData packEntry)
+        public void SetData(int starsAmount, CardCollectionOfferConfig packEntry)
         {
             _packEntry =  packEntry;
-            _packImage.sprite = packEntry.Sprite;
-            _starsAmountText.text = packEntry.Price.ToString("N0");
-            _buttonBackground.sprite = packEntry.Price < starsAmount ? _enabledBackgroundSprite : _disabledBackgroundSprite;
+            _starsAmountText.text = packEntry.packPrice.ToString("N0");
+            _buttonBackground.sprite = packEntry.packPrice < starsAmount ? _enabledBackgroundSprite : _disabledBackgroundSprite;
+            
+            LoadSprite().Forget();
+        }
+
+        private async UniTask LoadSprite()
+        {
+            var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(_packEntry.spriteId, this.GetCancellationTokenOnDestroy());
+            _packImage.sprite = sprite;
         }
         
         private void OnDestroy()
         {
+            ProdAddressablesWrapper.Release(_packEntry.spriteId);
+            _packImage.sprite = null;
             _buyPackButton.onClick.RemoveAllListeners();
             _packInfoButton.onClick.RemoveAllListeners();
         }

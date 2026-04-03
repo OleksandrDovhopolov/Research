@@ -18,7 +18,7 @@ namespace CardCollection.Tests
         public void Setup()
         {
             mockProvider = new MockCardPackProvider();
-            service = new CardPackService(mockProvider);
+            service = new CardPackService(mockProvider.Data);
         }
 
         [TearDown]
@@ -100,7 +100,7 @@ namespace CardCollection.Tests
             Assert.AreEqual(2, purchases);
         }
 
-        private class MockCardPackProvider : ICardPackProvider
+        private class MockCardPackProvider : IStaticDataProvider<List<CardPackConfig>>
         {
             private readonly List<CardPackConfig> _packs;
 
