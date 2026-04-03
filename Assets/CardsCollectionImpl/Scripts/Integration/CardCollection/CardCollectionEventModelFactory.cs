@@ -12,14 +12,13 @@ namespace EventOrchestration.Controllers
     {
         private const string CollectionNameKey = "collectionName";
         
+        private const string EventConfigAddressKey = "eventConfigAddress";
+        
         private const string RewardsConfigAddressKey = "rewardsConfigAddress";
         private const string FallbackRewardsConfigAddress = "CardCollectionRewardsConfig";
         
         private const string CardsCollectionAddressKey = "cardsCollectionAddress";
         private const string FallbackCollectionAddress = "fallback_card_collection";
-        
-        private const string CardGroupsAddressKey = "cardGroupsAddress";
-        private const string FallbackCardGroupsAddress = "fallback_card_groups";
         
         private const string CardPacksAddressKey = "cardPacksAddress";
         private const string FallbackCardPacksAddress = "shared_card_packs_config";
@@ -32,6 +31,7 @@ namespace EventOrchestration.Controllers
             item.CustomParams ??= new Dictionary<string, string>();
             
             item.CustomParams.TryGetValue(CollectionNameKey, out var collectionName);
+            item.CustomParams.TryGetValue(EventConfigAddressKey, out var eventConfigAddress);
             
             item.CustomParams.TryGetValue(RewardsConfigAddressKey, out var rewardsConfigAddress);
             if (string.IsNullOrEmpty(rewardsConfigAddress))
@@ -45,13 +45,6 @@ namespace EventOrchestration.Controllers
             {
                 Debug.LogError($"Failed to resolve CardsCollectionConfigAddressKey. Default used");
                 cardsCollectionAddress = FallbackCollectionAddress;
-            }
-
-            item.CustomParams.TryGetValue(CardGroupsAddressKey, out var cardGroupsAddress);
-            if (string.IsNullOrEmpty(cardGroupsAddress))
-            {
-                Debug.LogError($"Failed to resolve CardGroupsConfigAddressKey. Default used");
-                cardGroupsAddress = FallbackCardGroupsAddress;
             }
             
             item.CustomParams.TryGetValue(CardPacksAddressKey, out var cardPacksAddress);
@@ -67,10 +60,12 @@ namespace EventOrchestration.Controllers
                 EventType = item.EventType,
                 StreamId = item.StreamId,
                 CollectionName = collectionName,
+                
                 RewardsConfigAddress = rewardsConfigAddress,
                 CardCollectionFileName = cardsCollectionAddress,
-                GroupsFileName = cardGroupsAddress,
                 CardPacksFileName = cardPacksAddress,
+                
+                EventConfigAddress = eventConfigAddress,
             };
 
             return UniTask.FromResult(model);

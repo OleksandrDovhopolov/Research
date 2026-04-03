@@ -37,7 +37,7 @@ namespace Game.Cheat
         {
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Create test events", () =>
             {
-                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 10, 300);
+                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 10, 30);
                 //var first = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, 30, 120);
                 var second = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, first.EndTimeUtc, TimeSpan.FromSeconds(30));
                 
@@ -127,11 +127,12 @@ namespace Game.Cheat
                 CustomParams = new Dictionary<string, string>
                 {
                     ["eventId"] = eventId,
+                    ["collectionName"] = eventName,
                     ["rewardsConfigAddress"] = "winter_collection_rewards",
                     ["cardsCollectionAddress"] = "winter_collection_cards",
-                    ["cardGroupsAddress"] = "winter_collection_groups",
                     ["cardPacksAddress"] = "shared_card_packs_config",
-                    ["collectionName"] = eventName,
+                    
+                    ["eventConfigAddress"] = "event_winter_collection_config",
                 },
             };
         }
@@ -151,11 +152,12 @@ namespace Game.Cheat
                 CustomParams = new Dictionary<string, string>
                 {
                     ["eventId"] = eventId,
+                    ["collectionName"] = eventName,
                     ["rewardsConfigAddress"] = "spring_collection_rewards",
                     ["cardsCollectionAddress"] = "spring_collection_cards",
-                    ["cardGroupsAddress"] = "spring_collection_groups",
                     ["cardPacksAddress"] = "shared_card_packs_config",
-                    ["collectionName"] = eventName,
+                    
+                    ["eventConfigAddress"] = "event_spring_collection_config",
                 },
             };
         }

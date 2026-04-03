@@ -16,14 +16,7 @@ namespace CardCollectionImpl
         
         protected override List<RewardConfig> ParseAsset(CardEventRewardsConfigSO rewardsConfigSo)
         {
-            var result = rewardsConfigSo.ToString();
-            
-            Debug.LogWarning($"{GetType().Name} - {result}");
-            var rewards = JsonConvert.DeserializeObject<Wrapper>(result).rewards;
-            
-            Debug.LogWarning($"{GetType().Name} - {rewards.Count}");
-            
-            return rewards;
+            return JsonConvert.DeserializeObject<Wrapper>(rewardsConfigSo.ToString()).rewards;
         }
     }
 }
