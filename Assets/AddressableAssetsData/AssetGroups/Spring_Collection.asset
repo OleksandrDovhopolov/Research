@@ -71,12 +71,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Spring_Collection
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 55bf0528dfc32be45aa54db8e9346dd2
-    m_Address: spring_collection_groups
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Spring_Collection
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 638e04498675fd743a6574fb350cd7c8
     m_Address: Spring_Collection/Icon_Magnetic
     m_ReadOnly: 0
@@ -107,12 +101,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Spring_Collection
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7940ee88cb0dffb479111cf3855f50e0
-    m_Address: spring_collection_cards
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Spring_Collection
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 94e0831601e874f4782a318a70225696
     m_Address: Spring_Collection/Icon_Bomb_Dynamite
     m_ReadOnly: 0
@@ -133,12 +121,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a512805d65ee79f4e9f0167cbda177c6
     m_Address: Spring_Collection/card_9
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Spring_Collection
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a93b3c6ff8a94394db0b025981c1bb60
-    m_Address: spring_collection_rewards
     m_ReadOnly: 0
     m_SerializedLabels:
     - Spring_Collection
