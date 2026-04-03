@@ -5,6 +5,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
 using EventOrchestration.Models;
+using UnityEngine;
 
 namespace EventOrchestration.Core
 {
@@ -46,6 +47,7 @@ namespace EventOrchestration.Core
             ct.ThrowIfCancellationRequested();
 
             var loadedSchedule = await _scheduleProvider.LoadAsync(ct);
+            
             var validationErrors = await _scheduleValidator.ValidateAsync(loadedSchedule, ct);
             if (validationErrors.Count > 0)
             {

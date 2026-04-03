@@ -25,11 +25,11 @@ namespace UIShared
             }
 
             _ct = this.GetCancellationTokenOnDestroy();
-            _uiListPool.DisableAll();
         }
 
         public void AddUpcoming(string eventId, IGlobalTimerService  globalTimerService)
         {
+            Debug.LogWarning($"[Debug] AddUpcoming eventId {eventId}");
             if (_uiListPool == null) return;
             if (string.IsNullOrEmpty(eventId)) return;
             if (_idToView.ContainsKey(eventId)) return;
@@ -39,9 +39,9 @@ namespace UIShared
 
         private async UniTask SetDataAsync(string eventId, IGlobalTimerService  globalTimerService)
         {
+            var sprite = await LoadCollectionSprite(GetSpriteAddress(eventId));
+            
             var view = _uiListPool.GetNext();
-            var spriteAddress = eventId + "/" + CardCollectionGeneralConfig.CollectionPreview;
-            var sprite = await LoadCollectionSprite(spriteAddress);
             view.SetData(eventId, sprite, globalTimerService);
             _idToView[eventId] = view;
         }
@@ -74,9 +74,13 @@ namespace UIShared
                 _idToView.Remove(eventId);
             }
             
-            var spriteAddress = eventId + "/" + CardCollectionGeneralConfig.CollectionPreview;
-            ProdAddressablesWrapper.Release(spriteAddress);
+            ProdAddressablesWrapper.Release(GetSpriteAddress(eventId));
             _uiListPool.DisableNonActive();
+        }
+
+        private string GetSpriteAddress(string eventId)
+        {
+            return eventId + "/" + CardCollectionGeneralConfig.CollectionPreview;
         }
     }
 }

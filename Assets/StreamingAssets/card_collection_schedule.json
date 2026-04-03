@@ -1,17 +1,28 @@
 [
   {
-    "Id": "season_cards_001",
+    "Id": "Winter_Collection",
     "EventType": "CardCollection",
-    "StartTimeUtc": "2026-03-26T13:57:00Z",
-    "EndTimeUtc": "2026-03-26T14:00:00Z",
+    "StartTimeUtc": "2026-04-03T17:30:00Z",
+    "EndTimeUtc": "2026-04-03T17:40:00Z",
     "Priority": 10,
     "StreamId": "card_collection_seasons",
     "CustomParams": {
-      "eventId": "season_cards_001",
-      "rewardsConfigAddress": "season_rewards_001",
-      "cardsCollectionAddress": "season_cards_001",
-      "cardGroupsAddress": "season_groups_001",
-      "cardPacksAddress": "shared_card_packs_config"
+      "eventId": "Winter_Collection",
+      "collectionName": "Winter Collection",
+      "eventConfigAddress": "event_winter_collection_config"
+    }
+  },
+  {
+    "Id": "Spring_Collection",
+    "EventType": "CardCollection",
+    "StartTimeUtc": "2026-04-03T17:40:00Z",
+    "EndTimeUtc": "2026-04-03T17:50:00Z",
+    "Priority": 10,
+    "StreamId": "card_collection_seasons",
+    "CustomParams": {
+      "eventId": "Spring_Collection",
+      "collectionName": "Spring Collection",
+      "eventConfigAddress": "event_spring_collection_config"
     }
   }
 ]

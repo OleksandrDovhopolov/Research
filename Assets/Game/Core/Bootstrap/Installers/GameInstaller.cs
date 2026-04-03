@@ -19,6 +19,7 @@ namespace Game.Bootstrap
         [SerializeField] private GlobalTimerService _globalTimerService;
         [SerializeField] private RewardSpecsConfigSO _rewardSpecsConfigSo;
         [SerializeField] private string _cardCollectionScheduleFile = "card_collection_schedule.json";
+        [SerializeField] private string _removeCardCollectionConfigSchedule = "cards_event_schedule";
         
         protected override void Configure(IContainerBuilder builder)
         {
@@ -61,7 +62,7 @@ namespace Game.Bootstrap
             builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(_rewardSpecsConfigSo), Lifetime.Singleton); 
             
             // Orchestration.asmdef
-            builder.RegisterOrchestration(_cardCollectionScheduleFile);
+            builder.RegisterOrchestration(_cardCollectionScheduleFile, _removeCardCollectionConfigSchedule);
             builder.RegisterComponentInHierarchy<OrchestratorRunner>();
 
             builder.RegisterComponentInHierarchy<Bootstrap>();

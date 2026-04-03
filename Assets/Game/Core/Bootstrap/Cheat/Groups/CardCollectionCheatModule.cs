@@ -38,7 +38,6 @@ namespace Game.Cheat
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Create test events", () =>
             {
                 var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 10, 30);
-                //var first = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, 30, 120);
                 var second = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, first.EndTimeUtc, TimeSpan.FromSeconds(30));
                 
                 _orchestratorRunner.AddDebugCardCollectionEventNextMinute(first);
@@ -104,15 +103,6 @@ namespace Game.Cheat
         
         private ScheduleItem CreateDebugCardCollectionScheduleItemForNextMinute(string eventId, string eventName, int secondsDelay = 30, int secondsDuration = 30)
         {
-            /*var now = DateTimeOffset.UtcNow;
-            var startAt = new DateTimeOffset(
-                now.Year,
-                now.Month,
-                now.Day,
-                now.Hour,
-                now.Minute,
-                0,
-                TimeSpan.Zero).AddSeconds(secondsDelay);*/
             var startAt = DateTimeOffset.UtcNow.AddSeconds(secondsDelay);
             var endAt = startAt.AddSeconds(secondsDuration);
 
@@ -150,39 +140,6 @@ namespace Game.Cheat
                     ["eventId"] = eventId,
                     ["collectionName"] = eventName,
                     ["eventConfigAddress"] = "event_spring_collection_config",
-                },
-            };
-        }
-        
-        private ScheduleItem CreateDebugCardCollectionScheduleItem(string eventId, string eventName, int secondsDelay = 30, int secondsDuration = 30)
-        {
-            var now = DateTimeOffset.UtcNow;
-            var startAt = new DateTimeOffset(
-                now.Year,
-                now.Month,
-                now.Day,
-                now.Hour,
-                now.Minute,
-                0,
-                TimeSpan.Zero).AddSeconds(secondsDelay);
-            var endAt = startAt.AddSeconds(secondsDuration);
-
-            return new ScheduleItem
-            {
-                Id = eventId,
-                EventType = "CardCollection",
-                StartTimeUtc = startAt,
-                EndTimeUtc = endAt,
-                Priority = 10,
-                StreamId = "card_collection_seasons",
-                CustomParams = new Dictionary<string, string>
-                {
-                    ["eventId"] = eventId,
-                    ["rewardsConfigAddress"] = "spring_collection_rewards",
-                    ["cardsCollectionAddress"] = "spring_collection_cards",
-                    ["cardGroupsAddress"] = "spring_collection_groups",
-                    ["cardPacksAddress"] = "shared_card_packs_config",
-                    ["collectionName"] = eventName,
                 },
             };
         }

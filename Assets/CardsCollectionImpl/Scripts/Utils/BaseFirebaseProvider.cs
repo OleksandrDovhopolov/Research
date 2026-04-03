@@ -56,6 +56,7 @@ namespace CardCollectionImpl
         {
             ct.ThrowIfCancellationRequested();
 
+            await UniTask.CompletedTask;
             var value = FirebaseRemoteConfig.DefaultInstance.GetValue(address);
             var json = value.StringValue;
 
