@@ -12,7 +12,6 @@ namespace CardCollectionImpl
         private readonly UIManager _uiManager;
         private readonly IHUDService _hudService;
         private readonly IRewardSpecProvider _rewardSpecProvider;
-        private readonly ExchangePacksConfig _exchangePacksConfig;
         private readonly IRewardGrantService _rewardGrantService;
         private readonly IItemCategoryRegistry _itemCategoryRegistry;
         private readonly IInventoryUseHandlerStorage _inventoryUseHandlerStorage;
@@ -22,7 +21,6 @@ namespace CardCollectionImpl
             UIManager uiManager,
             IHUDService hudService,
             IRewardSpecProvider rewardSpecProvider,
-            ExchangePacksConfig exchangePacksConfig,
             IRewardGrantService rewardGrantService,
             IItemCategoryRegistry itemCategoryRegistry,
             IInventoryUseHandlerStorage inventoryUseHandlerStorage,
@@ -31,7 +29,6 @@ namespace CardCollectionImpl
             _uiManager = uiManager;
             _hudService = hudService;
             _rewardSpecProvider = rewardSpecProvider;
-            _exchangePacksConfig = exchangePacksConfig;
             _rewardGrantService = rewardGrantService;
             _itemCategoryRegistry = itemCategoryRegistry;
             _inventoryUseHandlerStorage = inventoryUseHandlerStorage;
@@ -45,14 +42,13 @@ namespace CardCollectionImpl
         {
             var rewardHandler = new CardCollectionRewardHandler(staticData, _rewardSpecProvider, _rewardGrantService);
             var snapshotBuilder = new CollectionProgressSnapshotBuilder(_cardCollectionCacheService, staticData.Groups);
-            var exchangeOfferProvider = new ExchangeOfferProvider(_exchangePacksConfig, rewardHandler);
+            var exchangeOfferProvider = new ExchangeOfferProvider(staticData.Offers, rewardHandler);
 
             var windowOpener = new CardCollectionWindowOpener(
                 _uiManager,
+                staticData,
                 facade,
                 facade,
-                staticData.Cards,
-                staticData.Groups,
                 exchangeOfferProvider,
                 snapshotBuilder,
                 rewardHandler);

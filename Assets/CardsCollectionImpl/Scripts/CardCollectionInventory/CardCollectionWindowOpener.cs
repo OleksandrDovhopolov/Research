@@ -12,19 +12,17 @@ namespace CardCollectionImpl
     public sealed class CardCollectionWindowOpener : ICardCollectionWindowOpener
     {
         private readonly UIManager _uiManager;
-        private readonly IReadOnlyList<CardConfig> _cards;
+        private readonly CardCollectionStaticData _eventStaticData;
         private readonly ICardCollectionModule _collectionModule;
         private readonly ICardCollectionRewardHandler _rewardHandler;
         private readonly IExchangeOfferProvider _exchangeOfferProvider;
-        private readonly IReadOnlyList<CardCollectionGroupConfig> _groups;
         private readonly ICardCollectionPointsAccount _collectionPointsAccount;
         private readonly ICollectionProgressSnapshotBuilder _collectionProgressSnapshotBuilder;
 
         public CardCollectionWindowOpener(UIManager uiManager,
+            CardCollectionStaticData eventStaticData,
             ICardCollectionModule module,
             ICardCollectionPointsAccount pointsAccount,
-            IReadOnlyList<CardConfig> cards,
-            IReadOnlyList<CardCollectionGroupConfig> groups,
             IExchangeOfferProvider exchangeOfferProvider,
             ICollectionProgressSnapshotBuilder collectionProgressSnapshotBuilder,
             ICardCollectionRewardHandler rewardHandler)
@@ -33,8 +31,7 @@ namespace CardCollectionImpl
             _collectionModule = module ?? throw new ArgumentNullException(nameof(module));
             _collectionPointsAccount = pointsAccount ?? throw new ArgumentNullException(nameof(pointsAccount));
             _rewardHandler = rewardHandler ?? throw new ArgumentNullException(nameof(rewardHandler));
-            _cards = cards ?? throw new ArgumentNullException(nameof(cards));
-            _groups = groups ?? throw new ArgumentNullException(nameof(groups));
+            _eventStaticData = eventStaticData ?? throw new ArgumentNullException(nameof(eventStaticData));
             _exchangeOfferProvider = exchangeOfferProvider ?? throw new ArgumentNullException(nameof(exchangeOfferProvider));
             _collectionProgressSnapshotBuilder = collectionProgressSnapshotBuilder ?? throw new ArgumentNullException(nameof(collectionProgressSnapshotBuilder));
         }
@@ -58,7 +55,7 @@ namespace CardCollectionImpl
 
             foreach (var groupType in groupTypes)
             {
-                var groupConfig = _groups.FirstOrDefault(group => group.groupType == groupType);
+                var groupConfig = _eventStaticData.Groups.FirstOrDefault(group => group.groupType == groupType);
                 if (groupConfig == null)
                 {
                     Debug.LogError($"Failed to find group {groupType}");
@@ -79,7 +76,7 @@ namespace CardCollectionImpl
             var beforeResetData = await _collectionModule.Load(ct);
             var snapshotBeforeReset = _collectionProgressSnapshotBuilder.Build(beforeResetData);
             
-            var newCardsData = CardCollectionNewCardsDto.Create(beforeResetData, _cards);
+            var newCardsData = CardCollectionNewCardsDto.Create(beforeResetData, _eventStaticData.Cards);
             var newCardIds = newCardsData.NewCardIds;
             if (newCardIds.Count > 0)
             {
@@ -95,8 +92,8 @@ namespace CardCollectionImpl
                 _collectionPointsAccount,
                 snapshotBeforeReset,
                 _collectionModule.EventId,
-                _cards,
-                _groups);
+                _eventStaticData.Cards,
+                _eventStaticData.Groups);
             _uiManager.Show<CardCollectionController>(args);
         }
     }

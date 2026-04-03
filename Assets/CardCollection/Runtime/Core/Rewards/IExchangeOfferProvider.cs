@@ -6,7 +6,7 @@ namespace CardCollection.Core
 {
     public interface IExchangeOfferProvider
     {
-        IReadOnlyCollection<ExchangeOfferData> GetAllOffers();
+        IReadOnlyCollection<CardCollectionOfferConfig> GetAllOffers();
         int GetOfferPrice(string offerPackId);
         UniTask<bool> ReceiveOfferContent(string offerPackId, CancellationToken ct = default);
     }

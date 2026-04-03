@@ -1,0 +1,19 @@
+{
+  "packs": [
+    {
+      "id": "SmallPack",
+      "spriteId": "chest01_closed",
+      "packPrice": 100
+    },
+    {
+      "id": "MiddlePack",
+      "spriteId": "chest02_closed",
+      "packPrice": 250
+    },
+    {
+      "id": "BigPack",
+      "spriteId": "chest03_closed",
+      "packPrice": 500
+    }
+  ]
+}

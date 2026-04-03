@@ -8,16 +8,8 @@ namespace CardCollectionImpl
 {
     public static class CardCollectionImplInstaller
     {
-        public static void RegisterCardCollectionImpl(this IContainerBuilder builder, ExchangePacksConfig exchangePacksConfig)
+        public static void RegisterCardCollectionImpl(this IContainerBuilder builder)
         {
-            if (exchangePacksConfig == null)
-            {
-                throw new MissingReferenceException(
-                    $"{nameof(ExchangePacksConfig)} is not assigned on {nameof(CardCollectionImplInstaller)}.");
-            }
-
-            builder.RegisterInstance(exchangePacksConfig);
-            
             builder.Register<IEventConfigProvider, FirebaseEventConfigProvider>(Lifetime.Singleton);
             
             builder.Register<IEventCardsStorage, JsonEventCardsStorage>(Lifetime.Singleton);
