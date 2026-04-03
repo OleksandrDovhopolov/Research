@@ -8,7 +8,7 @@ namespace CardCollection.Core
     [Serializable]
     public class EventConfig
     {
-        //public List<MapData> maps;
+        public List<CardConfig> cards;
         public List<CardCollectionGroupConfig> groups;
         //public RewardsData rewards;
         //public List<PackData> packs;

@@ -23,7 +23,6 @@ namespace CardCollectionImpl
             // Card collection feature storage
             
             builder.Register<ICardPackProvider, AddressablesCardPackProvider>(Lifetime.Singleton);
-            builder.Register<ICardsConfigProvider, AddressablesCardsConfigProvider>(Lifetime.Singleton); // MIGRATION IN PROGRESS
             builder.Register<IEventRewardsConfigProvider, FirebaseEventRewardsProvider>(Lifetime.Singleton);
             
             builder.Register<IEventConfigProvider, FirebaseEventConfigProvider>(Lifetime.Singleton);

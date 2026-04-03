@@ -129,7 +129,6 @@ namespace Game.Cheat
                     ["eventId"] = eventId,
                     ["collectionName"] = eventName,
                     ["rewardsConfigAddress"] = "winter_collection_rewards",
-                    ["cardsCollectionAddress"] = "winter_collection_cards",
                     ["cardPacksAddress"] = "shared_card_packs_config",
                     
                     ["eventConfigAddress"] = "event_winter_collection_config",
@@ -154,7 +153,6 @@ namespace Game.Cheat
                     ["eventId"] = eventId,
                     ["collectionName"] = eventName,
                     ["rewardsConfigAddress"] = "spring_collection_rewards",
-                    ["cardsCollectionAddress"] = "spring_collection_cards",
                     ["cardPacksAddress"] = "shared_card_packs_config",
                     
                     ["eventConfigAddress"] = "event_spring_collection_config",
