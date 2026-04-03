@@ -1,6 +1,6 @@
 using System;
 using CardCollection.Core;
-using Unity.Plastic.Newtonsoft.Json;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace CardCollectionImpl
@@ -15,11 +15,7 @@ namespace CardCollectionImpl
         
         protected override EventConfig ParseAsset(TextAsset textAsset)
         {
-            var test = textAsset.text;
-            Debug.LogWarning($"Debug test {test}");
-            var result = JsonConvert.DeserializeObject<Wrapper>(textAsset.text).eventConfigs;
-            Debug.LogWarning($"Debug result {result}");
-            return result;
+            return JsonConvert.DeserializeObject<Wrapper>(textAsset.text).eventConfigs;
         }
     }
 }
