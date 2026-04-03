@@ -72,9 +72,9 @@ namespace UIShared
                 view.ResetSprite();
                 _uiListPool.Return(view);
                 _idToView.Remove(eventId);
+                ProdAddressablesWrapper.Release(GetSpriteAddress(eventId));
             }
             
-            ProdAddressablesWrapper.Release(GetSpriteAddress(eventId));
             _uiListPool.DisableNonActive();
         }
 

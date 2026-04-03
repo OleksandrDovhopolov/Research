@@ -46,7 +46,7 @@ namespace CardCollectionImpl
             _inventoryIntegration = inventoryIntegration;
         }
 
-        public async UniTask StartAsync(CardCollectionEventModel model, ScheduleItem scheduleItem, CancellationToken externalCt)
+        public async UniTask StartAsync(CardCollectionEventModel model, ScheduleItem scheduleItem, bool firstStart, CancellationToken externalCt)
         {
             ThrowIfDisposed();
 
@@ -65,12 +65,7 @@ namespace CardCollectionImpl
                 _inventoryIntegration.Attach();
 
                 await EnsureEventAssetsReadyAsync(scheduleItem, ct);
-                
-                var spriteAddress = model.EventId + "/" + CardCollectionGeneralConfig.CollectionBackground;
-                var previewSprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, externalCt);
-                var args = new CollectionStartedArgs(_cardCollectionEventModel.EventId, _cardCollectionEventModel.CollectionName, previewSprite);
-                _uiManager.Show<CollectionStartedController>(args, UIShowCommand.UIShowType.Ordered);
-                
+                await IntroduceEvent(model.EventId, firstStart, ct);
                 await _hudPresenter.Bind(scheduleItem, ct);
                 
                 _isStarted = true;
@@ -79,6 +74,17 @@ namespace CardCollectionImpl
             {
                 SafeStopInternal(ct);
                 throw;
+            }
+        }
+
+        public async UniTask IntroduceEvent(string eventId, bool firstStart, CancellationToken externalCt)
+        {
+            if (firstStart)
+            {
+                var spriteAddress = eventId + "/" + CardCollectionGeneralConfig.CollectionBackground;
+                var previewSprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, externalCt);
+                var args = new CollectionStartedArgs(_cardCollectionEventModel.EventId, _cardCollectionEventModel.CollectionName, previewSprite);
+                _uiManager.Show<CollectionStartedController>(args, UIShowCommand.UIShowType.Ordered);
             }
         }
         

@@ -1,4 +1,5 @@
 using System;
+using EventOrchestration.Abstractions;
 using EventOrchestration.Models;
 using UIShared;
 using UnityEngine;
@@ -10,12 +11,14 @@ namespace EventOrchestration.Core
     {
         [SerializeField] private EventDebugView _debugView;
         
+        private IClock _clock;
         private EventOrchestrator _orchestrator;
         private IGlobalTimerService _globalTimerService;
 
         [Inject]
-        private void Construct(EventOrchestrator orchestrator, IGlobalTimerService  globalTimerService)
+        private void Construct(IClock clock, EventOrchestrator orchestrator, IGlobalTimerService  globalTimerService)
         {
+            _clock = clock;
             _orchestrator = orchestrator;
             _globalTimerService = globalTimerService;
         }
@@ -38,7 +41,11 @@ namespace EventOrchestration.Core
             if (item == null) return;
             
             _globalTimerService.Register(item.Id, item.StartTimeUtc);
-            _debugView.AddUpcoming(item.Id, _globalTimerService);
+            
+            if (_clock.UtcNow < item.StartTimeUtc)
+            {
+                _debugView.AddUpcoming(item.Id, _globalTimerService);
+            }
         }
 
         private void HandleEventStarted(ScheduleItem item)

@@ -7,7 +7,6 @@ namespace CardCollectionImpl
     public interface ICardCollectionFeatureFacade
     {
         bool IsActive { get; }
-        CardCollectionSessionContext FeatureContext { get; }
 
         void SetActiveSession(CardCollectionSessionContext sessionContext);
         bool TryGetCollectionModule(out ICardCollectionModule module);

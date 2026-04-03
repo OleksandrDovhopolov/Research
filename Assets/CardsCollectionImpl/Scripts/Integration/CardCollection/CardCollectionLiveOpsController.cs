@@ -33,8 +33,10 @@ namespace CardCollectionImpl
             CardCollectionSession newSession = null;
             try
             {
+                var firstStart = !state.StartInvoked;
+                
                 newSession = await _collectionRuntimeBuilder.BuildAsync(model, ct);
-                await newSession.StartAsync(model, CurrentSchedule, ct);
+                await newSession.StartAsync(model, CurrentSchedule, firstStart, ct);
 
                 ct.ThrowIfCancellationRequested();
                 

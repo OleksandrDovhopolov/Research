@@ -226,14 +226,16 @@ namespace EventOrchestration.Core
                 await TransitionStateAsync(state, EventInstanceState.Starting, ct);
 
                 await controller.InitializeAsync(item, state, ct);
-
+                await controller.OnStart(ct);
+                
                 if (!state.StartInvoked)
                 {
-                    await controller.OnStart(ct);
                     state.StartInvoked = true;
                 }
 
                 await TransitionStateAsync(state, EventInstanceState.Active, ct);
+                await _stateStore.SaveAsync(_states, ct);
+                
                 OnEventStarted?.Invoke(item);
 
                 await ProcessActiveAsync(item, _clock.UtcNow, ct);
