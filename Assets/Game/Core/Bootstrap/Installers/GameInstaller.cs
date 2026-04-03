@@ -2,6 +2,7 @@ using CardCollectionImpl;
 using core;
 using CoreResources;
 using EventOrchestration;
+using Infrastructure.SaveSystem;
 using Inventory.API;
 using Rewards;
 using UIShared;
@@ -41,7 +42,9 @@ namespace Game.Bootstrap
             builder.RegisterInstance(_uiManager);
             builder.RegisterInstance<IHUDService>(_hudService);
             builder.RegisterInstance<IGlobalTimerService>(_globalTimerService);
-            builder.Register<JsonResourcesStorage>(Lifetime.Singleton);
+            builder.Register<SaveMigrationService>(Lifetime.Singleton);
+            builder.Register<ISaveStorage>(_ => new LocalDiskStorage("global_save.json"), Lifetime.Singleton);
+            builder.Register<SaveService>(Lifetime.Singleton);
             builder.Register<ResourceManager>(Lifetime.Singleton);
             builder.Register<IAnimationService, AnimationService>(Lifetime.Singleton);
             

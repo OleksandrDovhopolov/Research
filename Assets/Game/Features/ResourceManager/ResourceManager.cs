@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Core.Models;
 using Cysharp.Threading.Tasks;
+using Infrastructure.SaveSystem;
 using UnityEngine;
 
 namespace CoreResources
@@ -17,18 +19,14 @@ namespace CoreResources
             { ResourceType.Energy, 0 },
             { ResourceType.Gems, 0 },
         };
-        private readonly JsonResourcesStorage _storage;
+        private readonly SaveService _saveService;
         private readonly CancellationTokenSource _saveCts = new();
         private bool _isInitialized;
         private bool _isDisposed;
 
-        public ResourceManager() : this(new JsonResourcesStorage())
+        public ResourceManager(SaveService saveService)
         {
-        }
-
-        public ResourceManager(JsonResourcesStorage storage)
-        {
-            _storage = storage;
+            _saveService = saveService;
         }
 
         public async UniTask InitializeAsync(CancellationToken ct)
@@ -39,8 +37,14 @@ namespace CoreResources
                 return;
             }
 
-            await _storage.InitializeAsync(ct);
-            var saveData = await _storage.LoadAsync(ct);
+            await _saveService.LoadAllAsync(ct);
+            var saveData = await _saveService.GetModuleAsync(data => new ResourcesModuleSaveData
+            {
+                Version = data.Resources.Version,
+                Gold = data.Resources.Gold,
+                Energy = data.Resources.Energy,
+                Gems = data.Resources.Gems,
+            }, ct);
             ApplySaveData(saveData);
             _isInitialized = true;
         }
@@ -48,7 +52,14 @@ namespace CoreResources
         public UniTask SaveAsync(CancellationToken ct)
         {
             ThrowIfDisposed();
-            return _storage.SaveAsync(CreateSaveData(), ct);
+            var saveData = CreateSaveData();
+            return _saveService.UpdateModuleAsync(data => data.Resources, resources =>
+            {
+                resources.Version = saveData.Version;
+                resources.Gold = saveData.Gold;
+                resources.Energy = saveData.Energy;
+                resources.Gems = saveData.Gems;
+            }, ct);
         }
 
         public void Add(ResourceType type, int amount)
@@ -104,10 +115,9 @@ namespace CoreResources
             _isDisposed = true;
             _saveCts.Cancel();
             _saveCts.Dispose();
-            _storage.Dispose();
         }
 
-        private void ApplySaveData(ResourcesSaveData saveData)
+        private void ApplySaveData(ResourcesModuleSaveData saveData)
         {
             if (saveData == null)
             {
@@ -119,10 +129,11 @@ namespace CoreResources
             _amountByType[ResourceType.Gems] = Mathf.Max(0, saveData.Gems);
         }
 
-        private ResourcesSaveData CreateSaveData()
+        private ResourcesModuleSaveData CreateSaveData()
         {
-            return new ResourcesSaveData
+            return new ResourcesModuleSaveData
             {
+                Version = 1,
                 Gold = _amountByType[ResourceType.Gold],
                 Energy = _amountByType[ResourceType.Energy],
                 Gems = _amountByType[ResourceType.Gems],

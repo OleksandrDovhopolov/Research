@@ -16,7 +16,8 @@
         "GUID:0c9a3bc3d6a5a4a7db1f089ece85cc6b",
         "GUID:23477f9337a4987418fe1de21d7c8454",
         "GUID:ef2f55bf82153a147a5aa65f49abf214",
-        "GUID:84651a3751eca9349aac36a66bba901b"
+        "GUID:84651a3751eca9349aac36a66bba901b",
+        "Core.Models"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
