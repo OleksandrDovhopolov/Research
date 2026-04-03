@@ -1,7 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using System;
+using System.Collections.Generic;
 
 namespace CardCollection.Core
 {
@@ -10,7 +8,7 @@ namespace CardCollection.Core
     {
         public List<CardConfig> cards;
         public List<CardCollectionGroupConfig> groups;
-        //public RewardsData rewards;
+        public List<RewardConfig> rewards;
         //public List<PackData> packs;
         //public List<OfferData> offers;
     }

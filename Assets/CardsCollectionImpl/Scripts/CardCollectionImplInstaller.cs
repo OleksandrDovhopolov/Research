@@ -18,12 +18,7 @@ namespace CardCollectionImpl
 
             builder.RegisterInstance(exchangePacksConfig);
             
-            //TODO this should be in CardCollectionImplInstaller. but CardCollectionController crashes because cant resolve 
-            // dependencies from CardCollectionImplInstaller. Bug in WindowFactoryDI -  var controller = _diContainer.Resolve<T>();
-            // Card collection feature storage
-            
             builder.Register<ICardPackProvider, AddressablesCardPackProvider>(Lifetime.Singleton);
-            builder.Register<IEventRewardsConfigProvider, FirebaseEventRewardsProvider>(Lifetime.Singleton);
             
             builder.Register<IEventConfigProvider, FirebaseEventConfigProvider>(Lifetime.Singleton);
             

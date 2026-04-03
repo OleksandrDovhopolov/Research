@@ -58,9 +58,9 @@ namespace CardCollectionImpl
         public EventConfig EventConfig { private get; set; }
         public IReadOnlyList<CardConfig> Cards  => EventConfig.cards;
         public IReadOnlyList<CardCollectionGroupConfig> Groups => EventConfig.groups;
+        public IReadOnlyList<RewardConfig> Rewards => EventConfig.rewards;
         
         
         public IReadOnlyList<CardPackConfig> Packs { get; set; }
-        public IReadOnlyList<RewardConfig> Rewards { get; set; }
     }
 }

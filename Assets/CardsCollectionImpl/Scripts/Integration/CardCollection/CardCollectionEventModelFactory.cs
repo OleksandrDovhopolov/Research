@@ -14,9 +14,6 @@ namespace EventOrchestration.Controllers
         
         private const string EventConfigAddressKey = "eventConfigAddress";
         
-        private const string RewardsConfigAddressKey = "rewardsConfigAddress";
-        private const string FallbackRewardsConfigAddress = "CardCollectionRewardsConfig";
-        
         private const string CardPacksAddressKey = "cardPacksAddress";
         private const string FallbackCardPacksAddress = "shared_card_packs_config";
         
@@ -30,12 +27,6 @@ namespace EventOrchestration.Controllers
             item.CustomParams.TryGetValue(CollectionNameKey, out var collectionName);
             item.CustomParams.TryGetValue(EventConfigAddressKey, out var eventConfigAddress);
             
-            item.CustomParams.TryGetValue(RewardsConfigAddressKey, out var rewardsConfigAddress);
-            if (string.IsNullOrEmpty(rewardsConfigAddress))
-            {
-                Debug.LogError($"Failed to resolve RewardsConfigAddressKey. Default used");
-                rewardsConfigAddress = FallbackRewardsConfigAddress;
-            }
             
             item.CustomParams.TryGetValue(CardPacksAddressKey, out var cardPacksAddress);
             if (string.IsNullOrEmpty(cardPacksAddress))
@@ -51,7 +42,6 @@ namespace EventOrchestration.Controllers
                 StreamId = item.StreamId,
                 CollectionName = collectionName,
                 
-                RewardsConfigAddress = rewardsConfigAddress,
                 CardPacksFileName = cardPacksAddress,
                 
                 EventConfigAddress = eventConfigAddress,
