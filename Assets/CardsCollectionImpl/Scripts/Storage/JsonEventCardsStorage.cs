@@ -29,7 +29,7 @@ namespace CardCollectionImpl
         {
             ValidateEventId(eventId);
 
-            var saveData = await _saveService.GetModuleAsync(data =>
+            var saveData = await _saveService.GetReadonlyModuleAsync(data =>
             {
                 var found = data.CardCollections.Find(x => x.EventId == eventId);
                 return found == null ? null : CloneCardCollection(found);

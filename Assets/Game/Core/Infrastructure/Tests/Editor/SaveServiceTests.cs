@@ -87,7 +87,7 @@ namespace Infrastructure.Tests.Editor
             var service = CreateService();
             await service.LoadAllAsync(CancellationToken.None);
             await service.SaveAllAsync(CancellationToken.None);
-            var resources = await service.GetModuleAsync(data => new ResourcesModuleSaveData
+            var resources = await service.GetReadonlyModuleAsync(data => new ResourcesModuleSaveData
             {
                 Version = data.Resources.Version,
                 Gold = data.Resources.Gold,

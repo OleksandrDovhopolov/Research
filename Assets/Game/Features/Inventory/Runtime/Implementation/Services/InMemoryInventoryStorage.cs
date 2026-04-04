@@ -30,7 +30,7 @@ namespace Inventory.Implementation.Services
                 return savedItems.ToArray();
             }
 
-            var loadedItemsData = await _saveService.GetModuleAsync(data =>
+            var loadedItemsData = await _saveService.GetReadonlyModuleAsync(data =>
             {
                 var resolvedOwnerId = string.IsNullOrWhiteSpace(ownerId) ? "player_1" : ownerId;
                 var owner = data.Inventory.Owners.Find(x => x.OwnerId == resolvedOwnerId);

@@ -22,7 +22,7 @@ namespace EventOrchestration.Infrastructure
         public async UniTask<Dictionary<string, EventStateData>> LoadAsync(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
-            var savedStates = await _saveService.GetModuleAsync(data => data.EventStates
+            var savedStates = await _saveService.GetReadonlyModuleAsync(data => data.EventStates
                 .Select(x => new EventStateSaveData
                 {
                     ScheduleItemId = x.ScheduleItemId,

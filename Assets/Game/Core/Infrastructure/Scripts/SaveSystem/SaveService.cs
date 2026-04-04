@@ -50,7 +50,7 @@ namespace Infrastructure.SaveSystem
             {
                 if (_isLoaded)
                 {
-                    return _data;
+                    return CloneDetached(_data);
                 }
 
                 if (_storage.Exists())
@@ -70,7 +70,7 @@ namespace Infrastructure.SaveSystem
                 ValidateData(_data);
                 VerifyHash(_data);
                 _isLoaded = true;
-                loadedSnapshot = _data;
+                loadedSnapshot = CloneDetached(_data);
             }
             finally
             {
@@ -138,7 +138,7 @@ namespace Infrastructure.SaveSystem
             }
         }
 
-        public async UniTask<TModule> GetModuleAsync<TModule>(
+        public async UniTask<TModule> GetReadonlyModuleAsync<TModule>(
             Func<GameSaveData, TModule> selector,
             CancellationToken cancellationToken)
         {
@@ -153,7 +153,8 @@ namespace Infrastructure.SaveSystem
                     throw new ArgumentNullException(nameof(selector));
                 }
 
-                return selector(_data);
+                var module = selector(_data);
+                return CloneDetached(module);
             }
             finally
             {
@@ -350,6 +351,17 @@ namespace Infrastructure.SaveSystem
             }
 
             return sb.ToString();
+        }
+
+        private static T CloneDetached<T>(T source)
+        {
+            if (source == null)
+            {
+                return default;
+            }
+
+            var json = JsonConvert.SerializeObject(source, Formatting.None);
+            return JsonConvert.DeserializeObject<T>(json);
         }
 
         private void ThrowIfDisposed()

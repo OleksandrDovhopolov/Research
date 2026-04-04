@@ -38,7 +38,7 @@ namespace CoreResources
             }
 
             await _saveService.LoadAllAsync(ct);
-            var saveData = await _saveService.GetModuleAsync(data => new ResourcesModuleSaveData
+            var saveData = await _saveService.GetReadonlyModuleAsync(data => new ResourcesModuleSaveData
             {
                 Version = data.Resources.Version,
                 Gold = data.Resources.Gold,
