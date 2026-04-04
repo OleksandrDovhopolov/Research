@@ -1,7 +1,7 @@
 using System.Threading;
 using CardCollectionImpl;
 using cheatModule;
-using UnityEngine;
+using Cysharp.Threading.Tasks;
 
 namespace Game.Cheat
 {
@@ -54,14 +54,7 @@ namespace Game.Cheat
         
         public void OpenNewCardWindow(string packId)
         {
-            if (_sessionFacade.IsActive)
-            {
-                _sessionFacade.ShowNewCardWindow(packId, _ct);
-            }
-            else
-            {
-                Debug.LogWarning($"[CardCollectionRuntime] {GetType().Name}: OpenNewCardWindow called without active feature");
-            }
+            _sessionFacade.TryShowNewCardWindow(packId, _ct).Forget();
         }
     }
 }

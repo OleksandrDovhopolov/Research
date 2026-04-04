@@ -1,17 +1,19 @@
 using System.Threading;
-using CardCollection.Core;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 
 namespace CardCollectionImpl
 {
     public interface ICardCollectionSessionFacade
     {
-        bool IsActive { get; }
-
         internal void SetActiveSession(CardCollectionSessionContext sessionContext);
-        bool TryGetCollectionModule(out ICardCollectionModule module);
-        bool TryGetCollectionPointsAccount(out ICardCollectionPointsAccount pointsAccount);
-        UniTask ShowNewCardWindow(string packId, CancellationToken ct);
+        UniTask TryShowNewCardWindow(string packId, CancellationToken ct);
+        UniTask TryUnlockCards(IReadOnlyCollection<string> cardIds, CancellationToken ct);
+        UniTask TryAddPoints(int points, CancellationToken ct);
+        UniTask TryRemovePoints(int points, CancellationToken ct);
+        UniTask TryCompleteAllCollection(CancellationToken ct);
+        UniTask TryUnlockAllMinusOneCard(CancellationToken ct);
+        UniTask TryUnlockGroupByIndex(int groupIndex, CancellationToken ct);
         internal void ClearSession();
     }
 }
