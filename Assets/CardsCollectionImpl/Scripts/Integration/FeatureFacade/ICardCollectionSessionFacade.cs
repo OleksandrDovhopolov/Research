@@ -4,14 +4,14 @@ using Cysharp.Threading.Tasks;
 
 namespace CardCollectionImpl
 {
-    public interface ICardCollectionFeatureFacade
+    public interface ICardCollectionSessionFacade
     {
         bool IsActive { get; }
 
-        void SetActiveSession(CardCollectionSessionContext sessionContext);
+        internal void SetActiveSession(CardCollectionSessionContext sessionContext);
         bool TryGetCollectionModule(out ICardCollectionModule module);
         bool TryGetCollectionPointsAccount(out ICardCollectionPointsAccount pointsAccount);
         UniTask ShowNewCardWindow(string packId, CancellationToken ct);
-        void ClearSession();
+        internal void ClearSession();
     }
 }

@@ -16,12 +16,12 @@ namespace Game.Cheat
         private const string BaseSixCardPackID = "Ruby_Pack";
         
         private readonly CancellationToken _ct;
-        private readonly ICardCollectionFeatureFacade _featureFacade;
+        private readonly ICardCollectionSessionFacade _sessionFacade;
         
-        public AddCardsCheatModule(ICardCollectionFeatureFacade featureFacade,  CancellationToken ct)
+        public AddCardsCheatModule(ICardCollectionSessionFacade sessionFacade,  CancellationToken ct)
         {
             _ct = ct;
-            _featureFacade = featureFacade;
+            _sessionFacade = sessionFacade;
         }
         
         public void Initialize(ICheatsContainer cheatsContainer)
@@ -54,9 +54,9 @@ namespace Game.Cheat
         
         public void OpenNewCardWindow(string packId)
         {
-            if (_featureFacade.IsActive)
+            if (_sessionFacade.IsActive)
             {
-                _featureFacade.ShowNewCardWindow(packId, _ct);
+                _sessionFacade.ShowNewCardWindow(packId, _ct);
             }
             else
             {

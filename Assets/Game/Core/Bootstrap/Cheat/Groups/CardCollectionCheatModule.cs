@@ -18,7 +18,7 @@ namespace Game.Cheat
         
         private readonly CancellationToken _ct;
         private readonly OrchestratorRunner _orchestratorRunner;
-        private readonly ICardCollectionFeatureFacade _featureFacade;
+        private readonly ICardCollectionSessionFacade _sessionFacade;
 
         private const string WinterCollectionEventId = "Winter_Collection";
         private const string WinterCollectionEventName = "Winter Collection";
@@ -26,10 +26,10 @@ namespace Game.Cheat
         private const string SpringCollectionEventId = "Spring_Collection";
         private const string SpringCollectionEventName = "Spring Collection";
         
-        public CardCollectionCheatModule(ICardCollectionFeatureFacade featureFacade, OrchestratorRunner orchestratorRunner, CancellationToken ct)
+        public CardCollectionCheatModule(ICardCollectionSessionFacade sessionFacade, OrchestratorRunner orchestratorRunner, CancellationToken ct)
         {
             _ct = ct;
-            _featureFacade = featureFacade;
+            _sessionFacade = sessionFacade;
             _orchestratorRunner = orchestratorRunner;
         }
 
@@ -66,7 +66,7 @@ namespace Game.Cheat
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<string>("Open card ID(str)", cardId =>
             {
-                if (_featureFacade.TryGetCollectionModule(out var module))
+                if (_sessionFacade.TryGetCollectionModule(out var module))
                 {
                     module.UnlockCards(new[] { cardId }, _ct).Forget();
                 }
@@ -78,7 +78,7 @@ namespace Game.Cheat
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Add points(int)", points =>
             {
-                if (_featureFacade.TryGetCollectionPointsAccount(out var pointsAccount))
+                if (_sessionFacade.TryGetCollectionPointsAccount(out var pointsAccount))
                 {
                     pointsAccount.TryAddPointsAsync(points, _ct).Forget();
                 }
@@ -90,7 +90,7 @@ namespace Game.Cheat
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Remove points(int)", points =>
             {
-                if (_featureFacade.TryGetCollectionPointsAccount(out var pointsAccount))
+                if (_sessionFacade.TryGetCollectionPointsAccount(out var pointsAccount))
                 {
                     pointsAccount.TrySpendPointsAsync(points, _ct).Forget();
                 }
@@ -158,7 +158,7 @@ namespace Game.Cheat
             foreach (var cardId in cardIds)
             {
                 ct.ThrowIfCancellationRequested();
-                if (_featureFacade.TryGetCollectionModule(out var module))
+                if (_sessionFacade.TryGetCollectionModule(out var module))
                 {
                     await module.UnlockCards(new[] { cardId }, ct);
                 }
@@ -180,8 +180,8 @@ namespace Game.Cheat
                 Debug.LogWarning("[Cheat] Not enough cards to unlock all minus one.");
                 return;
             }
-
-            if (!_featureFacade.TryGetCollectionModule(out var module))
+            
+            if (!_sessionFacade.TryGetCollectionModule(out var module))
             {
                 Debug.LogWarning("[Cheat] CardCollection module is unavailable.");
                 return;
@@ -220,7 +220,7 @@ namespace Game.Cheat
                 return;
             }
 
-            if (!_featureFacade.TryGetCollectionModule(out var module))
+            if (!_sessionFacade.TryGetCollectionModule(out var module))
             {
                 Debug.LogWarning("[Cheat] CardCollection module is unavailable.");
                 return;
@@ -236,7 +236,7 @@ namespace Game.Cheat
         private async UniTask<List<string>> GetAllCardIdsAsync(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
-            if (!_featureFacade.TryGetCollectionModule(out var module))
+            if (!_sessionFacade.TryGetCollectionModule(out var module))
             {
                 Debug.LogWarning("[Cheat] CardCollection reader is unavailable.");
                 return new List<string>();

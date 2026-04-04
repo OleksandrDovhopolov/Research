@@ -12,15 +12,15 @@ namespace CardCollectionImpl
     {
         private CardCollectionSession _cardCollectionSession;
         
-        private readonly ICardCollectionFeatureFacade _featureFacade;
+        private readonly ICardCollectionSessionFacade _sessionFacade;
         private readonly ICardCollectionRuntimeBuilder _collectionRuntimeBuilder;
         
         public CardCollectionLiveOpsController(
             IEventModelFactory modelFactory,
-            ICardCollectionFeatureFacade featureFacade,
+            ICardCollectionSessionFacade sessionFacade,
             ICardCollectionRuntimeBuilder collectionRuntimeBuilder) : base("CardCollection", modelFactory)
         {
-            _featureFacade = featureFacade;
+            _sessionFacade = sessionFacade;
             _collectionRuntimeBuilder = collectionRuntimeBuilder;
         }
         
@@ -41,7 +41,7 @@ namespace CardCollectionImpl
                 ct.ThrowIfCancellationRequested();
                 
                 _cardCollectionSession = newSession;
-                _featureFacade.SetActiveSession(_cardCollectionSession.Context);
+                _sessionFacade.SetActiveSession(_cardCollectionSession.Context);
             }
             catch (Exception e) when (e is not OperationCanceledException)
             {
@@ -99,7 +99,7 @@ namespace CardCollectionImpl
                 if (ReferenceEquals(targetSession, _cardCollectionSession))
                 {
                     _cardCollectionSession = null;
-                    _featureFacade.ClearSession();
+                    _sessionFacade.ClearSession();
                 }
             }
         }
