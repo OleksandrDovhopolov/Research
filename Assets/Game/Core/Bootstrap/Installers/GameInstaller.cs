@@ -2,10 +2,12 @@ using CardCollectionImpl;
 using core;
 using CoreResources;
 using EventOrchestration;
+using Game.Bootstrap.Loading;
 using Infrastructure.SaveSystem;
 using Inventory.API;
 using Rewards;
 using UIShared;
+using UIShared.Loading;
 using UISystem;
 using UnityEngine;
 using VContainer;
@@ -21,6 +23,7 @@ namespace Game.Bootstrap
         [SerializeField] private RewardSpecsConfigSO _rewardSpecsConfigSo;
         [SerializeField] private string _cardCollectionScheduleFile = "card_collection_schedule.json";
         [SerializeField] private string _removeCardCollectionConfigSchedule = "cards_event_schedule";
+        //[SerializeField] private LoadingScreenView _loadingScreenView;
         
         protected override void Configure(IContainerBuilder builder)
         {
@@ -38,14 +41,27 @@ namespace Game.Bootstrap
             {
                 throw new MissingReferenceException($"{nameof(GlobalTimerService)} is not assigned on {nameof(GameInstaller)}.");
             }
+            
+            /*if (_loadingScreenView == null)
+            {
+                throw new MissingReferenceException($"{nameof(LoadingScreenView)} is not assigned on {nameof(GameInstaller)}.");
+            }*/
 
             builder.RegisterInstance(_uiManager);
             builder.RegisterInstance<IHUDService>(_hudService);
             builder.RegisterInstance<IGlobalTimerService>(_globalTimerService);
-            builder.Register<SaveMigrationService>(Lifetime.Singleton);
-            builder.Register<ISaveStorage>(_ => new LocalDiskStorage("global_save.json"), Lifetime.Singleton);
-            builder.Register<SaveService>(Lifetime.Singleton);
-            builder.Register<ResourceManager>(Lifetime.Singleton);
+            //builder.RegisterInstance<ILoadingScreenView>(_loadingScreenView);
+            //builder.Register<ISaveStorage>(_ => new LocalDiskStorage("global_save.json"), Lifetime.Singleton);
+           // builder.Register<SaveService>(Lifetime.Singleton);
+            
+            //builder.Register<ResourceManager>(Lifetime.Singleton);
+            
+            //builder.Register<RemoteConfigLoader>(Lifetime.Singleton);
+            
+            //builder.Register<IAuthorizationService, MockAuthorizationService>(Lifetime.Singleton);
+            
+            //builder.Register<LoadingProgressAggregator>(Lifetime.Singleton);
+            //builder.Register<LoadingOrchestrator>(Lifetime.Singleton);
             builder.Register<IAnimationService, AnimationService>(Lifetime.Singleton);
             
             builder.RegisterInventoryService();

@@ -1,0 +1,30 @@
+using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using UnityEngine;
+
+namespace Game.Bootstrap.Loading.Operations
+{
+    public sealed class WarmupOperation : LoadingOperationBase
+    {
+        public WarmupOperation()
+            : base(
+                id: "warmup",
+                description: "Warming up game resources",
+                isCritical: false,
+                weight: 0.1f,
+                displayPriority: 70,
+                retryPolicy: new LoadingRetryPolicy(1, TimeSpan.Zero),
+                timeout: TimeSpan.FromSeconds(5))
+        {
+        }
+
+        protected override async UniTask ExecuteInternalAsync(CancellationToken ct)
+        {
+            // Placeholder warm-up step; can be extended with shader/prefab warm-up.
+            ReportProgress(0.2f);
+            await UniTask.Yield(PlayerLoopTiming.Update, ct);
+            ReportProgress(1f);
+        }
+    }
+}

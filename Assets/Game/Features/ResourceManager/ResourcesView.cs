@@ -26,6 +26,7 @@ namespace CoreResources
             
             ResourceManager.ResourceAmountChanged += OnResourceAmountChangedHandler;
         }
+        
         public void UpdateFromResourceManager(bool instant = false)
         {
             if (ResourceManager == null) return;
