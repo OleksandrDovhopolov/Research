@@ -29,7 +29,7 @@ namespace CardCollectionImpl
             builder.Register<ICardCollectionRuntimeBuilder, CardCollectionRuntimeBuilder>(Lifetime.Singleton);
             
             // Client code usage facade
-            builder.Register<ICardCollectionFeatureFacade, CardCollectionFeatureFacadeFacade>(Lifetime.Singleton);
+            builder.Register<ICardCollectionSessionFacade, CardCollectionSessionFacade>(Lifetime.Singleton);
             
             // Event model factory
             builder.Register<IEventModelFactory, CardCollectionEventModelFactory>(Lifetime.Singleton);

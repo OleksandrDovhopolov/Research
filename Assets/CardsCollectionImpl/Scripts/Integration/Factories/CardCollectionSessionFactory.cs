@@ -35,35 +35,35 @@ namespace CardCollectionImpl
             _cardCollectionCacheService = cardCollectionCacheService;
         }
 
-        public CardCollectionSession Create(
-            CardCollectionEventModel model,
-            CardCollectionStaticData staticData,
-            ICardCollectionApplicationFacade facade)
+        public CardCollectionSession Create(CardCollectionEventModel model, CardCollectionStaticData staticData, ICardCollectionApplicationFacade facade)
         {
             var rewardHandler = new CardCollectionRewardHandler(staticData, _rewardSpecProvider, _rewardGrantService);
+            
             var snapshotBuilder = new CollectionProgressSnapshotBuilder(_cardCollectionCacheService, staticData.Groups);
+            
             var exchangeOfferProvider = new ExchangeOfferProvider(staticData.Offers, rewardHandler);
 
-            var windowOpener = new CardCollectionWindowOpener(
-                _uiManager,
-                staticData,
-                facade,
-                facade,
-                exchangeOfferProvider,
-                snapshotBuilder,
-                rewardHandler);
+            var windowCoordinator = new CardCollectionWindowCoordinator(_uiManager);
 
-            var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
-            var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, windowOpener);
-            var context = new CardCollectionSessionContext(facade, facade, windowOpener);
+            var hudPresenter = new CardCollectionHudPresenter(_hudService);
+            
+            var newCardFlowService = new NewCardFlowService(facade, facade, _cardCollectionCacheService);
+            
+            var cardPackInventoryUseHandler = new CardPackInventoryUseHandler(facade, newCardFlowService, windowCoordinator);
+            
+            var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, cardPackInventoryUseHandler);
+            
+            var context = new CardCollectionSessionContext(facade, facade, _cardCollectionCacheService, windowCoordinator);
 
             return new CardCollectionSession(
-                _uiManager,
                 context,
                 facade,
                 hudPresenter,
                 rewardHandler,
-                inventoryIntegration);
+                inventoryIntegration,
+                staticData,
+                snapshotBuilder,
+                exchangeOfferProvider);
         }
     }
 }

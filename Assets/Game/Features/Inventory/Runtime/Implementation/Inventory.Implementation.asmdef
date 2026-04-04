@@ -9,7 +9,8 @@
         "UISystem",
         "Unity.TextMeshPro",
         "Infrastructure",
-        "NewAssembly"
+        "NewAssembly",
+        "Core.Models"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

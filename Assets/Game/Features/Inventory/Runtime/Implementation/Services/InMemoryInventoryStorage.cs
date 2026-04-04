@@ -1,20 +1,21 @@
 using System.Collections.Generic;
-using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading;
+using Core.Models;
 using Cysharp.Threading.Tasks;
-using Infrastructure;
+using Infrastructure.SaveSystem;
 using Inventory.API;
-using UnityEngine;
 
 namespace Inventory.Implementation.Services
 {
     public sealed class InMemoryInventoryStorage : IInventoryStorage
     {
         private readonly Dictionary<string, List<InventoryItemView>> _storage = new();
-        private readonly AtomicJsonFileSaver _jsonFileSaver = new();
-        private static readonly Regex InvalidFileNameChars = new($"[{Regex.Escape(new string(Path.GetInvalidFileNameChars()))}]", RegexOptions.Compiled);
-        private string _rootPath;
+        private readonly SaveService _saveService;
+
+        public InMemoryInventoryStorage(SaveService saveService)
+        {
+            _saveService = saveService;
+        }
 
         public async UniTask<IReadOnlyList<InventoryItemView>> LoadAsync(
             string ownerId,
@@ -22,17 +23,34 @@ namespace Inventory.Implementation.Services
         {
             cancellationToken.ThrowIfCancellationRequested();
             ValidateOwnerId(ownerId);
-            await EnsureInitializedAsync(cancellationToken);
+            await _saveService.LoadAllAsync(cancellationToken);
 
             if (_storage.TryGetValue(ownerId, out var savedItems))
             {
                 return savedItems.ToArray();
             }
 
-            var loadedItems = await _jsonFileSaver.LoadAsync<List<InventoryItemView>>(
-                GetFilePath(ownerId),
-                cancellationToken,
-                $"InMemoryInventoryStorage Load failed for owner {ownerId}") ?? new List<InventoryItemView>();
+            var loadedItemsData = await _saveService.GetReadonlyModuleAsync(data =>
+            {
+                var resolvedOwnerId = string.IsNullOrWhiteSpace(ownerId) ? "player_1" : ownerId;
+                var owner = data.Inventory.Owners.Find(x => x.OwnerId == resolvedOwnerId);
+                return owner?.Items?.ConvertAll(x => new InventoryItemSaveData
+                {
+                    OwnerId = x.OwnerId,
+                    ItemId = x.ItemId,
+                    StackCount = x.StackCount,
+                    CategoryId = x.CategoryId,
+                }) ?? new List<InventoryItemSaveData>();
+            }, cancellationToken);
+            var loadedItems = new List<InventoryItemView>(loadedItemsData.Count);
+            foreach (var item in loadedItemsData)
+            {
+                loadedItems.Add(new InventoryItemView(
+                    item.OwnerId,
+                    item.ItemId,
+                    item.StackCount,
+                    item.CategoryId));
+            }
 
             _storage[ownerId] = loadedItems;
             return loadedItems.ToArray();
@@ -45,26 +63,33 @@ namespace Inventory.Implementation.Services
         {
             cancellationToken.ThrowIfCancellationRequested();
             ValidateOwnerId(ownerId);
-            await EnsureInitializedAsync(cancellationToken);
+            await _saveService.LoadAllAsync(cancellationToken);
 
             _storage[ownerId] = new List<InventoryItemView>(items);
-            await _jsonFileSaver.SaveAsync(
-                GetFilePath(ownerId),
-                _storage[ownerId],
-                cancellationToken,
-                $"InMemoryInventoryStorage Save failed for owner {ownerId}");
-        }
+            var saveItems = new List<InventoryItemSaveData>(_storage[ownerId].Count);
+            foreach (var item in _storage[ownerId])
+            {
+                saveItems.Add(new InventoryItemSaveData
+                {
+                    OwnerId = ownerId,
+                    ItemId = item.ItemId,
+                    StackCount = item.StackCount,
+                    CategoryId = item.CategoryId,
+                });
+            }
 
-        private UniTask EnsureInitializedAsync(CancellationToken cancellationToken)
-        {
-            _rootPath ??= Path.Combine(Application.persistentDataPath, "inventory");
-            return _jsonFileSaver.InitializeAsync(_rootPath, cancellationToken, "InMemoryInventoryStorage");
-        }
+            await _saveService.UpdateModuleAsync(data => data.Inventory, inventory =>
+            {
+                var resolvedOwnerId = string.IsNullOrWhiteSpace(ownerId) ? "player_1" : ownerId;
+                var owner = inventory.Owners.Find(x => x.OwnerId == resolvedOwnerId);
+                if (owner == null)
+                {
+                    owner = new InventoryOwnerSaveData { OwnerId = resolvedOwnerId };
+                    inventory.Owners.Add(owner);
+                }
 
-        private string GetFilePath(string ownerId)
-        {
-            var sanitizedOwnerId = InvalidFileNameChars.Replace(ownerId, "_");
-            return Path.Combine(_rootPath, $"owner_{sanitizedOwnerId}.json");
+                owner.Items = saveItems;
+            }, cancellationToken);
         }
 
         private static void ValidateOwnerId(string ownerId)

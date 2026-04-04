@@ -1,7 +1,7 @@
 using System.Threading;
 using CardCollectionImpl;
 using cheatModule;
-using UnityEngine;
+using Cysharp.Threading.Tasks;
 
 namespace Game.Cheat
 {
@@ -16,12 +16,12 @@ namespace Game.Cheat
         private const string BaseSixCardPackID = "Ruby_Pack";
         
         private readonly CancellationToken _ct;
-        private readonly ICardCollectionFeatureFacade _featureFacade;
+        private readonly ICardCollectionSessionFacade _sessionFacade;
         
-        public AddCardsCheatModule(ICardCollectionFeatureFacade featureFacade,  CancellationToken ct)
+        public AddCardsCheatModule(ICardCollectionSessionFacade sessionFacade,  CancellationToken ct)
         {
             _ct = ct;
-            _featureFacade = featureFacade;
+            _sessionFacade = sessionFacade;
         }
         
         public void Initialize(ICheatsContainer cheatsContainer)
@@ -54,14 +54,7 @@ namespace Game.Cheat
         
         public void OpenNewCardWindow(string packId)
         {
-            if (_featureFacade.IsActive)
-            {
-                _featureFacade.ShowNewCardWindow(packId, _ct);
-            }
-            else
-            {
-                Debug.LogWarning($"[CardCollectionRuntime] {GetType().Name}: OpenNewCardWindow called without active feature");
-            }
+            _sessionFacade.TryShowNewCardWindow(packId, _ct).Forget();
         }
     }
 }

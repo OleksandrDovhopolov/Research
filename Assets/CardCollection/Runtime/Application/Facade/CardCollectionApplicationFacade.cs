@@ -141,7 +141,7 @@ namespace CardCollection.Core
 
         private void PublishCompletion(IReadOnlyList<string> newlyCompletedGroupIds, bool collectionCompleted)
         {
-            if (newlyCompletedGroupIds != null && newlyCompletedGroupIds.Count > 0)
+            if (newlyCompletedGroupIds is { Count: > 0 })
             {
                 var groups = newlyCompletedGroupIds
                     .Select(groupId => new CardGroupCompletedData { GroupType = groupId })

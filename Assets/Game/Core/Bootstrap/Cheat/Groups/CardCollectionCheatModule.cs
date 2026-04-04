@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using CardCollectionImpl;
 using cheatModule;
@@ -18,7 +17,7 @@ namespace Game.Cheat
         
         private readonly CancellationToken _ct;
         private readonly OrchestratorRunner _orchestratorRunner;
-        private readonly ICardCollectionFeatureFacade _featureFacade;
+        private readonly ICardCollectionSessionFacade _sessionFacade;
 
         private const string WinterCollectionEventId = "Winter_Collection";
         private const string WinterCollectionEventName = "Winter Collection";
@@ -26,10 +25,10 @@ namespace Game.Cheat
         private const string SpringCollectionEventId = "Spring_Collection";
         private const string SpringCollectionEventName = "Spring Collection";
         
-        public CardCollectionCheatModule(ICardCollectionFeatureFacade featureFacade, OrchestratorRunner orchestratorRunner, CancellationToken ct)
+        public CardCollectionCheatModule(ICardCollectionSessionFacade sessionFacade, OrchestratorRunner orchestratorRunner, CancellationToken ct)
         {
             _ct = ct;
-            _featureFacade = featureFacade;
+            _sessionFacade = sessionFacade;
             _orchestratorRunner = orchestratorRunner;
         }
 
@@ -51,53 +50,32 @@ namespace Game.Cheat
             
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Complete all collection", () =>
             {
-                CompleteAllCollectionAsync(_ct).Forget();
+                _sessionFacade.TryCompleteAllCollection(_ct).Forget();
             }).WithGroup(CardCollectionGroup));
 
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Unlock all cards - 1", () =>
             {
-                UnlockAllMinusOneCardAsync(_ct).Forget();
+                _sessionFacade.TryUnlockAllMinusOneCard(_ct).Forget();
             }).WithGroup(CardCollectionGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Complete group(Int)", groupIndex =>
             {
-               UnlockGroupByInt(groupIndex, _ct).Forget();
+               _sessionFacade.TryUnlockGroupByIndex(groupIndex, _ct).Forget();
             }).WithGroup(CardCollectionGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<string>("Open card ID(str)", cardId =>
             {
-                if (_featureFacade.TryGetCollectionModule(out var module))
-                {
-                    module.UnlockCards(new[] { cardId }, _ct).Forget();
-                }
-                else
-                {
-                    Debug.LogWarning("[Cheat] CardCollection module is unavailable.");
-                }
+                _sessionFacade.TryUnlockCards(new[] { cardId }, _ct).Forget();
             }).WithGroup(CardCollectionGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Add points(int)", points =>
             {
-                if (_featureFacade.TryGetCollectionPointsAccount(out var pointsAccount))
-                {
-                    pointsAccount.TryAddPointsAsync(points, _ct).Forget();
-                }
-                else
-                {
-                    Debug.LogWarning("[Cheat] CardCollection points account is unavailable.");
-                }
+                _sessionFacade.TryAddPoints(points, _ct).Forget();
             }).WithGroup(CardCollectionPointGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Remove points(int)", points =>
             {
-                if (_featureFacade.TryGetCollectionPointsAccount(out var pointsAccount))
-                {
-                    pointsAccount.TrySpendPointsAsync(points, _ct).Forget();
-                }
-                else
-                {
-                    Debug.LogWarning("[Cheat] CardCollection points account is unavailable.");
-                }
+                _sessionFacade.TryRemovePoints(points, _ct).Forget();
             }).WithGroup(CardCollectionPointGroup));
         }
         
@@ -144,116 +122,5 @@ namespace Game.Cheat
             };
         }
         
-        private async UniTask CompleteAllCollectionAsync(CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
-
-            var cardIds = await GetAllCardIdsAsync(ct);
-            if (cardIds.Count == 0)
-            {
-                Debug.LogWarning("[Cheat] Could not find card IDs to complete collection.");
-                return;
-            }
-
-            foreach (var cardId in cardIds)
-            {
-                ct.ThrowIfCancellationRequested();
-                if (_featureFacade.TryGetCollectionModule(out var module))
-                {
-                    await module.UnlockCards(new[] { cardId }, ct);
-                }
-                else
-                {
-                    Debug.LogWarning("[Cheat] CardCollection module is unavailable.");
-                    return;
-                }
-            }
-        }
-        
-        private async UniTask UnlockAllMinusOneCardAsync(CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
-
-            var cardIds = await GetAllCardIdsAsync(ct);
-            if (cardIds.Count <= 1)
-            {
-                Debug.LogWarning("[Cheat] Not enough cards to unlock all minus one.");
-                return;
-            }
-
-            if (!_featureFacade.TryGetCollectionModule(out var module))
-            {
-                Debug.LogWarning("[Cheat] CardCollection module is unavailable.");
-                return;
-            }
-
-            var unlockIds = cardIds.Take(cardIds.Count - 1).ToList();
-            await module.UnlockCards(unlockIds, ct);
-        }
-        
-        private async UniTask UnlockGroupByInt(int groupIndex, CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
-
-            if (groupIndex < 0)
-            {
-                Debug.LogWarning("[Cheat] Group index must be >= 0.");
-                return;
-            }
-
-            var cardIds = await GetAllCardIdsAsync(ct);
-            if (cardIds.Count == 0)
-            {
-                Debug.LogWarning("[Cheat] Could not find card IDs to unlock group.");
-                return;
-            }
-
-            const int groupSize = 10;
-            var groupCardIds = cardIds
-                .Skip(groupIndex * groupSize)
-                .Take(groupSize)
-                .ToList();
-
-            if (groupCardIds.Count == 0)
-            {
-                Debug.LogWarning($"[Cheat] Group index {groupIndex} is out of range.");
-                return;
-            }
-
-            if (!_featureFacade.TryGetCollectionModule(out var module))
-            {
-                Debug.LogWarning("[Cheat] CardCollection module is unavailable.");
-                return;
-            }
-
-            foreach (var cardId in groupCardIds)
-            {
-                ct.ThrowIfCancellationRequested();
-                await module.UnlockCards(new[] { cardId }, ct);
-            }
-        }
-
-        private async UniTask<List<string>> GetAllCardIdsAsync(CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
-            if (!_featureFacade.TryGetCollectionModule(out var module))
-            {
-                Debug.LogWarning("[Cheat] CardCollection reader is unavailable.");
-                return new List<string>();
-            }
-
-            var data = await module.Load(ct);
-
-            var result = new List<string>();
-            var seen = new HashSet<string>();
-            foreach (var card in data.Cards)
-            {
-                ct.ThrowIfCancellationRequested();
-                if (!string.IsNullOrEmpty(card?.CardId) && seen.Add(card.CardId))
-                    result.Add(card.CardId);
-            }
-
-            return result;
-        }
     }
 }

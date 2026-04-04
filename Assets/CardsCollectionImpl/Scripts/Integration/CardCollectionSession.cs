@@ -6,7 +6,6 @@ using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Models;
 using Infrastructure;
-using UISystem;
 using UnityEngine;
 
 namespace CardCollectionImpl
@@ -15,11 +14,13 @@ namespace CardCollectionImpl
     {
         private const int SessionWarmupSpritesCount = 30;
         
-        private readonly UIManager _uiManager;
         private readonly ICardCollectionApplicationFacade _facade;
         private readonly ICardCollectionRewardHandler _rewardHandler;
         private readonly CardCollectionHudPresenter _hudPresenter;
         private readonly CardCollectionInventoryIntegration _inventoryIntegration;
+        private readonly CardCollectionStaticData _eventStaticData;
+        private readonly ICollectionProgressSnapshotBuilder _collectionProgressSnapshotBuilder;
+        private readonly IExchangeOfferProvider _exchangeOfferProvider;
 
         private CardCollectionEventModel _cardCollectionEventModel;
 
@@ -31,19 +32,25 @@ namespace CardCollectionImpl
         public CardCollectionSessionContext Context { get; }
 
         public CardCollectionSession(
-            UIManager uiManager,
             CardCollectionSessionContext context,
             ICardCollectionApplicationFacade facade,
             CardCollectionHudPresenter hudPresenter,
             ICardCollectionRewardHandler rewardHandler,
-            CardCollectionInventoryIntegration inventoryIntegration)
+            CardCollectionInventoryIntegration inventoryIntegration,
+            CardCollectionStaticData eventStaticData,
+            ICollectionProgressSnapshotBuilder collectionProgressSnapshotBuilder,
+            IExchangeOfferProvider exchangeOfferProvider)
         {
-            Context = context;
-            _facade = facade;
-            _uiManager = uiManager;
-            _hudPresenter = hudPresenter;
-            _rewardHandler = rewardHandler;
-            _inventoryIntegration = inventoryIntegration;
+            Context = context ?? throw new ArgumentNullException(nameof(context));
+            _facade = facade ?? throw new ArgumentNullException(nameof(facade));
+            _hudPresenter = hudPresenter ?? throw new ArgumentNullException(nameof(hudPresenter));
+            _rewardHandler = rewardHandler ?? throw new ArgumentNullException(nameof(rewardHandler));
+            _inventoryIntegration = inventoryIntegration ?? throw new ArgumentNullException(nameof(inventoryIntegration));
+            _eventStaticData = eventStaticData ?? throw new ArgumentNullException(nameof(eventStaticData));
+            _collectionProgressSnapshotBuilder = collectionProgressSnapshotBuilder ?? throw new ArgumentNullException(nameof(collectionProgressSnapshotBuilder));
+            _exchangeOfferProvider = exchangeOfferProvider ?? throw new ArgumentNullException(nameof(exchangeOfferProvider));
+
+            _hudPresenter.SetShowCollectionHandler(ShowCollectionAsync);
         }
 
         public async UniTask StartAsync(CardCollectionEventModel model, ScheduleItem scheduleItem, bool firstStart, CancellationToken externalCt)
@@ -65,7 +72,7 @@ namespace CardCollectionImpl
                 _inventoryIntegration.Attach();
 
                 await EnsureEventAssetsReadyAsync(scheduleItem, ct);
-                await IntroduceEvent(model.EventId, firstStart, ct);
+                await ShowStartedAsync(model.EventId, firstStart, ct);
                 await _hudPresenter.Bind(scheduleItem, ct);
                 
                 _isStarted = true;
@@ -77,14 +84,14 @@ namespace CardCollectionImpl
             }
         }
 
-        public async UniTask IntroduceEvent(string eventId, bool firstStart, CancellationToken externalCt)
+        private async UniTask ShowStartedAsync(string eventId, bool firstStart, CancellationToken ct)
         {
             if (firstStart)
             {
                 var spriteAddress = eventId + "/" + CardCollectionGeneralConfig.CollectionBackground;
-                var previewSprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, externalCt);
+                var previewSprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, ct);
                 var args = new CollectionStartedArgs(_cardCollectionEventModel.EventId, _cardCollectionEventModel.CollectionName, previewSprite);
-                _uiManager.Show<CollectionStartedController>(args, UIShowCommand.UIShowType.Ordered);
+                Context.WindowCoordinator.ShowStarted(args);
             }
         }
         
@@ -115,44 +122,13 @@ namespace CardCollectionImpl
                 return UniTask.CompletedTask;
 
             externalCt.ThrowIfCancellationRequested();
-            HideEventWindows();
+            Context.WindowCoordinator.CloseSessionWindows();
             SafeStopInternal(externalCt);
             
             var args = new CollectionCompletedArgs(_cardCollectionEventModel.EventId, _cardCollectionEventModel.CollectionName);
-            _uiManager.Show<CollectionCompletedController>(args);
+            Context.WindowCoordinator.ShowCompleted(args);
 
             return UniTask.CompletedTask;
-        }
-
-        private void HideEventWindows()
-        {
-            if (_uiManager.IsWindowSpawned<CardCollectionController>())
-            {
-                var window = _uiManager.GetWindowSync<CardCollectionController>();
-                if (window.IsShown)
-                {
-                    _uiManager.Hide<CardCollectionController>();
-                }
-            }
-            
-            if (_uiManager.IsWindowSpawned<NewCardController>())
-            {
-                var window = _uiManager.GetWindowSync<NewCardController>();
-                      
-                if (window.IsShown)
-                {
-                    _uiManager.Hide<NewCardController>();
-                }
-            }
-            
-            if (_uiManager.IsWindowSpawned<CollectionStartedController>())
-            {
-                var window = _uiManager.GetWindowSync<CollectionStartedController>();
-                if (window.IsShown)
-                {
-                    _uiManager.Hide<CollectionStartedController>(true);
-                }
-            }
         }
         
         public UniTask SettleAsync(CancellationToken ct)
@@ -259,7 +235,15 @@ namespace CardCollectionImpl
                 return;
             }
 
-            await Context.WindowOpener.OpenCardGroupCompletedWindow(groupTypes, ct);
+            var groupConfigs = ResolveGroupConfigs(groupTypes);
+            if (groupConfigs.Count == 0)
+            {
+                return;
+            }
+
+            var collectionData = await Context.Module.Load(ct);
+            var args = new CardGroupCollectionArgs(Context.Module.EventId, collectionData, groupConfigs, _rewardHandler);
+            Context.WindowCoordinator.ShowGroupCompleted(args);
         }
 
         private void OnCollectionCompleted(CardCollectionCompletedData data)
@@ -281,6 +265,53 @@ namespace CardCollectionImpl
             if (!granted) return;
 
             //TODO add window collection reward. no reward animation now is shown
+        }
+
+        private async UniTask ShowCollectionAsync(CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            var beforeResetData = await Context.Module.Load(ct);
+            var snapshotBeforeReset = _collectionProgressSnapshotBuilder.Build(beforeResetData);
+
+            var newCardsData = CardCollectionNewCardsDto.Create(beforeResetData, _eventStaticData.Cards);
+            var newCardIds = newCardsData.NewCardIds;
+            if (newCardIds.Count > 0)
+            {
+                await Context.Module.ResetNewFlagsAsync(newCardIds, ct);
+            }
+
+            var afterResetData = await Context.Module.Load(ct);
+            var args = new CardCollectionArgs(
+                newCardsData,
+                afterResetData,
+                _exchangeOfferProvider,
+                _rewardHandler,
+                Context.PointsAccount,
+                snapshotBeforeReset,
+                Context.Module.EventId,
+                _eventStaticData.Cards,
+                _eventStaticData.Groups);
+            Context.WindowCoordinator.ShowCollection(args);
+        }
+
+        private List<CardCollectionGroupConfig> ResolveGroupConfigs(IEnumerable<string> groupTypes)
+        {
+            var groupConfigs = new List<CardCollectionGroupConfig>();
+
+            foreach (var groupType in groupTypes)
+            {
+                var groupConfig = _eventStaticData.Groups.FirstOrDefault(group => group.groupType == groupType);
+                if (groupConfig == null)
+                {
+                    Debug.LogError($"Failed to find group {groupType}");
+                    continue;
+                }
+
+                groupConfigs.Add(groupConfig);
+            }
+
+            return groupConfigs;
         }
         
         public void Dispose()

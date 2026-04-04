@@ -24,19 +24,19 @@ namespace Game.Cheat
         private ResourceManager _resourceManager;
         private IInventoryService _inventoryService;
         private OrchestratorRunner _orchestratorRunner;
-        private ICardCollectionFeatureFacade _cardCollectionFeatureFacade;
+        private ICardCollectionSessionFacade _cardCollectionSessionFacade;
 
         [Inject]
         private void Construct(
             ResourceManager resourceManager,
             IInventoryService inventoryService, 
             OrchestratorRunner orchestratorRunner,
-            ICardCollectionFeatureFacade cardCollectionFeatureFacade)
+            ICardCollectionSessionFacade cardCollectionSessionFacade)
         {
             _inventoryService = inventoryService;
             _resourceManager = resourceManager;
             _orchestratorRunner = orchestratorRunner;
-            _cardCollectionFeatureFacade = cardCollectionFeatureFacade;
+            _cardCollectionSessionFacade = cardCollectionSessionFacade;
         }
         
         public void Start()
@@ -81,8 +81,8 @@ namespace Game.Cheat
             
             var cheatsModules = new List<ICheatsModule>
             {
-                new CardCollectionCheatModule(_cardCollectionFeatureFacade, _orchestratorRunner, destroyCt),
-                new AddCardsCheatModule(_cardCollectionFeatureFacade, destroyCt),
+                new CardCollectionCheatModule(_cardCollectionSessionFacade, _orchestratorRunner, destroyCt),
+                new AddCardsCheatModule(_cardCollectionSessionFacade, destroyCt),
                 new ResourcesCheatModule(_resourceManager, _animateCurrency),
                 //new InventoryCheatModule(_inventoryService),
             };

@@ -7,20 +7,19 @@ namespace CardCollectionImpl
     {
         private readonly IItemCategoryRegistry _itemCategoryRegistry;
         private readonly IInventoryUseHandlerStorage _handlerStorage;
-        private readonly ICardCollectionWindowOpener _cardCollectionWindowOpener;
+        private readonly IInventoryItemUseHandler _inventoryItemUseHandler;
         
         private bool _attached;
         private ItemCategory _itemCategory;
-        private IInventoryItemUseHandler _inventoryItemUseHandler;
         
         public CardCollectionInventoryIntegration(
             IItemCategoryRegistry itemCategoryRegistry, 
-            IInventoryUseHandlerStorage handlerStorage,
-            ICardCollectionWindowOpener cardCollectionWindowOpener)
+            IInventoryUseHandlerStorage handlerStorage, 
+            IInventoryItemUseHandler inventoryItemUseHandler)
         {
             _handlerStorage = handlerStorage ?? throw new ArgumentNullException(nameof(handlerStorage));
             _itemCategoryRegistry = itemCategoryRegistry ?? throw new ArgumentNullException(nameof(itemCategoryRegistry));
-            _cardCollectionWindowOpener = cardCollectionWindowOpener ?? throw new ArgumentNullException(nameof(cardCollectionWindowOpener));
+            _inventoryItemUseHandler = inventoryItemUseHandler ?? throw new ArgumentNullException(nameof(inventoryItemUseHandler));
         }
 
         public void Attach()
@@ -29,8 +28,6 @@ namespace CardCollectionImpl
             
             _itemCategory = new CardsItemCategory(CardsConfig.CardPack);
             _itemCategoryRegistry.Register(_itemCategory);
-            
-            _inventoryItemUseHandler = new CardPackInventoryUseHandler(_cardCollectionWindowOpener);
             _handlerStorage.AddUseHandler(_inventoryItemUseHandler);
 
             _attached = true;
@@ -41,7 +38,6 @@ namespace CardCollectionImpl
             _itemCategoryRegistry.RemoveRegister(_itemCategory);
             _handlerStorage.RemoveUseHandler(_inventoryItemUseHandler);
 
-            _inventoryItemUseHandler = null;
             _itemCategory = null;
             _attached = false;
         }

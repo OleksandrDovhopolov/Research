@@ -1,27 +1,84 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using Core.Models;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
 using EventOrchestration.Models;
+using Infrastructure.SaveSystem;
 
 namespace EventOrchestration.Infrastructure
 {
     public sealed class InMemoryStateStore : IStateStore
     {
-        private Dictionary<string, EventStateData> _storage = new();
+        private readonly SaveService _saveService;
 
-        public UniTask<Dictionary<string, EventStateData>> LoadAsync(CancellationToken ct)
+        public InMemoryStateStore(SaveService saveService)
         {
-            ct.ThrowIfCancellationRequested();
-            var copy = new Dictionary<string, EventStateData>(_storage);
-            return UniTask.FromResult(copy);
+            _saveService = saveService;
         }
 
-        public UniTask SaveAsync(Dictionary<string, EventStateData> states, CancellationToken ct)
+        public async UniTask<Dictionary<string, EventStateData>> LoadAsync(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
-            _storage = new Dictionary<string, EventStateData>(states);
-            return UniTask.CompletedTask;
+            var savedStates = await _saveService.GetReadonlyModuleAsync(data => data.EventStates
+                .Select(x => new EventStateSaveData
+                {
+                    ScheduleItemId = x.ScheduleItemId,
+                    State = x.State,
+                    Version = x.Version,
+                    UpdatedAtUnixSeconds = x.UpdatedAtUnixSeconds,
+                    LastError = x.LastError,
+                    StartInvoked = x.StartInvoked,
+                    EndInvoked = x.EndInvoked,
+                    SettlementInvoked = x.SettlementInvoked,
+                })
+                .ToList(), ct);
+            var result = new Dictionary<string, EventStateData>(savedStates.Count);
+            foreach (var state in savedStates)
+            {
+                if (string.IsNullOrWhiteSpace(state.ScheduleItemId))
+                {
+                    continue;
+                }
+
+                result[state.ScheduleItemId] = new EventStateData
+                {
+                    ScheduleItemId = state.ScheduleItemId,
+                    State = (EventInstanceState)state.State,
+                    Version = state.Version,
+                    UpdatedAtUtc = DateTimeOffset.FromUnixTimeSeconds(state.UpdatedAtUnixSeconds),
+                    LastError = state.LastError,
+                    StartInvoked = state.StartInvoked,
+                    EndInvoked = state.EndInvoked,
+                    SettlementInvoked = state.SettlementInvoked,
+                };
+            }
+
+            return result;
+        }
+
+        public async UniTask SaveAsync(Dictionary<string, EventStateData> states, CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            var saveStates = states?.Values.Select(x => new EventStateSaveData
+            {
+                ScheduleItemId = x.ScheduleItemId,
+                State = (int)x.State,
+                Version = x.Version,
+                UpdatedAtUnixSeconds = x.UpdatedAtUtc.ToUnixTimeSeconds(),
+                LastError = x.LastError,
+                StartInvoked = x.StartInvoked,
+                EndInvoked = x.EndInvoked,
+                SettlementInvoked = x.SettlementInvoked,
+            }).ToList() ?? new List<EventStateSaveData>();
+
+            await _saveService.UpdateModuleAsync(data => data.EventStates, eventStates =>
+            {
+                eventStates.Clear();
+                eventStates.AddRange(saveStates);
+            }, ct);
         }
     }
 }

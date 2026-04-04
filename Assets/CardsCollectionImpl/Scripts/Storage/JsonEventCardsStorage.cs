@@ -1,41 +1,40 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using CardCollection.Core;
+using Core.Models;
 using Cysharp.Threading.Tasks;
-using Infrastructure;
-using UnityEngine;
+using Infrastructure.SaveSystem;
 
 namespace CardCollectionImpl
 {
     public class JsonEventCardsStorage : IEventCardsStorage
     {
-        private string _rootPath;
-        private readonly AtomicJsonFileSaver _jsonFileSaver = new AtomicJsonFileSaver();
-        private static readonly Regex InvalidFileNameChars = new Regex($"[{Regex.Escape(new string(Path.GetInvalidFileNameChars()))}]", RegexOptions.Compiled);
+        private readonly SaveService _saveService;
         private bool _disposed;
 
-        public UniTask InitializeAsync(CancellationToken ct = default)
+        public JsonEventCardsStorage(SaveService saveService)
+        {
+            _saveService = saveService;
+        }
+
+        public async UniTask InitializeAsync(CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
-
-            _rootPath = Path.Combine(Application.persistentDataPath, "event_cards");
-            return _jsonFileSaver.InitializeAsync(_rootPath, ct, "JsonEventCardsStorage");
+            await _saveService.LoadAllAsync(ct);
         }
 
         public async UniTask<EventCardsSaveData> LoadAsync(string eventId, CancellationToken ct = default)
         {
             ValidateEventId(eventId);
 
-            var path = GetFilePath(eventId);
-
-            var data = await _jsonFileSaver.LoadAsync<EventCardsSaveData>(
-                path,
-                ct,
-                $"JsonEventCardsStorage Load failed for event {eventId}");
+            var saveData = await _saveService.GetReadonlyModuleAsync(data =>
+            {
+                var found = data.CardCollections.Find(x => x.EventId == eventId);
+                return found == null ? null : CloneCardCollection(found);
+            }, ct);
+            var data = ToEventCardsSaveData(saveData);
 
             if (data == null)
             {
@@ -54,14 +53,22 @@ namespace CardCollectionImpl
         {
             if (data == null)
             {
-                Debug.LogError("[JsonEventCardsStorage] SaveAsync called with null data");
                 throw new ArgumentNullException(nameof(data));
             }
 
             ValidateEventId(data.EventId);
+            var moduleData = ToModuleData(data);
+            await _saveService.UpdateModuleAsync(root => root.CardCollections, cardCollections =>
+            {
+                var index = cardCollections.FindIndex(x => x.EventId == moduleData.EventId);
+                if (index < 0)
+                {
+                    cardCollections.Add(moduleData);
+                    return;
+                }
 
-            var path = GetFilePath(data.EventId);
-            await _jsonFileSaver.SaveAsync(path, data, ct, $"JsonEventCardsStorage Save failed for event {data.EventId}");
+                cardCollections[index] = moduleData;
+            }, ct);
         }
 
         public async UniTask UnlockCardsAsync(EventCardsSaveData data, IReadOnlyCollection<string> cardIds, CancellationToken ct = default)
@@ -80,7 +87,6 @@ namespace CardCollectionImpl
             {
                 if (string.IsNullOrEmpty(cardId))
                 {
-                    Debug.LogWarning($"[JsonEventCardsStorage] Skipping null or empty cardId for event {data.EventId}");
                     continue;
                 }
 
@@ -92,12 +98,6 @@ namespace CardCollectionImpl
             }
 
             await SaveAsync(data, ct);
-        }
-
-        private string GetFilePath(string eventId)
-        {
-            var sanitizedEventId = InvalidFileNameChars.Replace(eventId, "_");
-            return Path.Combine(_rootPath, $"event_{sanitizedEventId}.json");
         }
 
         private static void ValidateEventId(string eventId)
@@ -112,6 +112,59 @@ namespace CardCollectionImpl
         {
             if (_disposed) return;
             _disposed = true;
+        }
+
+        private static CardCollectionModuleSaveData ToModuleData(EventCardsSaveData data)
+        {
+            return new CardCollectionModuleSaveData
+            {
+                EventId = data.EventId,
+                Version = data.Version <= 0 ? 1 : data.Version,
+                Points = data.Points,
+                Cards = data.Cards?.Select(x => new CardProgressSaveData
+                {
+                    CardId = x.CardId,
+                    IsUnlocked = x.IsUnlocked,
+                    IsNew = x.IsNew,
+                }).ToList() ?? new List<CardProgressSaveData>(),
+            };
+        }
+
+        private static EventCardsSaveData ToEventCardsSaveData(CardCollectionModuleSaveData data)
+        {
+            if (data == null)
+            {
+                return null;
+            }
+
+            return new EventCardsSaveData
+            {
+                EventId = data.EventId,
+                Version = data.Version,
+                Points = data.Points,
+                Cards = data.Cards?.Select(x => new CardProgressData
+                {
+                    CardId = x.CardId,
+                    IsUnlocked = x.IsUnlocked,
+                    IsNew = x.IsNew,
+                }).ToList() ?? new List<CardProgressData>(),
+            };
+        }
+
+        private static CardCollectionModuleSaveData CloneCardCollection(CardCollectionModuleSaveData source)
+        {
+            return new CardCollectionModuleSaveData
+            {
+                EventId = source.EventId,
+                Version = source.Version,
+                Points = source.Points,
+                Cards = source.Cards?.Select(x => new CardProgressSaveData
+                {
+                    CardId = x.CardId,
+                    IsUnlocked = x.IsUnlocked,
+                    IsNew = x.IsNew,
+                }).ToList() ?? new List<CardProgressSaveData>(),
+            };
         }
     }
 }
