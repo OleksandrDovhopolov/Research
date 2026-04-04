@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
@@ -10,17 +9,17 @@ namespace CardCollectionImpl
     public class CardPackInventoryUseHandler : IInventoryItemUseHandler
     {
         private readonly ICardCollectionModule _collectionModule;
-        private readonly ICardCollectionPointsAccount _collectionPointsAccount;
+        private readonly INewCardFlowService _newCardFlowService;
         private readonly ICardCollectionWindowCoordinator _cardCollectionWindowCoordinator;
 
         public CardPackInventoryUseHandler(
             ICardCollectionModule collectionModule,
-            ICardCollectionPointsAccount collectionPointsAccount,
+            INewCardFlowService newCardFlowService,
             ICardCollectionWindowCoordinator cardCollectionWindowCoordinator)
         {
-            _collectionModule = collectionModule ?? throw new ArgumentNullException(nameof(collectionModule));
-            _collectionPointsAccount = collectionPointsAccount ?? throw new ArgumentNullException(nameof(collectionPointsAccount));
-            _cardCollectionWindowCoordinator = cardCollectionWindowCoordinator ?? throw new ArgumentNullException(nameof(cardCollectionWindowCoordinator));
+            _collectionModule = collectionModule;
+            _newCardFlowService = newCardFlowService;
+            _cardCollectionWindowCoordinator = cardCollectionWindowCoordinator;
         }
         
         //TODO better to rely on category type / enum ?? 
@@ -41,7 +40,7 @@ namespace CardCollectionImpl
                 return UniTask.CompletedTask;
             }
 
-            var args = new NewCardArgs(_collectionModule.EventId, packId, _collectionModule, _collectionPointsAccount);
+            var args = new NewCardArgs(packId, _newCardFlowService);
             _cardCollectionWindowCoordinator.ShowNewCard(args);
             return UniTask.CompletedTask;
         }

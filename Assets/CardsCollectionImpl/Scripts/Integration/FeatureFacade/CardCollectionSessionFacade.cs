@@ -33,14 +33,14 @@ namespace CardCollectionImpl
             Debug.LogWarning($"[CardCollectionRuntime] TryShowNewCardWindow {packId}");
 
             var module = context.Module;
-            var pointsAccount = context.PointsAccount;
             if (module.GetPackById(packId) == null)
             {
                 Debug.LogError($"Failed to find pack with id {packId}");
                 return UniTask.CompletedTask;
             }
 
-            var args = new NewCardArgs(module.EventId, packId, module, pointsAccount);
+            var flowService = new NewCardFlowService(context.Module, context.PointsAccount, context.CacheService);
+            var args = new NewCardArgs(packId, flowService);
             context.WindowCoordinator.ShowNewCard(args);
             return UniTask.CompletedTask;
         }

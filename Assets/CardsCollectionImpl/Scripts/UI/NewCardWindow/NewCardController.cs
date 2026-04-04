@@ -1,5 +1,4 @@
 using System.Threading;
-using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using UISystem;
 using VContainer;
@@ -8,21 +7,15 @@ namespace CardCollectionImpl
 {
     public class NewCardArgs : WindowArgs
     {
-        public readonly string EventId;
         public readonly string PackId;
-        public readonly ICardCollectionModule CollectionModule;
-        public readonly ICardCollectionPointsAccount CollectionPointsAccount;
+        public readonly INewCardFlowService NewCardFlowService;
 
         public NewCardArgs(
-            string eventId,
             string packId,
-            ICardCollectionModule collectionModule,
-            ICardCollectionPointsAccount cardCollectionPointsAccount)
+            INewCardFlowService newCardFlowService)
         {
-            EventId =  eventId;
             PackId = packId;
-            CollectionModule = collectionModule;
-            CollectionPointsAccount = cardCollectionPointsAccount;
+            NewCardFlowService = newCardFlowService;
         }
     }
 
@@ -30,16 +23,14 @@ namespace CardCollectionImpl
     public class NewCardController : WindowController<NewCardView>
     {
         private IEventSpriteManager _eventSpriteManager;
-        private ICardCollectionCacheService _cardCollectionCacheService;
         
         private NewCardArgs Args => (NewCardArgs)Arguments;
         private CancellationTokenSource _cts;
 
         [Inject]
-        private void Construct(IEventSpriteManager eventSpriteManager, ICardCollectionCacheService cardCollectionCacheService)
+        private void Construct(IEventSpriteManager eventSpriteManager)
         {
             _eventSpriteManager = eventSpriteManager;
-            _cardCollectionCacheService = cardCollectionCacheService;
         }
         
         protected override void OnShowStart()
@@ -51,14 +42,11 @@ namespace CardCollectionImpl
 
         private async UniTask GetNewCardsAsync(CancellationToken ct)
         {
-            var collectionPoints = await Args.CollectionPointsAccount.GetCollectionPoints(ct);
-            View.UpdatePointsAmount(collectionPoints);
-            
-            var cardsIdList = await Args.CollectionModule.OpenPackAndUnlockAsync(Args.PackId, ct);
-            var cardsData = await Args.CollectionModule.GetCardsByIdsAsync(cardsIdList, ct);
-            var displayData = _cardCollectionCacheService.ToNewCardDisplayData(cardsData);
-            
-            View.CreateNewCards(Args.EventId, displayData);
+            ct.ThrowIfCancellationRequested();
+            var screenData = await Args.NewCardFlowService.LoadAsync(Args.PackId, ct);
+
+            View.UpdatePointsAmount(screenData.Points);
+            View.CreateNewCards(screenData.EventId, screenData.Cards);
         }
 
         protected override void OnShowComplete()

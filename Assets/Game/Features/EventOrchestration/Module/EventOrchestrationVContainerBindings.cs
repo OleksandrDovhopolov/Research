@@ -10,8 +10,8 @@ namespace core
     {
         public static void RegisterOrchestration(this IContainerBuilder builder, string scheduleJsonFile, string scheduleConfigName)
         {
-            //builder.Register<IScheduleProvider>(_ => new StreamingAssetsScheduleProvider(scheduleJsonFile), Lifetime.Singleton);
-            builder.Register<IScheduleProvider>(_ => new FirebaseRemoteScheduleProvider(scheduleConfigName), Lifetime.Singleton);
+            builder.Register<IScheduleProvider>(_ => new StreamingAssetsScheduleProvider(scheduleJsonFile), Lifetime.Singleton);
+            //builder.Register<IScheduleProvider>(_ => new FirebaseRemoteScheduleProvider(scheduleConfigName), Lifetime.Singleton);
             builder.Register<IScheduleValidator, BasicScheduleValidator>(Lifetime.Singleton);
             builder.Register<IClock, FirebaseClock>(Lifetime.Singleton);
             builder.Register<IStateStore, InMemoryStateStore>(Lifetime.Singleton);
