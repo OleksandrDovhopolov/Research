@@ -33,6 +33,8 @@ namespace CardCollectionImpl
 
         public UniTask ShowNewCardWindow(string packId, CancellationToken ct)
         {
+            ct.ThrowIfCancellationRequested();
+
             if (_featureContext == null)
             {
                 Debug.LogWarning($"[CardCollectionRuntime] ShowNewCardWindow skipped for {packId}: session context is null.");
@@ -40,17 +42,27 @@ namespace CardCollectionImpl
             }
 
             Debug.LogWarning($"[CardCollectionRuntime] ShowNewCardWindow {packId}");
-            
-            _featureContext.WindowOpener.OpenNewCardWindow(packId);
+
+            var module = _featureContext.Module;
+            var pointsAccount = _featureContext.PointsAccount;
+            if (module.GetPackById(packId) == null)
+            {
+                Debug.LogError($"Failed to find pack with id {packId}");
+                return UniTask.CompletedTask;
+            }
+
+            var args = new NewCardArgs(module.EventId, packId, module, pointsAccount);
+            _featureContext.WindowCoordinator.ShowNewCard(args);
             return UniTask.CompletedTask;
         }
-        
-        public void ClearSession()
+
+        void ICardCollectionSessionFacade.ClearSession()
         {
             Debug.LogWarning($"[CardCollectionRuntime] ClearSession");
             Dispose();
         }
-        
+
+
         public void Dispose()
         {
             _featureContext = null;

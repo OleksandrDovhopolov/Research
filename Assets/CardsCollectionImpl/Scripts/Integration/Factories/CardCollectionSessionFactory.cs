@@ -44,26 +44,21 @@ namespace CardCollectionImpl
             var snapshotBuilder = new CollectionProgressSnapshotBuilder(_cardCollectionCacheService, staticData.Groups);
             var exchangeOfferProvider = new ExchangeOfferProvider(staticData.Offers, rewardHandler);
 
-            var windowOpener = new CardCollectionWindowOpener(
-                _uiManager,
-                staticData,
-                facade,
-                facade,
-                exchangeOfferProvider,
-                snapshotBuilder,
-                rewardHandler);
+            var windowCoordinator = new CardCollectionWindowCoordinator(_uiManager);
 
-            var hudPresenter = new CardCollectionHudPresenter(_hudService, windowOpener);
-            var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, windowOpener);
-            var context = new CardCollectionSessionContext(facade, facade, windowOpener);
+            var hudPresenter = new CardCollectionHudPresenter(_hudService);
+            var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, facade, facade, windowCoordinator);
+            var context = new CardCollectionSessionContext(facade, facade, windowCoordinator);
 
             return new CardCollectionSession(
-                _uiManager,
                 context,
                 facade,
                 hudPresenter,
                 rewardHandler,
-                inventoryIntegration);
+                inventoryIntegration,
+                staticData,
+                snapshotBuilder,
+                exchangeOfferProvider);
         }
     }
 }

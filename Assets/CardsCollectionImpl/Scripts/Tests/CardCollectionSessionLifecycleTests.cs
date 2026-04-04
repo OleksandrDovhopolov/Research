@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Threading;
 using NUnit.Framework;
 
@@ -44,13 +45,7 @@ namespace CardCollectionImpl
 
         private static CardCollectionSession CreateSession()
         {
-            return new CardCollectionSession(
-                uiManager: null,
-                context: null,
-                facade: null,
-                hudPresenter: null,
-                rewardHandler: null,
-                inventoryIntegration: null);
+            return (CardCollectionSession)FormatterServices.GetUninitializedObject(typeof(CardCollectionSession));
         }
 
         private static void SetPrivateField<T>(object target, string fieldName, T value)

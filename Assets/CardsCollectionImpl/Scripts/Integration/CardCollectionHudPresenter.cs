@@ -12,14 +12,18 @@ namespace CardCollectionImpl
         private const string CardCollectionButtonId = "CardCollection" + "/" + CardCollectionGeneralConfig.CollectionEventButton;
         
         private readonly IHUDService _hudService;
-        private readonly ICardCollectionWindowOpener _cardCollectionWindowOpener;
+        private Func<CancellationToken, UniTask> _showCollectionHandler;
         
         private IEventButton _eventButton;
         
-        public CardCollectionHudPresenter(IHUDService hudService, ICardCollectionWindowOpener cardCollectionWindowOpener)
+        public CardCollectionHudPresenter(IHUDService hudService)
         {
             _hudService = hudService ?? throw new ArgumentNullException(nameof(hudService));
-            _cardCollectionWindowOpener = cardCollectionWindowOpener ?? throw new ArgumentNullException(nameof(cardCollectionWindowOpener));
+        }
+
+        public void SetShowCollectionHandler(Func<CancellationToken, UniTask> showCollectionHandler)
+        {
+            _showCollectionHandler = showCollectionHandler ?? throw new ArgumentNullException(nameof(showCollectionHandler));
         }
 
         public async UniTask Bind(ScheduleItem config, CancellationToken ct)
@@ -39,7 +43,7 @@ namespace CardCollectionImpl
 
         private void OnEventButtonClickHandler(CancellationToken ct)
         {
-            _cardCollectionWindowOpener.OpenCardCollectionWindow(ct).Forget();
+            _showCollectionHandler?.Invoke(ct).Forget();
         }
         
         public void Unbind()

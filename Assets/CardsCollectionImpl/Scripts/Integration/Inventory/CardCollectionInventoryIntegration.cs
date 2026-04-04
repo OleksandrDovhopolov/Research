@@ -7,7 +7,9 @@ namespace CardCollectionImpl
     {
         private readonly IItemCategoryRegistry _itemCategoryRegistry;
         private readonly IInventoryUseHandlerStorage _handlerStorage;
-        private readonly ICardCollectionWindowOpener _cardCollectionWindowOpener;
+        private readonly ICardCollectionModule _collectionModule;
+        private readonly ICardCollectionPointsAccount _pointsAccount;
+        private readonly ICardCollectionWindowCoordinator _cardCollectionWindowCoordinator;
         
         private bool _attached;
         private ItemCategory _itemCategory;
@@ -16,11 +18,15 @@ namespace CardCollectionImpl
         public CardCollectionInventoryIntegration(
             IItemCategoryRegistry itemCategoryRegistry, 
             IInventoryUseHandlerStorage handlerStorage,
-            ICardCollectionWindowOpener cardCollectionWindowOpener)
+            ICardCollectionModule collectionModule,
+            ICardCollectionPointsAccount pointsAccount,
+            ICardCollectionWindowCoordinator cardCollectionWindowCoordinator)
         {
             _handlerStorage = handlerStorage ?? throw new ArgumentNullException(nameof(handlerStorage));
             _itemCategoryRegistry = itemCategoryRegistry ?? throw new ArgumentNullException(nameof(itemCategoryRegistry));
-            _cardCollectionWindowOpener = cardCollectionWindowOpener ?? throw new ArgumentNullException(nameof(cardCollectionWindowOpener));
+            _collectionModule = collectionModule ?? throw new ArgumentNullException(nameof(collectionModule));
+            _pointsAccount = pointsAccount ?? throw new ArgumentNullException(nameof(pointsAccount));
+            _cardCollectionWindowCoordinator = cardCollectionWindowCoordinator ?? throw new ArgumentNullException(nameof(cardCollectionWindowCoordinator));
         }
 
         public void Attach()
@@ -30,7 +36,7 @@ namespace CardCollectionImpl
             _itemCategory = new CardsItemCategory(CardsConfig.CardPack);
             _itemCategoryRegistry.Register(_itemCategory);
             
-            _inventoryItemUseHandler = new CardPackInventoryUseHandler(_cardCollectionWindowOpener);
+            _inventoryItemUseHandler = new CardPackInventoryUseHandler(_collectionModule, _pointsAccount, _cardCollectionWindowCoordinator);
             _handlerStorage.AddUseHandler(_inventoryItemUseHandler);
 
             _attached = true;

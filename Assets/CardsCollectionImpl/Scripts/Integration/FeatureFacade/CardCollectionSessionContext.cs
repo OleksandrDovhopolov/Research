@@ -7,16 +7,16 @@ namespace CardCollectionImpl
     {
         public ICardCollectionModule Module { get; }
         public ICardCollectionPointsAccount PointsAccount { get; }
-        public ICardCollectionWindowOpener WindowOpener { get; }
+        public ICardCollectionWindowCoordinator WindowCoordinator { get; }
 
         public CardCollectionSessionContext(
             ICardCollectionModule module,
             ICardCollectionPointsAccount pointsAccount,
-            ICardCollectionWindowOpener windowOpener)
+            ICardCollectionWindowCoordinator windowCoordinator)
         {
             Module = module ?? throw new ArgumentNullException(nameof(module));
             PointsAccount = pointsAccount ?? throw new ArgumentNullException(nameof(pointsAccount));
-            WindowOpener = windowOpener ?? throw new ArgumentNullException(nameof(windowOpener));
+            WindowCoordinator = windowCoordinator ?? throw new ArgumentNullException(nameof(windowCoordinator));
         }
     }
 }
