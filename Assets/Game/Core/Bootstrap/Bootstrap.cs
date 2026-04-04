@@ -19,9 +19,6 @@ namespace Game.Bootstrap
 
         private CancellationToken _destroyCt;
         
-        //private IObjectResolver _resolver;
-        //private ILoadingScreenView _loadingScreenView;
-        //private UISystem.UIManager _uiManager;
         private SaveService _saveService;
         private ResourceManager _resourceManager;
         private RemoteConfigLoader _remoteConfigLoader;
@@ -34,20 +31,13 @@ namespace Game.Bootstrap
             SaveService saveService,
             RemoteConfigLoader remoteConfigLoader,
             IAuthorizationService authorizationService,
-            LoadingOrchestrator loadingOrchestrator
-            //ILoadingScreenView loadingScreenView,
-            //UISystem.UIManager uiManager,
-            //IObjectResolver resolver
-            )
+            LoadingOrchestrator loadingOrchestrator)
         {
-            _resourceManager = resourceManager;
             _saveService = saveService;
+            _resourceManager = resourceManager;
             _remoteConfigLoader = remoteConfigLoader;
             _authorizationService = authorizationService;
             _loadingOrchestrator = loadingOrchestrator;
-            //_loadingScreenView = loadingScreenView;
-            //_uiManager = uiManager;
-            //_resolver = resolver;
         }
         
         private void Awake()
@@ -122,6 +112,7 @@ namespace Game.Bootstrap
             }
         }
 
+        //TODO move to factory ? 
         private System.Collections.Generic.IReadOnlyList<LoadingPhase> BuildPhases(IAuthorizationGate authGate)
         {
             var phase1 = new LoadingPhase("phase_technical_init", new[]
@@ -176,7 +167,8 @@ namespace Game.Bootstrap
 
         private void OnDestroy()
         {
-            _resourceManager?.Dispose();
+            //TODO move resources from loading phase
+            //_resourceManager?.Dispose();
         }
     }
 }

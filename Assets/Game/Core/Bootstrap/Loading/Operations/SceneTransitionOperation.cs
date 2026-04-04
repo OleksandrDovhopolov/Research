@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace Game.Bootstrap.Loading.Operations
@@ -32,11 +31,9 @@ namespace Game.Bootstrap.Loading.Operations
                 return;
             }
             
-            await UniTask.DelayFrame(100, cancellationToken: ct);
-            Debug.LogWarning($"[Debug] {GetType().Name} loading scene '{_sceneName}'");
-            ReportProgress(1f);
+            await UniTask.Yield(PlayerLoopTiming.Update, ct);
             
-            /*var asyncOperation = SceneManager.LoadSceneAsync(_sceneName);
+            var asyncOperation = SceneManager.LoadSceneAsync(_sceneName);
             if (asyncOperation == null)
             {
                 throw new InvalidOperationException($"Failed to load scene '{_sceneName}'.");
@@ -49,7 +46,7 @@ namespace Game.Bootstrap.Loading.Operations
                 await UniTask.Yield(PlayerLoopTiming.Update, ct);
             }
 
-            ReportProgress(1f);*/
+            ReportProgress(1f);
         }
     }
 }

@@ -2,12 +2,9 @@ using CardCollectionImpl;
 using core;
 using CoreResources;
 using EventOrchestration;
-using Game.Bootstrap.Loading;
-using Infrastructure.SaveSystem;
 using Inventory.API;
 using Rewards;
 using UIShared;
-using UIShared.Loading;
 using UISystem;
 using UnityEngine;
 using VContainer;
@@ -15,7 +12,7 @@ using VContainer.Unity;
 
 namespace Game.Bootstrap
 {
-    public sealed class GameInstaller : LifetimeScope
+    public sealed class GameInstaller : MonoInstaller
     {
         [SerializeField] private UIManager _uiManager;
         [SerializeField] private HUDService _hudService;
@@ -23,9 +20,8 @@ namespace Game.Bootstrap
         [SerializeField] private RewardSpecsConfigSO _rewardSpecsConfigSo;
         [SerializeField] private string _cardCollectionScheduleFile = "card_collection_schedule.json";
         [SerializeField] private string _removeCardCollectionConfigSchedule = "cards_event_schedule";
-        //[SerializeField] private LoadingScreenView _loadingScreenView;
         
-        protected override void Configure(IContainerBuilder builder)
+        public override void InstallBindings(IContainerBuilder builder)
         {
             if (_uiManager == null)
             {
@@ -41,35 +37,18 @@ namespace Game.Bootstrap
             {
                 throw new MissingReferenceException($"{nameof(GlobalTimerService)} is not assigned on {nameof(GameInstaller)}.");
             }
-            
-            /*if (_loadingScreenView == null)
-            {
-                throw new MissingReferenceException($"{nameof(LoadingScreenView)} is not assigned on {nameof(GameInstaller)}.");
-            }*/
 
+            //TODO uiManager should be in loading phase ? 
             builder.RegisterInstance(_uiManager);
             builder.RegisterInstance<IHUDService>(_hudService);
+            builder.RegisterComponentInHierarchy<AnimateCurrency>();
             builder.RegisterInstance<IGlobalTimerService>(_globalTimerService);
-            //builder.RegisterInstance<ILoadingScreenView>(_loadingScreenView);
-            //builder.Register<ISaveStorage>(_ => new LocalDiskStorage("global_save.json"), Lifetime.Singleton);
-           // builder.Register<SaveService>(Lifetime.Singleton);
-            
-            //builder.Register<ResourceManager>(Lifetime.Singleton);
-            
-            //builder.Register<RemoteConfigLoader>(Lifetime.Singleton);
-            
-            //builder.Register<IAuthorizationService, MockAuthorizationService>(Lifetime.Singleton);
-            
-            //builder.Register<LoadingProgressAggregator>(Lifetime.Singleton);
-            //builder.Register<LoadingOrchestrator>(Lifetime.Singleton);
             builder.Register<IAnimationService, AnimationService>(Lifetime.Singleton);
             
             builder.RegisterInventoryService();
             builder.RegisterCardCollectionImpl();
             
-            builder.RegisterComponentInHierarchy<AnimateCurrency>();
-            
-            // Rewards.asmdef
+            // Rewards
             builder.Register<IRewardGrantService>(resolver =>
             {
                 var resourceManager = resolver.Resolve<ResourceManager>();
@@ -77,14 +56,11 @@ namespace Game.Bootstrap
                 var inventoryOwnerId = resolver.Resolve<string>();
                 return new GameRewardGrantService(resourceManager, inventoryService, inventoryOwnerId);
             }, Lifetime.Singleton);
-
             builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(_rewardSpecsConfigSo), Lifetime.Singleton); 
             
-            // Orchestration.asmdef
+            // Orchestration
             builder.RegisterOrchestration(_cardCollectionScheduleFile, _removeCardCollectionConfigSchedule);
             builder.RegisterComponentInHierarchy<OrchestratorRunner>();
-
-            builder.RegisterComponentInHierarchy<Bootstrap>();
         }
     }
 }
