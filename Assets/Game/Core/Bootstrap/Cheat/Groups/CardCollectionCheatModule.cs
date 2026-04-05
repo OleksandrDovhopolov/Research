@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using CardCollectionImpl;
 using cheatModule;
 using Cysharp.Threading.Tasks;
 using EventOrchestration;
 using EventOrchestration.Models;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Game.Cheat
@@ -14,6 +16,7 @@ namespace Game.Cheat
     {
         private const string CardCollectionGroup = "CardCollection";
         private const string CardCollectionPointGroup = "CardCollectionPoints";
+        private const string ScheduleFileName = "card_collection_schedule.json";
         
         private readonly CancellationToken _ct;
         private readonly OrchestratorRunner _orchestratorRunner;
@@ -36,11 +39,12 @@ namespace Game.Cheat
         {
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Create test events", () =>
             {
-                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 10, 30);
+                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 10, 500);
                 var second = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, first.EndTimeUtc, TimeSpan.FromSeconds(30));
                 
                 _orchestratorRunner.AddDebugCardCollectionEventNextMinute(first);
                 _orchestratorRunner.AddDebugCardCollectionEventNextMinute(second);
+                RewriteScheduleFile(first, second);
             }).WithGroup(CardCollectionGroup));
 
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Complete current event", () =>
@@ -120,6 +124,25 @@ namespace Game.Cheat
                     ["eventConfigAddress"] = "event_spring_collection_config",
                 },
             };
+        }
+
+        private static void RewriteScheduleFile(ScheduleItem first, ScheduleItem second)
+        {
+            try
+            {
+                var schedulePath = Path.Combine(Application.streamingAssetsPath, ScheduleFileName);
+                var scheduleItems = new[] { first, second };
+
+                // Explicitly clear the file before writing fresh schedule entries.
+                File.WriteAllText(schedulePath, "[]");
+                File.WriteAllText(schedulePath, JsonConvert.SerializeObject(scheduleItems, Formatting.Indented));
+
+                Debug.Log($"[CardCollectionCheatModule] Rewrote schedule file: {schedulePath}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[CardCollectionCheatModule] Failed to rewrite schedule file: {e}");
+            }
         }
         
     }

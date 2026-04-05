@@ -65,6 +65,7 @@ namespace CardCollectionImpl
 
             _cardCollectionEventModel = model;
             
+            //Debug.LogWarning($"[Debug] CardCollectionSession StartAsync");
             try
             {
                 _facade.OnGroupCompleted += OnGroupCompleted;

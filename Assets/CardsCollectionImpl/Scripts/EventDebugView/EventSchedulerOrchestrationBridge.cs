@@ -42,6 +42,8 @@ namespace EventOrchestration.Core
         {
             if (item == null) return;
             
+            //Debug.LogWarning($"[Debug] ScheduleItem {item.Id}, {item.StartTimeUtc}");
+            
             _globalTimerService.Register(item.Id, item.StartTimeUtc);
             
             if (_clock.UtcNow < item.StartTimeUtc)

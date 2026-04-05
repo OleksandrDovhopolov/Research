@@ -56,7 +56,7 @@ namespace Infrastructure.Editor
             var savePath = Path.Combine(Application.persistentDataPath, GlobalSaveFileName);
             var confirmed = EditorUtility.DisplayDialog(
                 "Clear Global Save CardCollections",
-                $"Set CardCollections to empty array in:\n{savePath}",
+                $"Set CardCollections and EventStates to empty arrays in:\n{savePath}",
                 "Clear",
                 "Cancel");
 
@@ -75,14 +75,17 @@ namespace Infrastructure.Editor
 
                 var json = File.ReadAllText(savePath);
                 var root = JObject.Parse(json);
+
                 root["CardCollections"] = new JArray();
+                root["EventStates"] = new JArray();
+
                 File.WriteAllText(savePath, root.ToString(Formatting.Indented));
 
-                Debug.Log($"[CheatsMenuItems] Cleared CardCollections in {savePath}");
+                Debug.Log($"[CheatsMenuItems] Cleared CardCollections and EventStates in {savePath}");
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[CheatsMenuItems] Failed to clear CardCollections in global save: {ex}");
+                Debug.LogError($"[CheatsMenuItems] Failed to clear CardCollections and EventStates in global save: {ex}");
             }
         }
     }

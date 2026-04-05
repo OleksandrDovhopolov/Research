@@ -10,6 +10,7 @@ namespace CardCollectionImpl
     {
         public static void RegisterCardCollectionImpl(this IContainerBuilder builder)
         {
+            Debug.LogWarning($"[Debug] CardCollectionImplInstaller started");
             builder.Register<IEventConfigProvider, FirebaseEventConfigProvider>(Lifetime.Singleton);
             
             builder.Register<IEventCardsStorage, JsonEventCardsStorage>(Lifetime.Singleton);
@@ -43,6 +44,7 @@ namespace CardCollectionImpl
                 var controller = container.Resolve<CardCollectionLiveOpsController>();
                 eventRegistry.Register(controller);
             });
+            Debug.LogWarning($"[Debug] CardCollectionImplInstaller completed");
         }
     }
 }

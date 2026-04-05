@@ -28,6 +28,7 @@ namespace CardCollectionImpl
 
         public async UniTask Bind(ScheduleItem config, CancellationToken ct)
         {
+            Debug.LogWarning($"[Debug] CardCollectionHudPresenter Bind");
             var entryButton = await _hudService.SpawnEventButtonAsync(CardCollectionButtonId, ct);
 
             if (entryButton == null)

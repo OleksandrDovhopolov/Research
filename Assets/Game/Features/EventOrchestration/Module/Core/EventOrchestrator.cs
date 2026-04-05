@@ -20,6 +20,7 @@ namespace EventOrchestration.Core
 
         private readonly Dictionary<string, EventStateData> _states = new();
         private readonly HashSet<string> _transitionInFlight = new();
+        private readonly HashSet<string> _hydratedControllers = new();
         private List<ScheduleItem> _schedule = new();
 
         public event Action<ScheduleItem> OnEventCreated;
@@ -58,6 +59,7 @@ namespace EventOrchestration.Core
             
             var restored = await _stateStore.LoadAsync(ct);
             _states.Clear();
+            _hydratedControllers.Clear();
             foreach (var pair in restored)
             {
                 _states[pair.Key] = pair.Value;
@@ -77,6 +79,7 @@ namespace EventOrchestration.Core
             foreach (var stream in groupedByStream)
             {
                 ct.ThrowIfCancellationRequested();
+                Debug.LogWarning($"[EventOrchestrator] stream: {stream.Key}");
                 await ProcessStreamAsync(stream, now, ct);
             }
         }
@@ -122,6 +125,7 @@ namespace EventOrchestration.Core
                     UpdatedAtUtc = now,
                 };
 
+                Debug.LogWarning($"[Debug] EventOrchestrator created {item.Id}");
                 OnEventCreated?.Invoke(item);
             }
         }
@@ -148,6 +152,7 @@ namespace EventOrchestration.Core
                 ct.ThrowIfCancellationRequested();
 
                 var active = FindActive(items);
+                Debug.LogWarning($"[EventOrchestrator] active: {active == null}");
                 if (active != null)
                 {
                     await ProcessActiveAsync(active, now, ct);
@@ -155,6 +160,7 @@ namespace EventOrchestration.Core
                 }
 
                 var candidate = FindStartCandidateAsync(items, now);
+                Debug.LogWarning($"[EventOrchestrator] candidate: {candidate == null}");
                 if (candidate == null)
                 {
                     return;
@@ -207,9 +213,37 @@ namespace EventOrchestration.Core
 
             return null;
         }
+        
+        private async UniTask EnsureControllerHydratedAsync(
+            ScheduleItem item,
+            EventStateData state,
+            IEventController controller,
+            CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
 
+            if (_hydratedControllers.Contains(item.Id))
+            {
+                return;
+            }
+
+            await controller.InitializeAsync(item, state, ct);
+
+            if (state.StartInvoked &&
+                state.State is EventInstanceState.Active
+                    or EventInstanceState.Starting
+                    or EventInstanceState.Ending
+                    or EventInstanceState.Settling)
+            {
+                await controller.OnStart(ct);
+            }
+
+            _hydratedControllers.Add(item.Id);
+        }
+        
         private async UniTask StartAsync(ScheduleItem item, CancellationToken ct)
         {
+            Debug.LogWarning($"[EventOrchestrator] OnStartAsync: {item.Id}");
             ct.ThrowIfCancellationRequested();
 
             if (!_eventRegistry.TryGet(item.EventType, out var controller))
@@ -225,8 +259,11 @@ namespace EventOrchestration.Core
                 var state = _states[item.Id];
                 await TransitionStateAsync(state, EventInstanceState.Starting, ct);
 
-                await controller.InitializeAsync(item, state, ct);
-                await controller.OnStart(ct);
+                await EnsureControllerHydratedAsync(item, state, controller, ct);
+                if (!state.StartInvoked)
+                {
+                    await controller.OnStart(ct);
+                }
                 
                 if (!state.StartInvoked)
                 {
@@ -262,6 +299,8 @@ namespace EventOrchestration.Core
             var state = _states[item.Id];
             try
             {
+                await EnsureControllerHydratedAsync(item, state, controller, ct);
+                
                 if (state.State == EventInstanceState.Active)
                 {
                     await controller.OnUpdate(ct);
@@ -304,6 +343,7 @@ namespace EventOrchestration.Core
             await TransitionStateAsync(state, EventInstanceState.Completed, ct);
             OnEventCompleted?.Invoke(item);
             await _stateStore.SaveAsync(_states, ct);
+            _hydratedControllers.Remove(item.Id);
         }
 
         private async UniTask TransitionStateAsync(EventStateData state, EventInstanceState to, CancellationToken ct)
@@ -332,6 +372,7 @@ namespace EventOrchestration.Core
             await _telemetry.TrackTransitionAsync(itemId, from, EventInstanceState.Failed, ct);
             await _telemetry.TrackFailureAsync(itemId, stage, exception, ct);
             await _stateStore.SaveAsync(_states, ct);
+            _hydratedControllers.Remove(itemId);
         }
 
         #region Debug

@@ -2,8 +2,8 @@
   {
     "Id": "Winter_Collection",
     "EventType": "CardCollection",
-    "StartTimeUtc": "2026-04-03T17:30:00Z",
-    "EndTimeUtc": "2026-04-03T17:40:00Z",
+    "StartTimeUtc": "2026-04-05T15:32:14.5875028+00:00",
+    "EndTimeUtc": "2026-04-05T20:40:34.5875028+00:00",
     "Priority": 10,
     "StreamId": "card_collection_seasons",
     "CustomParams": {
@@ -15,8 +15,8 @@
   {
     "Id": "Spring_Collection",
     "EventType": "CardCollection",
-    "StartTimeUtc": "2026-04-03T17:40:00Z",
-    "EndTimeUtc": "2026-04-03T17:50:00Z",
+    "StartTimeUtc": "2026-04-05T15:40:34.5875028+00:00",
+    "EndTimeUtc": "2026-04-05T15:41:04.5875028+00:00",
     "Priority": 10,
     "StreamId": "card_collection_seasons",
     "CustomParams": {

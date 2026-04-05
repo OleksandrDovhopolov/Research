@@ -11,11 +11,12 @@ namespace UIShared
     public class HUDService : MonoBehaviour, IHUDService
     {
         [SerializeField] private GameObject _buttonPrefab;
-        [SerializeField] private Transform _eventsContainer;
 
         private readonly Dictionary<string, EventButton> _activeButtons = new();
         private IObjectResolver _resolver;
 
+        private Transform _eventsContainerTransform;
+        
         [Inject]
         private void Construct(IObjectResolver resolver)
         {
@@ -33,8 +34,18 @@ namespace UIShared
             _buttonPrefab.SetActive(false);
 
             var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, ct);
+
+            if (_eventsContainerTransform == null)
+            {
+                _eventsContainerTransform = GameObject.Find("EventsContainer").transform;
+                if (_eventsContainerTransform == null)
+                {
+                    Debug.LogError("Events Container not found");
+                    return null;
+                }
+            }
             
-            var btnObj = Instantiate(_buttonPrefab, _eventsContainer);
+            var btnObj = Instantiate(_buttonPrefab, _eventsContainerTransform);
             _buttonPrefab.SetActive(wasPrefabActive);
 
             _resolver.InjectGameObject(btnObj);
