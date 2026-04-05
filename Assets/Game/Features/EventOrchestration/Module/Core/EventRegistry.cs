@@ -11,7 +11,6 @@ namespace EventOrchestration.Core
 
         public void Register(IEventController controller)
         {
-            Debug.LogWarning($"[Debug] EventRegistry Register {controller.GetType().Name}");
             if (controller == null)
             {
                 throw new ArgumentNullException(nameof(controller));

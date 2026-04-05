@@ -18,10 +18,11 @@ namespace UIShared
     {
         [SerializeField] private UIListPool<EventDebugItemView> _uiListPool;
 
-        //private readonly Dictionary<string, EventDebugItemView> _idToView = new();
         private readonly List<EventViewData> _idToView = new();
 
         private CancellationToken _ct;
+        
+        private readonly SemaphoreSlim _addUpcomingSemaphore = new(1, 1);
         
         private void Start()
         {
@@ -41,39 +42,50 @@ namespace UIShared
             if (string.IsNullOrEmpty(eventId)) return;
             if (_idToView.Find(data => data.EventId == eventId) != null) return;
 
-            SetDataAsync(eventId, spriteAddress, globalTimerService).Forget();
+            SetDataAsync(eventId, spriteAddress, globalTimerService, _ct).Forget();
         }
 
-        private async UniTask SetDataAsync(string eventId, string spriteAddress, IGlobalTimerService  globalTimerService)
+        private async UniTask SetDataAsync(string eventId, string spriteAddress, IGlobalTimerService  globalTimerService, CancellationToken ct)
         {
-            var sprite = await LoadCollectionSprite(spriteAddress);
-            
-            var view = _uiListPool.GetNext();
-            view.SetData(eventId, sprite, globalTimerService);
-            var data = new EventViewData
-            {
-                EventId = eventId,
-                SpriteAddress = spriteAddress,
-                View = view
-            };
-            _idToView.Add(data);
-        }
-        
-        public async UniTask<Sprite> LoadCollectionSprite(string spriteAddress)
-        {
-            _ct.ThrowIfCancellationRequested();
-            
-            Sprite sprite = null;
+            await _addUpcomingSemaphore.WaitAsync(ct);
             try
             {
-                sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, _ct);
-            }
-            catch (Exception loadPrimaryException)
-            {
-                Debug.LogWarning($"Failed to load sprite for EventId='{spriteAddress}'. Falling back to default. {loadPrimaryException.Message}");
-            }
+                ct.ThrowIfCancellationRequested();
 
-            return sprite;
+                if (_idToView.Find(data => data.EventId == eventId) != null) return;
+
+                var sprite = await LoadCollectionSprite(spriteAddress, ct);
+                if (sprite == null) return;
+
+                var view = _uiListPool.GetNext();
+                view.SetData(eventId, sprite, globalTimerService);
+
+                _idToView.Add(new EventViewData
+                {
+                    EventId = eventId,
+                    SpriteAddress = spriteAddress,
+                    View = view
+                });
+            }
+            finally
+            {
+                _addUpcomingSemaphore.Release();
+            }
+        }
+        
+        public async UniTask<Sprite> LoadCollectionSprite(string spriteAddress, CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            try
+            {
+                return await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, ct);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                Debug.LogWarning($"Failed to load sprite for EventId='{spriteAddress}'. {ex.Message}");
+                return null;
+            }
         }
         
         public void OnEventStarted(string eventId)

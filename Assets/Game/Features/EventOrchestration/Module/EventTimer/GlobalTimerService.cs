@@ -31,8 +31,6 @@ namespace EventOrchestration
         
         public void Register(string eventId, DateTimeOffset timeUtc)
         {
-            Debug.LogWarning($"[Debug] GlobalTimerService eventId {eventId}");
-            
             if (string.IsNullOrEmpty(eventId))
                 throw new ArgumentException("Event id cannot be null or empty.", nameof(eventId));
 
