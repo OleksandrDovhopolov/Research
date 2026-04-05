@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using TMPro;
@@ -12,6 +11,7 @@ namespace UIShared.Loading
         [SerializeField] private CanvasGroup _rootGroup;
         [SerializeField] private Slider _progressBar;
         [SerializeField] private TextMeshProUGUI _statusText;
+        [SerializeField] private GameObject _loadingAnimationObject;
 
         private void Awake()
         {
@@ -48,7 +48,12 @@ namespace UIShared.Loading
                 _statusText.text = status ?? string.Empty;
             }
         }
-
+        
+        public void ShowLoader(bool show)
+        {
+            _loadingAnimationObject.gameObject.SetActive(show);
+        }
+        
         public void SetError(string message)
         {
         }
