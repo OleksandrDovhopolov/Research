@@ -8,6 +8,7 @@ using VContainer.Unity;
 
 namespace UIShared
 {
+    //TODO place it in correct ASMDEF
     public class HUDService : MonoBehaviour, IHUDService
     {
         [SerializeField] private GameObject _buttonPrefab;
@@ -37,6 +38,7 @@ namespace UIShared
 
             if (_eventsContainerTransform == null)
             {
+                //TODO fix it
                 _eventsContainerTransform = GameObject.Find("EventsContainer").transform;
                 if (_eventsContainerTransform == null)
                 {

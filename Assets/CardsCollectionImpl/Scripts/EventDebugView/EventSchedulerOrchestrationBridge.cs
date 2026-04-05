@@ -1,5 +1,7 @@
 using System;
+using System.Threading;
 using CardCollectionImpl;
+using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
 using EventOrchestration.Models;
 using UIShared;
@@ -15,6 +17,8 @@ namespace EventOrchestration.Core
         private UIManager _uiManager;
         private EventOrchestrator _orchestrator;
         private IGlobalTimerService _globalTimerService;
+        
+        private CancellationToken _destroyToken;
 
         [Inject]
         private void Construct(IClock clock, UIManager uiManager, EventOrchestrator orchestrator, IGlobalTimerService  globalTimerService)
@@ -23,6 +27,11 @@ namespace EventOrchestration.Core
             _uiManager = uiManager;
             _orchestrator = orchestrator;
             _globalTimerService = globalTimerService;
+        }
+
+        private void Awake()
+        {
+            _destroyToken = this.GetCancellationTokenOnDestroy();
         }
 
         private void Start()
@@ -36,13 +45,13 @@ namespace EventOrchestration.Core
             _orchestrator.OnEventCreated += HandleEventCreated;
             _orchestrator.OnEventStarted += HandleEventStarted;
             _orchestrator.OnEventCompleted += HandleEventCompleted;
+
+            SyncWhenOrchestratorReadyAsync(_destroyToken).Forget();
         }
         
         private void HandleEventCreated(ScheduleItem item)
         {
             if (item == null) return;
-            
-            //Debug.LogWarning($"[Debug] ScheduleItem {item.Id}, {item.StartTimeUtc}");
             
             _globalTimerService.Register(item.Id, item.StartTimeUtc);
             
@@ -51,6 +60,7 @@ namespace EventOrchestration.Core
                 if (_uiManager.IsWindowSpawned<GameplaySceneController>())
                 {
                     var gameplaySceneController = _uiManager.GetWindowSync<GameplaySceneController>();
+                    
                     if (gameplaySceneController.IsShown)
                     {
                         gameplaySceneController.AddUpcomingEvent(item.Id, GetSpriteAddress(item.Id), _globalTimerService);
@@ -86,6 +96,57 @@ namespace EventOrchestration.Core
                 return;
 
             _globalTimerService.Unregister(item.Id);
+        }
+
+        private void SyncFromOrchestratorSnapshot()
+        {
+            var scheduleItems = _orchestrator.GetScheduleSnapshot();
+            foreach (var item in scheduleItems)
+            {
+                if (item == null || string.IsNullOrWhiteSpace(item.Id))
+                {
+                    continue;
+                }
+
+                if (!_orchestrator.TryGetStateSnapshot(item.Id, out var state))
+                {
+                    continue;
+                }
+
+                switch (state.State)
+                {
+                    case EventInstanceState.Pending:
+                        HandleEventCreated(item);
+                        break;
+                    case EventInstanceState.Starting:
+                    case EventInstanceState.Active:
+                    case EventInstanceState.Ending:
+                    case EventInstanceState.Settling:
+                        HandleEventStarted(item);
+                        break;
+                    case EventInstanceState.Completed:
+                    case EventInstanceState.Failed:
+                    case EventInstanceState.Cancelled:
+                        HandleEventCompleted(item);
+                        break;
+                }
+            }
+        }
+
+        private async UniTaskVoid SyncWhenOrchestratorReadyAsync(CancellationToken ct)
+        {
+            try
+            {
+                await _orchestrator.WaitUntilInitializedAsync(ct);
+                SyncFromOrchestratorSnapshot();
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[EventSchedulerOrchestrationBridge] Failed to sync from orchestrator snapshot: {ex}");
+            }
         }
 
         public void Dispose()

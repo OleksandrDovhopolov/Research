@@ -21,7 +21,6 @@ namespace Game.Bootstrap
         
         public override void InstallBindings(IContainerBuilder builder)
         {
-            Debug.LogWarning($"[Debug] GameInstaller started");
             if (_hudService == null)
             {
                 throw new MissingReferenceException($"{nameof(HUDService)} is not assigned on {nameof(GameInstaller)}.");
@@ -32,6 +31,10 @@ namespace Game.Bootstrap
                 throw new MissingReferenceException($"{nameof(GlobalTimerService)} is not assigned on {nameof(GameInstaller)}.");
             }
 
+            // Game Ready Gate
+            builder.Register<IGameplayReadyGate, GameplayReadyGate>(Lifetime.Singleton);
+            
+            // ResourceManager
             builder.RegisterEntryPoint<ResourceManager>().As<ResourceManager>();
             
             builder.RegisterInstance<IHUDService>(_hudService);
@@ -59,11 +62,7 @@ namespace Game.Bootstrap
             builder.RegisterBuildCallback(resolver =>
             {
                 resolver.Resolve<WindowFactoryDI>().SetResolver(resolver);
-                
-                Debug.LogWarning($"[Debug] SetResolver completed");
             });
-            
-            Debug.LogWarning($"[Debug] GameInstaller completed");
         }
     }
 }

@@ -3,7 +3,7 @@ using VContainer;
 
 namespace UIShared
 {
-    [Window("GameplaySceneController")]
+    [Window("GameplaySceneController", isRoot: true)]
     public class GameplaySceneController : WindowController<GameplaySceneView>
     {
         [Inject]

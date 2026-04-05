@@ -36,7 +36,7 @@ namespace UIShared
 
         public void AddUpcoming(string eventId, string spriteAddress, IGlobalTimerService  globalTimerService)
         {
-//            Debug.LogWarning($"[Debug] AddUpcoming eventId {eventId}");
+            Debug.LogWarning($"[Debug] state.State  AddUpcoming eventId {eventId}");
             if (_uiListPool == null) return;
             if (string.IsNullOrEmpty(eventId)) return;
             if (_idToView.Find(data => data.EventId == eventId) != null) return;

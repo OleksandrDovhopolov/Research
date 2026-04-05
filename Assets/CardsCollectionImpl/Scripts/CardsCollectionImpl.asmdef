@@ -2,7 +2,7 @@
     "name": "CardsCollectionImpl",
     "rootNamespace": "",
     "references": [
-        "CardCollection.Application",
+        "GUID:4f0aae638f5d23442b70e1d053c4f8d7",
         "GUID:f51ebe6a0ceec4240a699833d6309b23",
         "GUID:783a0a365a6774210bf7eccf0f6f237a",
         "GUID:6055be8ebefd69e48b49212b09b47b2f",
@@ -17,7 +17,8 @@
         "GUID:23477f9337a4987418fe1de21d7c8454",
         "GUID:ef2f55bf82153a147a5aa65f49abf214",
         "GUID:84651a3751eca9349aac36a66bba901b",
-        "Core.Models"
+        "GUID:303506028f9befd4094e71a1f9916f2b",
+        "GUID:ed5447c4b36b09c408a042c161ba8c43"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

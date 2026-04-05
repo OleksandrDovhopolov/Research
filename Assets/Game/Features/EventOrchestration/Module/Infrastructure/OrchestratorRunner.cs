@@ -3,6 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Core;
 using EventOrchestration.Models;
+using UIShared;
 using UnityEngine;
 using VContainer;
 
@@ -14,13 +15,15 @@ namespace EventOrchestration
 
         private CancellationToken _destroyToken;
         private EventOrchestrator _orchestrator;
+        private IGameplayReadyGate _gameplayReadyGate;
 
         private TimeSpan _timeSpan;
         
         [Inject]
-        private void Construct(EventOrchestrator orchestrator)
+        private void Construct(EventOrchestrator orchestrator, IGameplayReadyGate  gameplayReadyGate)
         {
             _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
+            _gameplayReadyGate = gameplayReadyGate ?? throw new ArgumentNullException(nameof(gameplayReadyGate));
         }
 
         private void Awake()
@@ -38,6 +41,7 @@ namespace EventOrchestration
         {
             ct.ThrowIfCancellationRequested();
 
+            await _gameplayReadyGate.WaitUntilReadyAsync(ct); 
             await _orchestrator.InitializeAsync(ct);
 
             while (!ct.IsCancellationRequested)
