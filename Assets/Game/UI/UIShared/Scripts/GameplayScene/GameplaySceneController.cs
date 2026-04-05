@@ -19,6 +19,16 @@ namespace UIShared
         {
         }
 
+        public void AddUpcomingEvent(string eventId, string spriteAddress, IGlobalTimerService globalTimerService)
+        {
+            View.AddUpcomingEvent(eventId, spriteAddress, globalTimerService);
+        }
+
+        public void RemoveEventById(string eventId)
+        {
+            View.RemoveEventById(eventId);
+        }
+        
         protected override void OnHideStart(bool isClosed)
         {
         }

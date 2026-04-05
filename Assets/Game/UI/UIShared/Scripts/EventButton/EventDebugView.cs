@@ -1,18 +1,25 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
 using UnityEngine;
 
 namespace UIShared
 {
+    public class EventViewData
+    {
+        public string EventId;
+        public string SpriteAddress;
+        public EventDebugItemView View;
+    }
+    
     public class EventDebugView : MonoBehaviour
     {
         [SerializeField] private UIListPool<EventDebugItemView> _uiListPool;
 
-        private readonly Dictionary<string, EventDebugItemView> _idToView = new();
+        //private readonly Dictionary<string, EventDebugItemView> _idToView = new();
+        private readonly List<EventViewData> _idToView = new();
 
         private CancellationToken _ct;
         
@@ -27,23 +34,29 @@ namespace UIShared
             _ct = this.GetCancellationTokenOnDestroy();
         }
 
-        public void AddUpcoming(string eventId, IGlobalTimerService  globalTimerService)
+        public void AddUpcoming(string eventId, string spriteAddress, IGlobalTimerService  globalTimerService)
         {
             Debug.LogWarning($"[Debug] AddUpcoming eventId {eventId}");
             if (_uiListPool == null) return;
             if (string.IsNullOrEmpty(eventId)) return;
-            if (_idToView.ContainsKey(eventId)) return;
+            if (_idToView.Find(data => data.EventId == eventId) != null) return;
 
-            SetDataAsync(eventId, globalTimerService).Forget();
+            SetDataAsync(eventId, spriteAddress, globalTimerService).Forget();
         }
 
-        private async UniTask SetDataAsync(string eventId, IGlobalTimerService  globalTimerService)
+        private async UniTask SetDataAsync(string eventId, string spriteAddress, IGlobalTimerService  globalTimerService)
         {
-            var sprite = await LoadCollectionSprite(GetSpriteAddress(eventId));
+            var sprite = await LoadCollectionSprite(spriteAddress);
             
             var view = _uiListPool.GetNext();
             view.SetData(eventId, sprite, globalTimerService);
-            _idToView[eventId] = view;
+            var data = new EventViewData
+            {
+                EventId = eventId,
+                SpriteAddress = spriteAddress,
+                View = view
+            };
+            _idToView.Add(data);
         }
         
         public async UniTask<Sprite> LoadCollectionSprite(string spriteAddress)
@@ -67,20 +80,16 @@ namespace UIShared
         {
             if (string.IsNullOrEmpty(eventId) || _uiListPool == null) return;
 
-            if (_idToView.TryGetValue(eventId, out var view) && view != null)
+            var viewData = _idToView.Find(data => data.EventId == eventId);
+            if (viewData != null)
             {
-                view.ResetSprite();
-                _uiListPool.Return(view);
-                _idToView.Remove(eventId);
-                ProdAddressablesWrapper.Release(GetSpriteAddress(eventId));
+                viewData.View.ResetSprite();
+                _uiListPool.Return(viewData.View);
+                _idToView.Remove(viewData);
+                ProdAddressablesWrapper.Release(viewData.SpriteAddress);
             }
             
             _uiListPool.DisableNonActive();
-        }
-
-        private string GetSpriteAddress(string eventId)
-        {
-            return eventId + "/" + CardCollectionGeneralConfig.CollectionPreview;
         }
     }
 }

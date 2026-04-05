@@ -1,7 +1,9 @@
 using System;
+using CardCollectionImpl;
 using EventOrchestration.Abstractions;
 using EventOrchestration.Models;
 using UIShared;
+using UISystem;
 using UnityEngine;
 using VContainer;
 
@@ -9,16 +11,16 @@ namespace EventOrchestration.Core
 {
     public sealed class EventSchedulerOrchestrationBridge : MonoBehaviour, IDisposable
     {
-        [SerializeField] private EventDebugView _debugView;
-        
         private IClock _clock;
+        private UIManager _uiManager;
         private EventOrchestrator _orchestrator;
         private IGlobalTimerService _globalTimerService;
 
         [Inject]
-        private void Construct(IClock clock, EventOrchestrator orchestrator, IGlobalTimerService  globalTimerService)
+        private void Construct(IClock clock, UIManager uiManager, EventOrchestrator orchestrator, IGlobalTimerService  globalTimerService)
         {
             _clock = clock;
+            _uiManager = uiManager;
             _orchestrator = orchestrator;
             _globalTimerService = globalTimerService;
         }
@@ -44,16 +46,36 @@ namespace EventOrchestration.Core
             
             if (_clock.UtcNow < item.StartTimeUtc)
             {
-                _debugView.AddUpcoming(item.Id, _globalTimerService);
+                if (_uiManager.IsWindowSpawned<GameplaySceneController>())
+                {
+                    var gameplaySceneController = _uiManager.GetWindowSync<GameplaySceneController>();
+                    if (gameplaySceneController.IsShown)
+                    {
+                        gameplaySceneController.AddUpcomingEvent(item.Id, GetSpriteAddress(item.Id), _globalTimerService);
+                    }
+                }
             }
         }
 
+        private string GetSpriteAddress(string eventId)
+        {
+            return eventId + "/" + CardCollectionGeneralConfig.CollectionPreview;
+        }
+        
         private void HandleEventStarted(ScheduleItem item)
         {
             if (item == null) return;
             
             _globalTimerService.Register(item.Id, item.EndTimeUtc);
-            _debugView.OnEventStarted(item.Id);
+            
+            if (_uiManager.IsWindowSpawned<GameplaySceneController>())
+            {
+                var gameplaySceneController = _uiManager.GetWindowSync<GameplaySceneController>();
+                if (gameplaySceneController.IsShown)
+                {
+                    gameplaySceneController.RemoveEventById(item.Id);
+                }
+            }
         }
         
         private void HandleEventCompleted(ScheduleItem item)
