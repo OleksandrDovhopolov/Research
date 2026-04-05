@@ -3,8 +3,9 @@
     "rootNamespace": "",
     "references": [
         "GUID:f51ebe6a0ceec4240a699833d6309b23",
-        "Infrastructure",
-        "Core.Models"
+        "GUID:dea99baa1a8b8f34d839de0e3d580595",
+        "GUID:303506028f9befd4094e71a1f9916f2b",
+        "GUID:b0214a6008ed146ff8f122a6a9c2f6cc"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

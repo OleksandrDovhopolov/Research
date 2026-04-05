@@ -3,16 +3,15 @@ using System.Threading;
 using core;
 using Cysharp.Threading.Tasks;
 using UISystem;
-using VContainer;
 
 namespace Game.Bootstrap.Loading.Operations
 {
     public sealed class UiManagerConfigureOperation : LoadingOperationBase
     {
         private readonly UIManager _uiManager;
-        private readonly IObjectResolver _resolver;
+        private readonly WindowFactoryDI _windowFactoryDI;
 
-        public UiManagerConfigureOperation(UIManager uiManager, IObjectResolver resolver)
+        public UiManagerConfigureOperation(UIManager uiManager, WindowFactoryDI windowFactoryDI)
             : base(
                 id: "ui_manager_configure",
                 description: "Preparing UI systems",
@@ -23,15 +22,14 @@ namespace Game.Bootstrap.Loading.Operations
                 timeout: TimeSpan.FromSeconds(5))
         {
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
-            _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
+            _windowFactoryDI = windowFactoryDI ?? throw new ArgumentNullException(nameof(windowFactoryDI));
         }
 
         protected override UniTask ExecuteInternalAsync(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
-            var windowFactoryBase = new WindowFactoryDI(_uiManager, _resolver);
             var eventHandler = new UIManagerSignalHandler();
-            _uiManager.Configurate(windowFactoryBase, eventHandler);
+            _uiManager.Configurate(_windowFactoryDI, eventHandler);
             ReportProgress(1f);
             return UniTask.CompletedTask;
         }

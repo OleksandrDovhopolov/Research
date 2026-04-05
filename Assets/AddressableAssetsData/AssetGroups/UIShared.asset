@@ -17,6 +17,11 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: 93ea60d844c04b34796939054c296755
   m_SerializeEntries:
+  - m_GUID: 0d46c2ab7dc4589428601072bb9f6fae
+    m_Address: GameplaySceneController
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0df89b3f7fa7f453f97b65522ee1a7fa
     m_Address: Assets/Game/UI/UIShared/Prefabs/Loading/Animatons/Loading_rotate_00.png
     m_ReadOnly: 0

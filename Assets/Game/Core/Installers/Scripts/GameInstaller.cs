@@ -5,7 +5,6 @@ using EventOrchestration;
 using Inventory.API;
 using Rewards;
 using UIShared;
-using UISystem;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -14,7 +13,6 @@ namespace Game.Bootstrap
 {
     public sealed class GameInstaller : MonoInstaller
     {
-        [SerializeField] private UIManager _uiManager;
         [SerializeField] private HUDService _hudService;
         [SerializeField] private GlobalTimerService _globalTimerService;
         [SerializeField] private RewardSpecsConfigSO _rewardSpecsConfigSo;
@@ -23,11 +21,7 @@ namespace Game.Bootstrap
         
         public override void InstallBindings(IContainerBuilder builder)
         {
-            if (_uiManager == null)
-            {
-                throw new MissingReferenceException($"{nameof(UIManager)} is not assigned on {nameof(GameInstaller)}.");
-            }
-            
+            Debug.LogWarning($"[Debug] GameInstaller started");
             if (_hudService == null)
             {
                 throw new MissingReferenceException($"{nameof(HUDService)} is not assigned on {nameof(GameInstaller)}.");
@@ -38,8 +32,8 @@ namespace Game.Bootstrap
                 throw new MissingReferenceException($"{nameof(GlobalTimerService)} is not assigned on {nameof(GameInstaller)}.");
             }
 
-            //TODO uiManager should be in loading phase ? 
-            builder.RegisterInstance(_uiManager);
+            builder.RegisterEntryPoint<ResourceManager>().As<ResourceManager>();
+            
             builder.RegisterInstance<IHUDService>(_hudService);
             builder.RegisterComponentInHierarchy<AnimateCurrency>();
             builder.RegisterInstance<IGlobalTimerService>(_globalTimerService);
@@ -61,6 +55,15 @@ namespace Game.Bootstrap
             // Orchestration
             builder.RegisterOrchestration(_cardCollectionScheduleFile, _removeCardCollectionConfigSchedule);
             builder.RegisterComponentInHierarchy<OrchestratorRunner>();
+            
+            builder.RegisterBuildCallback(resolver =>
+            {
+                resolver.Resolve<WindowFactoryDI>().SetResolver(resolver);
+                
+                Debug.LogWarning($"[Debug] SetResolver completed");
+            });
+            
+            Debug.LogWarning($"[Debug] GameInstaller completed");
         }
     }
 }

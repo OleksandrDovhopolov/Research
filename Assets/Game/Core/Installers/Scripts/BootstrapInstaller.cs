@@ -1,12 +1,17 @@
-using CoreResources;
+using core;
 using Game.Bootstrap.Loading;
 using Infrastructure.SaveSystem;
+using UISystem;
+using UnityEngine;
 using VContainer;
+using VContainer.Unity;
 
 namespace Game.Bootstrap
 {
     public class BootstrapInstaller : ScriptableObjectInstaller
     {
+        [SerializeField] private UIManager _uiManagerPrefab;
+        
         public override void InstallBindings(IContainerBuilder builder)
         {
             //Loading
@@ -19,11 +24,12 @@ namespace Game.Bootstrap
             builder.Register<SaveMigrationService>(Lifetime.Singleton);
             builder.Register<SaveService>(Lifetime.Singleton);
             
-            //Resources
-            builder.Register<ResourceManager>(Lifetime.Singleton);
-            
             //RemoveConfig
             builder.Register<RemoteConfigLoader>(Lifetime.Singleton);
+            
+            //UI
+            builder.Register<WindowFactoryDI>(Lifetime.Singleton);
+            builder.RegisterComponentInNewPrefab(_uiManagerPrefab, Lifetime.Singleton).DontDestroyOnLoad();
         }
     }
 }

@@ -1,10 +1,12 @@
 using System.Threading;
+using core;
 using CoreResources;
 using Cysharp.Threading.Tasks;
 using Game.Bootstrap.Loading;
 using Game.Bootstrap.Loading.Operations;
 using Infrastructure.SaveSystem;
 using UIShared.Loading;
+using UISystem;
 using UnityEngine;
 using VContainer;
 
@@ -19,22 +21,26 @@ namespace Game.Bootstrap
 
         private CancellationToken _destroyCt;
         
+        private UIManager _uiManager;
+        private WindowFactoryDI _windowFactoryDI;
         private SaveService _saveService;
-        private ResourceManager _resourceManager;
+        private IObjectResolver _resolver;
         private RemoteConfigLoader _remoteConfigLoader;
         private LoadingOrchestrator _loadingOrchestrator;
         private IAuthorizationService _authorizationService;
         
         [Inject]
         private void Construct(
-            ResourceManager resourceManager,
+            UIManager uiManager,
             SaveService saveService,
+            WindowFactoryDI  windowFactoryDI,
             RemoteConfigLoader remoteConfigLoader,
             IAuthorizationService authorizationService,
             LoadingOrchestrator loadingOrchestrator)
         {
+            _uiManager = uiManager;
+            _windowFactoryDI = windowFactoryDI;
             _saveService = saveService;
-            _resourceManager = resourceManager;
             _remoteConfigLoader = remoteConfigLoader;
             _authorizationService = authorizationService;
             _loadingOrchestrator = loadingOrchestrator;
@@ -119,7 +125,7 @@ namespace Game.Bootstrap
             {
                 new LoadingGroup("phase_technical_seq", LoadingGroupExecutionMode.Sequential, new ILoadingOperation[]
                 {
-                    //new UiManagerConfigureOperation(_uiManager, _resolver),
+                    new UiManagerConfigureOperation(_uiManager, _windowFactoryDI),
                     new FirebaseDependenciesOperation(_remoteConfigLoader),
                     new AddressablesUpdateOperation(),
                 })
@@ -138,8 +144,7 @@ namespace Game.Bootstrap
                 new LoadingGroup("phase_data_parallel", LoadingGroupExecutionMode.Parallel, new ILoadingOperation[]
                 {
                     new RemoteConfigFetchOperation(_remoteConfigLoader),
-                    new SaveDataLoadOperation(_saveService),
-                    new ResourceInitializationOperation(_resourceManager)
+                    new SaveDataLoadOperation(_saveService)
                 })
             });
 
@@ -163,12 +168,6 @@ namespace Game.Bootstrap
         private void OnActiveDescriptionChanged(string description)
         {
             _loadingScreenView?.SetStatus(description);
-        }
-
-        private void OnDestroy()
-        {
-            //TODO move resources from loading phase
-            //_resourceManager?.Dispose();
         }
     }
 }

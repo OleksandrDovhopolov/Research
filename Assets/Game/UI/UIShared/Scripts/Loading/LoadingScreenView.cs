@@ -37,7 +37,7 @@ namespace UIShared.Loading
         {
             if (_progressBar != null)
             {
-                _progressBar.value = Mathf.Clamp01(normalizedProgress);
+                _progressBar.value = normalizedProgress * 100;
             }
         }
 

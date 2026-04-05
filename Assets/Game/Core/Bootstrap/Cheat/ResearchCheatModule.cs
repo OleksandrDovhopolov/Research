@@ -8,6 +8,7 @@ using EventOrchestration;
 using Inventory.API;
 using UIShared;
 using UnityEngine;
+using UnityEngine.UI;
 using VContainer;
 
 namespace Game.Cheat
@@ -15,7 +16,7 @@ namespace Game.Cheat
     public class ResearchCheatModule : MonoBehaviour, ICheatsContainer
     {
         [SerializeField] private CheatsManager _cheatsManagerPrefab;
-        [SerializeField] private AnimateCurrency _animateCurrency;
+        [SerializeField] private Button _cheatButton; 
         
         private CheatsManager _cheatsManager;
         private CheatPanelItem _rootPanel;
@@ -24,10 +25,12 @@ namespace Game.Cheat
         private ResourceManager _resourceManager;
         private IInventoryService _inventoryService;
         private OrchestratorRunner _orchestratorRunner;
+        private AnimateCurrency _animateCurrency;
         private ICardCollectionSessionFacade _cardCollectionSessionFacade;
 
         [Inject]
         private void Construct(
+            AnimateCurrency animateCurrency,
             ResourceManager resourceManager,
             IInventoryService inventoryService, 
             OrchestratorRunner orchestratorRunner,
@@ -35,6 +38,7 @@ namespace Game.Cheat
         {
             _inventoryService = inventoryService;
             _resourceManager = resourceManager;
+            _animateCurrency = animateCurrency;
             _orchestratorRunner = orchestratorRunner;
             _cardCollectionSessionFacade = cardCollectionSessionFacade;
         }
@@ -43,6 +47,16 @@ namespace Game.Cheat
         {
             InitializeRootPanel();
             InitializeCheatsModules();
+        }
+        
+        private void OnEnable()
+        {
+            _cheatButton.onClick.AddListener(OpenCheatPanel);
+        }
+
+        private void OnDisable()
+        {
+            _cheatButton.onClick.RemoveListener(OpenCheatPanel);
         }
         
         private void InitializeRootPanel()

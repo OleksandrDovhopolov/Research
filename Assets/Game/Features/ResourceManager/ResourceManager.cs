@@ -5,20 +5,21 @@ using Core.Models;
 using Cysharp.Threading.Tasks;
 using Infrastructure.SaveSystem;
 using UnityEngine;
+using VContainer.Unity;
 
 namespace CoreResources
 {
-    public class ResourceManager
+    public class ResourceManager : IStartable
     {
         public delegate void ResourceAmountChangedHandler(ResourceType type, int newAmount);
+
         public event ResourceAmountChangedHandler ResourceAmountChanged;
 
         private readonly Dictionary<ResourceType, int> _amountByType = new()
         {
-            { ResourceType.Gold, 0 },
-            { ResourceType.Energy, 0 },
-            { ResourceType.Gems, 0 },
+            { ResourceType.Gold, 0 }, { ResourceType.Energy, 0 }, { ResourceType.Gems, 0 },
         };
+
         private readonly SaveService _saveService;
         private readonly CancellationTokenSource _saveCts = new();
         private bool _isInitialized;
@@ -28,7 +29,13 @@ namespace CoreResources
         {
             _saveService = saveService;
         }
-
+        
+        void IStartable.Start()
+        {
+            //TODO refactor this
+            InitializeAsync(_saveCts.Token).Forget();
+        }
+        
         public async UniTask InitializeAsync(CancellationToken ct)
         {
             ThrowIfDisposed();
@@ -38,13 +45,14 @@ namespace CoreResources
             }
 
             await _saveService.LoadAllAsync(ct);
-            var saveData = await _saveService.GetReadonlyModuleAsync(data => new ResourcesModuleSaveData
-            {
-                Version = data.Resources.Version,
-                Gold = data.Resources.Gold,
-                Energy = data.Resources.Energy,
-                Gems = data.Resources.Gems,
-            }, ct);
+            var saveData = await _saveService.GetReadonlyModuleAsync(
+                data => new ResourcesModuleSaveData
+                {
+                    Version = data.Resources.Version,
+                    Gold = data.Resources.Gold,
+                    Energy = data.Resources.Energy,
+                    Gems = data.Resources.Gems,
+                }, ct);
             ApplySaveData(saveData);
             _isInitialized = true;
         }

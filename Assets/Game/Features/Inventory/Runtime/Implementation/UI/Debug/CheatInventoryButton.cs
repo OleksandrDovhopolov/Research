@@ -11,24 +11,26 @@ namespace Inventory.Implementation
 {
     public class CheatInventoryButton : MonoBehaviour
     {
-        [SerializeField] private UIManager _uiManager;
         [SerializeField] private Button _cheatButton;
         [SerializeField] private string _ownerId = "player_1";
 
         private CancellationToken _destroyCt;
         
+        private UIManager _uiManager;
         private IInventoryService _inventoryService;
         private IInventoryReadService _inventoryReadService;
         private IInventoryItemUseService _inventoryItemUseService;
         private IItemCategoryRegistry _itemCategoryRegistry;
         
         [Inject]
-        private void Construct(
+        public void Install(
+            UIManager uiManager,
             IInventoryService inventoryService,
             IInventoryReadService  inventoryReadService, 
             IInventoryItemUseService inventoryItemUseService,
             IItemCategoryRegistry  itemCategoryRegistry)
         {
+            _uiManager = uiManager;
             _inventoryService = inventoryService;
             _inventoryReadService = inventoryReadService;
             _inventoryItemUseService = inventoryItemUseService;

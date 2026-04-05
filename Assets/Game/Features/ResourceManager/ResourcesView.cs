@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 namespace CoreResources
 {
@@ -15,16 +16,17 @@ namespace CoreResources
         private readonly Dictionary<ResourceType, Tween> _tweenByType = new();
 
         private ResourceManager ResourceManager { get; set; }
-
-        public void InitView(ResourceManager resourceManager)
+        
+        [Inject]
+        public void Install(ResourceManager resourceManager)
         {
-            if (ResourceManager != null) return;
-            
             ResourceManager = resourceManager;
-            
-            if (ResourceManager == null) return;
-            
+        }
+        
+        void Start()
+        {
             ResourceManager.ResourceAmountChanged += OnResourceAmountChangedHandler;
+            UpdateFromResourceManager();
         }
         
         public void UpdateFromResourceManager(bool instant = false)
