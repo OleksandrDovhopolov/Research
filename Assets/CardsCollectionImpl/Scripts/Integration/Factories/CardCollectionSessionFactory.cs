@@ -45,7 +45,7 @@ namespace CardCollectionImpl
 
             var windowCoordinator = new CardCollectionWindowCoordinator(_uiManager);
 
-            var hudPresenter = new CardCollectionHudPresenter(_hudService);
+            var hudPresenter = new CardCollectionHudPresenter(_uiManager, _hudService);
             
             var newCardFlowService = new NewCardFlowService(facade, facade, _cardCollectionCacheService);
             

@@ -60,11 +60,7 @@ namespace EventOrchestration.Core
                 if (_uiManager.IsWindowSpawned<GameplaySceneController>())
                 {
                     var gameplaySceneController = _uiManager.GetWindowSync<GameplaySceneController>();
-                    
-                    if (gameplaySceneController.IsShown)
-                    {
-                        gameplaySceneController.AddUpcomingEvent(item.Id, GetSpriteAddress(item.Id), _globalTimerService);
-                    }
+                    gameplaySceneController.AddUpcomingEvent(item.Id, GetSpriteAddress(item.Id), _globalTimerService);
                 }
             }
         }
@@ -83,10 +79,7 @@ namespace EventOrchestration.Core
             if (_uiManager.IsWindowSpawned<GameplaySceneController>())
             {
                 var gameplaySceneController = _uiManager.GetWindowSync<GameplaySceneController>();
-                if (gameplaySceneController.IsShown)
-                {
-                    gameplaySceneController.RemoveEventById(item.Id);
-                }
+                gameplaySceneController.RemoveEventById(item.Id);
             }
         }
         

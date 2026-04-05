@@ -3,6 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Models;
 using UIShared;
+using UISystem;
 using UnityEngine;
 
 namespace CardCollectionImpl
@@ -11,13 +12,16 @@ namespace CardCollectionImpl
     {
         private const string CardCollectionButtonId = "CardCollection" + "/" + CardCollectionGeneralConfig.CollectionEventButton;
         
+        private readonly UIManager _uiManager;
         private readonly IHUDService _hudService;
+        
         private Func<CancellationToken, UniTask> _showCollectionHandler;
         
         private IEventButton _eventButton;
         
-        public CardCollectionHudPresenter(IHUDService hudService)
+        public CardCollectionHudPresenter(UIManager uiManager, IHUDService hudService)
         {
+            _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
             _hudService = hudService ?? throw new ArgumentNullException(nameof(hudService));
         }
 
@@ -28,7 +32,7 @@ namespace CardCollectionImpl
 
         public async UniTask Bind(ScheduleItem config, CancellationToken ct)
         {
-            Debug.LogWarning($"[Debug] CardCollectionHudPresenter Bind");
+            await UniTask.WaitUntil(() => _uiManager.IsWindowShown<GameplaySceneController>(), cancellationToken: ct);
             var entryButton = await _hudService.SpawnEventButtonAsync(CardCollectionButtonId, ct);
 
             if (entryButton == null)
@@ -49,6 +53,8 @@ namespace CardCollectionImpl
         
         public void Unbind()
         {
+            if (_eventButton == null) return;
+            
             _eventButton = null;
             _hudService.RemoveEventButton(CardCollectionButtonId);
         }
