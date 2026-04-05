@@ -153,7 +153,7 @@ namespace Infrastructure
                     {
                         result.Add((T) typeConverter.ConvertFromString(arrayValue));
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         Debug.LogException(new InvalidOperationException($"Cant cast value {arrayValue} to type {TypeOf<T>.Raw}"));
                     }
@@ -214,7 +214,7 @@ namespace Infrastructure
                     {
                         result.Add((T) typeConverter.ConvertFromString(value));
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         Debug.LogException(new InvalidOperationException($"Cant cast value {value} to type {TypeOf<T>.Raw}"));
                     }

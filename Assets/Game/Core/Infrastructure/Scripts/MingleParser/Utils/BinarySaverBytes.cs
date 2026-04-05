@@ -111,7 +111,7 @@ namespace Infrastructure
                 // And return it
                 return sb.ToString();
             }
-            catch (ArgumentNullException ane)
+            catch (ArgumentNullException)
             {
                 //If something occurred during serialization, 
                 //this method is called with a null argument. 
