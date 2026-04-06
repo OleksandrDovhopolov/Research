@@ -13,6 +13,108 @@ namespace EventOrchestration.Tests.Editor
     public sealed class EventOrchestratorOfflineTransitionTests
     {
         [Test]
+        public void TickAsync_WhenNowInsideEventWindow_StartsPendingEvent()
+        {
+            var now = new DateTimeOffset(2026, 4, 11, 13, 0, 0, TimeSpan.Zero);
+            var schedule = new List<ScheduleItem>
+            {
+                new()
+                {
+                    Id = "event1",
+                    EventType = "CardCollection1",
+                    StreamId = "main",
+                    Priority = 1,
+                    StartTimeUtc = now.AddMinutes(-5),
+                    EndTimeUtc = now.AddHours(1),
+                },
+            };
+
+            var restoredStates = new Dictionary<string, EventStateData>
+            {
+                ["event1"] = new()
+                {
+                    ScheduleItemId = "event1",
+                    State = EventInstanceState.Pending,
+                    Version = 1,
+                    UpdatedAtUtc = now,
+                },
+            };
+
+            var callOrder = new List<string>();
+            var event1Controller = new FakeEventController("CardCollection1", callOrder);
+
+            var orchestrator = CreateOrchestrator(
+                now,
+                schedule,
+                restoredStates,
+                event1Controller,
+                out var stateStore,
+                out _);
+
+            var startedCount = 0;
+            orchestrator.OnEventStarted += _ => startedCount++;
+
+            orchestrator.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+            orchestrator.TickAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.AreEqual(1, event1Controller.OnStartCalls);
+            Assert.AreEqual(1, startedCount);
+            Assert.That(stateStore.LastSavedStates.TryGetValue("event1", out var event1State), Is.True);
+            Assert.AreEqual(EventInstanceState.Active, event1State.State);
+            Assert.IsTrue(event1State.StartInvoked);
+        }
+
+        [Test]
+        public void TickAsync_WhenNowBeforeStart_DoesNotStartEvent()
+        {
+            var now = new DateTimeOffset(2026, 4, 11, 13, 0, 0, TimeSpan.Zero);
+            var schedule = new List<ScheduleItem>
+            {
+                new()
+                {
+                    Id = "event1",
+                    EventType = "CardCollection1",
+                    StreamId = "main",
+                    Priority = 1,
+                    StartTimeUtc = now.AddMinutes(5),
+                    EndTimeUtc = now.AddHours(1),
+                },
+            };
+
+            var restoredStates = new Dictionary<string, EventStateData>
+            {
+                ["event1"] = new()
+                {
+                    ScheduleItemId = "event1",
+                    State = EventInstanceState.Pending,
+                    Version = 1,
+                    UpdatedAtUtc = now,
+                },
+            };
+
+            var callOrder = new List<string>();
+            var event1Controller = new FakeEventController("CardCollection1", callOrder);
+
+            var orchestrator = CreateOrchestrator(
+                now,
+                schedule,
+                restoredStates,
+                event1Controller,
+                out var stateStore,
+                out _);
+
+            orchestrator.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+            orchestrator.TickAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.Zero(event1Controller.OnStartCalls);
+            Assert.Zero(event1Controller.OnUpdateCalls);
+            Assert.IsEmpty(callOrder);
+            Assert.That(stateStore.LastSavedStates.TryGetValue("event1", out var event1State), Is.True);
+            Assert.AreEqual(EventInstanceState.Pending, event1State.State);
+            Assert.IsFalse(event1State.StartInvoked);
+        }
+
+        [Test]
         public void TickAsync_WhenPreviousEventExpiredOffline_EndsPreviousThenStartsNextInSameStream()
         {
             var now = new DateTimeOffset(2026, 4, 11, 13, 0, 0, TimeSpan.Zero);
@@ -69,7 +171,8 @@ namespace EventOrchestration.Tests.Editor
                 restoredStates,
                 event1Controller,
                 event2Controller,
-                out var stateStore);
+                out var stateStore,
+                out _);
 
             orchestrator.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
             orchestrator.TickAsync(CancellationToken.None).GetAwaiter().GetResult();
@@ -90,6 +193,242 @@ namespace EventOrchestration.Tests.Editor
             Assert.AreEqual(EventInstanceState.Completed, event1State.State);
             Assert.AreEqual(EventInstanceState.Active, event2State.State);
             Assert.IsTrue(event2State.StartInvoked);
+        }
+
+        [Test]
+        public void TickAsync_WhenActiveEventExpired_EndsAndSettlesAndCompletes()
+        {
+            var now = new DateTimeOffset(2026, 4, 11, 13, 0, 0, TimeSpan.Zero);
+            var schedule = new List<ScheduleItem>
+            {
+                new()
+                {
+                    Id = "event1",
+                    EventType = "CardCollection1",
+                    StreamId = "main",
+                    Priority = 1,
+                    StartTimeUtc = now.AddDays(-5),
+                    EndTimeUtc = now.AddMinutes(-1),
+                },
+            };
+
+            var restoredStates = new Dictionary<string, EventStateData>
+            {
+                ["event1"] = new()
+                {
+                    ScheduleItemId = "event1",
+                    State = EventInstanceState.Active,
+                    Version = 1,
+                    UpdatedAtUtc = now,
+                    StartInvoked = true,
+                },
+            };
+
+            var callOrder = new List<string>();
+            var event1Controller = new FakeEventController("CardCollection1", callOrder);
+
+            var orchestrator = CreateOrchestrator(
+                now,
+                schedule,
+                restoredStates,
+                event1Controller,
+                out var stateStore,
+                out _);
+
+            var completedCount = 0;
+            orchestrator.OnEventCompleted += _ => completedCount++;
+
+            orchestrator.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+            orchestrator.TickAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.AreEqual(1, event1Controller.OnEndCalls);
+            Assert.AreEqual(1, event1Controller.ExecuteSettlementCalls);
+            Assert.AreEqual(1, completedCount);
+
+            Assert.That(callOrder.IndexOf("event1.OnEnd"), Is.GreaterThanOrEqualTo(0));
+            Assert.That(callOrder.IndexOf("event1.ExecuteSettlement"), Is.GreaterThan(callOrder.IndexOf("event1.OnEnd")));
+
+            Assert.That(stateStore.LastSavedStates.TryGetValue("event1", out var event1State), Is.True);
+            Assert.AreEqual(EventInstanceState.Completed, event1State.State);
+            Assert.IsTrue(event1State.EndInvoked);
+            Assert.IsTrue(event1State.SettlementInvoked);
+        }
+
+        [Test]
+        public void TickAsync_WhenOnUpdateThrows_MarksEventFailed()
+        {
+            var now = new DateTimeOffset(2026, 4, 11, 13, 0, 0, TimeSpan.Zero);
+            var schedule = new List<ScheduleItem>
+            {
+                new()
+                {
+                    Id = "event1",
+                    EventType = "CardCollection1",
+                    StreamId = "main",
+                    Priority = 1,
+                    StartTimeUtc = now.AddDays(-1),
+                    EndTimeUtc = now.AddHours(2),
+                },
+            };
+
+            var restoredStates = new Dictionary<string, EventStateData>
+            {
+                ["event1"] = new()
+                {
+                    ScheduleItemId = "event1",
+                    State = EventInstanceState.Active,
+                    Version = 1,
+                    UpdatedAtUtc = now,
+                    StartInvoked = true,
+                },
+            };
+
+            var callOrder = new List<string>();
+            var event1Controller = new FakeEventController("CardCollection1", callOrder)
+            {
+                ThrowOnUpdate = new InvalidOperationException("update failed"),
+            };
+
+            var orchestrator = CreateOrchestrator(
+                now,
+                schedule,
+                restoredStates,
+                event1Controller,
+                out var stateStore,
+                out var telemetry);
+
+            orchestrator.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+            orchestrator.TickAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(stateStore.LastSavedStates.TryGetValue("event1", out var event1State), Is.True);
+            Assert.AreEqual(EventInstanceState.Failed, event1State.State);
+            Assert.That(event1State.LastError, Does.Contain("UpdateOrEnd"));
+            Assert.AreEqual(1, telemetry.FailureCalls);
+            Assert.AreEqual("UpdateOrEnd", telemetry.LastFailureStage);
+        }
+
+        [Test]
+        public void TickAsync_WhenCancellationRequested_ThrowsOperationCanceledException()
+        {
+            var now = new DateTimeOffset(2026, 4, 11, 13, 0, 0, TimeSpan.Zero);
+            var schedule = new List<ScheduleItem>
+            {
+                new()
+                {
+                    Id = "event1",
+                    EventType = "CardCollection1",
+                    StreamId = "main",
+                    Priority = 1,
+                    StartTimeUtc = now.AddMinutes(-1),
+                    EndTimeUtc = now.AddHours(1),
+                },
+            };
+
+            var restoredStates = new Dictionary<string, EventStateData>
+            {
+                ["event1"] = new()
+                {
+                    ScheduleItemId = "event1",
+                    State = EventInstanceState.Pending,
+                    Version = 1,
+                    UpdatedAtUtc = now,
+                },
+            };
+
+            var callOrder = new List<string>();
+            var event1Controller = new FakeEventController("CardCollection1", callOrder);
+
+            var orchestrator = CreateOrchestrator(
+                now,
+                schedule,
+                restoredStates,
+                event1Controller,
+                out _,
+                out _);
+
+            orchestrator.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            using var cts = new CancellationTokenSource();
+            cts.Cancel();
+
+            Assert.Throws<OperationCanceledException>(
+                () => orchestrator.TickAsync(cts.Token).GetAwaiter().GetResult());
+        }
+
+        [Test]
+        public void TickAsync_WhenFirstEventCompletesAndSecondIsReady_StartsSecondInSameTick()
+        {
+            var now = new DateTimeOffset(2026, 4, 11, 13, 0, 0, TimeSpan.Zero);
+            var schedule = new List<ScheduleItem>
+            {
+                new()
+                {
+                    Id = "event1",
+                    EventType = "CardCollection1",
+                    StreamId = "main",
+                    Priority = 1,
+                    StartTimeUtc = now.AddDays(-2),
+                    EndTimeUtc = now.AddMinutes(-1),
+                },
+                new()
+                {
+                    Id = "event2",
+                    EventType = "CardCollection2",
+                    StreamId = "main",
+                    Priority = 1,
+                    StartTimeUtc = now.AddMinutes(-1),
+                    EndTimeUtc = now.AddDays(1),
+                },
+            };
+
+            var restoredStates = new Dictionary<string, EventStateData>
+            {
+                ["event1"] = new()
+                {
+                    ScheduleItemId = "event1",
+                    State = EventInstanceState.Active,
+                    Version = 1,
+                    UpdatedAtUtc = now,
+                    StartInvoked = true,
+                },
+                ["event2"] = new()
+                {
+                    ScheduleItemId = "event2",
+                    State = EventInstanceState.Pending,
+                    Version = 1,
+                    UpdatedAtUtc = now,
+                },
+            };
+
+            var callOrder = new List<string>();
+            var event1Controller = new FakeEventController("CardCollection1", callOrder);
+            var event2Controller = new FakeEventController("CardCollection2", callOrder);
+
+            var orchestrator = CreateOrchestrator(
+                now,
+                schedule,
+                restoredStates,
+                event1Controller,
+                event2Controller,
+                out var stateStore,
+                out _);
+
+            orchestrator.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+            orchestrator.TickAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.AreEqual(1, event1Controller.OnEndCalls);
+            Assert.AreEqual(1, event1Controller.ExecuteSettlementCalls);
+            Assert.AreEqual(1, event2Controller.OnStartCalls);
+
+            var firstEvent1SettleIndex = callOrder.IndexOf("event1.ExecuteSettlement");
+            var firstEvent2StartIndex = callOrder.IndexOf("event2.OnStart");
+            Assert.That(firstEvent1SettleIndex, Is.GreaterThanOrEqualTo(0));
+            Assert.That(firstEvent2StartIndex, Is.GreaterThan(firstEvent1SettleIndex));
+
+            Assert.That(stateStore.LastSavedStates.TryGetValue("event1", out var event1State), Is.True);
+            Assert.That(stateStore.LastSavedStates.TryGetValue("event2", out var event2State), Is.True);
+            Assert.AreEqual(EventInstanceState.Completed, event1State.State);
+            Assert.AreEqual(EventInstanceState.Active, event2State.State);
         }
 
         [Test]
@@ -128,7 +467,8 @@ namespace EventOrchestration.Tests.Editor
                 schedule,
                 restoredStates,
                 event1Controller,
-                out var stateStore);
+                out var stateStore,
+                out _);
 
             orchestrator.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
             orchestrator.TickAsync(CancellationToken.None).GetAwaiter().GetResult();
@@ -146,9 +486,10 @@ namespace EventOrchestration.Tests.Editor
             IReadOnlyList<ScheduleItem> schedule,
             Dictionary<string, EventStateData> restoredStates,
             FakeEventController event1Controller,
-            out FakeStateStore stateStore)
+            out FakeStateStore stateStore,
+            out FakeTelemetry telemetry)
         {
-            return CreateOrchestrator(now, schedule, restoredStates, new[] { event1Controller }, out stateStore);
+            return CreateOrchestrator(now, schedule, restoredStates, new[] { event1Controller }, out stateStore, out telemetry);
         }
 
         private static EventOrchestrator CreateOrchestrator(
@@ -157,9 +498,10 @@ namespace EventOrchestration.Tests.Editor
             Dictionary<string, EventStateData> restoredStates,
             FakeEventController event1Controller,
             FakeEventController event2Controller,
-            out FakeStateStore stateStore)
+            out FakeStateStore stateStore,
+            out FakeTelemetry telemetry)
         {
-            return CreateOrchestrator(now, schedule, restoredStates, new[] { event1Controller, event2Controller }, out stateStore);
+            return CreateOrchestrator(now, schedule, restoredStates, new[] { event1Controller, event2Controller }, out stateStore, out telemetry);
         }
 
         private static EventOrchestrator CreateOrchestrator(
@@ -167,14 +509,15 @@ namespace EventOrchestration.Tests.Editor
             IReadOnlyList<ScheduleItem> schedule,
             Dictionary<string, EventStateData> restoredStates,
             IReadOnlyCollection<FakeEventController> controllers,
-            out FakeStateStore stateStore)
+            out FakeStateStore stateStore,
+            out FakeTelemetry telemetry)
         {
             var scheduleProvider = new FakeScheduleProvider(schedule);
             var scheduleValidator = new FakeScheduleValidator();
             var eventRegistry = new FakeEventRegistry(controllers);
             var clock = new FakeClock(now);
             stateStore = new FakeStateStore(restoredStates);
-            var telemetry = new FakeTelemetry();
+            telemetry = new FakeTelemetry();
 
             return new EventOrchestrator(scheduleProvider, scheduleValidator, eventRegistry, clock, stateStore, telemetry);
         }
@@ -265,6 +608,9 @@ namespace EventOrchestration.Tests.Editor
 
         private sealed class FakeTelemetry : IOrchestratorTelemetry
         {
+            public int FailureCalls { get; private set; }
+            public string LastFailureStage { get; private set; }
+
             public UniTask TrackTransitionAsync(string scheduleItemId, EventInstanceState from, EventInstanceState to, CancellationToken ct)
             {
                 ct.ThrowIfCancellationRequested();
@@ -280,6 +626,8 @@ namespace EventOrchestration.Tests.Editor
             public UniTask TrackFailureAsync(string scheduleItemId, string stage, Exception ex, CancellationToken ct)
             {
                 ct.ThrowIfCancellationRequested();
+                FailureCalls++;
+                LastFailureStage = stage;
                 return UniTask.CompletedTask;
             }
         }
@@ -303,6 +651,7 @@ namespace EventOrchestration.Tests.Editor
             public int OnUpdateCalls { get; private set; }
             public int OnEndCalls { get; private set; }
             public int ExecuteSettlementCalls { get; private set; }
+            public Exception ThrowOnUpdate { get; set; }
 
             public UniTask InitializeAsync(ScheduleItem config, EventStateData state, CancellationToken ct)
             {
@@ -325,6 +674,11 @@ namespace EventOrchestration.Tests.Editor
                 ct.ThrowIfCancellationRequested();
                 OnUpdateCalls++;
                 _callOrder.Add($"{_eventId}.OnUpdate");
+                if (ThrowOnUpdate != null)
+                {
+                    throw ThrowOnUpdate;
+                }
+
                 return UniTask.CompletedTask;
             }
 
