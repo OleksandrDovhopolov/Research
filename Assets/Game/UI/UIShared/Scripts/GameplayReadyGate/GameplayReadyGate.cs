@@ -1,14 +1,25 @@
+using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UIShared.AnimationTransitionService;
 
 namespace UIShared
 {
     public sealed class GameplayReadyGate : IGameplayReadyGate
     {
+        private readonly TransitionAnimationService _transitionAnimationService;
         private readonly UniTaskCompletionSource _readyTcs = new();
+
         private bool _isReady;
+        private bool _isMarkingReady;
 
         public bool IsReady => _isReady;
+
+        public GameplayReadyGate(TransitionAnimationService transitionAnimationService)
+        {
+            _transitionAnimationService = transitionAnimationService
+                                          ?? throw new ArgumentNullException(nameof(transitionAnimationService));
+        }
 
         public UniTask WaitUntilReadyAsync(CancellationToken ct)
         {
@@ -19,13 +30,30 @@ namespace UIShared
             return _readyTcs.Task.AttachExternalCancellation(ct);
         }
 
-        public void MarkReady()
+        public async UniTask MarkReadyAsync(CancellationToken ct)
         {
             if (_isReady)
                 return;
 
-            _isReady = true;
-            _readyTcs.TrySetResult();
+            if (_isMarkingReady)
+            {
+                await WaitUntilReadyAsync(ct);
+                return;
+            }
+
+            _isMarkingReady = true;
+            try
+            {
+                ct.ThrowIfCancellationRequested();
+                await _transitionAnimationService.PlayRevealAsync(ct);
+
+                _isReady = true;
+                _readyTcs.TrySetResult();
+            }
+            finally
+            {
+                _isMarkingReady = false;
+            }
         }
     }
 }

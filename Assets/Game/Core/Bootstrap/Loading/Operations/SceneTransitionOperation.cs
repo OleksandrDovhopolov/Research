@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UIShared.AnimationTransitionService;
 using UnityEngine.SceneManagement;
 
 namespace Game.Bootstrap.Loading.Operations
@@ -8,8 +9,9 @@ namespace Game.Bootstrap.Loading.Operations
     public sealed class SceneTransitionOperation : LoadingOperationBase
     {
         private readonly string _sceneName;
+        private readonly TransitionAnimationService _transitionAnimationService;
 
-        public SceneTransitionOperation(string sceneName)
+        public SceneTransitionOperation(string sceneName, TransitionAnimationService  transitionAnimationService)
             : base(
                 id: "scene_transition",
                 description: "Entering main game",
@@ -20,6 +22,7 @@ namespace Game.Bootstrap.Loading.Operations
                 timeout: TimeSpan.FromSeconds(15))
         {
             _sceneName = sceneName;
+            _transitionAnimationService = transitionAnimationService;
         }
 
         protected override async UniTask ExecuteInternalAsync(CancellationToken ct)
@@ -32,7 +35,8 @@ namespace Game.Bootstrap.Loading.Operations
             }
             
             await UniTask.Yield(PlayerLoopTiming.Update, ct);
-            
+
+            await _transitionAnimationService.PlayCoverAsync(ct);
             var asyncOperation = SceneManager.LoadSceneAsync(_sceneName);
             if (asyncOperation == null)
             {

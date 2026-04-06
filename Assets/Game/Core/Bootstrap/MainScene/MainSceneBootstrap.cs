@@ -43,7 +43,7 @@ namespace Game.Bootstrap.MainScene
                 await UniTask.WaitUntil(() => _uiManager.IsWindowShown<GameplaySceneController>(), cancellationToken: ct);
                 ct.ThrowIfCancellationRequested();
 
-                _gameplayReadyGate.MarkReady();
+                await _gameplayReadyGate.MarkReadyAsync(ct);
             }
             catch (OperationCanceledException)
             {

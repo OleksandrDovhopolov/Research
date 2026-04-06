@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 using Game.Bootstrap.Loading;
 using Game.Bootstrap.Loading.Operations;
 using Infrastructure.SaveSystem;
+using UIShared.AnimationTransitionService;
 using UIShared.Loading;
 using UISystem;
 using UnityEngine;
@@ -23,6 +24,7 @@ namespace Game.Bootstrap
         
         private UIManager _uiManager;
         private WindowFactoryDI _windowFactoryDI;
+        private TransitionAnimationService _transitionAnimationService;
         private SaveService _saveService;
         private IObjectResolver _resolver;
         private RemoteConfigLoader _remoteConfigLoader;
@@ -36,7 +38,8 @@ namespace Game.Bootstrap
             WindowFactoryDI  windowFactoryDI,
             RemoteConfigLoader remoteConfigLoader,
             IAuthorizationService authorizationService,
-            LoadingOrchestrator loadingOrchestrator)
+            LoadingOrchestrator loadingOrchestrator,
+            TransitionAnimationService  transitionAnimationService)
         {
             _uiManager = uiManager;
             _windowFactoryDI = windowFactoryDI;
@@ -44,6 +47,7 @@ namespace Game.Bootstrap
             _remoteConfigLoader = remoteConfigLoader;
             _authorizationService = authorizationService;
             _loadingOrchestrator = loadingOrchestrator;
+            _transitionAnimationService = transitionAnimationService;
         }
         
         private void Awake()
@@ -153,7 +157,7 @@ namespace Game.Bootstrap
                 new LoadingGroup("phase_finalization_seq", LoadingGroupExecutionMode.Sequential, new ILoadingOperation[]
                 {
                     new WarmupOperation(),
-                    new SceneTransitionOperation(_mainSceneName)
+                    new SceneTransitionOperation(_mainSceneName, _transitionAnimationService)
                 })
             });
 

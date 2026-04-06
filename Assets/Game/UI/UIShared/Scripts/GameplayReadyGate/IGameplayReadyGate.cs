@@ -7,6 +7,6 @@ namespace UIShared
     {
         bool IsReady { get; }
         UniTask WaitUntilReadyAsync(CancellationToken ct);
-        void MarkReady();
+        UniTask MarkReadyAsync(CancellationToken ct);
     }
 }

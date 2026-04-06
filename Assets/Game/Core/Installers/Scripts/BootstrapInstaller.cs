@@ -1,6 +1,7 @@
 using core;
 using Game.Bootstrap.Loading;
 using Infrastructure.SaveSystem;
+using UIShared.AnimationTransitionService;
 using UISystem;
 using UnityEngine;
 using VContainer;
@@ -30,6 +31,17 @@ namespace Game.Bootstrap
             //UI
             builder.Register<WindowFactoryDI>(Lifetime.Singleton);
             builder.RegisterComponentInNewPrefab(_uiManagerPrefab, Lifetime.Singleton).DontDestroyOnLoad();
+            builder.Register<TransitionAnimationService>(resolver =>
+            {
+                var uiManager = resolver.Resolve<UIManager>();
+                var transitionService = uiManager.GetComponent<TransitionAnimationService>();
+                if (transitionService == null)
+                {
+                    throw new MissingReferenceException($"{nameof(TransitionAnimationService)} is missing on UIManager prefab.");
+                }
+
+                return transitionService;
+            }, Lifetime.Singleton);
         }
     }
 }

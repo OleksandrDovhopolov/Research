@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: BootstrapInstaller
   m_EditorClassIdentifier: 
   _uiManagerPrefab: {fileID: 1466821343620153979, guid: b217eb8861cfdc346a019946f8c837ec, type: 3}
+  _transitionAnimationService: {fileID: 1575333554874395037, guid: b217eb8861cfdc346a019946f8c837ec, type: 3}
