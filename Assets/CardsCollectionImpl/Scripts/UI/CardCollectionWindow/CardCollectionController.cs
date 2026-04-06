@@ -96,7 +96,7 @@ namespace CardCollectionImpl
             }
             else
             {
-                View.ShowLoader(true); 
+                //View.ShowLoader(true); 
                 View.CreateViews(Args.NewCardsData, GroupConfigs, Args.RewardHandler);
             }
 
@@ -167,7 +167,7 @@ namespace CardCollectionImpl
             }
             finally
             {
-                View.ShowLoader(false);
+                //View.ShowLoader(false);
             }
         }
 

@@ -43,6 +43,7 @@ namespace EventOrchestration.Core
             }
 
             _orchestrator.OnEventCreated += HandleEventCreated;
+            _orchestrator.OnEventStarting += HandleEventStarting;
             _orchestrator.OnEventStarted += HandleEventStarted;
             _orchestrator.OnEventCompleted += HandleEventCompleted;
 
@@ -60,21 +61,23 @@ namespace EventOrchestration.Core
                 if (_uiManager.IsWindowSpawned<GameplaySceneController>())
                 {
                     var gameplaySceneController = _uiManager.GetWindowSync<GameplaySceneController>();
-                    gameplaySceneController.AddUpcomingEvent(item.Id, GetSpriteAddress(item.Id), _globalTimerService);
+                    var spriteAddress = item.Id + "/" + CardCollectionGeneralConfig.CollectionPreview;
+                    gameplaySceneController.AddUpcomingEvent(item.Id, spriteAddress, _globalTimerService);
                 }
             }
         }
 
-        private string GetSpriteAddress(string eventId)
+        private void HandleEventStarting(ScheduleItem item)
         {
-            return eventId + "/" + CardCollectionGeneralConfig.CollectionPreview;
+            if (item == null) return;
+            
+            Debug.LogWarning($"[Debug] HandleEventStarting item {item.Id}, {item.EndTimeUtc}");
+            _globalTimerService.Register(item.Id, item.EndTimeUtc);
         }
         
         private void HandleEventStarted(ScheduleItem item)
         {
             if (item == null) return;
-            
-            _globalTimerService.Register(item.Id, item.EndTimeUtc);
             
             if (_uiManager.IsWindowSpawned<GameplaySceneController>())
             {
@@ -145,6 +148,7 @@ namespace EventOrchestration.Core
         public void Dispose()
         {
             _orchestrator.OnEventCreated -= HandleEventCreated;
+            _orchestrator.OnEventStarting -= HandleEventStarting;
             _orchestrator.OnEventStarted -= HandleEventStarted;
             _orchestrator.OnEventCompleted -= HandleEventCompleted;
         }

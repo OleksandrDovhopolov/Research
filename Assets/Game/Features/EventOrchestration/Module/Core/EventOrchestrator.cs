@@ -29,6 +29,7 @@ namespace EventOrchestration.Core
         private bool _isInitialized;
 
         public event Action<ScheduleItem> OnEventCreated;
+        public event Action<ScheduleItem> OnEventStarting;
         public event Action<ScheduleItem> OnEventStarted;
         public event Action<ScheduleItem> OnEventCompleted;
 
@@ -422,8 +423,12 @@ namespace EventOrchestration.Core
             {
                 var state = _states[item.Id];
                 await TransitionStateAsync(state, EventInstanceState.Starting, ct);
+                await _stateStore.SaveAsync(_states, ct);
 
                 await EnsureControllerHydratedAsync(item, state, controller, ct);
+                
+                OnEventStarting?.Invoke(item);
+                
                 if (!state.StartInvoked)
                 {
                     await controller.OnStart(ct);
@@ -433,7 +438,7 @@ namespace EventOrchestration.Core
                 {
                     state.StartInvoked = true;
                 }
-
+                
                 await TransitionStateAsync(state, EventInstanceState.Active, ct);
                 await _stateStore.SaveAsync(_states, ct);
                 

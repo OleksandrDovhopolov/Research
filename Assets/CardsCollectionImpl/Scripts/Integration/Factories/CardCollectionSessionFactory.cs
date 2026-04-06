@@ -56,6 +56,7 @@ namespace CardCollectionImpl
             var context = new CardCollectionSessionContext(facade, facade, _cardCollectionCacheService, windowCoordinator);
 
             return new CardCollectionSession(
+                _uiManager,
                 context,
                 facade,
                 hudPresenter,

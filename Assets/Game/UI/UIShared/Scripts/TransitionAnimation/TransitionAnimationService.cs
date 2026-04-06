@@ -146,7 +146,6 @@ namespace UIShared.AnimationTransitionService
 
         private void KillActiveSequence()
         {
-            Debug.LogWarning($"Test KillActiveSequence");
             if (_activeSequence == null)
             {
                 return;

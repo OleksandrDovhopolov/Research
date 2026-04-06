@@ -27,7 +27,7 @@ namespace CardCollectionImpl
         public void ShowCollection(CardCollectionArgs args)
         {
             if (args == null) throw new ArgumentNullException(nameof(args));
-            _uiManager.Show<CardCollectionController>(args);
+            _uiManager.Show<CardCollectionController>(args, UIShowCommand.UIShowType.Ordered);
         }
 
         public void ShowNewCard(NewCardArgs args)

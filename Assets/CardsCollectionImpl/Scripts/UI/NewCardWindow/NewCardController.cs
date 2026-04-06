@@ -10,9 +10,7 @@ namespace CardCollectionImpl
         public readonly string PackId;
         public readonly INewCardFlowService NewCardFlowService;
 
-        public NewCardArgs(
-            string packId,
-            INewCardFlowService newCardFlowService)
+        public NewCardArgs(string packId, INewCardFlowService newCardFlowService)
         {
             PackId = packId;
             NewCardFlowService = newCardFlowService;

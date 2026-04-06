@@ -6,6 +6,8 @@ using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Models;
 using Infrastructure;
+using UIShared;
+using UISystem;
 using UnityEngine;
 
 namespace CardCollectionImpl
@@ -14,6 +16,7 @@ namespace CardCollectionImpl
     {
         private const int SessionWarmupSpritesCount = 30;
         
+        private readonly UIManager _uiManager;
         private readonly ICardCollectionApplicationFacade _facade;
         private readonly ICardCollectionRewardHandler _rewardHandler;
         private readonly CardCollectionHudPresenter _hudPresenter;
@@ -32,6 +35,7 @@ namespace CardCollectionImpl
         public CardCollectionSessionContext Context { get; }
 
         public CardCollectionSession(
+            UIManager uiManager,
             CardCollectionSessionContext context,
             ICardCollectionApplicationFacade facade,
             CardCollectionHudPresenter hudPresenter,
@@ -41,6 +45,7 @@ namespace CardCollectionImpl
             ICollectionProgressSnapshotBuilder collectionProgressSnapshotBuilder,
             IExchangeOfferProvider exchangeOfferProvider)
         {
+            _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
             Context = context ?? throw new ArgumentNullException(nameof(context));
             _facade = facade ?? throw new ArgumentNullException(nameof(facade));
             _hudPresenter = hudPresenter ?? throw new ArgumentNullException(nameof(hudPresenter));
@@ -67,11 +72,13 @@ namespace CardCollectionImpl
             
             try
             {
+                await EnsureEventAssetsReadyAsync(scheduleItem, ct);
+                
                 _facade.OnGroupCompleted += OnGroupCompleted;
                 _facade.OnCollectionCompleted += OnCollectionCompleted;
+                
                 _inventoryIntegration.Attach();
 
-                await EnsureEventAssetsReadyAsync(scheduleItem, ct);
                 await ShowStartedAsync(model.EventId, firstStart, ct);
                 await _hudPresenter.Bind(scheduleItem, ct);
                 
@@ -88,10 +95,27 @@ namespace CardCollectionImpl
         {
             if (firstStart)
             {
+                Debug.LogWarning($"[Debug] ShowStartedAsync eventId {eventId}");
                 var spriteAddress = eventId + "/" + CardCollectionGeneralConfig.CollectionBackground;
                 var previewSprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, ct);
                 var args = new CollectionStartedArgs(_cardCollectionEventModel.EventId, _cardCollectionEventModel.CollectionName, previewSprite);
                 Context.WindowCoordinator.ShowStarted(args);
+                
+                await UniTask.WaitUntil(() =>
+                {
+                    var isShown = _uiManager.IsWindowShown<CollectionStartedController>();
+                    Debug.LogWarning($"[Debug] CollectionStartedController isShown {isShown}");
+                    return isShown;
+                }, cancellationToken: ct);
+                
+                await UniTask.WaitUntil(() =>
+                {
+                    var isShown = _uiManager.IsWindowShown<GameplaySceneController>();
+                    Debug.LogWarning($"[Debug] GameplaySceneController isShown {isShown}");
+                    return isShown;
+                }, cancellationToken: ct);
+                
+                await ShowCollectionAsync(ct);
             }
         }
         
