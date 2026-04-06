@@ -86,12 +86,25 @@ namespace EventOrchestration
         {
             DebugCompleteCurrentEventAsync().Forget();
         }
+
+        public void ForceNextEvent()
+        {
+            DebugForceEventAsync().Forget();
+        }
         
         public UniTask DebugCompleteCurrentEventAsync()
         {
             _destroyToken.ThrowIfCancellationRequested();
 
             _orchestrator.DebugCompleteCurrentEventAsync(_destroyToken).Forget();
+            return UniTask.CompletedTask;
+        }
+        
+        public UniTask DebugForceEventAsync()
+        {
+            _destroyToken.ThrowIfCancellationRequested();
+
+            _orchestrator.ForceNextEventAsync(_destroyToken).Forget();
             return UniTask.CompletedTask;
         }
 

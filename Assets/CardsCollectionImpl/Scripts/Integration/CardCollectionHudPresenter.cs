@@ -32,6 +32,8 @@ namespace CardCollectionImpl
 
         public async UniTask Bind(ScheduleItem config, CancellationToken ct)
         {
+            //TODO on event transition button can be shown when GameplaySceneController is still shown and timer not works in EventButton
+            await UniTask.WaitForSeconds(1f, cancellationToken: ct);
             await UniTask.WaitUntil(() => _uiManager.IsWindowShown<GameplaySceneController>(), cancellationToken: ct);
             var entryButton = await _hudService.SpawnEventButtonAsync(CardCollectionButtonId, ct);
 

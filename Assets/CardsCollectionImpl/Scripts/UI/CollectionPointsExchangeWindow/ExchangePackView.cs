@@ -56,7 +56,7 @@ namespace CardCollectionImpl
         
         private void OnDestroy()
         {
-            ProdAddressablesWrapper.Release(_packEntry.spriteId);
+            ProdAddressablesWrapper.Release(_packEntry?.spriteId);
             _packImage.sprite = null;
             _buyPackButton.onClick.RemoveAllListeners();
             _packInfoButton.onClick.RemoveAllListeners();

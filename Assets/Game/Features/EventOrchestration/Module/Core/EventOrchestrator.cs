@@ -597,6 +597,119 @@ namespace EventOrchestration.Core
             return true;
         }
 
+        public async UniTask<bool> ForceNextEventAsync(CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            var now = _clock.UtcNow;
+
+            // 1) If stream has an active event, finish it first.
+            var active = FindInProgressEvent();
+            var targetStreamId = active?.StreamId;
+
+            if (active != null)
+            {
+                if (active.EndTimeUtc > now)
+                {
+                    active.EndTimeUtc = now;
+                }
+
+                await TickAsync(ct);
+                await _stateStore.SaveAsync(_states, ct);
+
+                // If still not terminal, cannot safely force "next" in same stream.
+                if (IsInProgress(active.Id))
+                {
+                    return false;
+                }
+
+                now = _clock.UtcNow;
+            }
+
+            // 2) Find next pending event (prefer same stream if we had active).
+            var next = FindNextPendingEvent(now, targetStreamId);
+            if (next == null)
+            {
+                return false;
+            }
+
+            // 3) Open start gate immediately.
+            if (next.StartTimeUtc > now)
+            {
+                next.StartTimeUtc = now;
+            }
+
+            // Safety: prevent instant end on start.
+            if (next.EndTimeUtc <= now)
+            {
+                next.EndTimeUtc = now.AddMinutes(1);
+            }
+
+            // 4) Run lifecycle.
+            await TickAsync(ct);
+            await _stateStore.SaveAsync(_states, ct);
+
+            return _states.TryGetValue(next.Id, out var state) &&
+                   state.State is EventInstanceState.Active or EventInstanceState.Starting;
+        }
+
+        private ScheduleItem FindInProgressEvent()
+        {
+            for (var i = 0; i < _schedule.Count; i++)
+            {
+                var item = _schedule[i];
+                if (IsInProgress(item.Id))
+                {
+                    return item;
+                }
+            }
+
+            return null;
+        }
+
+        private bool IsInProgress(string scheduleItemId)
+        {
+            if (!_states.TryGetValue(scheduleItemId, out var state))
+            {
+                return false;
+            }
+
+            return state.State is EventInstanceState.Active or EventInstanceState.Starting or EventInstanceState.Ending
+                or EventInstanceState.Settling;
+        }
+
+        private ScheduleItem FindNextPendingEvent(DateTimeOffset now, string streamId)
+        {
+            for (var i = 0; i < _schedule.Count; i++)
+            {
+                var item = _schedule[i];
+
+                if (!string.IsNullOrEmpty(streamId) && item.StreamId != streamId)
+                {
+                    continue;
+                }
+
+                if (!_states.TryGetValue(item.Id, out var state))
+                {
+                    continue;
+                }
+
+                if (state.State != EventInstanceState.Pending)
+                {
+                    continue;
+                }
+
+                if (item.EndTimeUtc <= now)
+                {
+                    continue;
+                }
+
+                return item;
+            }
+
+            return null;
+        }
+
         #endregion
 
         private static void WriteDebugLog(string hypothesisId, string location, string message, object data = null)
