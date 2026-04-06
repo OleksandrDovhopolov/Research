@@ -1,15 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
 using EventOrchestration.Models;
+using Newtonsoft.Json;
+using UnityEngine;
 
 namespace EventOrchestration.Core
 {
     public sealed class EventOrchestrator
     {
+        private const string DebugLogPath = @"c:\Projects\Research\.cursor\debug.log";
         private readonly IScheduleProvider _scheduleProvider;
         private readonly IScheduleValidator _scheduleValidator;
         private readonly IEventRegistry _eventRegistry;
@@ -48,18 +52,63 @@ namespace EventOrchestration.Core
 
         public async UniTask InitializeAsync(CancellationToken ct)
         {
+            #region agent log
+            Debug.LogWarning("[Debug] EventOrchestrator.InitializeAsync entered");
+            WriteDebugLog("H1", "EventOrchestrator.InitializeAsync", "[Debug] EventOrchestrator.InitializeAsync entered", new
+            {
+                isCancellationRequested = ct.IsCancellationRequested
+            });
+            #endregion
             ct.ThrowIfCancellationRequested();
             try
             {
+                #region agent log
+                Debug.LogWarning("[Debug] EventOrchestrator.InitializeAsync loading schedule");
+                WriteDebugLog("H3", "EventOrchestrator.InitializeAsync", "[Debug] EventOrchestrator.InitializeAsync loading schedule");
+                #endregion
                 var loadedSchedule = await _scheduleProvider.LoadAsync(ct);
+                #region agent log
+                Debug.LogWarning($"[Debug] EventOrchestrator.InitializeAsync loaded schedule count={loadedSchedule?.Count ?? -1}");
+                WriteDebugLog("H3", "EventOrchestrator.InitializeAsync", "[Debug] EventOrchestrator.InitializeAsync loaded schedule", new
+                {
+                    count = loadedSchedule?.Count ?? -1
+                });
+                #endregion
                 
                 var validationErrors = await _scheduleValidator.ValidateAsync(loadedSchedule, ct);
+                #region agent log
+                Debug.LogWarning($"[Debug] EventOrchestrator.InitializeAsync validation errors count={validationErrors.Count}");
+                WriteDebugLog("H4", "EventOrchestrator.InitializeAsync", "[Debug] EventOrchestrator.InitializeAsync validation errors", new
+                {
+                    count = validationErrors.Count
+                });
+                #endregion
                 if (validationErrors.Count > 0)
                 {
                     throw new InvalidOperationException("Schedule validation failed: " + string.Join("; ", validationErrors));
                 }
                 
-                _schedule = BuildUpcomingSchedule(loadedSchedule);
+                #region agent log
+                Debug.LogWarning("[Debug] EventOrchestrator.InitializeAsync building upcoming schedule");
+                WriteDebugLog("H5", "EventOrchestrator.InitializeAsync", "[Debug] EventOrchestrator.InitializeAsync building upcoming schedule");
+                #endregion
+                _schedule = loadedSchedule
+                    .OrderBy(x => x.StreamId)
+                    .ThenByDescending(x => x.Priority)
+                    .ThenBy(x => x.StartTimeUtc)
+                    .ToList();
+                #region agent log
+                Debug.LogWarning($"[Debug] EventOrchestrator.InitializeAsync built upcoming schedule count={_schedule.Count}");
+                WriteDebugLog("H5", "EventOrchestrator.InitializeAsync", "[Debug] EventOrchestrator.InitializeAsync built upcoming schedule", new
+                {
+                    count = _schedule.Count
+                });
+                #endregion
+
+                foreach (var scheduleItem in _schedule)
+                {
+                    Debug.LogWarning($"[Debug] scheduleItem {scheduleItem.Id}, {scheduleItem.StartTimeUtc}, {scheduleItem.EndTimeUtc}" );
+                }
                 
                 var restored = await _stateStore.LoadAsync(ct);
                 _states.Clear();
@@ -68,6 +117,8 @@ namespace EventOrchestration.Core
                 {
                     _states[pair.Key] = pair.Value;
                 }
+                
+                _schedule = BuildRuntimeSchedule(_schedule);
 
                 CreateScheduleData();
 
@@ -81,10 +132,22 @@ namespace EventOrchestration.Core
             }
             catch (OperationCanceledException)
             {
+                #region agent log
+                Debug.LogWarning("[Debug] EventOrchestrator.InitializeAsync cancelled");
+                WriteDebugLog("H2", "EventOrchestrator.InitializeAsync", "[Debug] EventOrchestrator.InitializeAsync cancelled");
+                #endregion
                 throw;
             }
             catch (Exception ex)
             {
+                #region agent log
+                Debug.LogError($"[Debug] EventOrchestrator.InitializeAsync failed: {ex}");
+                WriteDebugLog("H3", "EventOrchestrator.InitializeAsync", "[Debug] EventOrchestrator.InitializeAsync failed", new
+                {
+                    exceptionType = ex.GetType().FullName,
+                    ex.Message
+                });
+                #endregion
                 _initializedTcs.TrySetException(ex);
                 throw;
             }
@@ -192,15 +255,48 @@ namespace EventOrchestration.Core
             }
         }
 
-        private List<ScheduleItem> BuildUpcomingSchedule(IEnumerable<ScheduleItem> schedule)
+        private List<ScheduleItem> BuildRuntimeSchedule(IEnumerable<ScheduleItem> schedule)
         {
             var now = _clock.UtcNow;
             return schedule
-                .Where(x => x.EndTimeUtc > now)
+                .Where(item => ShouldKeepForRuntime(item, now))
                 .OrderBy(x => x.StreamId)
                 .ThenByDescending(x => x.Priority)
                 .ThenBy(x => x.StartTimeUtc)
                 .ToList();
+        }
+
+        private bool ShouldKeepForRuntime(ScheduleItem item, DateTimeOffset now)
+        {
+            if (item.EndTimeUtc > now)
+            {
+                return true;
+            }
+
+            if (!_states.TryGetValue(item.Id, out var state) || state == null)
+            {
+                return false;
+            }
+
+            if (state.State is EventInstanceState.Active
+                or EventInstanceState.Starting
+                or EventInstanceState.Ending
+                or EventInstanceState.Settling)
+            {
+                return true;
+            }
+
+            if (state.StartInvoked && !state.EndInvoked)
+            {
+                return true;
+            }
+
+            if (state.EndInvoked && !state.SettlementInvoked)
+            {
+                return true;
+            }
+
+            return false;
         }
         
         private async UniTask ProcessStreamAsync(IEnumerable<ScheduleItem> streamItems, DateTimeOffset now, CancellationToken ct)
@@ -217,6 +313,15 @@ namespace EventOrchestration.Core
                 if (active != null)
                 {
                     await ProcessActiveAsync(active, now, ct);
+
+                    var activeState = _states[active.Id].State;
+                    if (activeState is EventInstanceState.Completed
+                        or EventInstanceState.Failed
+                        or EventInstanceState.Cancelled)
+                    {
+                        continue;
+                    }
+
                     return;
                 }
 
@@ -453,7 +558,7 @@ namespace EventOrchestration.Core
                 throw new InvalidOperationException("Schedule validation failed: " + string.Join("; ", validationErrors));
             }
             
-            _schedule = BuildUpcomingSchedule(updatedSchedule);
+            _schedule = BuildRuntimeSchedule(updatedSchedule);
 
             CreateScheduleData();
 
@@ -493,5 +598,26 @@ namespace EventOrchestration.Core
         }
 
         #endregion
+
+        private static void WriteDebugLog(string hypothesisId, string location, string message, object data = null)
+        {
+            try
+            {
+                var payload = new
+                {
+                    runId = "initial",
+                    hypothesisId,
+                    location,
+                    message,
+                    data,
+                    timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                };
+                File.AppendAllText(DebugLogPath, JsonConvert.SerializeObject(payload) + Environment.NewLine);
+            }
+            catch
+            {
+                // Instrumentation must never break runtime flow.
+            }
+        }
     }
 }

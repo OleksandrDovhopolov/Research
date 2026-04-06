@@ -1,17 +1,18 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Game.Bootstrap.Loading;
 using NUnit.Framework;
+using UnityEngine.TestTools;
 
 namespace Game.Bootstrap.Tests.Editor
 {
     public sealed class LoadingOrchestratorTests
     {
-        [Test]
-        public async Task RunAsync_RetriesOperation_AndSucceeds()
+        [UnityTest]
+        public IEnumerator RunAsync_RetriesOperation_AndSucceeds()
         {
             var attempts = 0;
             var operation = new TestLoadingOperation(
@@ -39,14 +40,15 @@ namespace Game.Bootstrap.Tests.Editor
             var orchestrator = new LoadingOrchestrator(new LoadingProgressAggregator(1f));
             orchestrator.SetPhases(new[] { phase });
 
-            var result = await orchestrator.RunAsync(0, null, CancellationToken.None);
+            LoadingRunResult result = default;
+            yield return ToCoroutine(orchestrator.RunAsync(0, null, CancellationToken.None), value => result = value);
 
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(attempts, Is.EqualTo(2));
         }
 
-        [Test]
-        public async Task RunAsync_StopsOnCriticalFailure_AndReturnsFailedPhase()
+        [UnityTest]
+        public IEnumerator RunAsync_StopsOnCriticalFailure_AndReturnsFailedPhase()
         {
             var nonCriticalAttempts = 0;
             var criticalAttempts = 0;
@@ -90,7 +92,8 @@ namespace Game.Bootstrap.Tests.Editor
 
             var orchestrator = new LoadingOrchestrator(new LoadingProgressAggregator(1f));
             orchestrator.SetPhases(new[] { phase0, phase1 });
-            var result = await orchestrator.RunAsync(0, null, CancellationToken.None);
+            LoadingRunResult result = default;
+            yield return ToCoroutine(orchestrator.RunAsync(0, null, CancellationToken.None), value => result = value);
 
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.FailedPhaseIndex, Is.EqualTo(1));
@@ -98,8 +101,8 @@ namespace Game.Bootstrap.Tests.Editor
             Assert.That(criticalAttempts, Is.EqualTo(1));
         }
 
-        [Test]
-        public async Task RunAsync_ReturnsTimeoutFailure_WhenOperationTimesOut()
+        [UnityTest]
+        public IEnumerator RunAsync_ReturnsTimeoutFailure_WhenOperationTimesOut()
         {
             var operation = new TestLoadingOperation(
                 id: "timeout_op",
@@ -119,7 +122,8 @@ namespace Game.Bootstrap.Tests.Editor
 
             var orchestrator = new LoadingOrchestrator(new LoadingProgressAggregator(1f));
             orchestrator.SetPhases(new[] { phase });
-            var result = await orchestrator.RunAsync(0, null, CancellationToken.None);
+            LoadingRunResult result = default;
+            yield return ToCoroutine(orchestrator.RunAsync(0, null, CancellationToken.None), value => result = value);
 
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Failure, Is.Not.Null);
@@ -197,6 +201,22 @@ namespace Game.Bootstrap.Tests.Editor
                 Status = LoadingOperationStatus.NotStarted;
                 ProgressValue = 0f;
             }
+        }
+
+        private static IEnumerator ToCoroutine<T>(UniTask<T> task, Action<T> onResult)
+        {
+            var wrappedTask = task.AsTask();
+            while (!wrappedTask.IsCompleted)
+            {
+                yield return null;
+            }
+
+            if (wrappedTask.IsFaulted)
+            {
+                throw wrappedTask.Exception;
+            }
+
+            onResult?.Invoke(wrappedTask.Result);
         }
     }
 }

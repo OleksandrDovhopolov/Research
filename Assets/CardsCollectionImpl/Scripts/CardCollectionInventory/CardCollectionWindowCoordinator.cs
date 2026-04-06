@@ -21,7 +21,7 @@ namespace CardCollectionImpl
         public void ShowCompleted(CollectionCompletedArgs args)
         {
             if (args == null) throw new ArgumentNullException(nameof(args));
-            _uiManager.Show<CollectionCompletedController>(args);
+            _uiManager.Show<CollectionCompletedController>(args, UIShowCommand.UIShowType.Ordered);
         }
 
         public void ShowCollection(CardCollectionArgs args)

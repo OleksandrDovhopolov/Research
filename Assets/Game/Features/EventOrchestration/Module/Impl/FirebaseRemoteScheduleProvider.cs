@@ -8,6 +8,7 @@ using EventOrchestration.Abstractions;
 using EventOrchestration.Models;
 using Firebase.RemoteConfig;
 using Newtonsoft.Json;
+using UnityEngine;
 
 namespace EventOrchestration.Infrastructure
 {
@@ -26,12 +27,15 @@ namespace EventOrchestration.Infrastructure
         public UniTask<IReadOnlyList<ScheduleItem>> LoadAsync(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
+            Debug.LogWarning($"[Debug] FirebaseRemoteScheduleProvider.LoadAsync start key={_remoteConfigKey}");
 
             var value = FirebaseRemoteConfig.DefaultInstance.GetValue(_remoteConfigKey);
             var json = value.StringValue;
+            Debug.LogWarning($"[Debug] FirebaseRemoteScheduleProvider.LoadAsync json length={json?.Length ?? -1}");
 
             if (string.IsNullOrWhiteSpace(json))
             {
+                Debug.LogWarning("[Debug] FirebaseRemoteScheduleProvider.LoadAsync json is empty");
                 return UniTask.FromResult<IReadOnlyList<ScheduleItem>>(Array.Empty<ScheduleItem>());
             }
 
@@ -43,11 +47,13 @@ namespace EventOrchestration.Infrastructure
                     .Where(x => x != null)
                     .ToList()
                     .AsReadOnly();
+                Debug.LogWarning($"[Debug] FirebaseRemoteScheduleProvider.LoadAsync parsed items count={items.Count}");
 
                 return UniTask.FromResult<IReadOnlyList<ScheduleItem>>(items);
             }
             catch (Exception ex)
             {
+                Debug.LogError($"[Debug] FirebaseRemoteScheduleProvider.LoadAsync failed: {ex.Message}");
                 throw new InvalidOperationException($"Failed to parse schedule from Remote Config key '{_remoteConfigKey}': {ex.Message}", ex);
             }
         }
