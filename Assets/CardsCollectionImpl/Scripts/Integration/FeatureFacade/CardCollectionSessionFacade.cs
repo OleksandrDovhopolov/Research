@@ -29,23 +29,8 @@ namespace CardCollectionImpl
                 Debug.LogWarning($"[CardCollectionRuntime] TryShowNewCardWindow skipped for {packId}: session context is null.");
                 return;
             }
-
-            Debug.LogWarning($"[CardCollectionRuntime] TryShowNewCardWindow {packId}");
-
-            var module = context.Module;
-            if (module.GetPackById(packId) == null)
-            {
-                Debug.LogError($"Failed to find pack with id {packId}");
-                return;
-            }
-
-            var openPackFlowService = new OpenPackFlowService(context.Module, context.CacheService);
-            var screenData = await openPackFlowService.LoadAsync(packId, ct);
-            var args = new NewCardArgs(screenData);
             
-            ct.ThrowIfCancellationRequested();
-            context.WindowCoordinator.ShowNewCard(args);
-            //return UniTask.CompletedTask;
+            await context.OpenPackFlow.TryOpenPackById(packId, ct);
         }
 
         public async UniTask TryUnlockCards(IReadOnlyCollection<string> cardIds, CancellationToken ct)
@@ -63,7 +48,7 @@ namespace CardCollectionImpl
                 return;
             }
 
-            await context.Module.UnlockCards(cardIds, ct);
+            await context.CardCollectionFacade.UnlockCards(cardIds, ct);
         }
 
         public async UniTask TryAddPoints(int points, CancellationToken ct)
@@ -75,7 +60,7 @@ namespace CardCollectionImpl
                 return;
             }
 
-            await context.PointsAccount.TryAddPointsAsync(points, ct);
+            await context.CardCollectionFacade.TryAddPointsAsync(points, ct);
         }
 
         public async UniTask TryRemovePoints(int points, CancellationToken ct)
@@ -87,7 +72,7 @@ namespace CardCollectionImpl
                 return;
             }
 
-            await context.PointsAccount.TrySpendPointsAsync(points, ct);
+            await context.CardCollectionFacade.TrySpendPointsAsync(points, ct);
         }
 
         public async UniTask TryCompleteAllCollection(CancellationToken ct)
@@ -109,7 +94,7 @@ namespace CardCollectionImpl
             foreach (var cardId in cardIds)
             {
                 ct.ThrowIfCancellationRequested();
-                await context.Module.UnlockCards(new[] { cardId }, ct);
+                await context.CardCollectionFacade.UnlockCards(new[] { cardId }, ct);
             }
         }
 
@@ -130,7 +115,7 @@ namespace CardCollectionImpl
             }
 
             var unlockIds = cardIds.Take(cardIds.Count - 1).ToList();
-            await context.Module.UnlockCards(unlockIds, ct);
+            await context.CardCollectionFacade.UnlockCards(unlockIds, ct);
         }
 
         public async UniTask TryUnlockGroupByIndex(int groupIndex, CancellationToken ct)
@@ -170,7 +155,7 @@ namespace CardCollectionImpl
             foreach (var cardId in groupCardIds)
             {
                 ct.ThrowIfCancellationRequested();
-                await context.Module.UnlockCards(new[] { cardId }, ct);
+                await context.CardCollectionFacade.UnlockCards(new[] { cardId }, ct);
             }
         }
 
@@ -178,7 +163,7 @@ namespace CardCollectionImpl
         {
             ct.ThrowIfCancellationRequested();
 
-            var data = await context.Module.Load(ct);
+            var data = await context.CardCollectionFacade.Load(ct);
             var result = new List<string>();
             var seen = new HashSet<string>();
             foreach (var card in data.Cards)

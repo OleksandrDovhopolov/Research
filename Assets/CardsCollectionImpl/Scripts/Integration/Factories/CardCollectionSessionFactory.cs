@@ -47,21 +47,19 @@ namespace CardCollectionImpl
 
             var hudPresenter = new CardCollectionHudPresenter(_uiManager, _hudService);
             
-            var openPackFlowService = new OpenPackFlowService(facade, _cardCollectionCacheService);
+            var newCardWindowFlow = new OpenPackFlow(facade, _cardCollectionCacheService, windowCoordinator);
             
-            var cardPackInventoryUseHandler = new CardPackInventoryUseHandler(facade, openPackFlowService, windowCoordinator);
+            var cardPackInventoryUseHandler = new CardPackInventoryUseHandler(newCardWindowFlow);
             
             var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, cardPackInventoryUseHandler);
             
-            var context = new CardCollectionSessionContext(facade, facade, _cardCollectionCacheService, windowCoordinator);
+            var context = new CardCollectionSessionContext(newCardWindowFlow, windowCoordinator, facade);
 
             return new CardCollectionSession(
                 _uiManager,
                 context,
-                facade,
                 hudPresenter,
                 rewardHandler,
-                openPackFlowService,
                 inventoryIntegration,
                 staticData,
                 snapshotBuilder,

@@ -5,21 +5,18 @@ namespace CardCollectionImpl
 {
     public sealed class CardCollectionSessionContext
     {
-        public ICardCollectionModule Module { get; }
-        public ICardCollectionPointsAccount PointsAccount { get; }
-        public ICardCollectionCacheService CacheService { get; }
+        public IOpenPackFlow OpenPackFlow { get; }
         public ICardCollectionWindowCoordinator WindowCoordinator { get; }
+        public ICardCollectionApplicationFacade CardCollectionFacade { get; }
 
         public CardCollectionSessionContext(
-            ICardCollectionModule module,
-            ICardCollectionPointsAccount pointsAccount,
-            ICardCollectionCacheService cacheService,
-            ICardCollectionWindowCoordinator windowCoordinator)
+            IOpenPackFlow openPackFlow,
+            ICardCollectionWindowCoordinator windowCoordinator,
+            ICardCollectionApplicationFacade cardCollectionFacade)
         {
-            Module = module ?? throw new ArgumentNullException(nameof(module));
-            PointsAccount = pointsAccount ?? throw new ArgumentNullException(nameof(pointsAccount));
-            CacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
             WindowCoordinator = windowCoordinator ?? throw new ArgumentNullException(nameof(windowCoordinator));
+            CardCollectionFacade = cardCollectionFacade ?? throw new ArgumentNullException(nameof(cardCollectionFacade));
+            OpenPackFlow = openPackFlow ?? throw new ArgumentNullException(nameof(openPackFlow));
         }
     }
 }

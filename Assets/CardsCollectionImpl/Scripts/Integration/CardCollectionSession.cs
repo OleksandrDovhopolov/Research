@@ -17,10 +17,8 @@ namespace CardCollectionImpl
         private const int SessionWarmupSpritesCount = 30;
         
         private readonly UIManager _uiManager;
-        private readonly ICardCollectionApplicationFacade _facade;
         private readonly ICardCollectionRewardHandler _rewardHandler;
         private readonly CardCollectionHudPresenter _hudPresenter;
-        private readonly IOpenPackFlowService _openPackFlowService;
         private readonly CardCollectionInventoryIntegration _inventoryIntegration;
         private readonly CardCollectionStaticData _eventStaticData;
         private readonly ICollectionProgressSnapshotBuilder _collectionProgressSnapshotBuilder;
@@ -38,10 +36,8 @@ namespace CardCollectionImpl
         public CardCollectionSession(
             UIManager uiManager,
             CardCollectionSessionContext context,
-            ICardCollectionApplicationFacade facade,
             CardCollectionHudPresenter hudPresenter,
             ICardCollectionRewardHandler rewardHandler,
-            OpenPackFlowService openPackFlowService,
             CardCollectionInventoryIntegration inventoryIntegration,
             CardCollectionStaticData eventStaticData,
             ICollectionProgressSnapshotBuilder collectionProgressSnapshotBuilder,
@@ -49,10 +45,8 @@ namespace CardCollectionImpl
         {
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
             Context = context ?? throw new ArgumentNullException(nameof(context));
-            _facade = facade ?? throw new ArgumentNullException(nameof(facade));
             _hudPresenter = hudPresenter ?? throw new ArgumentNullException(nameof(hudPresenter));
             _rewardHandler = rewardHandler ?? throw new ArgumentNullException(nameof(rewardHandler));
-            _openPackFlowService = openPackFlowService ?? throw new ArgumentNullException(nameof(openPackFlowService));
             _inventoryIntegration = inventoryIntegration ?? throw new ArgumentNullException(nameof(inventoryIntegration));
             _eventStaticData = eventStaticData ?? throw new ArgumentNullException(nameof(eventStaticData));
             _collectionProgressSnapshotBuilder = collectionProgressSnapshotBuilder ?? throw new ArgumentNullException(nameof(collectionProgressSnapshotBuilder));
@@ -77,8 +71,8 @@ namespace CardCollectionImpl
             {
                 await EnsureEventAssetsReadyAsync(scheduleItem, ct);
                 
-                _facade.OnGroupCompleted += OnGroupCompleted;
-                _facade.OnCollectionCompleted += OnCollectionCompleted;
+                Context.CardCollectionFacade.OnGroupCompleted += OnGroupCompleted;
+                Context.CardCollectionFacade.OnCollectionCompleted += OnCollectionCompleted;
                 
                 _isStarted = true;
 
@@ -144,10 +138,7 @@ namespace CardCollectionImpl
                     return;
                 }
 
-                var newCardsViewData = await _openPackFlowService.LoadAsync(welcomePackConfig.packId, ct);
-                var newCardArgs = new NewCardArgs(newCardsViewData);
-                ct.ThrowIfCancellationRequested();
-                Context.WindowCoordinator.ShowNewCard(newCardArgs);
+                await Context.OpenPackFlow.TryOpenPackById(welcomePackConfig.packId, ct);
 
                 await UniTask.WaitUntil(() => _uiManager.IsWindowShown<NewCardController>(), cancellationToken: ct);
                 await UniTask.WaitUntil(() => _uiManager.IsWindowShown<GameplaySceneController>(),
@@ -218,8 +209,8 @@ namespace CardCollectionImpl
             }
             catch { /* ignore */ }
 
-            _facade.OnGroupCompleted -= OnGroupCompleted;
-            _facade.OnCollectionCompleted -= OnCollectionCompleted;
+            Context.CardCollectionFacade.OnGroupCompleted -= OnGroupCompleted;
+            Context.CardCollectionFacade.OnCollectionCompleted -= OnCollectionCompleted;
 
             try
             {
@@ -241,7 +232,7 @@ namespace CardCollectionImpl
 
             try
             {
-                _facade?.Dispose();
+                Context.CardCollectionFacade?.Dispose();
             }
             catch (Exception e)
             {
@@ -307,8 +298,8 @@ namespace CardCollectionImpl
                 return;
             }
 
-            var collectionData = await Context.Module.Load(ct);
-            var args = new CardGroupCollectionArgs(Context.Module.EventId, collectionData, groupConfigs, _rewardHandler);
+            var collectionData = await Context.CardCollectionFacade.Load(ct);
+            var args = new CardGroupCollectionArgs(Context.CardCollectionFacade.EventId, collectionData, groupConfigs, _rewardHandler);
             Context.WindowCoordinator.ShowGroupCompleted(args);
         }
 
@@ -337,25 +328,25 @@ namespace CardCollectionImpl
         {
             ct.ThrowIfCancellationRequested();
 
-            var beforeResetData = await Context.Module.Load(ct);
+            var beforeResetData = await Context.CardCollectionFacade.Load(ct);
             var snapshotBeforeReset = _collectionProgressSnapshotBuilder.Build(beforeResetData);
 
             var newCardsData = CardCollectionNewCardsDto.Create(beforeResetData, _eventStaticData.Cards);
             var newCardIds = newCardsData.NewCardIds;
             if (newCardIds.Count > 0)
             {
-                await Context.Module.ResetNewFlagsAsync(newCardIds, ct);
+                await Context.CardCollectionFacade.ResetNewFlagsAsync(newCardIds, ct);
             }
 
-            var afterResetData = await Context.Module.Load(ct);
+            var afterResetData = await Context.CardCollectionFacade.Load(ct);
             var args = new CardCollectionArgs(
                 newCardsData,
                 afterResetData,
                 _exchangeOfferProvider,
                 _rewardHandler,
-                Context.PointsAccount,
+                Context.CardCollectionFacade,
                 snapshotBeforeReset,
-                Context.Module.EventId,
+                Context.CardCollectionFacade.EventId,
                 _eventStaticData.Cards,
                 _eventStaticData.Groups);
             Context.WindowCoordinator.ShowCollection(args);

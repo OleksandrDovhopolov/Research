@@ -3,23 +3,31 @@ using System.Collections.Generic;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace CardCollectionImpl
 {
-    public sealed class OpenPackFlowService : IOpenPackFlowService
+    public sealed class OpenPackFlow : IOpenPackFlow
     {
         private readonly ICardCollectionModule _collectionModule;
         private readonly ICardCollectionCacheService _cardCollectionCacheService;
+        private readonly ICardCollectionWindowCoordinator _windowCoordinator;
 
-        public OpenPackFlowService(ICardCollectionModule collectionModule, ICardCollectionCacheService cardCollectionCacheService)
+        public OpenPackFlow(
+            ICardCollectionModule collectionModule,
+            ICardCollectionCacheService cardCollectionCacheService,
+            ICardCollectionWindowCoordinator windowCoordinator)
         {
             _collectionModule = collectionModule ?? throw new ArgumentNullException(nameof(collectionModule));
             _cardCollectionCacheService = cardCollectionCacheService ?? throw new ArgumentNullException(nameof(cardCollectionCacheService));
+            _windowCoordinator = windowCoordinator ?? throw new ArgumentNullException(nameof(windowCoordinator));
         }
 
-        public async UniTask<NewCardScreenData> LoadAsync(string packId, CancellationToken ct)
+        public async UniTask TryOpenPackById(string packId, CancellationToken ct)
         {
+            Debug.LogWarning($"[CardCollectionRuntime] TryShowNewCardWindow {packId}");
             ct.ThrowIfCancellationRequested();
+
             if (string.IsNullOrWhiteSpace(packId))
             {
                 throw new ArgumentException("Pack id cannot be null or whitespace.", nameof(packId));
@@ -29,8 +37,11 @@ namespace CardCollectionImpl
             var cardIds = openPackResult.OpenedCardIds as List<string> ?? new List<string>(openPackResult.OpenedCardIds);
             var cardsData = await _collectionModule.GetCardsByIdsAsync(cardIds, ct);
             var displayData = _cardCollectionCacheService.ToNewCardDisplayData(cardsData);
+            var screenData = new NewCardScreenData(_collectionModule.EventId, openPackResult.CurrentPoints, displayData);
 
-            return new NewCardScreenData(_collectionModule.EventId, openPackResult.CurrentPoints, displayData);
+            var args = new NewCardArgs(screenData);
+            ct.ThrowIfCancellationRequested();
+            _windowCoordinator.ShowNewCard(args);
         }
     }
 }
