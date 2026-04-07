@@ -30,7 +30,12 @@ namespace CardCollectionImpl
             _showCollectionHandler = showCollectionHandler ?? throw new ArgumentNullException(nameof(showCollectionHandler));
         }
 
-        public async UniTask Bind(ScheduleItem config, CancellationToken ct)
+        public void Bind(ScheduleItem config, CancellationToken ct)
+        {
+            BindASync(config, ct).Forget();
+        }
+        
+        public async UniTask BindASync(ScheduleItem config, CancellationToken ct)
         {
             //TODO on event transition button can be shown when GameplaySceneController is still shown and timer not works in EventButton
             await UniTask.WaitForSeconds(1f, cancellationToken: ct);
