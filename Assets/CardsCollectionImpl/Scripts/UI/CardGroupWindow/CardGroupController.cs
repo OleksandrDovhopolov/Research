@@ -144,7 +144,6 @@ namespace CardCollectionImpl
             
             await View.AnimateSwitchGroup(direction, _currentGroupType, GroupCardsData, Args.NewCardsData, UpdateGroupViewData);
 
-            UpdateCardSprites();
             MarkCurrentGroupAsSeen();
             Args.OnGroupChanged?.Invoke(_currentGroupType);
         }
@@ -166,7 +165,9 @@ namespace CardCollectionImpl
             
             var collectionNumberText = "Set " + (_currentGroupIndex + 1) + "/" + CollectionGroups.Count;
             View.SetCollectionNumber(collectionNumberText);
-
+            
+            UpdateCardSprites();
+            
             var collectedAmount =  _cardCollectionCardCollectionCacheService.GetCollectedGroupAmount(Args.EventCardsSaveData, _currentGroupType);;
             var totalAmount = _cardCollectionCardCollectionCacheService.GetGroupAmount(Args.EventCardsSaveData, _currentGroupType);
 
