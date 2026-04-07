@@ -131,18 +131,26 @@ namespace CardCollectionImpl
         
         public async UniTask SetSprites(string eventId, List<CardConfig> cardsData)
         {
-            await UIUtils.BindAndSetSpritesAsync(
+            var ct = this.GetCancellationTokenOnDestroy();
+            await UIUtils.BindAndSetSpritesFromAtlasAsync(
                 cardsData,
                 eventId,
                 _eventSpriteManager,
-                config =>  eventId + "/" + config.icon,
+                config => eventId,
+                config =>
+                {
+                    var spriteName = $"{eventId}_{config.icon}";
+                    Debug.LogWarning($"[Debug] atlas={eventId}, sprite={spriteName}");
+                    return spriteName;
+                },
                 config =>
                 {
                     if (_viewsDict.TryGetValue(config, out var view))
                         return view.GetCardImage();
 
                     return null;
-                });
+                },
+                ct);
         }
 
         /// <summary>

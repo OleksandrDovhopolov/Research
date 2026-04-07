@@ -48,8 +48,8 @@ namespace CardCollectionImpl
             {
                 var ct = this.GetCancellationTokenOnDestroy();
                 ct.ThrowIfCancellationRequested();
-                var spriteAddress = eventId + "/" + config.icon;
-                await _eventSpriteManager.BindSpriteAsync(eventId, spriteAddress, _selectedCardView.GetCardImage(), ct);
+                var spriteAddress = eventId + "_" + config.icon;
+                await _eventSpriteManager.BindSpriteFromAtlasAsync(eventId, eventId, spriteAddress, _selectedCardView.GetCardImage(), ct);
             }
         }
 

@@ -72,18 +72,30 @@ namespace EventOrchestration.Core
             if (item == null) return;
             
             Debug.LogWarning($"[Debug] HandleEventStarting item {item.Id}, {item.EndTimeUtc}");
-            _globalTimerService.Register(item.Id, item.EndTimeUtc);
+           
+            RegisterActiveEventTimer(item);
         }
         
         private void HandleEventStarted(ScheduleItem item)
         {
             if (item == null) return;
             
+            
+            RegisterActiveEventTimer(item);
+            
             if (_uiManager.IsWindowSpawned<GameplaySceneController>())
             {
                 var gameplaySceneController = _uiManager.GetWindowSync<GameplaySceneController>();
                 gameplaySceneController.RemoveEventById(item.Id);
             }
+        }
+        
+        private void RegisterActiveEventTimer(ScheduleItem item)
+        {
+            if (item == null || string.IsNullOrWhiteSpace(item.Id))
+                return;
+
+            _globalTimerService.Register(item.Id, item.EndTimeUtc);
         }
         
         private void HandleEventCompleted(ScheduleItem item)

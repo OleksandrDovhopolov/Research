@@ -9,6 +9,7 @@ using EventOrchestration.Models;
 using Infrastructure;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.U2D;
 
 namespace CardCollectionImpl
 {
@@ -27,6 +28,8 @@ namespace CardCollectionImpl
             public readonly List<SpriteBinding> Bindings = new();
             public readonly Dictionary<string, Sprite> SpriteByAddress = new(StringComparer.Ordinal);
             public readonly Dictionary<string, UniTask<Sprite>> InFlightByAddress = new(StringComparer.Ordinal);
+            public readonly Dictionary<string, SpriteAtlas> AtlasByAddress = new(StringComparer.Ordinal);
+            public readonly Dictionary<string, UniTask<SpriteAtlas>> InFlightAtlasByAddress = new(StringComparer.Ordinal);
         }
 
         private readonly object _gate = new();
@@ -138,6 +141,113 @@ namespace CardCollectionImpl
             return loadedSprite;
         }
 
+        public async UniTask<Sprite> BindSpriteFromAtlasAsync(
+            string eventId,
+            string atlasAddress,
+            string spriteName,
+            Image image,
+            CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (string.IsNullOrWhiteSpace(eventId)) throw new ArgumentException("EventId is null or empty.", nameof(eventId));
+            if (string.IsNullOrWhiteSpace(atlasAddress)) throw new ArgumentException("Atlas address is null or empty.", nameof(atlasAddress));
+            if (string.IsNullOrWhiteSpace(spriteName)) throw new ArgumentException("Sprite name is null or empty.", nameof(spriteName));
+            if (image == null) throw new ArgumentNullException(nameof(image));
+
+            UniTask<SpriteAtlas> loadTask;
+            SpriteAtlas cachedAtlas = null;
+            var shouldLoadAtlas = false;
+            var bindingAddress = $"{atlasAddress}[{spriteName}]";
+
+            lock (_gate)
+            {
+                var state = GetOrCreateEventState(eventId);
+                state.Bindings.Add(new SpriteBinding
+                {
+                    Address = bindingAddress,
+                    ImageRef = new WeakReference<Image>(image),
+                });
+
+                if (state.AtlasByAddress.TryGetValue(atlasAddress, out cachedAtlas) && cachedAtlas != null)
+                {
+                    loadTask = default;
+                }
+                else if (state.InFlightAtlasByAddress.TryGetValue(atlasAddress, out loadTask))
+                {
+                }
+                else
+                {
+                    loadTask = ProdAddressablesWrapper.LoadAsync<SpriteAtlas>(atlasAddress, ct).AsUniTask();
+                    state.InFlightAtlasByAddress[atlasAddress] = loadTask;
+                    shouldLoadAtlas = true;
+                }
+            }
+
+            SpriteAtlas loadedAtlas = cachedAtlas;
+            if (loadedAtlas == null)
+            {
+                try
+                {
+                    loadedAtlas = await loadTask;
+                    ct.ThrowIfCancellationRequested();
+                }
+                catch
+                {
+                    if (shouldLoadAtlas)
+                    {
+                        lock (_gate)
+                        {
+                            if (_stateByEventId.TryGetValue(eventId, out var state))
+                            {
+                                state.InFlightAtlasByAddress.Remove(atlasAddress);
+                            }
+                        }
+                    }
+
+                    throw;
+                }
+            }
+
+            var shouldAssign = false;
+            lock (_gate)
+            {
+                if (_stateByEventId.TryGetValue(eventId, out var state))
+                {
+                    if (shouldLoadAtlas)
+                    {
+                        state.InFlightAtlasByAddress.Remove(atlasAddress);
+                        state.AtlasByAddress.TryAdd(atlasAddress, loadedAtlas);
+                    }
+
+                    shouldAssign = true;
+                }
+            }
+
+            var sprite = loadedAtlas.GetSprite(spriteName);
+            if (sprite == null)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to resolve sprite '{spriteName}' from atlas '{atlasAddress}'.");
+            }
+
+            if (!shouldAssign)
+            {
+                // Event ended while this call owned an in-flight atlas load; release immediately.
+                if (shouldLoadAtlas)
+                {
+                    ProdAddressablesWrapper.Release(atlasAddress);
+                }
+                return sprite;
+            }
+
+            if (image != null)
+            {
+                image.sprite = sprite;
+            }
+
+            return sprite;
+        }
+
         private async UniTaskVoid ReleaseEventAsync(string eventId, CancellationToken ct)
         {
             try
@@ -172,7 +282,9 @@ namespace CardCollectionImpl
                 }
             }
 
-            foreach (var address in state.SpriteByAddress.Keys.Distinct(StringComparer.Ordinal))
+            foreach (var address in state.SpriteByAddress.Keys
+                         .Concat(state.AtlasByAddress.Keys)
+                         .Distinct(StringComparer.Ordinal))
             {
                 ProdAddressablesWrapper.Release(address);
             }

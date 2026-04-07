@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
 using Infrastructure;
 using UnityEngine;
+using UnityEngine.U2D;
 using VContainer.Unity;
 
 namespace EventOrchestration.Core
@@ -21,8 +22,8 @@ namespace EventOrchestration.Core
         private static readonly TimeSpan PrepareDisk_SecondsBefore = TimeSpan.FromMilliseconds(7000);
         private static readonly TimeSpan PrepareRam_SecondsBefore = TimeSpan.FromMilliseconds(3000);
         
-        //TODO update If you have 150 cards in your collection, that means the other 140 will load cold when you open the window.
-        private const int MaxWarmupSpritesCount = 30;
+        // Atlas-first flow typically needs one atlas per event label.
+        private const int MaxWarmupAtlasesCount = 1;
 
         private readonly EventOrchestrator _orchestrator;
         private readonly IClock _clock;
@@ -97,10 +98,10 @@ namespace EventOrchestration.Core
 
                 if (!state.RamPrepared && now >= item.StartTimeUtc - PrepareRam_SecondsBefore)
                 {
-                    var warmedAddresses = await ProdAddressablesWrapper.WarmupGroupByLabelAsync<Sprite>(
+                    var warmedAddresses = await ProdAddressablesWrapper.WarmupGroupByLabelAsync<SpriteAtlas>(
                         item.Id,
                         ct,
-                        MaxWarmupSpritesCount);
+                        MaxWarmupAtlasesCount);
                     state.WarmedAddresses = warmedAddresses;
                     state.RamPrepared = true;
                 }

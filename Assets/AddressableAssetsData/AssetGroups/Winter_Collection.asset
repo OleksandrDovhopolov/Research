@@ -29,32 +29,8 @@ MonoBehaviour:
     m_SerializedLabels:
     - Winter_Collection
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1a446817ead67a04c8cdc20caf74a5a1
-    m_Address: Winter_Collection/card_3
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Winter_Collection
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2034a4cbbf9d7e84286e2841b6b04b31
-    m_Address: Winter_Collection/card_4
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Winter_Collection
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 20ed937f10179304cb76b9844912c748
-    m_Address: Winter_Collection/card_2
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Winter_Collection
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 20f269d11ab27e94d8519a8b825202de
     m_Address: Winter_Collection/icon_potion_blue
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Winter_Collection
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 21fd7d615c8ecc24e8598309ce5eed08
-    m_Address: Winter_Collection/card_6
     m_ReadOnly: 0
     m_SerializedLabels:
     - Winter_Collection
@@ -65,26 +41,8 @@ MonoBehaviour:
     m_SerializedLabels:
     - Winter_Collection
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 36b90eee0f43a0143871654a95c9e79d
-    m_Address: Winter_Collection/card_10
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Winter_Collection
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3798c685d88fb864cbcc8af5a848fd87
-    m_Address: Winter_Collection/card_7
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Winter_Collection
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 38b20b529c43e514c9bb1ae7869f98c2
     m_Address: Winter_Collection/Collection_background
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Winter_Collection
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3b50de33cca154445858648d7aa3fed0
-    m_Address: Winter_Collection/card_5
     m_ReadOnly: 0
     m_SerializedLabels:
     - Winter_Collection
@@ -107,12 +65,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Winter_Collection
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 489ed91ed2ef77644a3faa9312b520b6
-    m_Address: Winter_Collection/card_9
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Winter_Collection
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4f69b3699eadee34699fcc3562aed63c
     m_Address: Winter_Collection/icon_potion_purple
     m_ReadOnly: 0
@@ -127,12 +79,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5e8cb876261df374380630543f32b6ea
     m_Address: Winter_Collection/icon_gemstone
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Winter_Collection
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 624915b2e2b8c5d4e93d5bb2abfe531a
-    m_Address: Winter_Collection/card_1
     m_ReadOnly: 0
     m_SerializedLabels:
     - Winter_Collection
@@ -161,8 +107,8 @@ MonoBehaviour:
     m_SerializedLabels:
     - Winter_Collection
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d1525d006a890f446b6ab6257a082a01
-    m_Address: Winter_Collection/card_8
+  - m_GUID: c2958cb79b0313646b88bae2dc56e5c9
+    m_Address: Winter_Collection
     m_ReadOnly: 0
     m_SerializedLabels:
     - Winter_Collection

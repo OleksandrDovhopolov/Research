@@ -61,16 +61,30 @@ namespace Infrastructure
             {
                 if (HandleByKey.TryGetValue(key, out var cachedHandle))
                 {
-                    RefCountByKey[key]++;
-                    handle = cachedHandle;
+                    if (!cachedHandle.IsValid())
+                    {
+                        HandleByKey.Remove(key);
+                        RefCountByKey.Remove(key);
+                    }
+                    else
+                    {
+                        if (!RefCountByKey.ContainsKey(key))
+                        {
+                            RefCountByKey[key] = 0;
+                        }
+
+                        RefCountByKey[key]++;
+                        handle = cachedHandle;
+                        goto HandleResolved;
+                    }
                 }
-                else
-                {
-                    handle = Addressables.LoadAssetAsync<T>(address);
-                    HandleByKey[key] = handle;
-                    RefCountByKey[key] = 1;
-                }
+
+                handle = Addressables.LoadAssetAsync<T>(address);
+                HandleByKey[key] = handle;
+                RefCountByKey[key] = 1;
             }
+            
+            HandleResolved:
 
             try
             {
@@ -80,6 +94,12 @@ namespace Infrastructure
             {
                 Release(key);
                 throw;
+            }
+
+            if (!handle.IsValid())
+            {
+                Release(key);
+                throw new InvalidOperationException($"Invalid handle while loading address '{address}' as {typeof(T).Name}.");
             }
 
             if (handle.Status != AsyncOperationStatus.Succeeded)
