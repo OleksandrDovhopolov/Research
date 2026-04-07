@@ -7,13 +7,11 @@ namespace CardCollectionImpl
 {
     public class NewCardArgs : WindowArgs
     {
-        public readonly string PackId;
-        public readonly INewCardFlowService NewCardFlowService;
+        public readonly NewCardScreenData NewCardScreenData;
 
-        public NewCardArgs(string packId, INewCardFlowService newCardFlowService)
+        public NewCardArgs(NewCardScreenData screenData)
         {
-            PackId = packId;
-            NewCardFlowService = newCardFlowService;
+            NewCardScreenData = screenData;
         }
     }
 
@@ -35,16 +33,8 @@ namespace CardCollectionImpl
         {
             _cts = new CancellationTokenSource();
             View.SetSpriteManager(_eventSpriteManager);
-            GetNewCardsAsync(_cts.Token).Forget();
-        }
-
-        private async UniTask GetNewCardsAsync(CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
-            var screenData = await Args.NewCardFlowService.LoadAsync(Args.PackId, ct);
-
-            View.UpdatePointsAmount(screenData.Points);
-            View.CreateNewCards(screenData.EventId, screenData.Cards);
+            View.UpdatePointsAmount(Args.NewCardScreenData.Points);
+            View.CreateNewCards(Args.NewCardScreenData.EventId, Args.NewCardScreenData.Cards);
         }
 
         protected override void OnShowComplete()

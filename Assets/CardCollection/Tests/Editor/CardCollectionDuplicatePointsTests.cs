@@ -21,7 +21,7 @@ namespace CardCollection.Tests
         }
 
         [UnityTest]
-        public IEnumerator OpenPackAndUnlockAsync_WhenAllOpenedCardsAreDuplicates_AddsExpectedPointsByCardType()
+        public IEnumerator OpenPackAsync_WhenAllOpenedCardsAreDuplicates_AddsExpectedPointsByCardType()
         {
             const string eventId = "test";
             const string packId = "test_pack";
@@ -47,7 +47,7 @@ namespace CardCollection.Tests
 
             yield return CreateFacadeInitialized(eventId, packId, openedCardIds.Count, cardDefinitions, openedCardIds, initialData)
                 .ToCoroutine(result => _facade = result);
-            yield return _facade.OpenPackAndUnlockAsync(packId).ToCoroutine(_ => { });
+            yield return _facade.OpenPackAsync(packId).ToCoroutine(_ => { });
 
             EventCardsSaveData updatedData = null;
             yield return _facade.Load().ToCoroutine(result => updatedData = result);
@@ -57,7 +57,7 @@ namespace CardCollection.Tests
         }
 
         [UnityTest]
-        public IEnumerator OpenPackAndUnlockAsync_WhenPackContainsOwnedAndNewCards_AddsPointsOnlyForOwnedCards()
+        public IEnumerator OpenPackAsync_WhenPackContainsOwnedAndNewCards_AddsPointsOnlyForOwnedCards()
         {
             const string eventId = "test";
             const string packId = "example_pack";
@@ -77,7 +77,7 @@ namespace CardCollection.Tests
 
             yield return CreateFacadeInitialized(eventId, packId, openedCardIds.Count, cardDefinitions, openedCardIds, initialData)
                 .ToCoroutine(result => _facade = result);
-            yield return _facade.OpenPackAndUnlockAsync(packId).ToCoroutine(_ => { });
+            yield return _facade.OpenPackAsync(packId).ToCoroutine(_ => { });
 
             EventCardsSaveData updatedData = null;
             yield return _facade.Load().ToCoroutine(result => updatedData = result);
@@ -91,7 +91,7 @@ namespace CardCollection.Tests
         }
 
         [UnityTest]
-        public IEnumerator OpenPackAndUnlockAsync_ReturnsOpenedCardIdsCountEqualToPackCardCount()
+        public IEnumerator OpenPackAsync_ReturnsOpenedCardIdsCountEqualToPackCardCount()
         {
             const string eventId = "test";
             const string packId = "Bronze_Pack";
@@ -115,8 +115,8 @@ namespace CardCollection.Tests
             yield return CreateFacadeInitialized(eventId, packId, packCardCount, cardDefinitions, selectorOrder, initialData)
                 .ToCoroutine(result => _facade = result);
 
-            List<string> openedCardIds = null;
-            yield return _facade.OpenPackAndUnlockAsync(packId).ToCoroutine(result => openedCardIds = result);
+            IReadOnlyList<string> openedCardIds = null;
+            yield return _facade.OpenPackAsync(packId).ToCoroutine(result => openedCardIds = result.OpenedCardIds);
 
             Assert.NotNull(openedCardIds);
             Assert.AreEqual(packCardCount, openedCardIds.Count);

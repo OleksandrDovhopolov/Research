@@ -10,22 +10,26 @@ namespace CardCollection.Core
             System.Array.Empty<string>(),
             System.Array.Empty<string>(),
             false,
+            0,
             0);
 
         public IReadOnlyList<string> OpenedCardIds { get; }
         public IReadOnlyList<string> NewlyCompletedGroupIds { get; }
         public bool CollectionCompleted { get; }
+        public int CurrentPoints { get; }
         public int AwardedDuplicatePoints { get; }
 
         public OpenPackResultDto(
             IReadOnlyList<string> openedCardIds,
             IReadOnlyList<string> newlyCompletedGroupIds,
             bool collectionCompleted,
+            int currentPoints,
             int awardedDuplicatePoints)
         {
             OpenedCardIds = openedCardIds ?? System.Array.Empty<string>();
             NewlyCompletedGroupIds = newlyCompletedGroupIds ?? System.Array.Empty<string>();
             CollectionCompleted = collectionCompleted;
+            CurrentPoints = currentPoints;
             AwardedDuplicatePoints = awardedDuplicatePoints;
         }
     }

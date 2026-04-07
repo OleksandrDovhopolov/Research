@@ -7,7 +7,7 @@ namespace CardCollectionImpl
     public interface ICardCollectionSessionFacade
     {
         internal void SetActiveSession(CardCollectionSessionContext sessionContext);
-        UniTask TryShowNewCardWindow(string packId, CancellationToken ct);
+        UniTask TryOpenPackById(string packId, CancellationToken ct);
         UniTask TryUnlockCards(IReadOnlyCollection<string> cardIds, CancellationToken ct);
         UniTask TryAddPoints(int points, CancellationToken ct);
         UniTask TryRemovePoints(int points, CancellationToken ct);

@@ -1,23 +1,19 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 
 namespace CardCollectionImpl
 {
-    public sealed class NewCardFlowService : INewCardFlowService
+    public sealed class OpenPackFlowService : IOpenPackFlowService
     {
         private readonly ICardCollectionModule _collectionModule;
-        private readonly ICardCollectionPointsAccount _pointsAccount;
         private readonly ICardCollectionCacheService _cardCollectionCacheService;
 
-        public NewCardFlowService(
-            ICardCollectionModule collectionModule,
-            ICardCollectionPointsAccount pointsAccount,
-            ICardCollectionCacheService cardCollectionCacheService)
+        public OpenPackFlowService(ICardCollectionModule collectionModule, ICardCollectionCacheService cardCollectionCacheService)
         {
             _collectionModule = collectionModule ?? throw new ArgumentNullException(nameof(collectionModule));
-            _pointsAccount = pointsAccount ?? throw new ArgumentNullException(nameof(pointsAccount));
             _cardCollectionCacheService = cardCollectionCacheService ?? throw new ArgumentNullException(nameof(cardCollectionCacheService));
         }
 
@@ -29,12 +25,12 @@ namespace CardCollectionImpl
                 throw new ArgumentException("Pack id cannot be null or whitespace.", nameof(packId));
             }
 
-            var collectionPoints = await _pointsAccount.GetCollectionPoints(ct);
-            var cardsIdList = await _collectionModule.OpenPackAndUnlockAsync(packId, ct);
-            var cardsData = await _collectionModule.GetCardsByIdsAsync(cardsIdList, ct);
+            var openPackResult = await _collectionModule.OpenPackAsync(packId, ct);
+            var cardIds = openPackResult.OpenedCardIds as List<string> ?? new List<string>(openPackResult.OpenedCardIds);
+            var cardsData = await _collectionModule.GetCardsByIdsAsync(cardIds, ct);
             var displayData = _cardCollectionCacheService.ToNewCardDisplayData(cardsData);
 
-            return new NewCardScreenData(_collectionModule.EventId, collectionPoints, displayData);
+            return new NewCardScreenData(_collectionModule.EventId, openPackResult.CurrentPoints, displayData);
         }
     }
 }

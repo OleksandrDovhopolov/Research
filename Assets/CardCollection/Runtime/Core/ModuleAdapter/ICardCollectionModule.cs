@@ -9,7 +9,7 @@ namespace CardCollection.Core
         string EventId { get; }
 
         CardPack GetPackById(string packId);
-        UniTask<List<string>> OpenPackAndUnlockAsync(string packId, CancellationToken ct = default);
+        UniTask<OpenPackResultDto> OpenPackAsync(string packId, CancellationToken ct = default);
         UniTask<List<CardProgressData>> GetCardsByIdsAsync(List<string> cardIds, CancellationToken ct = default);
         UniTask ResetNewFlagsAsync(IReadOnlyCollection<string> cardIds, CancellationToken ct = default);
         UniTask UnlockCards(IReadOnlyCollection<string> cardIds, CancellationToken ct = default);

@@ -33,7 +33,7 @@ namespace CardCollectionImpl
         public void ShowNewCard(NewCardArgs args)
         {
             if (args == null) throw new ArgumentNullException(nameof(args));
-            _uiManager.Show<NewCardController>(args);
+            _uiManager.Show<NewCardController>(args,UIShowCommand.UIShowType.Ordered);
         }
 
         public void ShowGroupCompleted(CardGroupCollectionArgs args)

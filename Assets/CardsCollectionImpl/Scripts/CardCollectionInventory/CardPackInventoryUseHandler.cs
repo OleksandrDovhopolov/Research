@@ -9,16 +9,16 @@ namespace CardCollectionImpl
     public class CardPackInventoryUseHandler : IInventoryItemUseHandler
     {
         private readonly ICardCollectionModule _collectionModule;
-        private readonly INewCardFlowService _newCardFlowService;
+        private readonly IOpenPackFlowService _openPackFlowService;
         private readonly ICardCollectionWindowCoordinator _cardCollectionWindowCoordinator;
 
         public CardPackInventoryUseHandler(
             ICardCollectionModule collectionModule,
-            INewCardFlowService newCardFlowService,
+            IOpenPackFlowService openPackFlowService,
             ICardCollectionWindowCoordinator cardCollectionWindowCoordinator)
         {
             _collectionModule = collectionModule;
-            _newCardFlowService = newCardFlowService;
+            _openPackFlowService = openPackFlowService;
             _cardCollectionWindowCoordinator = cardCollectionWindowCoordinator;
         }
         
@@ -28,7 +28,7 @@ namespace CardCollectionImpl
             return item.CategoryId == CardsConfig.CardPack;
         }
 
-        public UniTask UseAsync(InventoryItemDelta item, string ownerId, CancellationToken ct)
+        public async UniTask UseAsync(InventoryItemDelta item, string ownerId, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
 
@@ -37,12 +37,13 @@ namespace CardCollectionImpl
             if (pack == null)
             {
                 Debug.LogError($"Failed to find pack with id {packId}");
-                return UniTask.CompletedTask;
+                return;
             }
 
-            var args = new NewCardArgs(packId, _newCardFlowService);
+            var screenData = await _openPackFlowService.LoadAsync(packId, ct);
+            var args = new NewCardArgs(screenData);
+            ct.ThrowIfCancellationRequested();
             _cardCollectionWindowCoordinator.ShowNewCard(args);
-            return UniTask.CompletedTask;
         }
     }
 }

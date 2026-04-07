@@ -20,14 +20,14 @@ namespace CardCollectionImpl
             IsActive = true;
         }
 
-        public UniTask TryShowNewCardWindow(string packId, CancellationToken ct)
+        public async UniTask TryOpenPackById(string packId, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
 
             if (!TryGetActiveContext(out var context))
             {
                 Debug.LogWarning($"[CardCollectionRuntime] TryShowNewCardWindow skipped for {packId}: session context is null.");
-                return UniTask.CompletedTask;
+                return;
             }
 
             Debug.LogWarning($"[CardCollectionRuntime] TryShowNewCardWindow {packId}");
@@ -36,13 +36,16 @@ namespace CardCollectionImpl
             if (module.GetPackById(packId) == null)
             {
                 Debug.LogError($"Failed to find pack with id {packId}");
-                return UniTask.CompletedTask;
+                return;
             }
 
-            var flowService = new NewCardFlowService(context.Module, context.PointsAccount, context.CacheService);
-            var args = new NewCardArgs(packId, flowService);
+            var openPackFlowService = new OpenPackFlowService(context.Module, context.CacheService);
+            var screenData = await openPackFlowService.LoadAsync(packId, ct);
+            var args = new NewCardArgs(screenData);
+            
+            ct.ThrowIfCancellationRequested();
             context.WindowCoordinator.ShowNewCard(args);
-            return UniTask.CompletedTask;
+            //return UniTask.CompletedTask;
         }
 
         public async UniTask TryUnlockCards(IReadOnlyCollection<string> cardIds, CancellationToken ct)

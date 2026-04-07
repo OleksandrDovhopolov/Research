@@ -54,7 +54,7 @@ namespace Game.Cheat
         
         public void OpenNewCardWindow(string packId)
         {
-            _sessionFacade.TryShowNewCardWindow(packId, _ct).Forget();
+            _sessionFacade.TryOpenPackById(packId, _ct).Forget();
         }
     }
 }

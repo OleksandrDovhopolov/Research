@@ -20,6 +20,7 @@ namespace CardCollectionImpl
         private readonly ICardCollectionApplicationFacade _facade;
         private readonly ICardCollectionRewardHandler _rewardHandler;
         private readonly CardCollectionHudPresenter _hudPresenter;
+        private readonly IOpenPackFlowService _openPackFlowService;
         private readonly CardCollectionInventoryIntegration _inventoryIntegration;
         private readonly CardCollectionStaticData _eventStaticData;
         private readonly ICollectionProgressSnapshotBuilder _collectionProgressSnapshotBuilder;
@@ -40,6 +41,7 @@ namespace CardCollectionImpl
             ICardCollectionApplicationFacade facade,
             CardCollectionHudPresenter hudPresenter,
             ICardCollectionRewardHandler rewardHandler,
+            OpenPackFlowService openPackFlowService,
             CardCollectionInventoryIntegration inventoryIntegration,
             CardCollectionStaticData eventStaticData,
             ICollectionProgressSnapshotBuilder collectionProgressSnapshotBuilder,
@@ -50,6 +52,7 @@ namespace CardCollectionImpl
             _facade = facade ?? throw new ArgumentNullException(nameof(facade));
             _hudPresenter = hudPresenter ?? throw new ArgumentNullException(nameof(hudPresenter));
             _rewardHandler = rewardHandler ?? throw new ArgumentNullException(nameof(rewardHandler));
+            _openPackFlowService = openPackFlowService ?? throw new ArgumentNullException(nameof(openPackFlowService));
             _inventoryIntegration = inventoryIntegration ?? throw new ArgumentNullException(nameof(inventoryIntegration));
             _eventStaticData = eventStaticData ?? throw new ArgumentNullException(nameof(eventStaticData));
             _collectionProgressSnapshotBuilder = collectionProgressSnapshotBuilder ?? throw new ArgumentNullException(nameof(collectionProgressSnapshotBuilder));
@@ -79,7 +82,7 @@ namespace CardCollectionImpl
                 
                 _inventoryIntegration.Attach();
 
-                await ShowStartedAsync(model.EventId, firstStart, ct);
+                await TryIntroduceCollectionAsync(model.EventId, firstStart, ct);
                 await _hudPresenter.Bind(scheduleItem, ct);
                 
                 _isStarted = true;
@@ -91,20 +94,47 @@ namespace CardCollectionImpl
             }
         }
 
-        private async UniTask ShowStartedAsync(string eventId, bool firstStart, CancellationToken ct)
+        private async UniTask TryIntroduceCollectionAsync(string eventId, bool firstStart, CancellationToken ct)
         {
+            const int welcomePackCardsAmount = 4;
+            
             if (firstStart)
             {
+                //Welcome Window
                 Debug.LogWarning($"[Debug] ShowStartedAsync eventId {eventId}");
                 var spriteAddress = eventId + "/" + CardCollectionGeneralConfig.CollectionBackground;
                 var previewSprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, ct);
                 var args = new CollectionStartedArgs(_cardCollectionEventModel.EventId, _cardCollectionEventModel.CollectionName, previewSprite);
                 Context.WindowCoordinator.ShowStarted(args);
                 
-                
+                // Welcome Pack
                 await UniTask.WaitUntil(() => _uiManager.IsWindowShown<CollectionStartedController>(), cancellationToken: ct);
                 await UniTask.WaitUntil(() => _uiManager.IsWindowShown<GameplaySceneController>(), cancellationToken: ct);
                 
+                var packs = _eventStaticData.Packs;
+                if (packs == null || packs.Count == 0)
+                {
+                    Debug.LogError("[CardCollectionSession] failed to find welcome pack: packs list is null or empty.");
+                    return;
+                }
+                
+                var welcomePackConfig = packs.FirstOrDefault(packConfig => packConfig.cardCount == welcomePackCardsAmount)
+                                        ?? packs.OrderByDescending(packConfig => packConfig.cardCount).FirstOrDefault();
+                if (welcomePackConfig == null)
+                {
+                   Debug.LogError($"[CardCollectionSession] failed to find pack with welcomePackCardsAmount {welcomePackCardsAmount}");
+                   return;
+                }
+                
+                var newCardsViewData = await _openPackFlowService.LoadAsync(welcomePackConfig.packId, ct);
+                var newCardArgs = new NewCardArgs(newCardsViewData);
+                ct.ThrowIfCancellationRequested();
+                Context.WindowCoordinator.ShowNewCard(newCardArgs);
+                
+                await UniTask.WaitUntil(() => _uiManager.IsWindowShown<NewCardController>(), cancellationToken: ct);
+                await UniTask.WaitUntil(() => _uiManager.IsWindowShown<GameplaySceneController>(), cancellationToken: ct);
+                
+                // Open Card Collection Window
                 await ShowCollectionAsync(ct);
             }
         }

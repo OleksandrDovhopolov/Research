@@ -61,11 +61,11 @@ namespace CardCollection.Core
 
         public CardPack GetPackById(string packId) => _cardPackService.GetPackById(packId);
 
-        public async UniTask<List<string>> OpenPackAndUnlockAsync(string packId, CancellationToken ct = default)
+        public async UniTask<OpenPackResultDto> OpenPackAsync(string packId, CancellationToken ct = default)
         {
             var result = await _openPackUseCase.ExecuteAsync(_eventId, packId, ct);
             PublishCompletion(result.NewlyCompletedGroupIds, result.CollectionCompleted);
-            return result.OpenedCardIds.ToList();
+            return result;
         }
 
         public UniTask<List<CardProgressData>> GetCardsByIdsAsync(List<string> cardIds, CancellationToken ct = default)

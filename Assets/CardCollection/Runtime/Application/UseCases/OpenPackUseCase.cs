@@ -74,6 +74,7 @@ namespace CardCollection.Core
                 openedCardIds,
                 completion.NewlyCompletedGroupIds,
                 completion.CollectionCompleted,
+                afterData.Points,
                 duplicatePoints.TotalPoints);
         }
     }
