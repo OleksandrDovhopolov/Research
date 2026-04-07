@@ -65,7 +65,7 @@ namespace CardCollection.Core
         {
             var result = await _openPackUseCase.ExecuteAsync(_eventId, packId, ct);
             PublishCompletion(result.NewlyCompletedGroupIds, result.CollectionCompleted);
-            return result.UnlockedCardIds.ToList();
+            return result.OpenedCardIds.ToList();
         }
 
         public UniTask<List<CardProgressData>> GetCardsByIdsAsync(List<string> cardIds, CancellationToken ct = default)

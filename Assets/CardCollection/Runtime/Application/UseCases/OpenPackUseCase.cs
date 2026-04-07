@@ -65,18 +65,13 @@ namespace CardCollection.Core
                     .Select(card => card.CardId),
                 StringComparer.Ordinal);
 
-            var unlockedCardIds = openedCardIds
-                .Where(cardId => !string.IsNullOrEmpty(cardId) && unlockedAfter.Contains(cardId) && !unlockedBefore.Contains(cardId))
-                .Distinct(StringComparer.Ordinal)
-                .ToArray();
-
             var completion = CompletionOutcomeEvaluator.Evaluate(
                 _cardDefinitionProvider.GetCardDefinitions(),
                 unlockedBefore,
                 unlockedAfter);
 
             return new OpenPackResultDto(
-                unlockedCardIds,
+                openedCardIds,
                 completion.NewlyCompletedGroupIds,
                 completion.CollectionCompleted,
                 duplicatePoints.TotalPoints);

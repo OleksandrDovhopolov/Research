@@ -67,8 +67,8 @@ namespace CardCollectionImpl
                 cardView.UpdateCardName();
                 cardView.UpdateCardStars();
                 
-                var spriteAddress = eventId + "/" + config.icon;
-                _eventSpriteManager.BindSpriteAsync(eventId, spriteAddress, cardView.CardImage, _ct).Forget();
+                var spriteAddress = eventId + "_" + config.icon;
+                _eventSpriteManager.BindSpriteFromAtlasAsync(eventId, eventId, spriteAddress, cardView.CardImage, _ct).Forget();
                 
                 cardView.SetAlpha(false);
                 cardView.transform.SetSiblingIndex(i);

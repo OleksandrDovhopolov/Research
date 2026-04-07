@@ -12,18 +12,18 @@ namespace CardCollection.Core
             false,
             0);
 
-        public IReadOnlyList<string> UnlockedCardIds { get; }
+        public IReadOnlyList<string> OpenedCardIds { get; }
         public IReadOnlyList<string> NewlyCompletedGroupIds { get; }
         public bool CollectionCompleted { get; }
         public int AwardedDuplicatePoints { get; }
 
         public OpenPackResultDto(
-            IReadOnlyList<string> unlockedCardIds,
+            IReadOnlyList<string> openedCardIds,
             IReadOnlyList<string> newlyCompletedGroupIds,
             bool collectionCompleted,
             int awardedDuplicatePoints)
         {
-            UnlockedCardIds = unlockedCardIds ?? System.Array.Empty<string>();
+            OpenedCardIds = openedCardIds ?? System.Array.Empty<string>();
             NewlyCompletedGroupIds = newlyCompletedGroupIds ?? System.Array.Empty<string>();
             CollectionCompleted = collectionCompleted;
             AwardedDuplicatePoints = awardedDuplicatePoints;

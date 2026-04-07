@@ -90,6 +90,39 @@ namespace CardCollection.Tests
             Assert.IsTrue(newlyOpenedCard.IsUnlocked);
         }
 
+        [UnityTest]
+        public IEnumerator OpenPackAndUnlockAsync_ReturnsOpenedCardIdsCountEqualToPackCardCount()
+        {
+            const string eventId = "test";
+            const string packId = "Bronze_Pack";
+            const int packCardCount = 2;
+
+            var cardDefinitions = CreateCardDefinitions(
+                ("1", 1, false),
+                ("2", 2, false),
+                ("3", 3, false),
+                ("4", 4, false));
+
+            var selectorOrder = new List<string> { "1", "2", "3", "4" };
+            var initialData = CreateSaveData(
+                eventId,
+                points: 0,
+                ("1", false),
+                ("2", false),
+                ("3", false),
+                ("4", false));
+
+            yield return CreateFacadeInitialized(eventId, packId, packCardCount, cardDefinitions, selectorOrder, initialData)
+                .ToCoroutine(result => _facade = result);
+
+            List<string> openedCardIds = null;
+            yield return _facade.OpenPackAndUnlockAsync(packId).ToCoroutine(result => openedCardIds = result);
+
+            Assert.NotNull(openedCardIds);
+            Assert.AreEqual(packCardCount, openedCardIds.Count);
+            Assert.That(openedCardIds, Is.EquivalentTo(selectorOrder.Take(packCardCount)));
+        }
+
         private static async UniTask<ICardCollectionApplicationFacade> CreateFacadeInitialized(
             string eventId,
             string packId,

@@ -101,19 +101,9 @@ namespace CardCollectionImpl
                 var args = new CollectionStartedArgs(_cardCollectionEventModel.EventId, _cardCollectionEventModel.CollectionName, previewSprite);
                 Context.WindowCoordinator.ShowStarted(args);
                 
-                await UniTask.WaitUntil(() =>
-                {
-                    var isShown = _uiManager.IsWindowShown<CollectionStartedController>();
-                    Debug.LogWarning($"[Debug] CollectionStartedController isShown {isShown}");
-                    return isShown;
-                }, cancellationToken: ct);
                 
-                await UniTask.WaitUntil(() =>
-                {
-                    var isShown = _uiManager.IsWindowShown<GameplaySceneController>();
-                    Debug.LogWarning($"[Debug] GameplaySceneController isShown {isShown}");
-                    return isShown;
-                }, cancellationToken: ct);
+                await UniTask.WaitUntil(() => _uiManager.IsWindowShown<CollectionStartedController>(), cancellationToken: ct);
+                await UniTask.WaitUntil(() => _uiManager.IsWindowShown<GameplaySceneController>(), cancellationToken: ct);
                 
                 await ShowCollectionAsync(ct);
             }
