@@ -84,6 +84,59 @@ namespace Inventory.Implementation.Services
 
             await PublishAndPersistAsync(itemDelta.OwnerId, cancellationToken);
         }
+        
+        public async UniTask<InventoryBatchRemoveResult> RemoveItemsAsync(
+            IReadOnlyList<InventoryItemDelta> itemDeltas,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (itemDeltas == null || itemDeltas.Count == 0)
+            {
+                return new InventoryBatchRemoveResult(0, 0, Array.Empty<InventoryItemDelta>());
+            }
+
+            var requestedStacks = 0;
+            var removedStacks = 0;
+            var failedItems = new List<InventoryItemDelta>();
+            var changedOwners = new HashSet<string>(StringComparer.Ordinal);
+
+            for (var i = 0; i < itemDeltas.Count; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var itemDelta = itemDeltas[i];
+
+                if (itemDelta.Amount <= 0 ||
+                    string.IsNullOrWhiteSpace(itemDelta.OwnerId) ||
+                    string.IsNullOrWhiteSpace(itemDelta.ItemId) ||
+                    string.IsNullOrWhiteSpace(itemDelta.CategoryId))
+                {
+                    failedItems.Add(itemDelta);
+                    continue;
+                }
+
+                requestedStacks += itemDelta.Amount;
+
+                await EnsureOwnerLoadedAsync(itemDelta.OwnerId, cancellationToken);
+                var changed = _removeItemSystem.Execute(itemDelta);
+                if (!changed)
+                {
+                    failedItems.Add(itemDelta);
+                    continue;
+                }
+
+                removedStacks += itemDelta.Amount;
+                changedOwners.Add(itemDelta.OwnerId);
+            }
+
+            foreach (var ownerId in changedOwners)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await PublishAndPersistAsync(ownerId, cancellationToken);
+            }
+
+            return new InventoryBatchRemoveResult(requestedStacks, removedStacks, failedItems);
+        }
 
         public async UniTask<IReadOnlyList<InventoryItemView>> GetItemsAsync(string ownerId, string categoryId, CancellationToken cancellationToken = default)
         {

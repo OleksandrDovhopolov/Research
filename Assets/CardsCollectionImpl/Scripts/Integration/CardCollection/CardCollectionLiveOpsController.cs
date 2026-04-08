@@ -16,15 +16,18 @@ namespace CardCollectionImpl
         private readonly IEventCardsStorage _eventCardsStorage;
         private readonly ICardCollectionSessionFacade _sessionFacade;
         private readonly ICardCollectionRuntimeBuilder _collectionRuntimeBuilder;
+        private readonly ICardCollectionSettlementCleanupService _settlementCleanupService;
         
         public CardCollectionLiveOpsController(
             IEventModelFactory modelFactory,
             IEventCardsStorage eventCardsStorage,
+            ICardCollectionSettlementCleanupService settlementCleanupService,
             ICardCollectionSessionFacade sessionFacade,
             ICardCollectionRuntimeBuilder collectionRuntimeBuilder) : base("CardCollection", modelFactory)
         {
             _sessionFacade = sessionFacade;
             _eventCardsStorage = eventCardsStorage;
+            _settlementCleanupService = settlementCleanupService;
             _collectionRuntimeBuilder = collectionRuntimeBuilder;
         }
         
@@ -80,6 +83,7 @@ namespace CardCollectionImpl
         {
             ct.ThrowIfCancellationRequested();
             Debug.LogWarning($"[CardCollectionRuntime] Settle: {model.EventId}");
+            await _settlementCleanupService.CleanupUnusedPacksAsync(model, ct);
             await _eventCardsStorage.DeleteAsync(model.EventId, ct);
         }
         

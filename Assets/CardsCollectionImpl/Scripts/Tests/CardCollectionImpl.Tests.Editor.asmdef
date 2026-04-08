@@ -10,7 +10,10 @@
         "GUID:4f54a75d65d3447dfae76985aff1ee81",
         "GUID:dea99baa1a8b8f34d839de0e3d580595",
         "GUID:ef2f55bf82153a147a5aa65f49abf214",
-        "GUID:2cb7e0c239e6ade40bbe156cf8a85dcc"
+        "GUID:2cb7e0c239e6ade40bbe156cf8a85dcc",
+        "GUID:0c9a3bc3d6a5a4a7db1f089ece85cc6b",
+        "GUID:77221876cc6b8244180b96e320b1bcd4",
+        "GUID:23477f9337a4987418fe1de21d7c8454"
     ],
     "includePlatforms": [
         "Editor"
@@ -19,7 +22,8 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "nunit.framework.dll"
+        "nunit.framework.dll",
+        "R3.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

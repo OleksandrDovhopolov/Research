@@ -43,8 +43,9 @@ namespace CardCollectionImpl
             ICollectionProgressSnapshotBuilder collectionProgressSnapshotBuilder,
             IExchangeOfferProvider exchangeOfferProvider)
         {
-            _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
             Context = context ?? throw new ArgumentNullException(nameof(context));
+            
+            _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
             _hudPresenter = hudPresenter ?? throw new ArgumentNullException(nameof(hudPresenter));
             _rewardHandler = rewardHandler ?? throw new ArgumentNullException(nameof(rewardHandler));
             _inventoryIntegration = inventoryIntegration ?? throw new ArgumentNullException(nameof(inventoryIntegration));

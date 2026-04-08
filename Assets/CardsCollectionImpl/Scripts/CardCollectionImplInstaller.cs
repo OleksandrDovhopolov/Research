@@ -27,6 +27,7 @@ namespace CardCollectionImpl
             builder.Register<ICardCollectionApplicationFacadeFactory, CardCollectionApplicationFacadeFactory>(Lifetime.Singleton);
             builder.Register<ICardCollectionSessionFactory, CardCollectionSessionFactory>(Lifetime.Singleton);
             builder.Register<ICardCollectionRuntimeBuilder, CardCollectionRuntimeBuilder>(Lifetime.Singleton);
+            builder.Register<ICardCollectionSettlementCleanupService, CardCollectionSettlementCleanupService>(Lifetime.Singleton);
             
             // Client code usage facade
             builder.Register<ICardCollectionSessionFacade, CardCollectionSessionFacade>(Lifetime.Singleton);
