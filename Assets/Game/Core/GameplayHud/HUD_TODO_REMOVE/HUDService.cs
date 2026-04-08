@@ -6,7 +6,7 @@ using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
-namespace UIShared
+namespace HUD
 {
     //TODO place it in correct ASMDEF
     public class HUDService : MonoBehaviour, IHUDService

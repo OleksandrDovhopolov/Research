@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
+using UIShared;
 using UnityEngine;
 
-namespace UIShared
+namespace HUD
 {
     public class EventViewData
     {

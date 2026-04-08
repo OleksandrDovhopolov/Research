@@ -2,6 +2,7 @@ using CardCollectionImpl;
 using core;
 using CoreResources;
 using EventOrchestration;
+using HUD;
 using Inventory.API;
 using Rewards;
 using UIShared;

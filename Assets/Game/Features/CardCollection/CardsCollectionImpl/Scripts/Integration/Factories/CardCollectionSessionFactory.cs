@@ -1,5 +1,6 @@
 using CardCollection.Core;
 using EventOrchestration.Models;
+using HUD;
 using Inventory.API;
 using Rewards;
 using UIShared;

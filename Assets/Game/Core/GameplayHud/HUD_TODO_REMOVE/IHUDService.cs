@@ -1,7 +1,7 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
-namespace UIShared
+namespace HUD
 {
     public interface IHUDService
     {

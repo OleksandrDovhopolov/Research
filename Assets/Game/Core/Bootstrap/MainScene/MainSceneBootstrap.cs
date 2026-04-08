@@ -1,12 +1,13 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using HUD;
 using UIShared;
 using UISystem;
 using UnityEngine;
 using VContainer;
 
-namespace Game.Bootstrap.MainScene
+namespace Game.Bootstrap
 {
     //TODO delete this class 
     public sealed class MainSceneBootstrap : MonoBehaviour

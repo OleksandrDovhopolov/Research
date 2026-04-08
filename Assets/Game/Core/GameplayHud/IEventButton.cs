@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using EventOrchestration.Models;
 
-namespace UIShared
+namespace HUD
 {
     public interface IEventButton
     {

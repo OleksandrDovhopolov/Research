@@ -3,7 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Infrastructure.SaveSystem;
 
-namespace Game.Bootstrap.Loading.Operations
+namespace Game.Bootstrap.Loading
 {
     public sealed class SaveDataLoadOperation : LoadingOperationBase
     {

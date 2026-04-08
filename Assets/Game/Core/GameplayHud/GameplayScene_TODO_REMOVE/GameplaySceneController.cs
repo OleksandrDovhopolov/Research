@@ -1,7 +1,8 @@
+using UIShared;
 using UISystem;
 using VContainer;
 
-namespace UIShared
+namespace HUD
 {
     [Window("GameplaySceneController", isRoot: true)]
     public class GameplaySceneController : WindowController<GameplaySceneView>

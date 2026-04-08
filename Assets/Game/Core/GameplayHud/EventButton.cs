@@ -2,11 +2,12 @@ using System;
 using System.Threading;
 using EventOrchestration;
 using EventOrchestration.Models;
+using UIShared;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
 
-namespace UIShared
+namespace HUD
 {
     public class EventButton : MonoBehaviour, IEventButton
     {

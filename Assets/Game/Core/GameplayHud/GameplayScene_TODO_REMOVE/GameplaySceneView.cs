@@ -1,8 +1,9 @@
 using CoreResources;
+using UIShared;
 using UISystem;
 using UnityEngine;
 
-namespace UIShared
+namespace HUD
 {
     public class GameplaySceneView : WindowView
     {

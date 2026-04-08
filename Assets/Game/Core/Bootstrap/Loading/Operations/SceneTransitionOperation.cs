@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using UIShared.AnimationTransitionService;
 using UnityEngine.SceneManagement;
 
-namespace Game.Bootstrap.Loading.Operations
+namespace Game.Bootstrap.Loading
 {
     public sealed class SceneTransitionOperation : LoadingOperationBase
     {

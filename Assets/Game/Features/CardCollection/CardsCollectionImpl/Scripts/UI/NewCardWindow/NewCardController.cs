@@ -20,7 +20,7 @@ namespace CardCollectionImpl
         }
     }
 
-    [Window("NewCardWindow")]
+    [Window("NewCardWindow", WindowType.Popup)]
     public class NewCardController : WindowController<NewCardView>
     {
         private IEventSpriteManager _eventSpriteManager;

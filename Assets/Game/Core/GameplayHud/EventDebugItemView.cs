@@ -1,9 +1,10 @@
 using EventOrchestration;
 using TMPro;
+using UIShared;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UIShared
+namespace HUD
 {
     public class EventDebugItemView : MonoBehaviour, ICleanup
     {
