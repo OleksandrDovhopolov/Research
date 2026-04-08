@@ -3,7 +3,7 @@ using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 
-namespace UIShared.AnimationTransitionService
+namespace UIShared
 {
     public class TransitionAnimationService : MonoBehaviour
     {

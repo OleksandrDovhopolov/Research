@@ -1,5 +1,4 @@
 using System;
-using CoreResources;
 using DG.Tweening;
 using UnityEngine;
 using Random = UnityEngine.Random;

@@ -1,8 +1,7 @@
 using UnityEngine;
 
-namespace core
+namespace UIShared
 {
-
     public class SafeAreaLayout : MonoBehaviour
     {
         private RectTransform _panel;

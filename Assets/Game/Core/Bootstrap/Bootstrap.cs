@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using core;
 using Cysharp.Threading.Tasks;
 using Game.Bootstrap.Loading;
 using Infrastructure;
-using UIShared.AnimationTransitionService;
+using UIShared;
 using UIShared.Loading;
 using UISystem;
 using UnityEngine;

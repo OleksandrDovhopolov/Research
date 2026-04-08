@@ -1,7 +1,6 @@
-using core;
 using Game.Bootstrap.Loading;
 using Infrastructure;
-using UIShared.AnimationTransitionService;
+using UIShared;
 using UISystem;
 using UnityEngine;
 using VContainer;

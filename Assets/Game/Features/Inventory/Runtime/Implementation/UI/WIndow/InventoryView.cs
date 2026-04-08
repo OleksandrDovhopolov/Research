@@ -1,5 +1,4 @@
 using System;
-using Inventory.API;
 using Inventory.Implementation.UI;
 using TMPro;
 using UIShared;

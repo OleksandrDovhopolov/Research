@@ -7,7 +7,7 @@ using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
-namespace core
+namespace UIShared
 {
     public class WindowFactoryDI : WindowFactoryBase
     {

@@ -6,7 +6,6 @@ namespace Rewards
 {
     public sealed class RewardSpecProvider : IRewardSpecProvider
     {
-        private const string DefaultRewardId = "default";
         private readonly Dictionary<string, RewardSpec> _rewardSpecsById;
 
         public RewardSpecProvider(RewardSpecsConfigSO config) : this(config?.RewardSpecs)
@@ -42,7 +41,6 @@ namespace Rewards
 
             Debug.LogError($"[RewardSpecProvider] failed to find reward with ID {rewardId}. Default reward returned");
             return false;
-            //return _rewardSpecsById.TryGetValue(DefaultRewardId, out spec);
         }
     }
 }
