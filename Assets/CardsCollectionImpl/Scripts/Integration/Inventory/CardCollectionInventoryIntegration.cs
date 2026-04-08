@@ -26,7 +26,7 @@ namespace CardCollectionImpl
         {
             if (_attached) return;
             
-            _itemCategory = new CardsItemCategory(CardsConfig.CardPack);
+            _itemCategory = new CardsItemCategory(CardCollectionGeneralConfig.CardPack);
             _itemCategoryRegistry.Register(_itemCategory);
             _handlerStorage.AddUseHandler(_inventoryItemUseHandler);
 

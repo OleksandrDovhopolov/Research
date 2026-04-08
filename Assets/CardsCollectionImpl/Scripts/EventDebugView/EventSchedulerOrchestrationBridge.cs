@@ -1,15 +1,15 @@
 using System;
 using System.Threading;
-using CardCollectionImpl;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
+using EventOrchestration.Core;
 using EventOrchestration.Models;
 using UIShared;
 using UISystem;
 using UnityEngine;
 using VContainer;
 
-namespace EventOrchestration.Core
+namespace CardCollectionImpl
 {
     public sealed class EventSchedulerOrchestrationBridge : MonoBehaviour, IDisposable
     {

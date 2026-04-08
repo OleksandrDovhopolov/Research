@@ -5,7 +5,7 @@ using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
 using EventOrchestration.Models;
 
-namespace EventOrchestration.Controllers
+namespace CardCollectionImpl
 {
     public sealed class CardCollectionEventModelFactory : IEventModelFactory
     {

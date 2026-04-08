@@ -1,7 +1,7 @@
+using System;
 using CardCollection.Core;
 using EventOrchestration.Abstractions;
 using EventOrchestration.Controllers;
-using UnityEngine;
 using VContainer;
 
 namespace CardCollectionImpl
@@ -20,7 +20,7 @@ namespace CardCollectionImpl
             builder.Register<ICardPointsCalculator, CardsCollectionPointsCalculator>(Lifetime.Singleton);
             builder.Register<EventSpriteManager>(Lifetime.Singleton)
                 .As<IEventSpriteManager>()
-                .As<System.IDisposable>();
+                .As<IDisposable>();
             
             // Feature session builder
             builder.Register<ICardCollectionStaticDataLoader, CardCollectionStaticDataLoader>(Lifetime.Singleton);

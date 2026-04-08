@@ -15,7 +15,7 @@ namespace CardCollectionImpl
 
         public bool CanHandle(InventoryItemDelta item)
         {
-            return item.CategoryId == CardsConfig.CardPack;
+            return item.CategoryId == CardCollectionGeneralConfig.CardPack;
         }
 
         public async UniTask UseAsync(InventoryItemDelta item, string ownerId, CancellationToken ct)

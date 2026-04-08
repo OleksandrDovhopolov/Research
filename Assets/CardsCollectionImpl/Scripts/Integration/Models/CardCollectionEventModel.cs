@@ -1,4 +1,6 @@
-namespace EventOrchestration.Models
+using EventOrchestration.Models;
+
+namespace CardCollectionImpl
 {
     public sealed class CardCollectionEventModel : BaseGameEventModel
     {

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using EventOrchestration.Models;
 using Inventory.API;
 using UnityEngine;
 
@@ -68,7 +67,7 @@ namespace CardCollectionImpl
                 return new CardCollectionSettlementCleanupResult(0, 0);
             }
 
-            var inventoryPacks = await _inventoryReadService.GetItemsAsync(_inventoryOwnerId, CardsConfig.CardPack, ct);
+            var inventoryPacks = await _inventoryReadService.GetItemsAsync(_inventoryOwnerId, CardCollectionGeneralConfig.CardPack, ct);
             var removeDeltas = inventoryPacks
                 .Where(item => item.StackCount > 0 && eventPackIds.Contains(item.ItemId))
                 .Select(item => new InventoryItemDelta(item.OwnerId, item.ItemId, item.StackCount, item.CategoryId))

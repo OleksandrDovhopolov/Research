@@ -1,6 +1,5 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using EventOrchestration.Models;
 
 namespace CardCollectionImpl
 {

@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using EventOrchestration.Abstractions;
 using EventOrchestration.Core;
 using EventOrchestration.Models;
 using Infrastructure;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.U2D;
+using UnityEngine.UI;
 
 namespace CardCollectionImpl
 {

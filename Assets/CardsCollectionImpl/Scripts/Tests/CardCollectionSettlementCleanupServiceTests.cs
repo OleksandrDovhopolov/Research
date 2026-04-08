@@ -29,8 +29,8 @@ namespace CardCollectionImpl.Tests
 
             var readService = new StubInventoryReadService(new List<InventoryItemView>
             {
-                new("player_1", "pack_a", 2, CardsConfig.CardPack),
-                new("player_1", "pack_x", 5, CardsConfig.CardPack),
+                new("player_1", "pack_a", 2, CardCollectionGeneralConfig.CardPack),
+                new("player_1", "pack_x", 5, CardCollectionGeneralConfig.CardPack),
             });
 
             var inventoryService = new StubInventoryService(new InventoryBatchRemoveResult(

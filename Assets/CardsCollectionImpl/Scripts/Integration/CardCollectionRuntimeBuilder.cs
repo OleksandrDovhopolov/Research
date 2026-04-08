@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using EventOrchestration.Models;
 
 namespace CardCollectionImpl
 {
