@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
 using EventOrchestration.Models;
 
-namespace EventOrchestration.Controllers
+namespace EventOrchestration
 {
     public abstract class BaseLiveOpsController<T> : IEventController where T : BaseGameEventModel
     {

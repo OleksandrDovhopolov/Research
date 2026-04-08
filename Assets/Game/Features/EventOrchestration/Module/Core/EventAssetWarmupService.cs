@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.U2D;
 using VContainer.Unity;
 
-namespace EventOrchestration.Core
+namespace EventOrchestration
 {
     public sealed class EventAssetWarmupService : IEventAssetWarmupService, IStartable, ITickable, IDisposable
     {

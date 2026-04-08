@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Core.Models;
 using Cysharp.Threading.Tasks;
-using Infrastructure.SaveSystem;
+using Infrastructure;
 using Inventory.API;
 
 namespace Inventory.Implementation.Services

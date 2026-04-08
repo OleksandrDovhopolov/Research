@@ -1,7 +1,6 @@
 using EventOrchestration.Abstractions;
-using EventOrchestration.Core;
 
-namespace core
+namespace EventOrchestration
 {
     public sealed class OrchestratorFactory
     {

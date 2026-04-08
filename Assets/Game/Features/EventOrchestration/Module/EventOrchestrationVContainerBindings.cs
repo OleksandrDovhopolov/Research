@@ -1,10 +1,8 @@
 using EventOrchestration.Abstractions;
-using EventOrchestration.Core;
-using EventOrchestration.Infrastructure;
 using VContainer;
 using VContainer.Unity;
 
-namespace core
+namespace EventOrchestration
 {
     public static class EventOrchestrationVContainerBindings
     {

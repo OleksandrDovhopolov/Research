@@ -10,7 +10,7 @@ using Firebase.RemoteConfig;
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace EventOrchestration.Infrastructure
+namespace EventOrchestration
 {
     public sealed class FirebaseRemoteScheduleProvider : IScheduleProvider
     {

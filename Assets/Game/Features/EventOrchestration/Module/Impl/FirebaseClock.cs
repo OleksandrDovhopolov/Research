@@ -2,7 +2,7 @@ using System;
 using EventOrchestration.Abstractions;
 using Firebase.Database;
 
-namespace EventOrchestration.Infrastructure
+namespace EventOrchestration
 {
     public class FirebaseClock : IClock, IDisposable
     {

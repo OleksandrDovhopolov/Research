@@ -4,7 +4,7 @@ using System.Threading;
 using core;
 using Cysharp.Threading.Tasks;
 using Game.Bootstrap.Loading;
-using Infrastructure.SaveSystem;
+using Infrastructure;
 using UIShared.AnimationTransitionService;
 using UIShared.Loading;
 using UISystem;

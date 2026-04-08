@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using EventOrchestration.Abstractions;
-using UnityEngine;
 
-namespace EventOrchestration.Core
+namespace EventOrchestration
 {
     public sealed class EventRegistry : IEventRegistry
     {

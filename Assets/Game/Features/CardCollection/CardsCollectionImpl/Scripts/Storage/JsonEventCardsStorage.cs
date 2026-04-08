@@ -5,7 +5,7 @@ using System.Threading;
 using CardCollection.Core;
 using Core.Models;
 using Cysharp.Threading.Tasks;
-using Infrastructure.SaveSystem;
+using Infrastructure;
 using UnityEngine;
 
 namespace CardCollectionImpl

@@ -8,7 +8,7 @@ using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace Infrastructure.SaveSystem
+namespace Infrastructure
 {
     public sealed class SaveMigrationService
     {

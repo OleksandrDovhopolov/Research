@@ -1,4 +1,4 @@
-using UIShared;
+using EventOrchestration;
 using UISystem;
 using UnityEngine;
 using VContainer;

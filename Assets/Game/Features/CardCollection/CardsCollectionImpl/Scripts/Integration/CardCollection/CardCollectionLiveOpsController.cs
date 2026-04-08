@@ -2,8 +2,8 @@ using System;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
+using EventOrchestration;
 using EventOrchestration.Abstractions;
-using EventOrchestration.Controllers;
 using EventOrchestration.Models;
 using UnityEngine;
 

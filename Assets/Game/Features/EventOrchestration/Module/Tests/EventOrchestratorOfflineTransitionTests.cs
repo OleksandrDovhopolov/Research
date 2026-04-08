@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
-using EventOrchestration.Core;
 using EventOrchestration.Models;
 using NUnit.Framework;
 

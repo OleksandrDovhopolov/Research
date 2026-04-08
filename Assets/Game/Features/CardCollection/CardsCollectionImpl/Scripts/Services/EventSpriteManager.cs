@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using EventOrchestration.Core;
+using EventOrchestration;
 using EventOrchestration.Models;
 using Infrastructure;
 using UnityEngine;

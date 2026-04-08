@@ -9,7 +9,7 @@ using EventOrchestration.Models;
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace EventOrchestration.Core
+namespace EventOrchestration
 {
     public sealed class EventOrchestrator
     {

@@ -4,7 +4,6 @@ using System.IO;
 using System.Threading;
 using Core.Models;
 using Cysharp.Threading.Tasks;
-using Infrastructure.SaveSystem;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;

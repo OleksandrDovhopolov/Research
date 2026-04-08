@@ -5,7 +5,7 @@ using EventOrchestration.Models;
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace core
+namespace EventOrchestration
 {
     public sealed class ScheduleTimeGeneratorPanel : MonoBehaviour
     {

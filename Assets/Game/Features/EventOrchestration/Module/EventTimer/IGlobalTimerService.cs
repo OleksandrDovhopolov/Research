@@ -1,6 +1,6 @@
 using System;
 
-namespace UIShared
+namespace EventOrchestration
 {
     public interface IGlobalTimerService
     {

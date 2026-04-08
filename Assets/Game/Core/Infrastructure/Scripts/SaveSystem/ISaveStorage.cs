@@ -1,7 +1,7 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
-namespace Infrastructure.SaveSystem
+namespace Infrastructure
 {
     public interface ISaveStorage
     {

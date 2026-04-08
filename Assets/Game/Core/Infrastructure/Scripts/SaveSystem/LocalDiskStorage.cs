@@ -5,7 +5,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace Infrastructure.SaveSystem
+namespace Infrastructure
 {
     public sealed class LocalDiskStorage : ISaveStorage
     {
