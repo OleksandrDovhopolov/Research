@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace CardCollectionImpl
 {
     //TODO rename this. what is the difference with CardsCollectionView ?
-    public class CollectionCardView : MonoBehaviour
+    public class CardView : MonoBehaviour
     {
         [SerializeField] private Button _cardButton;
         [SerializeField] private TextMeshProUGUI _closedCardName;
@@ -42,7 +42,7 @@ namespace CardCollectionImpl
 
         protected RectTransform CardRect;
         
-        public event Action<CollectionCardView> OnCardPressed;
+        public event Action<CardView> OnCardPressed;
         
         protected virtual void Awake()
         {

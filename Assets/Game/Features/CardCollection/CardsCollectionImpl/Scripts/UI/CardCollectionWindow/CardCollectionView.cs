@@ -13,7 +13,7 @@ namespace CardCollectionImpl
 {
     public class CardCollectionView : WindowView
     {
-        [SerializeField] private UIListPool<CardsCollectionView> _cardGroupsPool;
+        [SerializeField] private UIListPool<GroupCollectionView> _cardGroupsPool;
         [SerializeField] private GameObject _loadingAnimationObject;
         [SerializeField] private Button _infoButton;
         
@@ -32,7 +32,7 @@ namespace CardCollectionImpl
         [Space, Space, Header("CardsContentWidget")]
         [SerializeField] private CardsOfferWidgetView _inventoryWidgetView;
         
-        private readonly Dictionary<string, CardsCollectionView> _viewsDict = new();
+        private readonly Dictionary<string, GroupCollectionView> _viewsDict = new();
         private IEventSpriteManager _eventSpriteManager;
         
         public event Action<string> OnGroupButtonPressed;
@@ -70,7 +70,6 @@ namespace CardCollectionImpl
             OnInfoButtonClicked?.Invoke();
         }
 
-        //TODO remove this
         private ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
         public void SetService(ICardCollectionCacheService cardCollectionCacheService)
         {
@@ -139,7 +138,7 @@ namespace CardCollectionImpl
             }
         }
 
-        public void UpdateGroupProgressAnimated(CardsCollectionView groupView, int collectedGroupAmount, int totalGroupAmount)
+        public void UpdateGroupProgressAnimated(GroupCollectionView groupView, int collectedGroupAmount, int totalGroupAmount)
         {
             if (collectedGroupAmount == totalGroupAmount)
             {

@@ -8,11 +8,11 @@ namespace CardCollectionImpl
 {
     public class CardGroupCompletedView : WindowView
     {
-        [SerializeField] private UIListPool<CardsCollectionView> _uiListPool;
+        [SerializeField] private UIListPool<GroupCollectionView> _uiListPool;
         [SerializeField] private RectTransform _animationStartPosition;
         public Vector3 AnimationStartPosition => _animationStartPosition.transform.position;
         
-        private readonly Dictionary<string, CardsCollectionView> _activeViewsByGroupType = new();
+        private readonly Dictionary<string, GroupCollectionView> _activeViewsByGroupType = new();
 
         public readonly struct GroupCompletedViewData
         {
@@ -70,7 +70,7 @@ namespace CardCollectionImpl
             }
         }
 
-        private  async UniTask SetSprite(IEventSpriteManager eventSpriteManager, CardsCollectionView view, string eventId, string spriteName)
+        private  async UniTask SetSprite(IEventSpriteManager eventSpriteManager, GroupCollectionView view, string eventId, string spriteName)
         {
             var ct = this.GetCancellationTokenOnDestroy();
             ct.ThrowIfCancellationRequested();
@@ -78,7 +78,7 @@ namespace CardCollectionImpl
             await eventSpriteManager.BindSpriteFromAtlasAsync(eventId, eventId, spriteAddress, view.GetGroupImage(), ct);
         }
         
-        private static void OnAnimationCompletedHandler(CardsCollectionView groupView, bool isGroupCompleted)
+        private static void OnAnimationCompletedHandler(GroupCollectionView groupView, bool isGroupCompleted)
         {
             if (!isGroupCompleted)
             {

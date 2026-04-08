@@ -95,7 +95,7 @@ namespace CardCollectionImpl
 
         private async UniTask AnimateSingleCardFlipAsync(
             EmptyCardView mock,
-            CollectionCardView card,
+            CardView card,
             float startDelay,
             CancellationToken ct)
         {
@@ -183,7 +183,7 @@ namespace CardCollectionImpl
             return _cardsCollectionPointsView.HideAsync(_showedTransform.position, _hidedTransform.position, ct);
         }
 
-        private async UniTask AnimateHideNewCardAsync(CollectionCardView cardView, CancellationToken ct)
+        private async UniTask AnimateHideNewCardAsync(CardView cardView, CancellationToken ct)
         {
             if (_hasDuplicates)
             {
@@ -193,7 +193,7 @@ namespace CardCollectionImpl
                 .AttachExternalCancellation(ct);
         }
 
-        private async UniTask AnimateHideCardWithPointAsync(CollectionCardView cardView, int pointsAmount, Vector3 targetPosition, CancellationToken ct)
+        private async UniTask AnimateHideCardWithPointAsync(CardView cardView, int pointsAmount, Vector3 targetPosition, CancellationToken ct)
         {
             var cardPosition = cardView.transform.position;
             await cardView.Hide().SetLink(gameObject).AsyncWaitForCompletion().AsUniTask()

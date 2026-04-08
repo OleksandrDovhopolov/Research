@@ -1596,7 +1596,6 @@ namespace AssetUsageDetectorNamespace
 				catch( UnassignedReferenceException ) { }
 				catch( MissingReferenceException ) { }
 				catch( MissingComponentException ) { }
-				catch( NotImplementedException ) { }
 				catch( Exception e )
 				{
 					// Unknown exceptions usually occur when variableValue is an IEnumerable and its enumerator throws an unhandled exception in MoveNext or Current

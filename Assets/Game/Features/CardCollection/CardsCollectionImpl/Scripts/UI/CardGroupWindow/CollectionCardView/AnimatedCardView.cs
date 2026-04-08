@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace CardCollectionImpl
 {
-    public class AnimatedCardView : CollectionCardView
+    public class AnimatedCardView : CardView
     {
         [Space, Space, Header("Animations")]
         [SerializeField] private float _animationDuration = 1f;

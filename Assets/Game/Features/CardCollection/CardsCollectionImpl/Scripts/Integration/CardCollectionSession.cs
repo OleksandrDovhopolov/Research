@@ -316,8 +316,6 @@ namespace CardCollectionImpl
         {
             var granted = await _rewardHandler.TryHandleCollectionCompleted(data, ct);
             if (!granted) return;
-
-            //TODO add window collection reward. no reward animation now is shown
         }
 
         private async UniTask ShowCollectionAsync(CancellationToken ct)

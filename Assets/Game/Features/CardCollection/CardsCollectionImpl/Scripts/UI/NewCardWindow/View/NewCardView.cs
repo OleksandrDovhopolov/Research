@@ -15,11 +15,11 @@ namespace CardCollectionImpl
         [Space, Space, Header("Base")]
         [SerializeField] private Button _cardOpenButton;
         [SerializeField] private CanvasGroup _canvasGroup;
-        [SerializeField] private UIListPool<CollectionCardView> _newCardsPool;
+        [SerializeField] private UIListPool<CardView> _newCardsPool;
         [SerializeField] private UIListPool<EmptyCardView> _mockCardsPool;
         [SerializeField] private UIListPool<CollectionPointView> _pointStarsPool;
         
-        private readonly Dictionary<CardConfig, CollectionCardView> _viewsDict = new();
+        private readonly Dictionary<CardConfig, CardView> _viewsDict = new();
         private readonly Dictionary<CardConfig, EmptyCardView> _mockDict = new();
         private readonly Dictionary<CardConfig, int> _duplicatePointsDict = new();
         private readonly List<CardConfig> _orderedConfigs = new();

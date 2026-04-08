@@ -121,7 +121,6 @@ namespace Game.Bootstrap
             }
         }
 
-        //TODO move to factory ? 
         private IReadOnlyList<LoadingPhase> BuildPhases(IAuthorizationGate authGate)
         {
             var phase1 = new LoadingPhase("phase_technical_init", new[]

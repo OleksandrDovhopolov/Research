@@ -14,8 +14,8 @@ namespace CardCollectionImpl
     public class CardGroupView : WindowView
     {
         [Space, Space, Header("CardsPool")]
-        [SerializeField] private UIListPool<CollectionCardView> _upperCardsPool;
-        [SerializeField] private UIListPool<CollectionCardView> _bottomCardsPool;
+        [SerializeField] private UIListPool<CardView> _upperCardsPool;
+        [SerializeField] private UIListPool<CardView> _bottomCardsPool;
         
         [Space, Space, Header("BaseParts")]
         [SerializeField] private SelectedCardView _selectedCardAnimation;
@@ -37,7 +37,7 @@ namespace CardCollectionImpl
         [SerializeField] private Image _grouoRewardImage;
         [SerializeField] private TextMeshProUGUI _groupRewardAmountText;
 
-        private readonly Dictionary<CardConfig, CollectionCardView> _viewsDict = new();
+        private readonly Dictionary<CardConfig, CardView> _viewsDict = new();
 
         private string _eventId;
         private IReadOnlyList<CardConfig> _cardConfigs;
@@ -197,7 +197,7 @@ namespace CardCollectionImpl
             }
         }
 
-        private void OnCardPressedHandler(CollectionCardView cardView)
+        private void OnCardPressedHandler(CardView cardView)
         {
             CardConfig config = null;
             foreach (var pair in _viewsDict)

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace CardCollectionImpl
 {
     //TODO rename this. what is the difference with CollectionCardView ?
-    public class CardsCollectionView : MonoBehaviour
+    public class GroupCollectionView : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI _cardsGroupName;
         [SerializeField] private Image _cardsGrouopImage;

@@ -9,7 +9,6 @@ using VContainer;
 
 namespace Game.Bootstrap
 {
-    //TODO delete this class 
     public sealed class MainSceneBootstrap : MonoBehaviour
     {
         private UIManager _uiManager;

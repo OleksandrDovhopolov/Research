@@ -14,7 +14,7 @@ namespace CardCollectionImpl
         [SerializeField] private AnimatedCardView _selectedCardView;
         [SerializeField] private RectTransform _targetRect;
         
-        private CollectionCardView _clickedCardView;
+        private CardView _clickedCardView;
         private IEventSpriteManager _eventSpriteManager;
 
         public void SetSpriteManager(IEventSpriteManager eventSpriteManager)
@@ -22,7 +22,7 @@ namespace CardCollectionImpl
             _eventSpriteManager = eventSpriteManager;
         }
         
-        public void OnCardPressedHandler(string eventId, CollectionCardView cardView, CardConfig config)
+        public void OnCardPressedHandler(string eventId, CardView cardView, CardConfig config)
         {
             _clickedCardView = cardView;
             
