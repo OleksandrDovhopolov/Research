@@ -79,7 +79,7 @@ namespace Rewards
                 _inventoryOwnerId,
                 rewardRequest.RewardId,
                 rewardRequest.Amount,
-                rewardRequest.Category); // TODO need this Category in DTO ?
+                rewardRequest.Category);
 
             await _inventoryService.AddItemAsync(itemDelta, ct);
             return true;

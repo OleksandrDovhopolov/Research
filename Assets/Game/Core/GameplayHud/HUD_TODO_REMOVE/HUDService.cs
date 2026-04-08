@@ -2,26 +2,27 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
+using UISystem;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
 namespace HUD
 {
-    //TODO place it in correct ASMDEF
     public class HUDService : MonoBehaviour, IHUDService
     {
         [SerializeField] private GameObject _buttonPrefab;
 
         private readonly Dictionary<string, EventButton> _activeButtons = new();
+        
+        private UIManager _uiManager;
         private IObjectResolver _resolver;
-
-        private Transform _eventsContainerTransform;
         
         [Inject]
-        private void Construct(IObjectResolver resolver)
+        private void Construct(IObjectResolver resolver, UIManager uiManager)
         {
             _resolver = resolver;
+            _uiManager = uiManager;
         }
 
         public async UniTask<IEventButton> SpawnEventButtonAsync(string spriteAddress, CancellationToken ct)
@@ -36,18 +37,14 @@ namespace HUD
 
             var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, ct);
 
-            if (_eventsContainerTransform == null)
+            var gameplaySceneController = _uiManager.GetWindowSync<GameplaySceneController>();
+            if (gameplaySceneController == null)
             {
-                //TODO fix it
-                _eventsContainerTransform = GameObject.Find("EventsContainer").transform;
-                if (_eventsContainerTransform == null)
-                {
-                    Debug.LogError("Events Container not found");
-                    return null;
-                }
+                Debug.LogError("Failed to find GameplaySceneController");
+                return null;
             }
             
-            var btnObj = Instantiate(_buttonPrefab, _eventsContainerTransform);
+            var btnObj = Instantiate(_buttonPrefab, gameplaySceneController.GetButtonContainer());
             _buttonPrefab.SetActive(wasPrefabActive);
 
             _resolver.InjectGameObject(btnObj);

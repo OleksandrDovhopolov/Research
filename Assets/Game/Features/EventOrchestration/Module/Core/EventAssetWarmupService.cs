@@ -30,7 +30,6 @@ namespace EventOrchestration
         private readonly Dictionary<string, WarmupState> _warmupByEventId = new();
 
         private CancellationTokenSource _lifetimeCts;
-        //TODO Tick blocked by one async process. other events do not processed 
         private int _tickInProgress;
 
         public EventAssetWarmupService(EventOrchestrator orchestrator, IClock clock)

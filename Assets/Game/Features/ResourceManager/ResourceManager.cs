@@ -32,7 +32,6 @@ namespace CoreResources
         
         void IStartable.Start()
         {
-            //TODO refactor this
             InitializeAsync(_saveCts.Token).Forget();
         }
         

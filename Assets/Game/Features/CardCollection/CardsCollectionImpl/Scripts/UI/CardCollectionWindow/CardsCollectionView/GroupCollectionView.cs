@@ -5,7 +5,6 @@ using UnityEngine.UI;
 
 namespace CardCollectionImpl
 {
-    //TODO rename this. what is the difference with CollectionCardView ?
     public class GroupCollectionView : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI _cardsGroupName;
@@ -89,7 +88,6 @@ namespace CardCollectionImpl
 
         public void ShowCompleteCheckMark()
         {
-            throw new NotImplementedException();
         }
     }
 }

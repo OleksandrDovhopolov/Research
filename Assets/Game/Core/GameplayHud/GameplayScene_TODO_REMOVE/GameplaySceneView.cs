@@ -10,6 +10,7 @@ namespace HUD
     {
         [SerializeField] private ResourcesView _resourcesView;
         [SerializeField] private EventDebugView _debugView;
+        [SerializeField] private RectTransform _eventButtonContainer;
         
         public void AddUpcomingEvent(string eventId, string spriteAddress, IGlobalTimerService globalTimerService)
         {
@@ -19,6 +20,11 @@ namespace HUD
         public void RemoveEventById(string eventId)
         {
             _debugView.OnEventStarted(eventId);
+        }
+
+        public RectTransform GetButtonContainer()
+        {
+            return _eventButtonContainer;
         }
     }
 }

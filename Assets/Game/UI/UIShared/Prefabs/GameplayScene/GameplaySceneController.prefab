@@ -530,6 +530,7 @@ MonoBehaviour:
   _closeButtons: []
   _resourcesView: {fileID: 7523680055166344293}
   _debugView: {fileID: 4500059732737237192}
+  _eventButtonContainer: {fileID: 5105823596209943278}
 --- !u!1 &8665334089762426621
 GameObject:
   m_ObjectHideFlags: 0

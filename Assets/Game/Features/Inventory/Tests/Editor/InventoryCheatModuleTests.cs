@@ -194,7 +194,7 @@ namespace Inventory.Tests.Editor
 
             public override CategoryUiMetadata GetMetadata()
             {
-                throw new NotImplementedException();
+                return null;
             }
         }
 

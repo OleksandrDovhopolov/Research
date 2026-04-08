@@ -1,5 +1,6 @@
 using EventOrchestration;
 using UISystem;
+using UnityEngine;
 using VContainer;
 
 namespace HUD
@@ -32,6 +33,11 @@ namespace HUD
         
         protected override void OnHideStart(bool isClosed)
         {
+        }
+
+        public RectTransform GetButtonContainer()
+        {
+            return View.GetButtonContainer();
         }
     }
 }

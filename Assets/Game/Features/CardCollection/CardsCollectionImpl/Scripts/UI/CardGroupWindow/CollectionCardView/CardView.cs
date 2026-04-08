@@ -8,7 +8,6 @@ using UnityEngine.UI;
 
 namespace CardCollectionImpl
 {
-    //TODO rename this. what is the difference with CardsCollectionView ?
     public class CardView : MonoBehaviour
     {
         [SerializeField] private Button _cardButton;
