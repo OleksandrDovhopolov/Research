@@ -74,8 +74,8 @@ namespace CardCollectionImpl
         {
             var ct = this.GetCancellationTokenOnDestroy();
             ct.ThrowIfCancellationRequested();
-            var spriteAddress = eventId + "/" + spriteName;
-            await eventSpriteManager.BindSpriteAsync(eventId, spriteAddress, view.GetGroupImage(), ct);
+            var spriteAddress = eventId + "_" + spriteName;
+            await eventSpriteManager.BindSpriteFromAtlasAsync(eventId, eventId, spriteAddress, view.GetGroupImage(), ct);
         }
         
         private static void OnAnimationCompletedHandler(CardsCollectionView groupView, bool isGroupCompleted)

@@ -195,7 +195,7 @@ namespace CardCollectionImpl
                 groupsData,
                 argsScheduleItemEventId,
                 _eventSpriteManager,
-                config => argsScheduleItemEventId + "/" + config.groupIcon,
+                config => argsScheduleItemEventId + "_" + config.groupIcon,
                 config =>
                 {
                     if (_viewsDict.TryGetValue(config.groupType, out var view))

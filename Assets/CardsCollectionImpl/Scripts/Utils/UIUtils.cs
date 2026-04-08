@@ -45,7 +45,7 @@ namespace CardCollectionImpl
                         return;
 
                     cancellationToken.ThrowIfCancellationRequested();
-                    await eventSpriteManager.BindSpriteAsync(eventId, spriteAddress, image, cancellationToken);
+                    await eventSpriteManager.BindSpriteFromAtlasAsync(eventId, eventId, spriteAddress, image, cancellationToken);
                 }
                 catch (Exception e)
                 {

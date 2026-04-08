@@ -24,9 +24,11 @@ namespace Game.Cheat
 
         private const string WinterCollectionEventId = "Winter_Collection";
         private const string WinterCollectionEventName = "Winter Collection";
+        private const string WinterConfigEventName = "event_winter_collection_config";
         
         private const string SpringCollectionEventId = "Spring_Collection";
         private const string SpringCollectionEventName = "Spring Collection";
+        private const string SpringConfigEventName = "event_spring_collection_config";
         
         public CardCollectionCheatModule(ICardCollectionSessionFacade sessionFacade, OrchestratorRunner orchestratorRunner, CancellationToken ct)
         {
@@ -39,8 +41,10 @@ namespace Game.Cheat
         {
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Create test events", () =>
             {
-                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 5, 10000);
-                var second = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, first.EndTimeUtc, TimeSpan.FromSeconds(500));
+                //var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, WinterConfigEventName, 5, 10000);
+                var first = CreateDebugCardCollectionScheduleItemForNextMinute(SpringCollectionEventId, SpringCollectionEventName,SpringConfigEventName, 5, 10000);
+                //var second = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, SpringConfigEventName, first.EndTimeUtc, TimeSpan.FromSeconds(500));
+                var second = CreateDebugCardCollectionScheduleItem(WinterCollectionEventId, WinterCollectionEventName, WinterConfigEventName,first.EndTimeUtc, TimeSpan.FromSeconds(500));
                 
                 _orchestratorRunner.AddDebugCardCollectionEventNextMinute(first);
                 _orchestratorRunner.AddDebugCardCollectionEventNextMinute(second);
@@ -93,7 +97,7 @@ namespace Game.Cheat
             }).WithGroup(CardCollectionPointGroup));
         }
         
-        private ScheduleItem CreateDebugCardCollectionScheduleItemForNextMinute(string eventId, string eventName, int secondsDelay = 30, int secondsDuration = 30)
+        private ScheduleItem CreateDebugCardCollectionScheduleItemForNextMinute(string eventId, string eventName, string eventConfig, int secondsDelay = 30, int secondsDuration = 30)
         {
             var startAt = DateTimeOffset.UtcNow.AddSeconds(secondsDelay);
             var endAt = startAt.AddSeconds(secondsDuration);
@@ -110,12 +114,13 @@ namespace Game.Cheat
                 {
                     ["eventId"] = eventId,
                     ["collectionName"] = eventName,
-                    ["eventConfigAddress"] = "event_winter_collection_config",
+                    //["eventConfigAddress"] = "event_winter_collection_config",
+                    ["eventConfigAddress"] = eventConfig,
                 },
             };
         }
         
-        private ScheduleItem CreateDebugCardCollectionScheduleItem(string eventId, string eventName, DateTimeOffset startAt, TimeSpan duration)
+        private ScheduleItem CreateDebugCardCollectionScheduleItem(string eventId, string eventName, string eventConfig, DateTimeOffset startAt, TimeSpan duration)
         {
             var endAt = startAt.Add(duration);
 
@@ -131,7 +136,8 @@ namespace Game.Cheat
                 {
                     ["eventId"] = eventId,
                     ["collectionName"] = eventName,
-                    ["eventConfigAddress"] = "event_spring_collection_config",
+                    //["eventConfigAddress"] = "event_spring_collection_config",
+                    ["eventConfigAddress"] = eventConfig,
                 },
             };
         }
