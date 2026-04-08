@@ -1,12 +1,13 @@
+using System.Collections;
 using System;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using Core.Models;
 using Cysharp.Threading.Tasks;
 using Infrastructure.SaveSystem;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace Infrastructure.Tests.Editor
 {
@@ -40,8 +41,8 @@ namespace Infrastructure.Tests.Editor
             TryDelete(Path.Combine(Application.persistentDataPath, "resources_data"));
         }
 
-        [Test]
-        public async Task SaveAll_IsThreadSafe_WhenCalledConcurrently()
+        [UnityTest]
+        public IEnumerator SaveAll_IsThreadSafe_WhenCalledConcurrently() => UniTask.ToCoroutine(async () =>
         {
             var service = CreateService();
             await service.LoadAllAsync(CancellationToken.None);
@@ -57,12 +58,12 @@ namespace Infrastructure.Tests.Editor
             var task2 = service.SaveAllAsync(CancellationToken.None).AsTask();
             var task3 = service.SaveAllAsync(CancellationToken.None).AsTask();
 
-            await Task.WhenAll(task1, task2, task3);
+            await UniTask.WhenAll(task1.AsUniTask(), task2.AsUniTask(), task3.AsUniTask());
             Assert.That(File.Exists(_testFilePath), Is.True);
-        }
+        });
 
-        [Test]
-        public async Task LoadAll_FallsBackToDefault_WhenJsonCorrupted()
+        [UnityTest]
+        public IEnumerator LoadAll_FallsBackToDefault_WhenJsonCorrupted() => UniTask.ToCoroutine(async () =>
         {
             await File.WriteAllTextAsync(_testFilePath, "{not_valid_json", CancellationToken.None);
 
@@ -73,10 +74,10 @@ namespace Infrastructure.Tests.Editor
             Assert.That(data.Meta, Is.Not.Null);
             Assert.That(data.Inventory, Is.Not.Null);
             Assert.That(data.Resources, Is.Not.Null);
-        }
+        });
 
-        [Test]
-        public async Task Migration_LoadsLegacyFiles_IntoGlobalSave()
+        [UnityTest]
+        public IEnumerator Migration_LoadsLegacyFiles_IntoGlobalSave() => UniTask.ToCoroutine(async () =>
         {
             Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, "resources_data"));
             await File.WriteAllTextAsync(
@@ -97,7 +98,7 @@ namespace Infrastructure.Tests.Editor
 
             Assert.That(resources.Gold, Is.EqualTo(111));
             Assert.That(File.Exists(_testFilePath), Is.True);
-        }
+        });
 
         private SaveService CreateService()
         {

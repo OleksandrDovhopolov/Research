@@ -1,102 +1,234 @@
+using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using NUnit.Framework;
 using Rewards;
-using UnityEditor;
-using UnityEngine;
 
 namespace CardCollectionImpl
 {
     public class CardCollectionRewardHandlerTests
     {
-        /*
-         * bad test quality
-         * TODO fix this test
-         */
         [Test]
-        public void TryHandleCollectionCompleted_WhenRewardIdIsMissing_ReturnsTrue()
+        public void TryHandleGroupCompleted_WhenRewardAndSpecExist_GrantsRewardAndReturnsTrue()
         {
-            Assert.IsTrue(false);
-            //TODO update this test
-            /*var rewardGrantService = new FakeRewardGrantService();
-            var rewardSpecProvider = new FakeRewardSpecProvider();
-            
-            //TODO moving file to different folders would cause fail
-            var config = AssetDatabase.LoadAssetAtPath<CardCollectionRewardsConfigSO>(
-                "Assets/CardsCollectionImpl/Data/Shared/CardCollectionRewardsConfig.asset");
-            
-            Assert.IsNotNull(config, "CardCollectionRewardsConfig asset not found at expected path.");
-            
-            var handler = new CardCollectionRewardHandler(config, rewardSpecProvider, rewardGrantService);
-            
-            //SetInitializedConfig(handler, config);
+            var grantService = new FakeRewardGrantService(grantResult: true);
+            var specProvider = new FakeRewardSpecProvider(CreateSpec("group-reward"));
+            var handler = CreateHandler(grantService, specProvider, ("group-a", "group-reward"));
 
-            //TODO EventId should be the same as in file CardCollectionRewardsConfig
-            var result = handler.TryHandleCollectionCompleted(new CardCollectionCompletedData
-            {
-                EventId = "season_cards_001"
-            }).GetAwaiter().GetResult();
+            var result = handler.TryHandleGroupCompleted(new CardGroupCompletedData { GroupType = "group-a" }, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
 
             Assert.IsTrue(result);
-            Assert.AreEqual(1, rewardSpecProvider.CreateCollectionCallsCount);*/
+            Assert.AreEqual(1, specProvider.TryGetCallsCount);
+            Assert.AreEqual(1, grantService.GrantListCallsCount);
+            Assert.AreEqual(1, grantService.LastGrantedRequests.Count);
+            Assert.AreEqual("coins", grantService.LastGrantedRequests[0].RewardId);
+            Assert.AreEqual(25, grantService.LastGrantedRequests[0].Amount);
         }
 
         [Test]
-        public void TryHandleCollectionCompleted_WhenRewardIdMatchesEventId_ReturnsTrueAndSendsReward()
+        public void TryHandleGroupCompleted_WhenGroupRewardConfigMissing_ReturnsFalseAndDoesNotGrant()
         {
-            Assert.IsTrue(false);
-            //TODO update this test
-            /*var rewardGrantService = new FakeRewardGrantService();
-            var rewardSpecProvider = new FakeRewardSpecProvider();
-            
-            var config = ScriptableObject.CreateInstance<CardCollectionRewardsConfigSO>();
-            config.FullCollectionReward = new FullCollectionRewardConfig
+            var grantService = new FakeRewardGrantService(grantResult: true);
+            var specProvider = new FakeRewardSpecProvider(CreateSpec("group-reward"));
+            var handler = CreateHandler(grantService, specProvider, ("another-group", "group-reward"));
+
+            var result = handler.TryHandleGroupCompleted(new CardGroupCompletedData { GroupType = "group-a" }, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.IsFalse(result);
+            Assert.AreEqual(0, specProvider.TryGetCallsCount);
+            Assert.AreEqual(0, grantService.GrantListCallsCount);
+        }
+
+        [Test]
+        public void TryHandleGroupCompleted_WhenRewardSpecMissing_Throws()
+        {
+            var grantService = new FakeRewardGrantService(grantResult: true);
+            var specProvider = new FakeRewardSpecProvider(null);
+            var handler = CreateHandler(grantService, specProvider, ("group-a", "missing-reward"));
+
+            var ex = Assert.Throws<Exception>(() =>
+                handler.TryHandleGroupCompleted(new CardGroupCompletedData { GroupType = "group-a" }, CancellationToken.None)
+                    .GetAwaiter()
+                    .GetResult());
+
+            StringAssert.Contains("Unknown reward id", ex.Message);
+            Assert.AreEqual(1, specProvider.TryGetCallsCount);
+            Assert.AreEqual(0, grantService.GrantListCallsCount);
+        }
+
+        [Test]
+        public void TryHandleGroupCompleted_WhenGrantFails_ReturnsFalse()
+        {
+            var grantService = new FakeRewardGrantService(grantResult: false);
+            var specProvider = new FakeRewardSpecProvider(CreateSpec("group-reward"));
+            var handler = CreateHandler(grantService, specProvider, ("group-a", "group-reward"));
+
+            var result = handler.TryHandleGroupCompleted(new CardGroupCompletedData { GroupType = "group-a" }, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.IsFalse(result);
+            Assert.AreEqual(1, grantService.GrantListCallsCount);
+        }
+
+        [Test]
+        public void CompletedGroups_NoUiOrchestration_GrantsRewardForEachCompletedGroup()
+        {
+            var grantService = new FakeRewardGrantService(grantResult: true);
+            var specProvider = new FakeRewardSpecProvider(
+                CreateSpec("group-reward-a"),
+                CreateSpec("group-reward-b"));
+            var handler = CreateHandler(
+                grantService,
+                specProvider,
+                ("group-a", "group-reward-a"),
+                ("group-b", "group-reward-b"));
+
+            var completedData = new CardGroupsCompletedData(new[]
             {
-                RewardId = "event-1",
+                new CardGroupCompletedData { GroupType = "group-a" },
+                new CardGroupCompletedData { GroupType = "group-b" }
+            });
+
+            var allGranted = true;
+            foreach (var group in completedData.Groups)
+            {
+                var granted = handler.TryHandleGroupCompleted(group, CancellationToken.None)
+                    .GetAwaiter()
+                    .GetResult();
+                allGranted &= granted;
+            }
+
+            Assert.IsTrue(allGranted);
+            Assert.AreEqual(2, specProvider.TryGetCallsCount);
+            Assert.AreEqual(2, grantService.GrantListCallsCount);
+        }
+
+        [Test]
+        public void TryHandleGroupCompleted_WhenTokenIsCanceled_ThrowsOperationCanceled()
+        {
+            var grantService = new FakeRewardGrantService(grantResult: true);
+            var specProvider = new FakeRewardSpecProvider(CreateSpec("group-reward"));
+            var handler = CreateHandler(grantService, specProvider, ("group-a", "group-reward"));
+
+            using var cts = new CancellationTokenSource();
+            cts.Cancel();
+
+            Assert.Throws<OperationCanceledException>(() =>
+                handler.TryHandleGroupCompleted(new CardGroupCompletedData { GroupType = "group-a" }, cts.Token)
+                    .GetAwaiter()
+                    .GetResult());
+
+            Assert.AreEqual(0, specProvider.TryGetCallsCount);
+            Assert.AreEqual(0, grantService.GrantListCallsCount);
+        }
+
+        private static CardCollectionRewardHandler CreateHandler(
+            FakeRewardGrantService grantService,
+            FakeRewardSpecProvider specProvider,
+            params (string groupType, string rewardItemId)[] rewards)
+        {
+            var rewardConfigs = new List<RewardConfig>(rewards.Length);
+            foreach (var reward in rewards)
+            {
+                rewardConfigs.Add(new RewardConfig
+                {
+                    rewardId = reward.groupType,
+                    rewardItemId = reward.rewardItemId
+                });
+            }
+
+            var staticData = new CardCollectionStaticData
+            {
+                EventConfig = new EventConfig
+                {
+                    rewards = rewardConfigs,
+                    cards = new List<CardConfig>(),
+                    groups = new List<CardCollectionGroupConfig>(),
+                    packs = new List<CardPackConfig>(),
+                    offers = new List<CardCollectionOfferConfig>()
+                }
             };
-            
-            var handler = new CardCollectionRewardHandler(config, rewardSpecProvider, rewardGrantService);
-            
-            //SetInitializedConfig(handler, config);
 
-            var result = handler.TryHandleCollectionCompleted(new CardCollectionCompletedData
+            return new CardCollectionRewardHandler(staticData, specProvider, grantService);
+        }
+
+        private static RewardSpec CreateSpec(string rewardId)
+        {
+            return new RewardSpec
             {
-                EventId = "event-1"
-            }).GetAwaiter().GetResult();
-
-            Assert.IsTrue(result);
-            Assert.AreEqual(1, rewardSpecProvider.CreateCollectionCallsCount);*/
+                RewardId = rewardId,
+                Resources = new List<RewardSpecResource>
+                {
+                    new() { ResourceId = "coins", Amount = 25, Category = "soft" }
+                }
+            };
         }
 
         private sealed class FakeRewardGrantService : IRewardGrantService
         {
-            public int GrantCallsCount { get; private set; }
+            private readonly bool _grantResult;
+
+            public int GrantSingleCallsCount { get; private set; }
+            public int GrantListCallsCount { get; private set; }
+            public List<RewardGrantRequest> LastGrantedRequests { get; private set; } = new();
+
+            public FakeRewardGrantService(bool grantResult)
+            {
+                _grantResult = grantResult;
+            }
 
             public UniTask<bool> TryGrantAsync(RewardGrantRequest rewardRequest, CancellationToken ct = default)
             {
-                GrantCallsCount++;
-                return UniTask.FromResult(true);
+                ct.ThrowIfCancellationRequested();
+                GrantSingleCallsCount++;
+                LastGrantedRequests = new List<RewardGrantRequest> { rewardRequest };
+                return UniTask.FromResult(_grantResult);
             }
 
             public UniTask<bool> TryGrantAsync(List<RewardGrantRequest> rewardRequest, CancellationToken ct = default)
             {
-                GrantCallsCount++;
-                return UniTask.FromResult(true);
+                ct.ThrowIfCancellationRequested();
+                GrantListCallsCount++;
+                LastGrantedRequests = rewardRequest ?? new List<RewardGrantRequest>();
+                return UniTask.FromResult(_grantResult);
             }
         }
 
         private sealed class FakeRewardSpecProvider : IRewardSpecProvider
         {
-            public int CreateCollectionCallsCount { get; private set; }
+            private readonly Dictionary<string, RewardSpec> _specsByRewardId = new();
+
+            public int TryGetCallsCount { get; private set; }
+
+            public FakeRewardSpecProvider(params RewardSpec[] specs)
+            {
+                if (specs == null)
+                {
+                    return;
+                }
+
+                foreach (var spec in specs)
+                {
+                    if (spec == null || string.IsNullOrWhiteSpace(spec.RewardId))
+                    {
+                        continue;
+                    }
+
+                    _specsByRewardId[spec.RewardId] = spec;
+                }
+            }
 
             public bool TryGet(string rewardId, out RewardSpec spec)
             {
-                spec = null;
-                CreateCollectionCallsCount++;
-                return true;
+                TryGetCallsCount++;
+                return _specsByRewardId.TryGetValue(rewardId, out spec);
             }
         }
     }
