@@ -23,7 +23,7 @@ namespace CardCollectionImpl
             _windowCoordinator = windowCoordinator ?? throw new ArgumentNullException(nameof(windowCoordinator));
         }
 
-        public async UniTask TryOpenPackById(string packId, CancellationToken ct)
+        public async UniTask OpenPackById(string packId, CancellationToken ct)
         {
             Debug.LogWarning($"[CardCollectionRuntime] TryShowNewCardWindow {packId}");
             ct.ThrowIfCancellationRequested();

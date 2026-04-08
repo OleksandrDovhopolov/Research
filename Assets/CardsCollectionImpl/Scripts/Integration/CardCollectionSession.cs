@@ -138,7 +138,7 @@ namespace CardCollectionImpl
                     return;
                 }
 
-                await Context.OpenPackFlow.TryOpenPackById(welcomePackConfig.packId, ct);
+                await Context.OpenPackFlow.OpenPackById(welcomePackConfig.packId, ct);
 
                 await UniTask.WaitUntil(() => _uiManager.IsWindowShown<NewCardController>(), cancellationToken: ct);
                 await UniTask.WaitUntil(() => _uiManager.IsWindowShown<GameplaySceneController>(),

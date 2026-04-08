@@ -21,7 +21,7 @@ namespace CardCollectionImpl
         public async UniTask UseAsync(InventoryItemDelta item, string ownerId, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
-            await _openPackFlowService.TryOpenPackById(item.ItemId, ct);
+            await _openPackFlowService.OpenPackById(item.ItemId, ct);
         }
     }
 }

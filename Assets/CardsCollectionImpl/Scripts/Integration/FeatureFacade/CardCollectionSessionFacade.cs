@@ -30,7 +30,7 @@ namespace CardCollectionImpl
                 return;
             }
             
-            await context.OpenPackFlow.TryOpenPackById(packId, ct);
+            await context.OpenPackFlow.OpenPackById(packId, ct);
         }
 
         public async UniTask TryUnlockCards(IReadOnlyCollection<string> cardIds, CancellationToken ct)

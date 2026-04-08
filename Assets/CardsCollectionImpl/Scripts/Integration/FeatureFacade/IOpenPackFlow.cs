@@ -5,6 +5,6 @@ namespace CardCollectionImpl
 {
     public interface IOpenPackFlow
     {
-        UniTask TryOpenPackById(string packId, CancellationToken ct);
+        UniTask OpenPackById(string packId, CancellationToken ct);
     }
 }
