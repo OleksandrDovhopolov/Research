@@ -1,13 +1,13 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using EventOrchestration.Abstractions;
 using EventOrchestration.Core;
 using EventOrchestration.Models;
 using UIShared;
 using UISystem;
 using UnityEngine;
 using VContainer;
+using IClock = EventOrchestration.Abstractions.IClock;
 
 namespace CardCollectionImpl
 {

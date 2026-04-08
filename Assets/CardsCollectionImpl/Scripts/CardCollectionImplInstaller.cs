@@ -1,7 +1,6 @@
 using System;
 using CardCollection.Core;
 using EventOrchestration.Abstractions;
-using EventOrchestration.Controllers;
 using VContainer;
 
 namespace CardCollectionImpl

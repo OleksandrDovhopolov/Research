@@ -1,6 +1,5 @@
 using System;
 using CardCollection.Core;
-using Infrastructure;
 
 namespace CardCollectionImpl
 {

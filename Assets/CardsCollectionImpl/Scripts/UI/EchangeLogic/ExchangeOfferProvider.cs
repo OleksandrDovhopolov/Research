@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using UIShared;
 
 namespace CardCollectionImpl
 {
