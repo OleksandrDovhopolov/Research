@@ -44,16 +44,23 @@ namespace CardCollectionImpl
             var exchangeOfferProvider = new ExchangeOfferProvider(staticData.Offers, rewardHandler);
 
             var windowCoordinator = new CardCollectionWindowCoordinator(_uiManager);
+            var groupCompletionPresentationQueue = new PendingGroupCompletionPresentationQueue(staticData.Groups);
 
             var hudPresenter = new CardCollectionHudPresenter(_uiManager, _hudService);
             
-            var newCardWindowFlow = new OpenPackFlow(facade, _cardCollectionCacheService, windowCoordinator);
+            var newCardWindowFlow = new OpenPackFlow(
+                _uiManager,
+                facade,
+                rewardHandler,
+                windowCoordinator,
+                _cardCollectionCacheService,
+                groupCompletionPresentationQueue);
             
             var cardPackInventoryUseHandler = new CardPackInventoryUseHandler(newCardWindowFlow);
             
             var inventoryIntegration = new CardCollectionInventoryIntegration(_itemCategoryRegistry, _inventoryUseHandlerStorage, cardPackInventoryUseHandler);
             
-            var context = new CardCollectionSessionContext(newCardWindowFlow, windowCoordinator, facade);
+            var context = new CardCollectionSessionContext(newCardWindowFlow, windowCoordinator, facade, groupCompletionPresentationQueue);
 
             return new CardCollectionSession(
                 _uiManager,

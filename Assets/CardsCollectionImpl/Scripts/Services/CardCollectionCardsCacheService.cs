@@ -4,14 +4,14 @@ using UnityEngine;
 
 namespace CardCollectionImpl
 {
-    public class CardCollectionCardCollectionCacheService : ICardCollectionCacheService
+    public class CardCollectionCardsCacheService : ICardCollectionCacheService
     {
         private readonly Dictionary<string, HashSet<string>> _groupIdToCardIds = new();
         private readonly Dictionary<string, CardConfig> _configById = new();
         
         private readonly ICardPointsCalculator _pointsCalculator;
 
-        public CardCollectionCardCollectionCacheService(ICardPointsCalculator pointsCalculator)
+        public CardCollectionCardsCacheService(ICardPointsCalculator pointsCalculator)
         {
             _pointsCalculator = pointsCalculator;
         }

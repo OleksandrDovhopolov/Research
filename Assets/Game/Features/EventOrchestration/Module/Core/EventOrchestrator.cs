@@ -431,6 +431,7 @@ namespace EventOrchestration.Core
                 
                 if (!state.StartInvoked)
                 {
+                    //TODO if leave game while waiting it will break lifecycle and event wont start on reenter
                     await controller.OnStart(ct);
                 }
                 

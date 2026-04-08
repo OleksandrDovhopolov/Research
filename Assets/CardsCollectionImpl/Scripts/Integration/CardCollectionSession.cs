@@ -211,6 +211,7 @@ namespace CardCollectionImpl
 
             Context.CardCollectionFacade.OnGroupCompleted -= OnGroupCompleted;
             Context.CardCollectionFacade.OnCollectionCompleted -= OnCollectionCompleted;
+            Context.GroupCompletionPresentationQueue.Clear();
 
             try
             {
@@ -281,26 +282,18 @@ namespace CardCollectionImpl
                 return;
             }
 
-            var groupTypes = data.Groups
+            var grantedGroupTypes = data.Groups
                 .Select(group => group.GroupType)
                 .Where(groupType => !string.IsNullOrWhiteSpace(groupType))
                 .Distinct()
                 .ToArray();
 
-            if (groupTypes.Length == 0)
+            if (grantedGroupTypes.Length == 0)
             {
                 return;
             }
 
-            var groupConfigs = ResolveGroupConfigs(groupTypes);
-            if (groupConfigs.Count == 0)
-            {
-                return;
-            }
-
-            var collectionData = await Context.CardCollectionFacade.Load(ct);
-            var args = new CardGroupCollectionArgs(Context.CardCollectionFacade.EventId, collectionData, groupConfigs, _rewardHandler);
-            Context.WindowCoordinator.ShowGroupCompleted(args);
+            Context.GroupCompletionPresentationQueue.Enqueue(grantedGroupTypes);
         }
 
         private void OnCollectionCompleted(CardCollectionCompletedData data)
@@ -352,25 +345,6 @@ namespace CardCollectionImpl
             Context.WindowCoordinator.ShowCollection(args);
         }
 
-        private List<CardCollectionGroupConfig> ResolveGroupConfigs(IEnumerable<string> groupTypes)
-        {
-            var groupConfigs = new List<CardCollectionGroupConfig>();
-
-            foreach (var groupType in groupTypes)
-            {
-                var groupConfig = _eventStaticData.Groups.FirstOrDefault(group => group.groupType == groupType);
-                if (groupConfig == null)
-                {
-                    Debug.LogError($"Failed to find group {groupType}");
-                    continue;
-                }
-
-                groupConfigs.Add(groupConfig);
-            }
-
-            return groupConfigs;
-        }
-        
         public void Dispose()
         {
             if (_isDisposed)

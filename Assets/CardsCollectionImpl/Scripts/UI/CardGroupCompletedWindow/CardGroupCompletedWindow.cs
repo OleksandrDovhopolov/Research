@@ -10,14 +10,14 @@ namespace CardCollectionImpl
     public class CardGroupCollectionArgs : WindowArgs
     {
         public readonly string EventId;
-        public readonly List<CardCollectionGroupConfig> GroupConfigs;
+        public readonly IReadOnlyList<CardCollectionGroupConfig> GroupConfigs;
         public readonly EventCardsSaveData EventCardsSaveData;
         public readonly ICardCollectionRewardHandler RewardHandler;
         
         public CardGroupCollectionArgs(
             string eventId,
             EventCardsSaveData eventCardsSaveData, 
-            List<CardCollectionGroupConfig>  groupConfigs,
+            IReadOnlyList<CardCollectionGroupConfig>  groupConfigs,
             ICardCollectionRewardHandler rewardHandler)
         {
             EventId = eventId;

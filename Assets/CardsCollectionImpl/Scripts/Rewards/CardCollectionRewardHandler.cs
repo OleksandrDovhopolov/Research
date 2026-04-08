@@ -52,7 +52,6 @@ namespace CardCollectionImpl
                 Debug.LogWarning($"Failed to find GroupRewardDefinition for group with ID {collectionCompletedData.EventId}");
                 return false;
             }
-            //var collectionRewardDefinition = _cardCollectionRewardsConfigSo.FullCollectionReward; 
             var rewardId = groupRewardConfig.rewardItemId; 
             
             if (!_rewardSpecProvider.TryGet(rewardId, out var spec))

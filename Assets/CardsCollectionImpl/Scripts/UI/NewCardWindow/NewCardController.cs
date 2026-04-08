@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UISystem;
@@ -7,11 +8,15 @@ namespace CardCollectionImpl
 {
     public class NewCardArgs : WindowArgs
     {
-        public readonly NewCardScreenData NewCardScreenData;
+        public readonly string EventId;
+        public readonly int Points;
+        public readonly List<NewCardDisplayData> Cards;
 
-        public NewCardArgs(NewCardScreenData screenData)
+        public NewCardArgs(string eventId, int points, List<NewCardDisplayData> cards)
         {
-            NewCardScreenData = screenData;
+            EventId = eventId;
+            Points = points;
+            Cards = cards ?? new List<NewCardDisplayData>();
         }
     }
 
@@ -33,8 +38,8 @@ namespace CardCollectionImpl
         {
             _cts = new CancellationTokenSource();
             View.SetSpriteManager(_eventSpriteManager);
-            View.UpdatePointsAmount(Args.NewCardScreenData.Points);
-            View.CreateNewCards(Args.NewCardScreenData.EventId, Args.NewCardScreenData.Cards);
+            View.UpdatePointsAmount(Args.Points);
+            View.CreateNewCards(Args.EventId, Args.Cards);
         }
 
         protected override void OnShowComplete()

@@ -16,7 +16,7 @@ namespace CardCollectionImpl
             builder.Register<IPackSelectionStrategy, DefaultPackStrategy>(Lifetime.Singleton);
             builder.Register<ICardSelector, RandomCardSelector>(Lifetime.Singleton);
             // Points calculator
-            builder.Register<ICardCollectionCacheService, CardCollectionCardCollectionCacheService>(Lifetime.Singleton);
+            builder.Register<ICardCollectionCacheService, CardCollectionCardsCacheService>(Lifetime.Singleton);
             builder.Register<ICardPointsCalculator, CardsCollectionPointsCalculator>(Lifetime.Singleton);
             builder.Register<EventSpriteManager>(Lifetime.Singleton)
                 .As<IEventSpriteManager>()
