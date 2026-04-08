@@ -120,6 +120,7 @@ namespace EventOrchestration.Core
                 }
                 
                 _schedule = BuildRuntimeSchedule(_schedule);
+                PruneStatesOutsideSchedule();
 
                 CreateScheduleData();
 
@@ -315,10 +316,10 @@ namespace EventOrchestration.Core
                 {
                     await ProcessActiveAsync(active, now, ct);
 
-                    var activeState = _states[active.Id].State;
-                    if (activeState is EventInstanceState.Completed
-                        or EventInstanceState.Failed
-                        or EventInstanceState.Cancelled)
+                    if (!_states.TryGetValue(active.Id, out var activeStateData)
+                        || activeStateData.State is EventInstanceState.Completed
+                            or EventInstanceState.Failed
+                            or EventInstanceState.Cancelled)
                     {
                         continue;
                     }
@@ -346,7 +347,12 @@ namespace EventOrchestration.Core
         {
             for (var i = 0; i < streamItems.Count; i++)
             {
-                var state = _states[streamItems[i].Id].State;
+                if (!_states.TryGetValue(streamItems[i].Id, out var stateData))
+                {
+                    continue;
+                }
+
+                var state = stateData.State;
                 if (state == EventInstanceState.Active ||
                     state == EventInstanceState.Starting ||
                     state == EventInstanceState.Ending ||
@@ -366,7 +372,12 @@ namespace EventOrchestration.Core
             for (var i = 0; i < streamItems.Count; i++)
             {
                 var item = streamItems[i];
-                var state = _states[item.Id].State;
+                if (!_states.TryGetValue(item.Id, out var stateData))
+                {
+                    continue;
+                }
+
+                var state = stateData.State;
                 if (state != EventInstanceState.Pending)
                     continue;
 
@@ -512,8 +523,44 @@ namespace EventOrchestration.Core
 
             await TransitionStateAsync(state, EventInstanceState.Completed, ct);
             OnEventCompleted?.Invoke(item);
-            await _stateStore.SaveAsync(_states, ct);
             _hydratedControllers.Remove(item.Id);
+            RemoveItemFromRuntime(item.Id);
+            await _stateStore.SaveAsync(_states, ct);
+        }
+
+        private void RemoveItemFromRuntime(string itemId)
+        {
+            if (string.IsNullOrWhiteSpace(itemId))
+            {
+                return;
+            }
+
+            _states.Remove(itemId);
+            _transitionInFlight.Remove(itemId);
+            _hydratedControllers.Remove(itemId);
+        }
+
+        private void PruneStatesOutsideSchedule()
+        {
+            if (_states.Count == 0)
+            {
+                return;
+            }
+
+            var runtimeScheduleIds = new HashSet<string>(_schedule.Select(item => item.Id), StringComparer.Ordinal);
+            if (runtimeScheduleIds.Count == 0)
+            {
+                _states.Clear();
+                _transitionInFlight.Clear();
+                _hydratedControllers.Clear();
+                return;
+            }
+
+            var staleIds = _states.Keys.Where(id => !runtimeScheduleIds.Contains(id)).ToList();
+            for (var i = 0; i < staleIds.Count; i++)
+            {
+                RemoveItemFromRuntime(staleIds[i]);
+            }
         }
 
         private async UniTask TransitionStateAsync(EventStateData state, EventInstanceState to, CancellationToken ct)
@@ -576,31 +623,18 @@ namespace EventOrchestration.Core
             ct.ThrowIfCancellationRequested();
 
             var now = _clock.UtcNow;
+            var current = FindInProgressEvent();
+            var hasCurrent = current != null;
 
-            var current = _schedule.FirstOrDefault(item =>
-            {
-                if (!_states.TryGetValue(item.Id, out var state)) return false;
-
-                return state.State 
-                    is EventInstanceState.Active 
-                    or EventInstanceState.Starting 
-                    or EventInstanceState.Ending 
-                    or EventInstanceState.Settling;
-            });
-
-            if (current == null)
-            {
-                return false;
-            }
-
-            if (current.EndTimeUtc > now)
+            if (hasCurrent && current.EndTimeUtc > now)
             {
                 current.EndTimeUtc = now;
             }
 
             await TickAsync(ct);
+            PruneStatesOutsideSchedule();
             await _stateStore.SaveAsync(_states, ct);
-            return true;
+            return hasCurrent;
         }
 
         public async UniTask<bool> ForceNextEventAsync(CancellationToken ct)

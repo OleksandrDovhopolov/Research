@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
 using EventOrchestration.Controllers;
@@ -12,15 +13,18 @@ namespace CardCollectionImpl
     {
         private CardCollectionSession _cardCollectionSession;
         
+        private readonly IEventCardsStorage _eventCardsStorage;
         private readonly ICardCollectionSessionFacade _sessionFacade;
         private readonly ICardCollectionRuntimeBuilder _collectionRuntimeBuilder;
         
         public CardCollectionLiveOpsController(
             IEventModelFactory modelFactory,
+            IEventCardsStorage eventCardsStorage,
             ICardCollectionSessionFacade sessionFacade,
             ICardCollectionRuntimeBuilder collectionRuntimeBuilder) : base("CardCollection", modelFactory)
         {
             _sessionFacade = sessionFacade;
+            _eventCardsStorage = eventCardsStorage;
             _collectionRuntimeBuilder = collectionRuntimeBuilder;
         }
         
@@ -72,11 +76,11 @@ namespace CardCollectionImpl
             await CloseSessionInternalAsync(ct : ct);
         }
 
-        protected override UniTask OnSettlementAsync(CardCollectionEventModel model, EventStateData state, CancellationToken ct)
+        protected override async UniTask OnSettlementAsync(CardCollectionEventModel model, EventStateData state, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
             Debug.LogWarning($"[CardCollectionRuntime] Settle: {model.EventId}");
-            return _cardCollectionSession?.SettleAsync(ct) ?? UniTask.CompletedTask;
+            await _eventCardsStorage.DeleteAsync(model.EventId, ct);
         }
         
         private async UniTask CloseSessionInternalAsync(CardCollectionSession session = null, CancellationToken ct = default)
@@ -100,6 +104,7 @@ namespace CardCollectionImpl
                 {
                     _cardCollectionSession = null;
                     _sessionFacade.ClearSession();
+                    Debug.LogWarning($"[CardCollectionRuntime] CloseSessionInternalAsync");
                 }
             }
         }

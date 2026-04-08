@@ -8,12 +8,12 @@ namespace CardCollection.Core
     {
         string EventId { get; }
 
-        CardPack GetPackById(string packId);
         UniTask<OpenPackResultDto> OpenPackAsync(string packId, CancellationToken ct = default);
         UniTask<List<CardProgressData>> GetCardsByIdsAsync(List<string> cardIds, CancellationToken ct = default);
         UniTask ResetNewFlagsAsync(IReadOnlyCollection<string> cardIds, CancellationToken ct = default);
         UniTask UnlockCards(IReadOnlyCollection<string> cardIds, CancellationToken ct = default);
         UniTask<EventCardsSaveData> Load(CancellationToken ct = default);
+        UniTask PurgeEventDataAsync(CancellationToken ct = default);
     }
 
     public interface ICardCollectionPointsAccount

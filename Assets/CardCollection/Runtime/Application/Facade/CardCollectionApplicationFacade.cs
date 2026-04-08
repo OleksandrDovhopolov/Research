@@ -59,8 +59,6 @@ namespace CardCollection.Core
                 .CollectionCompleted;
         }
 
-        public CardPack GetPackById(string packId) => _cardPackService.GetPackById(packId);
-
         public async UniTask<OpenPackResultDto> OpenPackAsync(string packId, CancellationToken ct = default)
         {
             var result = await _openPackUseCase.ExecuteAsync(_eventId, packId, ct);
@@ -102,6 +100,11 @@ namespace CardCollection.Core
         public UniTask<int> GetCollectionPoints(CancellationToken ct = default)
         {
             return _pointsAccountService.GetBalanceAsync(_eventId, ct);
+        }
+
+        public UniTask PurgeEventDataAsync(CancellationToken ct = default)
+        {
+            return _cardProgressService.PurgeEventDataAsync(_eventId, ct);
         }
 
         public void Dispose()

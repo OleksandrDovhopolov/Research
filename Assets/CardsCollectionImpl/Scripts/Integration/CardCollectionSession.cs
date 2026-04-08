@@ -193,6 +193,7 @@ namespace CardCollectionImpl
             if (_isDisposed)
                 return UniTask.CompletedTask;
 
+            ct.ThrowIfCancellationRequested();
             return UniTask.CompletedTask;
         }
         

@@ -220,6 +220,16 @@ namespace CardCollection.Core
             }
         }
 
+        public async UniTask PurgeEventDataAsync(string eventId, CancellationToken ct = default)
+        {
+            if (string.IsNullOrEmpty(eventId))
+                throw new ArgumentException("Event ID cannot be null or empty", nameof(eventId));
+
+            await EnsureInitializedAsync(ct);
+            await _storage.DeleteAsync(eventId, ct);
+            _cache.Remove(eventId);
+        }
+
         public void Dispose()
         {
             if (_disposed) return;

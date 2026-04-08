@@ -300,6 +300,17 @@ namespace CardCollection.Tests
                 return UniTask.CompletedTask;
             }
 
+            public UniTask DeleteAsync(string eventId, CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+                if (_data != null && _data.EventId == eventId)
+                {
+                    _data = null;
+                }
+
+                return UniTask.CompletedTask;
+            }
+
             public void Dispose()
             {
             }

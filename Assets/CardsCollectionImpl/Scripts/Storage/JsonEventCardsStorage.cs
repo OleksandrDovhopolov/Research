@@ -6,6 +6,7 @@ using CardCollection.Core;
 using Core.Models;
 using Cysharp.Threading.Tasks;
 using Infrastructure.SaveSystem;
+using UnityEngine;
 
 namespace CardCollectionImpl
 {
@@ -98,6 +99,26 @@ namespace CardCollectionImpl
             }
 
             await SaveAsync(data, ct);
+        }
+
+        public async UniTask DeleteAsync(string eventId, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            ValidateEventId(eventId);
+
+            await _saveService.UpdateModuleAsync(root => root.CardCollections, cardCollections =>
+            {
+                foreach (var data in cardCollections)
+                {
+                    Debug.LogWarning($"[Debug] Before DeleteAsync data {data.EventId}");
+                }
+                cardCollections.RemoveAll(x => x.EventId == eventId);
+                
+                foreach (var data in cardCollections)
+                {
+                    Debug.LogWarning($"[Debug] After DeleteAsync data {data.EventId}");
+                }
+            }, ct);
         }
 
         private static void ValidateEventId(string eventId)

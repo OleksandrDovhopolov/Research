@@ -72,6 +72,45 @@ namespace CardCollection.Tests
             Assert.AreEqual(1, collectionEvents);
         });
 
+        [UnityTest]
+        public IEnumerator Facade_PurgeEventData_RemovesSavedProgress() => UniTask.ToCoroutine(async () =>
+        {
+            const string eventId = "evt";
+            var storage = new InMemoryEventCardsStorage(new EventCardsSaveData
+            {
+                EventId = eventId,
+                Version = 7,
+                Points = 42,
+                Cards = new List<CardProgressData>
+                {
+                    new() { CardId = "c1", IsUnlocked = true, IsNew = false },
+                }
+            });
+            var progress = new CardProgressService(storage);
+            var points = new PointsAccountService(progress);
+            var query = new CollectionProgressQueryService(progress);
+            var cardPackService = new CardPackService(new List<CardPackConfig>());
+
+            var facade = new CardCollectionApplicationFacade(
+                eventId,
+                new StubCardDefinitionProvider(new List<CardDefinition>()),
+                cardPackService,
+                progress,
+                new StubOpenPackUseCase(),
+                new StubUnlockCardsUseCase(UnlockCardsResultDto.Empty),
+                points,
+                query);
+
+            await facade.InitializeAsync(CancellationToken.None);
+            await facade.PurgeEventDataAsync(CancellationToken.None);
+
+            var reloaded = await facade.Load(CancellationToken.None);
+            Assert.AreEqual(eventId, reloaded.EventId);
+            Assert.AreEqual(1, reloaded.Version);
+            Assert.AreEqual(0, reloaded.Points);
+            Assert.IsEmpty(reloaded.Cards);
+        });
+
         private sealed class StubOpenPackUseCase : IOpenPackUseCase
         {
             public UniTask<OpenPackResultDto> ExecuteAsync(string eventId, string packId, CancellationToken ct = default)
@@ -161,6 +200,17 @@ namespace CardCollection.Tests
             public UniTask ClearCollectionAsync(CancellationToken ct = default)
             {
                 _data = null;
+                return UniTask.CompletedTask;
+            }
+
+            public UniTask DeleteAsync(string eventId, CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+                if (_data != null && _data.EventId == eventId)
+                {
+                    _data = null;
+                }
+
                 return UniTask.CompletedTask;
             }
 
