@@ -57,7 +57,7 @@ namespace CardCollectionImpl
             await ShowPendingGroupCompletedAsync(ct);
         }
 
-        private async UniTask ShowPendingGroupCompletedAsync(CancellationToken ct)
+        public async UniTask ShowPendingGroupCompletedAsync(CancellationToken ct)
         {
             var completedGroups = _groupCompletionPresentationQueue.DequeueAll();
             if (completedGroups.Count == 0)

@@ -49,6 +49,7 @@ namespace CardCollectionImpl
             }
 
             await context.CardCollectionFacade.UnlockCards(cardIds, ct);
+            await context.OpenPackFlow.ShowPendingGroupCompletedAsync(ct);
         }
 
         public async UniTask TryAddPoints(int points, CancellationToken ct)
@@ -118,6 +119,40 @@ namespace CardCollectionImpl
             await context.CardCollectionFacade.UnlockCards(unlockIds, ct);
         }
 
+        public async UniTask TryUnlockFirstNineCardsInEachGroup(CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (!TryGetActiveContext(out var context))
+            {
+                Debug.LogWarning("[CardCollectionRuntime] TryUnlockFirstNineCardsInEachGroup skipped: session context is null.");
+                return;
+            }
+
+            var cardIds = await GetAllCardIdsAsync(context, ct);
+            if (cardIds.Count == 0)
+            {
+                Debug.LogWarning("[CardCollectionRuntime] Could not find card IDs to unlock first nine cards in each group.");
+                return;
+            }
+
+            const int cardsPerGroup = 10;
+            const int cardsToUnlockPerGroup = 9;
+
+            var unlockIds = new List<string>(cardIds.Count);
+            for (var startIndex = 0; startIndex < cardIds.Count; startIndex += cardsPerGroup)
+            {
+                ct.ThrowIfCancellationRequested();
+                unlockIds.AddRange(cardIds.Skip(startIndex).Take(cardsToUnlockPerGroup));
+            }
+
+            if (unlockIds.Count == 0)
+            {
+                return;
+            }
+
+            await context.CardCollectionFacade.UnlockCards(unlockIds, ct);
+        }
+
         public async UniTask TryUnlockGroupByIndex(int groupIndex, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
@@ -140,7 +175,7 @@ namespace CardCollectionImpl
                 return;
             }
 
-            const int groupSize = 10;
+            const int groupSize = 9;
             var groupCardIds = cardIds
                 .Skip(groupIndex * groupSize)
                 .Take(groupSize)

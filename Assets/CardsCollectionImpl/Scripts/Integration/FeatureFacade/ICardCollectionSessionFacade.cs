@@ -13,6 +13,7 @@ namespace CardCollectionImpl
         UniTask TryRemovePoints(int points, CancellationToken ct);
         UniTask TryCompleteAllCollection(CancellationToken ct);
         UniTask TryUnlockAllMinusOneCard(CancellationToken ct);
+        UniTask TryUnlockFirstNineCardsInEachGroup(CancellationToken ct);
         UniTask TryUnlockGroupByIndex(int groupIndex, CancellationToken ct);
         internal void ClearSession();
     }

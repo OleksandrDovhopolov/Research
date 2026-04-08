@@ -6,5 +6,6 @@ namespace CardCollectionImpl
     public interface IOpenPackFlow
     {
         UniTask OpenPackById(string packId, CancellationToken ct);
+        UniTask ShowPendingGroupCompletedAsync(CancellationToken ct);
     }
 }

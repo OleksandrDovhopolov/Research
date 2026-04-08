@@ -39,7 +39,7 @@ namespace Game.Cheat
         {
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Create test events", () =>
             {
-                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 15, 10000);
+                var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, 5, 10000);
                 var second = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, first.EndTimeUtc, TimeSpan.FromSeconds(500));
                 
                 _orchestratorRunner.AddDebugCardCollectionEventNextMinute(first);
@@ -65,6 +65,11 @@ namespace Game.Cheat
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Unlock all cards - 1", () =>
             {
                 _sessionFacade.TryUnlockAllMinusOneCard(_ct).Forget();
+            }).WithGroup(CardCollectionGroup));
+
+            cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Unlock first 9 cards in each group", () =>
+            {
+                _sessionFacade.TryUnlockFirstNineCardsInEachGroup(_ct).Forget();
             }).WithGroup(CardCollectionGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Complete group(Int)", groupIndex =>
