@@ -11,7 +11,6 @@ namespace GameplayUI
     public class EventButton : MonoBehaviour, IEventButton
     {
         [SerializeField] private Button _button;
-        [SerializeField] private Image _image;
         [SerializeField] private EventTimerDisplay _eventTimerDisplay;
 
         private IGlobalTimerService _globalTimerService;
@@ -37,13 +36,7 @@ namespace GameplayUI
 
         private void OnDestroy()
         {
-            _image.sprite = null;
             _button.onClick.RemoveAllListeners();
-        }
-        
-        public void SetSprite(Sprite sprite)
-        {
-            _image.sprite = sprite;
         }
     }
 }

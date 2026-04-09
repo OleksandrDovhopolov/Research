@@ -9,7 +9,6 @@ namespace CardCollectionImpl
     public sealed class CardCollectionSessionFactory : ICardCollectionSessionFactory
     {
         private readonly UIManager _uiManager;
-        private readonly IHUDService _hudService;
         private readonly IRewardSpecProvider _rewardSpecProvider;
         private readonly IRewardGrantService _rewardGrantService;
         private readonly IItemCategoryRegistry _itemCategoryRegistry;
@@ -18,7 +17,6 @@ namespace CardCollectionImpl
 
         public CardCollectionSessionFactory(
             UIManager uiManager,
-            IHUDService hudService,
             IRewardSpecProvider rewardSpecProvider,
             IRewardGrantService rewardGrantService,
             IItemCategoryRegistry itemCategoryRegistry,
@@ -26,7 +24,6 @@ namespace CardCollectionImpl
             ICardCollectionCacheService cardCollectionCacheService)
         {
             _uiManager = uiManager;
-            _hudService = hudService;
             _rewardSpecProvider = rewardSpecProvider;
             _rewardGrantService = rewardGrantService;
             _itemCategoryRegistry = itemCategoryRegistry;
@@ -45,7 +42,7 @@ namespace CardCollectionImpl
             var windowCoordinator = new CardCollectionWindowCoordinator(_uiManager);
             var groupCompletionPresentationQueue = new PendingGroupCompletionPresentationQueue(staticData.Groups);
 
-            var hudPresenter = new CardCollectionHudPresenter(_uiManager, _hudService);
+            var hudPresenter = new CardCollectionHudPresenter(_uiManager);
             
             var newCardWindowFlow = new OpenPackFlow(
                 _uiManager,

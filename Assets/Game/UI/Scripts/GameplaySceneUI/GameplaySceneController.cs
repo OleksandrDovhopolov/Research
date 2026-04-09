@@ -1,6 +1,5 @@
 using EventOrchestration;
 using UISystem;
-using UnityEngine;
 using VContainer;
 
 namespace GameplayUI
@@ -34,10 +33,10 @@ namespace GameplayUI
         protected override void OnHideStart(bool isClosed)
         {
         }
-
-        public RectTransform GetButtonContainer()
+        
+        public IEventButton GetEventButton()
         {
-            return View.GetButtonContainer();
+            return View.GetEventButton();
         }
     }
 }

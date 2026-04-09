@@ -13,7 +13,7 @@ using VContainer;
 
 namespace Game.Cheat
 {
-    public class ResearchCheatModule : MonoBehaviour, ICheatsContainer
+    public class CheatModuleView : MonoBehaviour, ICheatsContainer
     {
         [SerializeField] private CheatsManager _cheatsManagerPrefab;
         [SerializeField] private Button _cheatButton; 

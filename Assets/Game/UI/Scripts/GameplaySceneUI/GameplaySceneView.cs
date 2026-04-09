@@ -8,7 +8,15 @@ namespace GameplayUI
     {
         [SerializeField] private ResourcesView _resourcesView;
         [SerializeField] private EventDebugView _debugView;
-        [SerializeField] private RectTransform _eventButtonContainer;
+        
+        [Space, Header("Main Menu")]
+        [SerializeField] private EventButton _cardCollectionButton;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            _cardCollectionButton.gameObject.SetActive(false);
+        }
         
         public void AddUpcomingEvent(string eventId, string spriteAddress, IGlobalTimerService globalTimerService)
         {
@@ -19,10 +27,10 @@ namespace GameplayUI
         {
             _debugView.OnEventStarted(eventId);
         }
-
-        public RectTransform GetButtonContainer()
+        
+        public IEventButton GetEventButton()
         {
-            return _eventButtonContainer;
+            return _cardCollectionButton;
         }
     }
 }

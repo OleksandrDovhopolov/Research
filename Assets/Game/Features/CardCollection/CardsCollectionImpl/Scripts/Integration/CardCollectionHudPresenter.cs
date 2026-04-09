@@ -13,16 +13,15 @@ namespace CardCollectionImpl
         private const string CardCollectionButtonId = "CardCollection" + "/" + CardCollectionGeneralConfig.CollectionEventButton;
         
         private readonly UIManager _uiManager;
-        private readonly IHUDService _hudService;
         
         private Func<CancellationToken, UniTask> _showCollectionHandler;
         
         private IEventButton _eventButton;
+        private GameplaySceneController _gameplaySceneController;
         
-        public CardCollectionHudPresenter(UIManager uiManager, IHUDService hudService)
+        public CardCollectionHudPresenter(UIManager uiManager)
         {
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
-            _hudService = hudService ?? throw new ArgumentNullException(nameof(hudService));
         }
 
         public void SetShowCollectionHandler(Func<CancellationToken, UniTask> showCollectionHandler)
@@ -37,10 +36,12 @@ namespace CardCollectionImpl
         
         public async UniTask BindASync(ScheduleItem config, CancellationToken ct)
         {
+            _gameplaySceneController ??= _uiManager.GetWindowSync<GameplaySceneController>();
+            
             await UniTask.WaitForSeconds(1f, cancellationToken: ct);
-            await UniTask.WaitUntil(() => _uiManager.IsWindowShown<GameplaySceneController>(), cancellationToken: ct);
-            var entryButton = await _hudService.SpawnEventButtonAsync(CardCollectionButtonId, ct);
+            await UniTask.WaitUntil(() => _gameplaySceneController.IsShown, cancellationToken: ct);
 
+            var entryButton =  _gameplaySceneController.GetEventButton();
             if (entryButton == null)
             {
                 Debug.LogWarning($"[CardCollectionRuntime] No button found for {CardCollectionButtonId}]");
@@ -48,8 +49,8 @@ namespace CardCollectionImpl
             }
             
             _eventButton = entryButton;
-            _eventButton.Setup(config, () => OnEventButtonClickHandler(ct), ct);
             _eventButton.SetVisible(true);
+            _eventButton.Setup(config, () => OnEventButtonClickHandler(ct), ct);
         }
 
         private void OnEventButtonClickHandler(CancellationToken ct)
@@ -61,8 +62,8 @@ namespace CardCollectionImpl
         {
             if (_eventButton == null) return;
             
+            _eventButton.SetVisible(false);
             _eventButton = null;
-            _hudService.RemoveEventButton(CardCollectionButtonId);
         }
 
         public void Dispose()
