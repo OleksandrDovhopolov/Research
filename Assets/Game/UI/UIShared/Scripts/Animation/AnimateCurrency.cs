@@ -8,11 +8,11 @@ namespace UIShared
     public class ArgAnimateCurrency
     {
         public Vector3 StartScreenPosition { get; }
-        public string ItemType { get; }
+        public AnimationTargetTypes ItemType { get; }
         public int Amount { get; }
         public Sprite Sprite { get; }
 
-        public ArgAnimateCurrency(Vector3 startScreenPosition, string itemType, int amount, Sprite sprite)
+        public ArgAnimateCurrency(Vector3 startScreenPosition, AnimationTargetTypes itemType, int amount, Sprite sprite)
         {
             Amount = amount;
             Sprite = sprite;

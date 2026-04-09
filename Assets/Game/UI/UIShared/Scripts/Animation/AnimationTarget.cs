@@ -4,16 +4,16 @@ namespace UIShared
 {
     public class AnimationTarget : MonoBehaviour
     {
-        [SerializeField] private string animationType;
+        [SerializeField] private AnimationTargetTypes animationTargetType;
         
         public void Awake()
         {
-            AnimationTargets.Register(animationType, transform);
+            AnimationTargets.Register(animationTargetType, transform);
         }
 
         public void OnDestroy()
         {
-            AnimationTargets.Remove(animationType);
+            AnimationTargets.Remove(animationTargetType);
         }
     }
 }

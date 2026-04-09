@@ -12,9 +12,9 @@ namespace UIShared
         [SerializeField]
         private List<ParticleAnimationParameters> _animationParameters;
 
-        public ParticleAnimationParameters GetResourceAnimationParameters(string itemType)
+        public ParticleAnimationParameters GetResourceAnimationParameters(AnimationTargetTypes itemType)
         {
-            var animationSettings = _animationParameters.Find(parameters => parameters.ItemType == itemType);
+            var animationSettings = _animationParameters.Find(parameters => parameters.AnimatioTargetType == itemType);
             if (animationSettings != null)
             {
                 return animationSettings;
@@ -29,6 +29,7 @@ namespace UIShared
     {
         public AnimationCurve ParticleAccelerationCurve;
         public string ItemType;
+        public AnimationTargetTypes AnimatioTargetType;
         
         public Vector3 StartScaleValue = Vector3.one;
         public float UpScaleDuration = 0.5f;
