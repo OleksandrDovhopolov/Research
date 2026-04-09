@@ -5,9 +5,8 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Models;
-using HUD;
+using GameplayUI;
 using Infrastructure;
-using UIShared;
 using UISystem;
 using UnityEngine;
 

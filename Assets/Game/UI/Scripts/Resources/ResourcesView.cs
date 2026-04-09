@@ -1,17 +1,18 @@
 using System.Collections.Generic;
+using CoreResources;
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using VContainer;
 
-namespace CoreResources
+namespace GameplayUI
 {
     public class ResourcesView : MonoBehaviour
     {
         [SerializeField] private float _amountChangeDurationSeconds = 0.4f;
-        [SerializeField] private Text _goldAmountText;
-        [SerializeField] private Text _energyAmountText;
-        [SerializeField] private Text _gemsAmountTest;
+        [SerializeField] private TextMeshProUGUI _goldAmountText;
+        [SerializeField] private TextMeshProUGUI _energyAmountText;
+        [SerializeField] private TextMeshProUGUI _gemsAmountTest;
 
         private readonly Dictionary<ResourceType, Tween> _tweenByType = new();
 
@@ -68,7 +69,7 @@ namespace CoreResources
                 .OnComplete(() => _tweenByType.Remove(resourceType));
         }
 
-        private Text GetText(ResourceType resourceType)
+        private TextMeshProUGUI GetText(ResourceType resourceType)
         {
             return resourceType switch
             {

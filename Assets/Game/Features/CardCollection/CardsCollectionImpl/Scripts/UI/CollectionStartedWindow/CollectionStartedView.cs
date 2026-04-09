@@ -1,6 +1,6 @@
 using EventOrchestration;
+using GameplayUI;
 using TMPro;
-using UIShared;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;

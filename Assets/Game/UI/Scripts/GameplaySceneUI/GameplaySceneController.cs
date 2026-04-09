@@ -3,7 +3,7 @@ using UISystem;
 using UnityEngine;
 using VContainer;
 
-namespace HUD
+namespace GameplayUI
 {
     [Window("GameplaySceneController", isRoot: true)]
     public class GameplaySceneController : WindowController<GameplaySceneView>

@@ -7,7 +7,7 @@ using Infrastructure;
 using UIShared;
 using UnityEngine;
 
-namespace HUD
+namespace GameplayUI
 {
     public class EventViewData
     {

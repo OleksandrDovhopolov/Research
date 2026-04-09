@@ -1,10 +1,8 @@
-using CoreResources;
 using EventOrchestration;
-using UIShared;
 using UISystem;
 using UnityEngine;
 
-namespace HUD
+namespace GameplayUI
 {
     public class GameplaySceneView : WindowView
     {

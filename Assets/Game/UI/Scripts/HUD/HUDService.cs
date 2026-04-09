@@ -7,7 +7,7 @@ using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
-namespace HUD
+namespace GameplayUI
 {
     public class HUDService : MonoBehaviour, IHUDService
     {

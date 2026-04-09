@@ -1,7 +1,7 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
-namespace HUD
+namespace GameplayUI
 {
     public interface IHUDService
     {

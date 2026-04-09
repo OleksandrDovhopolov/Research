@@ -3,7 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using EventOrchestration;
 using EventOrchestration.Models;
-using HUD;
+using GameplayUI;
 using UISystem;
 using UnityEngine;
 using VContainer;

@@ -2,6 +2,7 @@ using System;
 
 namespace EventOrchestration
 {
+    //TODO move out of EventOrchestration into another asmdef ( core  ? ) 
     public interface IGlobalTimerService
     {
         event Action<string, TimeSpan> OnTick;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using EventOrchestration;
+using GameplayUI;
 using TMPro;
 using UIShared;
 using UISystem;

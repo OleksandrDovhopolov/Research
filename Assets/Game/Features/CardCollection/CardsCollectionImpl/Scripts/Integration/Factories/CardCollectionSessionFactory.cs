@@ -1,9 +1,7 @@
 using CardCollection.Core;
-using EventOrchestration.Models;
-using HUD;
+using GameplayUI;
 using Inventory.API;
 using Rewards;
-using UIShared;
 using UISystem;
 
 namespace CardCollectionImpl

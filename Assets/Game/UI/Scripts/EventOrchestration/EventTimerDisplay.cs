@@ -1,9 +1,9 @@
 using System;
+using EventOrchestration;
 using TMPro;
-using UIShared;
 using UnityEngine;
 
-namespace EventOrchestration
+namespace GameplayUI
 {
     public sealed class EventTimerDisplay : MonoBehaviour
     {

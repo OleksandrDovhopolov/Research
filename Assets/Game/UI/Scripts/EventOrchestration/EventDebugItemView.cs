@@ -4,7 +4,7 @@ using UIShared;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace HUD
+namespace GameplayUI
 {
     public class EventDebugItemView : MonoBehaviour, ICleanup
     {

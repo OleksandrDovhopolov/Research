@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using HUD;
+using GameplayUI;
 using UIShared;
 using UISystem;
 using UnityEngine;
