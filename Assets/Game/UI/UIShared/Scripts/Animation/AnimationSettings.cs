@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 namespace UIShared
@@ -32,6 +33,8 @@ namespace UIShared
         public AnimationTargetTypes AnimatioTargetType;
         
         public Vector3 StartScaleValue = Vector3.one;
+        public PathType PathType = PathType.CubicBezier;
+        public float MinScaleValue = 0f;
         public float UpScaleDuration = 0.5f;
         public float DownScaleDuration = 0.3f;
         public float UpScaleValue = 1.5f;

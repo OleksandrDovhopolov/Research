@@ -594,7 +594,6 @@ MonoBehaviour:
   _closeButtons: []
   _resourcesView: {fileID: 8359693996393681529}
   _debugView: {fileID: 4500059732737237192}
-  _eventButtonContainer: {fileID: 5105823596209943278}
   _cardCollectionButton: {fileID: 701415513453838389}
 --- !u!1 &8665334089762426621
 GameObject:

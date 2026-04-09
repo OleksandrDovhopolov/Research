@@ -20,12 +20,19 @@ namespace UIShared
             AnimationTargetTypes animationTargetType = AnimationTargetTypes.None;
             if (Enum.TryParse<ResourceType>(resourceId, true, out var resourceType))
             {
-                animationTargetType =  (AnimationTargetTypes)resourceType;
+                animationTargetType = resourceType switch
+                {
+                    ResourceType.Gold => AnimationTargetTypes.Gold,
+                    ResourceType.Energy => AnimationTargetTypes.Energy,
+                    ResourceType.Gems => AnimationTargetTypes.Gems,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
             }
             else
             {
                 animationTargetType = AnimationTargetTypes.Inventory;
             }
+            
             //var animationTargetId = Enum.TryParse<ResourceType>(resourceId, true, out var resourceType) ? resourceType.ToString() : "Inventory";
             var animationArgs = new ArgAnimateCurrency(from, animationTargetType,  amount, sprite);
             _animateCurrency.Animate(animationArgs, OnAnimationCompleted);

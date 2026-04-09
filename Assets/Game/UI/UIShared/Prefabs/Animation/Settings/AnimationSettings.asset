@@ -40,6 +40,8 @@ MonoBehaviour:
     ItemType: Energy
     AnimatioTargetType: 1
     StartScaleValue: {x: 1, y: 1, z: 1}
+    PathType: 2
+    MinScaleValue: 0
     UpScaleDuration: 0.5
     DownScaleDuration: 0.3
     UpScaleValue: 0.8
@@ -146,6 +148,8 @@ MonoBehaviour:
     ItemType: Gems
     AnimatioTargetType: 3
     StartScaleValue: {x: 1, y: 1, z: 1}
+    PathType: 2
+    MinScaleValue: 0
     UpScaleDuration: 0.5
     DownScaleDuration: 0.3
     UpScaleValue: 0.8
@@ -252,6 +256,8 @@ MonoBehaviour:
     ItemType: Gold
     AnimatioTargetType: 2
     StartScaleValue: {x: 1, y: 1, z: 1}
+    PathType: 2
+    MinScaleValue: 0
     UpScaleDuration: 0.5
     DownScaleDuration: 0.3
     UpScaleValue: 0.8
@@ -358,6 +364,8 @@ MonoBehaviour:
     ItemType: default
     AnimatioTargetType: 0
     StartScaleValue: {x: 1, y: 1, z: 1}
+    PathType: 2
+    MinScaleValue: 0
     UpScaleDuration: 0.5
     DownScaleDuration: 0.3
     UpScaleValue: 0.8
