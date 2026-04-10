@@ -994,28 +994,28 @@ PrefabInstance:
       objectReference: {fileID: 11400000, guid: aaef6b3978f98c645b03c0530515339b, type: 2}
     - target: {fileID: 983718311819333550, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: autoInjectGameObjects.Array.size
-      value: 7
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 983718311819333550, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: autoInjectGameObjects.Array.data[0]
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 343525367}
     - target: {fileID: 983718311819333550, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: autoInjectGameObjects.Array.data[1]
       value: 
-      objectReference: {fileID: 343525367}
+      objectReference: {fileID: 430775084}
     - target: {fileID: 983718311819333550, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: autoInjectGameObjects.Array.data[2]
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 3532737}
     - target: {fileID: 983718311819333550, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: autoInjectGameObjects.Array.data[3]
       value: 
-      objectReference: {fileID: 430775084}
+      objectReference: {fileID: 1978314244}
     - target: {fileID: 983718311819333550, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: autoInjectGameObjects.Array.data[4]
       value: 
-      objectReference: {fileID: 3532737}
+      objectReference: {fileID: 1978314244}
     - target: {fileID: 983718311819333550, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: autoInjectGameObjects.Array.data[5]
       value: 

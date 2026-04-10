@@ -52,7 +52,7 @@ desktop.ini
 /ServerData/
 /Assets/ServerData/
 /**/catalog_*.json
-/**/*.bundle
+
 
 # Firebase files
 .firebase/
