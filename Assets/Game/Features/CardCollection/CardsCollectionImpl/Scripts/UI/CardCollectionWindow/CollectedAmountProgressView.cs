@@ -9,6 +9,7 @@ namespace CardCollectionImpl
     public class CollectedAmountProgressView : MonoBehaviour
     {
         [SerializeField] private Image _collectedSlider;
+        [SerializeField] private Slider _slider;
         [SerializeField] private TextMeshProUGUI _groupCollectedAmountText;
         [SerializeField] private float _animationDuration = 0.35f;
 
@@ -28,7 +29,8 @@ namespace CardCollectionImpl
 
             _hasCollectedProgressValue = true;
             _lastCollectedProgressValue = GetTargetProgress(collectedAmount, totalAmount);
-            _collectedSlider.fillAmount = _lastCollectedProgressValue;
+            //_collectedSlider.fillAmount = _lastCollectedProgressValue;
+            _slider.value = _lastCollectedProgressValue;
 
             _hasLastAmounts = true;
             _lastCollectedAmount = collectedAmount;
@@ -52,7 +54,8 @@ namespace CardCollectionImpl
 
             if (_hasCollectedProgressValue == false)
             {
-                _collectedSlider.fillAmount = targetProgress;
+                //_collectedSlider.fillAmount = targetProgress;
+                _slider.value = targetProgress;
                 _lastCollectedProgressValue = targetProgress;
                 _hasCollectedProgressValue = true;
                 _hasLastAmounts = true;
@@ -82,6 +85,8 @@ namespace CardCollectionImpl
             var targetProgress = totalAmount > 0
                 ? Mathf.Clamp01((float)collectedAmount / totalAmount)
                 : 0f;
+            
+            Debug.LogWarning($"Debug targetProgress {targetProgress}");
             return targetProgress;
         }
         

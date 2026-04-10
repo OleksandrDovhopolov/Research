@@ -16,7 +16,6 @@ namespace CardCollectionImpl
     {
         [SerializeField] private UIListPool<GroupCollectionView> _cardGroupsPool;
         [SerializeField] private GameObject _loadingAnimationObject;
-        [SerializeField] private Button _infoButton;
         
         [Header("Points Container")]
         [SerializeField] private CardsCollectionPointsView _cardsCollectionPointsView;
@@ -53,7 +52,6 @@ namespace CardCollectionImpl
         {
             _cardsCollectionPointsView.OnViewClicked += OnPointsViewClickedHandler;
             _collectionRewardButton.onClick.AddListener(OnRewardChestClickedHandler);
-            _infoButton.onClick.AddListener(OnInfoButtonClickedHandler);
         }
 
         private void OnPointsViewClickedHandler()
@@ -64,11 +62,6 @@ namespace CardCollectionImpl
         private void OnRewardChestClickedHandler()
         {
             OnRewardChestClicked?.Invoke(_collectionRewardButtonRect);
-        }
-        
-        private void OnInfoButtonClickedHandler()
-        {
-            OnInfoButtonClicked?.Invoke();
         }
 
         private ICardCollectionCacheService _cardCollectionCardCollectionCacheService;
@@ -246,7 +239,6 @@ namespace CardCollectionImpl
 
             _cardsCollectionPointsView.OnViewClicked -= OnPointsViewClickedHandler;
             _collectionRewardButton.onClick.RemoveAllListeners();
-            _infoButton.onClick.RemoveAllListeners();
             
             foreach (var view in _viewsDict.Values)
             {
