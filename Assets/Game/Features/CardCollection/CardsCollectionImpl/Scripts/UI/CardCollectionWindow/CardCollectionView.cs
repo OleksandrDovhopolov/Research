@@ -17,19 +17,18 @@ namespace CardCollectionImpl
         [SerializeField] private UIListPool<GroupCollectionView> _cardGroupsPool;
         [SerializeField] private GameObject _loadingAnimationObject;
         
-        [Header("Points Container")]
+        [Header("CollectionPoints")]
         [SerializeField] private CardsCollectionPointsView _cardsCollectionPointsView;
         
-        [Space, Space, Header("GroupReward")]
+        [Space, Space, Header("Rewards")]
         [SerializeField] private CollectedAmountProgressView _collectedAmountProgressView;
         [SerializeField] private Button _collectionRewardButton;
         [SerializeField] private RectTransform _collectionRewardButtonRect;
         
-        [Header("Points Container")]
-        [SerializeField] private TextMeshProUGUI _timerText;
+        [Header("Timer")]
         [SerializeField] private EventTimerDisplay _eventTimerDisplay;
         
-        [Space, Space, Header("CardsContentWidget")]
+        [Space, Space, Header("CardsContent")]
         [SerializeField] private CardsOfferWidgetView _inventoryWidgetView;
         
         private readonly Dictionary<string, GroupCollectionView> _viewsDict = new();
