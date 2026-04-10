@@ -20,7 +20,7 @@ namespace CardCollectionImpl
         
         [Space, Header("NewCards")]
         [SerializeField] private GameObject _newCardsContainer;
-        [SerializeField] private TextMeshProUGUI _nexCardsAmountText;
+        //[SerializeField] private TextMeshProUGUI _nexCardsAmountText;
 
         public string GroupType { get; private set; }
         public Vector3 AnimationStartPosition => _animationStartPosition.transform.position;
@@ -46,7 +46,7 @@ namespace CardCollectionImpl
         public void UpdateNewCards(int newCardsAmount)
         {
             _newCardsContainer.SetActive(newCardsAmount > 0);
-            _nexCardsAmountText.text = newCardsAmount.ToString();
+            //_nexCardsAmountText.text = newCardsAmount.ToString();
         }
         
         public void SetCollectedAmountProgressStart(int collectedAmount, int totalAmount)
