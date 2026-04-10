@@ -2286,6 +2286,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: NewContainer
       objectReference: {fileID: 0}
+    - target: {fileID: 4688835061146772284, guid: b11c3ecf67b79184fbf6517456877d80, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4688835061146772285, guid: b11c3ecf67b79184fbf6517456877d80, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -2360,11 +2364,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4688835061146772285, guid: b11c3ecf67b79184fbf6517456877d80, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -117.7
+      value: -82.5
       objectReference: {fileID: 0}
     - target: {fileID: 4688835061146772285, guid: b11c3ecf67b79184fbf6517456877d80, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -72.4
+      value: -66
       objectReference: {fileID: 0}
     - target: {fileID: 4688835061146772285, guid: b11c3ecf67b79184fbf6517456877d80, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x

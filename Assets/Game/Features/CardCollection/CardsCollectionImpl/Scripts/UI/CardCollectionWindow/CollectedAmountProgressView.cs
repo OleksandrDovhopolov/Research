@@ -8,7 +8,7 @@ namespace CardCollectionImpl
 {
     public class CollectedAmountProgressView : MonoBehaviour
     {
-        [SerializeField] private Image _collectedSlider;
+        //[SerializeField] private Image _collectedSlider;
         [SerializeField] private Slider _slider;
         [SerializeField] private TextMeshProUGUI _groupCollectedAmountText;
         [SerializeField] private float _animationDuration = 0.35f;
@@ -50,6 +50,7 @@ namespace CardCollectionImpl
             
             var targetProgress = GetTargetProgress(collectedAmount, totalAmount);
 
+            Debug.LogWarning($"Debug UpdateCollectedAmountAnimated targetProgress {targetProgress}, {_hasCollectedProgressValue == false}");
             _sliderTween?.Kill();
 
             if (_hasCollectedProgressValue == false)
@@ -64,9 +65,9 @@ namespace CardCollectionImpl
                 return;
             }
 
-            _collectedSlider.fillAmount = _lastCollectedProgressValue;
-            _sliderTween = _collectedSlider
-                .DOFillAmount(targetProgress, _animationDuration)
+            _slider.value = _lastCollectedProgressValue;
+            _sliderTween = _slider
+                .DOValue(targetProgress, _animationDuration)
                 .SetEase(Ease.OutCubic)
                 .OnComplete(() =>
                 {
