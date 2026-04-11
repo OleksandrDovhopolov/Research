@@ -32,7 +32,8 @@ namespace CardCollectionImpl
         [Space, Space, Header("GroupReward")]
         [SerializeField] private GameObject _progressContainer;
         [SerializeField] private GameObject _groupCompletedContainer;
-        [SerializeField] private Image _collectedSlider;
+        //[SerializeField] private Image _collectedSlider;
+        [SerializeField] private Slider _collectedSlider;
         [SerializeField] private TextMeshProUGUI _groupCollectedAmountText;
         [SerializeField] private Image _grouoRewardImage;
         [SerializeField] private TextMeshProUGUI _groupRewardAmountText;
@@ -119,8 +120,9 @@ namespace CardCollectionImpl
         
         public void UpdateCollectedAmount(int collectedAmount, int totalAmount)
         {
-            _collectedSlider.fillAmount = (float)collectedAmount / totalAmount;;
-            _groupCollectedAmountText.text = collectedAmount.ToString();
+            _collectedSlider.value = (float)collectedAmount / totalAmount;;
+            
+            _groupCollectedAmountText.text = collectedAmount + " / " + totalAmount; //collectedAmount.ToString();
         }
         
         public void SetRewardData(Sprite sprite, int amount)
