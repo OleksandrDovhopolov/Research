@@ -30,7 +30,6 @@ namespace CardCollectionImpl
             _selectedCardContainer.gameObject.SetActive(true);
 
             _selectedCardView.SetConfig(config);
-            _selectedCardView.UpdateCardFrame();
             _selectedCardView.SetOpenCardContainerActive(cardView.IsOpen);
             _selectedCardView.SetClosedCardContainerActive(!cardView.IsOpen);
             _selectedCardView.SetCardNew(cardView.IsNew);
@@ -40,6 +39,7 @@ namespace CardCollectionImpl
             _selectedCardView.GetRectTransform().position = _clickedCardView.GetRectTransform().position;
             _selectedCardView.UpdateCardName();
             _selectedCardView.UpdateCardStars();
+            _selectedCardView.UpdateCardFrame();
             
             SetSprite().Forget();
             _selectedCardView.PlayCardPreview(_targetRect.localPosition);

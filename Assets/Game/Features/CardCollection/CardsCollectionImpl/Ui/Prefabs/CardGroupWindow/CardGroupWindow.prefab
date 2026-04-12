@@ -2416,8 +2416,20 @@ MonoBehaviour:
   - {fileID: 0}
   _defaultFrameColor: {r: 1, g: 1, b: 1, a: 1}
   _premiumFrameColor: {r: 0.94509804, g: 0.83137256, b: 0.3254902, a: 1}
+  _cardStarVisualCustomizer: {fileID: 4643567152439357856}
   _animationDuration: 0.3
   _scaleFactor: 1.75
+--- !u!114 &4643567152439357856 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 348285395365791927, guid: 2befe36a2fd82904890090e3ca8f7765, type: 3}
+  m_PrefabInstance: {fileID: 4946104679926724887}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3741427135926207217}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfd0c185a7433f94f93b203d1b0bd867, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!224 &5836878769996672199 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 1559611411435771344, guid: 2befe36a2fd82904890090e3ca8f7765, type: 3}

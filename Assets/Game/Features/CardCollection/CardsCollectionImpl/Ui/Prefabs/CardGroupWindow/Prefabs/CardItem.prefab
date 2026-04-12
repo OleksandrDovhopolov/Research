@@ -1732,6 +1732,7 @@ GameObject:
   - component: {fileID: 278193600762186652}
   - component: {fileID: 6025566192142743113}
   - component: {fileID: 8054221120566827906}
+  - component: {fileID: 348285395365791927}
   m_Layer: 5
   m_Name: CardItem
   m_TagString: Untagged
@@ -1885,6 +1886,38 @@ MonoBehaviour:
   _cardFrameImage: []
   _defaultFrameColor: {r: 1, g: 1, b: 1, a: 1}
   _premiumFrameColor: {r: 0.94509804, g: 0.83137256, b: 0.3254902, a: 1}
+  _cardStarVisualCustomizer: {fileID: 348285395365791927}
+--- !u!114 &348285395365791927
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8595155245159316454}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfd0c185a7433f94f93b203d1b0bd867, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _starTierSettings:
+  - GlowColor: {r: 0, g: 1, b: 1, a: 0.5882353}
+    GradientColor: {r: 0.043137256, g: 0.45490196, b: 0.80784315, a: 1}
+    CardSpriteBackground: {fileID: 21300000, guid: 91d37967864564f818aaf9326fcf0302, type: 3}
+  - GlowColor: {r: 0.6901961, g: 1, b: 0.20392157, a: 0.5882353}
+    GradientColor: {r: 0, g: 0.69803923, b: 0.44313726, a: 1}
+    CardSpriteBackground: {fileID: 21300000, guid: 2fb3144d9de6d8c45815c7822790e2ce, type: 3}
+  - GlowColor: {r: 0.99215686, g: 0.49411765, b: 1, a: 0.5882353}
+    GradientColor: {r: 0.6156863, g: 0.30588236, b: 1, a: 1}
+    CardSpriteBackground: {fileID: 21300000, guid: 072fc1e433b92438e915c6c10bfd2994, type: 3}
+  - GlowColor: {r: 1, g: 0.7921569, b: 0.14509805, a: 0.5882353}
+    GradientColor: {r: 1, g: 0.19215687, b: 0.19215687, a: 1}
+    CardSpriteBackground: {fileID: 21300000, guid: c9b56cac3a123cb4a80986445ca377fc, type: 3}
+  - GlowColor: {r: 1, g: 0.7921569, b: 0.14509805, a: 0.5882353}
+    GradientColor: {r: 1, g: 0.19215687, b: 0.19215687, a: 1}
+    CardSpriteBackground: {fileID: 21300000, guid: c9b56cac3a123cb4a80986445ca377fc, type: 3}
+  _cardSpriteBackground: {fileID: 5883847927348556231}
+  _glowColor: {fileID: 5883847927927938912}
+  _gradientColor: {fileID: 5883847928673099590}
 --- !u!1 &8854900117636385431
 GameObject:
   m_ObjectHideFlags: 0

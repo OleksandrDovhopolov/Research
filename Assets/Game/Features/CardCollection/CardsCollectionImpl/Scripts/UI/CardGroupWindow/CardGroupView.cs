@@ -98,9 +98,9 @@ namespace CardCollectionImpl
                 cardView.SetConfig(config);
                 cardView.SetCardOpen(data.IsUnlocked);
                 cardView.SetCardNew(newCardsData.IsNew(data.CardId));
+                cardView.UpdateCardStars();
                 cardView.UpdateCardFrame();
                 cardView.UpdateCardName();
-                cardView.UpdateCardStars();
                 cardView.OnCardPressed += OnCardPressedHandler;
         
                 _viewsDict[config] = cardView;

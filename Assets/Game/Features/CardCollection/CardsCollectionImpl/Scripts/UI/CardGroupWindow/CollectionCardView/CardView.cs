@@ -32,6 +32,7 @@ namespace CardCollectionImpl
         [SerializeField] private List<Image> _cardFrameImage;
         [SerializeField] private Color _defaultFrameColor;
         [SerializeField] private Color _premiumFrameColor;
+        [SerializeField] private CardStarVisualCustomizer _cardStarVisualCustomizer;
 
         private CardConfig _cardCollectionConfig;
         public bool IsOpen { get; private set; }
@@ -85,11 +86,12 @@ namespace CardCollectionImpl
 
         public void UpdateCardFrame()
         {
-            var frameColor = _cardCollectionConfig.premiumCard ? _premiumFrameColor : _defaultFrameColor;
+            _cardStarVisualCustomizer.ApplyStarTier(Stars);
+            /*var frameColor = _cardCollectionConfig.premiumCard ? _premiumFrameColor : _defaultFrameColor;
             foreach (var image in _cardFrameImage)
             {
                 image.color = frameColor;
-            }
+            }*/
         }
         
         public void UpdateCardStars()

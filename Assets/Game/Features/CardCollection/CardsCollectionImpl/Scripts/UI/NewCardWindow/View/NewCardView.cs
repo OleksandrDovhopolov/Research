@@ -61,9 +61,9 @@ namespace CardCollectionImpl
                 cardView.SetConfig(config);
                 cardView.SetCardOpen(cardDisplayData.IsUnlocked);
                 cardView.SetCardNew(cardDisplayData.IsNew);
+                cardView.UpdateCardStars();
                 cardView.UpdateCardFrame();
                 cardView.UpdateCardName();
-                cardView.UpdateCardStars();
                 
                 var spriteAddress = eventId + "_" + config.icon;
                 _eventSpriteManager.BindSpriteFromAtlasAsync(eventId, eventId, spriteAddress, cardView.CardImage, _ct).Forget();
