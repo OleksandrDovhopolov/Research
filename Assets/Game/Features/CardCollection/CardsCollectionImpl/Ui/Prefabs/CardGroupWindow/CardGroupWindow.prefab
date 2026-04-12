@@ -54,7 +54,7 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 4
-  m_Spacing: 25
+  m_Spacing: 35
   m_ChildForceExpandWidth: 0
   m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 0
@@ -507,7 +507,7 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 4
-  m_Spacing: 25
+  m_Spacing: 35
   m_ChildForceExpandWidth: 0
   m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 0
@@ -2369,17 +2369,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &2491284659295465498 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7365296559044577549, guid: 2befe36a2fd82904890090e3ca8f7765, type: 3}
-  m_PrefabInstance: {fileID: 4946104679926724887}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &3741427135926207217 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8595155245159316454, guid: 2befe36a2fd82904890090e3ca8f7765, type: 3}
@@ -2411,12 +2400,8 @@ MonoBehaviour:
   _cardRect: {fileID: 3741427135926207217}
   _newNotificationGameObject: {fileID: 7943525747829865609}
   _canvasGroup: {fileID: 0}
-  _cardFrameImage:
-  - {fileID: 2491284659295465498}
-  - {fileID: 0}
-  _defaultFrameColor: {r: 1, g: 1, b: 1, a: 1}
-  _premiumFrameColor: {r: 0.94509804, g: 0.83137256, b: 0.3254902, a: 1}
   _cardStarVisualCustomizer: {fileID: 4643567152439357856}
+  _newCardFX: {fileID: 0}
   _animationDuration: 0.3
   _scaleFactor: 1.75
 --- !u!114 &4643567152439357856 stripped

@@ -122,6 +122,7 @@ namespace CardCollectionImpl
             {
                 mock.gameObject.SetActive(false);
                 card.SetAlpha(true);
+                card.SetNewCardFXActive(card.IsNew);
                 card.OnCardAnimationCompleted();
             });
 

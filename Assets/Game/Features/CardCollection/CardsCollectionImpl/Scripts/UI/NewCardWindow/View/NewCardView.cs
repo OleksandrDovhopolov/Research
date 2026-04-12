@@ -97,6 +97,7 @@ namespace CardCollectionImpl
             
             foreach (var cardView in _viewsDict.Values)
             {
+                cardView.SetNewCardFXActive(false);
                 cardView.transform.rotation = Quaternion.Euler(0, 0, 0);
                 cardView.ResetView();
             }

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using CardCollection.Core;
 using DG.Tweening;
 using TMPro;
@@ -30,6 +29,9 @@ namespace CardCollectionImpl
 
         [Space, Header("Frame")]
         [SerializeField] private CardStarVisualCustomizer _cardStarVisualCustomizer;
+        
+        [Space, Header("FX")]
+        [SerializeField] private ParticleSystem _newCardFX;
 
         private CardConfig _cardCollectionConfig;
         public bool IsOpen { get; private set; }
@@ -84,6 +86,11 @@ namespace CardCollectionImpl
         public void UpdateCardFrame()
         {
             _cardStarVisualCustomizer.ApplyStarTier(Stars, _cardCollectionConfig.premiumCard);
+        }
+
+        public void SetNewCardFXActive(bool isActive)
+        {
+            _newCardFX.gameObject.SetActive(isActive);
         }
         
         public void UpdateCardStars()
