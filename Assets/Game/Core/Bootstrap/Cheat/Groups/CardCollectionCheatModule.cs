@@ -42,7 +42,7 @@ namespace Game.Cheat
             cheatsContainer.AddItem<CheatButtonItem>(item => item.OnClick("Create test events", () =>
             {
                 //var first = CreateDebugCardCollectionScheduleItemForNextMinute(WinterCollectionEventId, WinterCollectionEventName, WinterConfigEventName, 5, 10000);
-                var first = CreateDebugCardCollectionScheduleItemForNextMinute(SpringCollectionEventId, SpringCollectionEventName,SpringConfigEventName, 5, 10000);
+                var first = CreateDebugCardCollectionScheduleItemForNextMinute(SpringCollectionEventId, SpringCollectionEventName,SpringConfigEventName, 5, 1000000);
                 //var second = CreateDebugCardCollectionScheduleItem(SpringCollectionEventId, SpringCollectionEventName, SpringConfigEventName, first.EndTimeUtc, TimeSpan.FromSeconds(500));
                 var second = CreateDebugCardCollectionScheduleItem(WinterCollectionEventId, WinterCollectionEventName, WinterConfigEventName,first.EndTimeUtc, TimeSpan.FromSeconds(500));
                 

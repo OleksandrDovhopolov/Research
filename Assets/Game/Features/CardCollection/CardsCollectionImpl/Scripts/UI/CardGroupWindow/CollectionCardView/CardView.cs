@@ -102,17 +102,11 @@ namespace CardCollectionImpl
             star4.SetActive(false);
             star5.SetActive(false);
 
-            if (Stars == 5)
-            {
-                star5.SetActive(true);
-            }
-            else
-            {
-                if (Stars >= 1) star1.SetActive(true);
-                if (Stars >= 2) star2.SetActive(true);
-                if (Stars >= 3) star3.SetActive(true);
-                if (Stars >= 4) star4.SetActive(true);
-            }            
+            if (Stars >= 1) star1.SetActive(true);
+            if (Stars >= 2) star2.SetActive(true);
+            if (Stars >= 3) star3.SetActive(true);
+            if (Stars >= 4) star4.SetActive(true);
+            if (Stars >= 5) star5.SetActive(true);
         }
         
         public void SetCardImage(Sprite cardSprite,  bool shouldRelease = false)
