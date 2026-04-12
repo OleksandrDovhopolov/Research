@@ -19,8 +19,9 @@ namespace CardCollectionImpl
         [SerializeField] private Image _cardSpriteBackground;
         [SerializeField] private Image _glowColor;
         [SerializeField] private Image _gradientColor;
+        [SerializeField] private Image _premiumCardFocus;
 
-        public void ApplyStarTier(int starsCount)
+        public void ApplyStarTier(int starsCount, bool premiumCard)
         {
             var index = Mathf.Clamp(starsCount, 1, 5) - 1;
             if (_starTierSettings == null || index < 0 || index >= _starTierSettings.Count)
@@ -28,8 +29,7 @@ namespace CardCollectionImpl
                 return;
             }
 
-            Debug.LogWarning($"[Debug] starsCount {starsCount}, index {index}");
-            var settings = _starTierSettings[starsCount - 1];
+            var settings = _starTierSettings[index];
 
             if (_cardSpriteBackground != null)
             {
@@ -45,6 +45,8 @@ namespace CardCollectionImpl
             {
                 _gradientColor.color = settings.GradientColor;
             }
+
+            _premiumCardFocus.gameObject.SetActive(premiumCard);
         }
     }
 }
