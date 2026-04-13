@@ -40,7 +40,6 @@ namespace CardCollectionImpl
         
         public void CreateNewCards(string eventId, List<NewCardDisplayData> cardsData)
         {
-            Debug.LogWarning("CreateNewCards called");
             _newCardsPool.DisableNonActive();
             _mockCardsPool.DisableNonActive();
             _orderedConfigs.Clear();
