@@ -512,7 +512,8 @@ namespace EventOrchestration.Tests.Editor
             stateStore = new FakeStateStore(restoredStates);
             telemetry = new FakeTelemetry();
 
-            return new EventOrchestrator(scheduleProvider, scheduleValidator, eventRegistry, clock, stateStore, telemetry);
+            var engine = new EventLifecycleEngine(eventRegistry, clock, stateStore, telemetry);
+            return new EventOrchestrator(scheduleProvider, scheduleValidator, clock, stateStore, engine);
         }
 
         private sealed class FakeScheduleProvider : IScheduleProvider

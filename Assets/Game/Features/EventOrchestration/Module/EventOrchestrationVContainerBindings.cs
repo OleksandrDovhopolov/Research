@@ -16,9 +16,11 @@ namespace EventOrchestration
             builder.Register<IOrchestratorTelemetry, UnityDebugTelemetry>(Lifetime.Singleton);
             builder.Register<IEventRegistry, EventRegistry>(Lifetime.Singleton);
 
+            builder.Register<IEventLifecycleEngine, EventLifecycleEngine>(Lifetime.Singleton);
             builder.Register<OrchestratorFactory>(Lifetime.Singleton);
             builder.Register<EventOrchestrator>(resolver => resolver.Resolve<OrchestratorFactory>().Create(), Lifetime.Singleton);
-            
+            builder.Register<EventOrchestratorDebugFacade>(Lifetime.Singleton);
+
             builder.RegisterEntryPoint<EventAssetWarmupService>(Lifetime.Singleton)
                 .As<IEventAssetWarmupService>();
         }
