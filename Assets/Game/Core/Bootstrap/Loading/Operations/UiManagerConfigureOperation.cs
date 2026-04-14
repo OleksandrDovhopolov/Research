@@ -2,9 +2,10 @@ using System;
 using System.Threading;
 using core;
 using Cysharp.Threading.Tasks;
+using UIShared;
 using UISystem;
 
-namespace Game.Bootstrap.Loading.Operations
+namespace Game.Bootstrap.Loading
 {
     public sealed class UiManagerConfigureOperation : LoadingOperationBase
     {

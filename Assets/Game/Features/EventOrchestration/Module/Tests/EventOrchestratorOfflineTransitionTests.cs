@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
-using EventOrchestration.Core;
 using EventOrchestration.Models;
 using NUnit.Framework;
 
@@ -188,9 +187,8 @@ namespace EventOrchestration.Tests.Editor
             Assert.That(firstEvent1SettleIndex, Is.GreaterThan(firstEvent1EndIndex));
             Assert.That(firstEvent2StartIndex, Is.GreaterThan(firstEvent1SettleIndex));
 
-            Assert.That(stateStore.LastSavedStates.TryGetValue("event1", out var event1State), Is.True);
+            Assert.That(stateStore.LastSavedStates.TryGetValue("event1", out _), Is.False);
             Assert.That(stateStore.LastSavedStates.TryGetValue("event2", out var event2State), Is.True);
-            Assert.AreEqual(EventInstanceState.Completed, event1State.State);
             Assert.AreEqual(EventInstanceState.Active, event2State.State);
             Assert.IsTrue(event2State.StartInvoked);
         }
@@ -248,10 +246,7 @@ namespace EventOrchestration.Tests.Editor
             Assert.That(callOrder.IndexOf("event1.OnEnd"), Is.GreaterThanOrEqualTo(0));
             Assert.That(callOrder.IndexOf("event1.ExecuteSettlement"), Is.GreaterThan(callOrder.IndexOf("event1.OnEnd")));
 
-            Assert.That(stateStore.LastSavedStates.TryGetValue("event1", out var event1State), Is.True);
-            Assert.AreEqual(EventInstanceState.Completed, event1State.State);
-            Assert.IsTrue(event1State.EndInvoked);
-            Assert.IsTrue(event1State.SettlementInvoked);
+            Assert.That(stateStore.LastSavedStates.TryGetValue("event1", out _), Is.False);
         }
 
         [Test]
@@ -425,9 +420,8 @@ namespace EventOrchestration.Tests.Editor
             Assert.That(firstEvent1SettleIndex, Is.GreaterThanOrEqualTo(0));
             Assert.That(firstEvent2StartIndex, Is.GreaterThan(firstEvent1SettleIndex));
 
-            Assert.That(stateStore.LastSavedStates.TryGetValue("event1", out var event1State), Is.True);
+            Assert.That(stateStore.LastSavedStates.TryGetValue("event1", out _), Is.False);
             Assert.That(stateStore.LastSavedStates.TryGetValue("event2", out var event2State), Is.True);
-            Assert.AreEqual(EventInstanceState.Completed, event1State.State);
             Assert.AreEqual(EventInstanceState.Active, event2State.State);
         }
 
@@ -477,8 +471,7 @@ namespace EventOrchestration.Tests.Editor
             Assert.Zero(event1Controller.ExecuteSettlementCalls);
             Assert.IsEmpty(callOrder);
 
-            Assert.That(stateStore.LastSavedStates.TryGetValue("event1", out var event1State), Is.True);
-            Assert.AreEqual(EventInstanceState.Pending, event1State.State);
+            Assert.That(stateStore.LastSavedStates.TryGetValue("event1", out _), Is.False);
         }
 
         private static EventOrchestrator CreateOrchestrator(
@@ -519,7 +512,8 @@ namespace EventOrchestration.Tests.Editor
             stateStore = new FakeStateStore(restoredStates);
             telemetry = new FakeTelemetry();
 
-            return new EventOrchestrator(scheduleProvider, scheduleValidator, eventRegistry, clock, stateStore, telemetry);
+            var engine = new EventLifecycleEngine(eventRegistry, clock, stateStore, telemetry);
+            return new EventOrchestrator(scheduleProvider, scheduleValidator, clock, stateStore, engine);
         }
 
         private sealed class FakeScheduleProvider : IScheduleProvider

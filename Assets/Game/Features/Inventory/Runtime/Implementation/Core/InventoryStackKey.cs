@@ -1,5 +1,4 @@
 using System;
-using Inventory.API;
 
 namespace Inventory.Implementation.Core
 {

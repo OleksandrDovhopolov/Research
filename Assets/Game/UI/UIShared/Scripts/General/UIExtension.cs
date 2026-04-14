@@ -1,7 +1,7 @@
 using System;
 using UISystem;
 
-namespace core
+namespace UIShared
 {
     public static class UIExtension
     {

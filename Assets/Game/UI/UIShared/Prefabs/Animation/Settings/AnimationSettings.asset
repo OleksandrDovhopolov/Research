@@ -38,7 +38,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     ItemType: Energy
+    AnimatioTargetType: 1
     StartScaleValue: {x: 1, y: 1, z: 1}
+    PathType: 2
+    MinScaleValue: 0
     UpScaleDuration: 0.5
     DownScaleDuration: 0.3
     UpScaleValue: 0.8
@@ -143,7 +146,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     ItemType: Gems
+    AnimatioTargetType: 3
     StartScaleValue: {x: 1, y: 1, z: 1}
+    PathType: 2
+    MinScaleValue: 0
     UpScaleDuration: 0.5
     DownScaleDuration: 0.3
     UpScaleValue: 0.8
@@ -248,7 +254,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     ItemType: Gold
+    AnimatioTargetType: 2
     StartScaleValue: {x: 1, y: 1, z: 1}
+    PathType: 2
+    MinScaleValue: 0
     UpScaleDuration: 0.5
     DownScaleDuration: 0.3
     UpScaleValue: 0.8
@@ -353,7 +362,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     ItemType: default
+    AnimatioTargetType: 0
     StartScaleValue: {x: 1, y: 1, z: 1}
+    PathType: 2
+    MinScaleValue: 0
     UpScaleDuration: 0.5
     DownScaleDuration: 0.3
     UpScaleValue: 0.8

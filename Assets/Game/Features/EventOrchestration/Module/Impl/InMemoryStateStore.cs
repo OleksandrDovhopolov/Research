@@ -6,9 +6,9 @@ using Core.Models;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
 using EventOrchestration.Models;
-using Infrastructure.SaveSystem;
+using Infrastructure;
 
-namespace EventOrchestration.Infrastructure
+namespace EventOrchestration
 {
     public sealed class InMemoryStateStore : IStateStore
     {

@@ -151,7 +151,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e201c2d5bc5694e41bbd59fbbeea75dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _debugView: {fileID: 0}
 --- !u!4 &3532739
 Transform:
   m_ObjectHideFlags: 0
@@ -525,7 +524,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &343525368
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -812,52 +811,6 @@ MonoBehaviour:
     prefab: {fileID: 8357532721075047589, guid: 87bb85f085615d246ba5b212f530d24f, type: 3}
     parent: {fileID: 686062901}
   _animationSettings: {fileID: 11400000, guid: c1df1e6a480d59a419cda3c4663d3d19, type: 2}
---- !u!1 &1180951366
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1180951368}
-  - component: {fileID: 1180951367}
-  m_Layer: 0
-  m_Name: HUDService
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1180951367
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1180951366}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b840bd5c43f50344b229cc8f75a2af7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _buttonPrefab: {fileID: 3337189766852012063, guid: 51ff8532255c98c4ca4ec898a1430c98, type: 3}
-  _eventsContainer: {fileID: 0}
---- !u!4 &1180951368
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1180951366}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1675742006
 GameObject:
   m_ObjectHideFlags: 0
@@ -1030,7 +983,7 @@ PrefabInstance:
     - target: {fileID: 983718311819333550, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: _hudService
       value: 
-      objectReference: {fileID: 1180951367}
+      objectReference: {fileID: 0}
     - target: {fileID: 983718311819333550, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: _globalTimerService
       value: 
@@ -1041,28 +994,28 @@ PrefabInstance:
       objectReference: {fileID: 11400000, guid: aaef6b3978f98c645b03c0530515339b, type: 2}
     - target: {fileID: 983718311819333550, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: autoInjectGameObjects.Array.size
-      value: 7
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 983718311819333550, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: autoInjectGameObjects.Array.data[0]
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 343525367}
     - target: {fileID: 983718311819333550, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: autoInjectGameObjects.Array.data[1]
       value: 
-      objectReference: {fileID: 343525367}
+      objectReference: {fileID: 430775084}
     - target: {fileID: 983718311819333550, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: autoInjectGameObjects.Array.data[2]
       value: 
-      objectReference: {fileID: 1180951366}
+      objectReference: {fileID: 3532737}
     - target: {fileID: 983718311819333550, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: autoInjectGameObjects.Array.data[3]
       value: 
-      objectReference: {fileID: 430775084}
+      objectReference: {fileID: 1978314244}
     - target: {fileID: 983718311819333550, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: autoInjectGameObjects.Array.data[4]
       value: 
-      objectReference: {fileID: 3532737}
+      objectReference: {fileID: 1978314244}
     - target: {fileID: 983718311819333550, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: autoInjectGameObjects.Array.data[5]
       value: 
@@ -1082,7 +1035,7 @@ PrefabInstance:
     - target: {fileID: 3711819036832241099, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: _hudService
       value: 
-      objectReference: {fileID: 1180951367}
+      objectReference: {fileID: 0}
     - target: {fileID: 3711819036832241099, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: _globalTimerService
       value: 
@@ -1139,7 +1092,6 @@ SceneRoots:
   - {fileID: 519420032}
   - {fileID: 2137487816}
   - {fileID: 1978314246}
-  - {fileID: 1180951368}
   - {fileID: 686062901}
   - {fileID: 309088065}
   - {fileID: 972890874612369683}

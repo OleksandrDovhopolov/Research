@@ -1,9 +1,8 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using UnityEngine;
 
-namespace Game.Bootstrap.Loading.Operations
+namespace Game.Bootstrap.Loading
 {
     public sealed class WarmupOperation : LoadingOperationBase
     {

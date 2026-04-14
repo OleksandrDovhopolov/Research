@@ -1,30 +1,38 @@
 using System.Collections.Generic;
-using CoreResources;
 using UnityEngine;
 
 namespace UIShared
 {
+    public enum AnimationTargetTypes
+    {
+        None,
+        Energy,
+        Gold,
+        Gems,
+        Inventory
+    }
+    
     public static class AnimationTargets
     {
-        private static readonly Dictionary<string, Transform> Targets = new();
+        private static readonly Dictionary<AnimationTargetTypes, Transform> Targets = new();
 
-        public static void Register(string targetType, Transform targetTransform)
+        public static void Register(AnimationTargetTypes animationTargetType, Transform targetTransform)
         {
             if (targetTransform == null)
             {
-                Debug.LogWarning($"Cannot register animation target for {targetType}: target transform is null.");
+                Debug.LogWarning($"Cannot register animation target for {animationTargetType}: target transform is null.");
                 return;
             }
 
-            Targets[targetType] = targetTransform;
+            Targets[animationTargetType] = targetTransform;
         }
 
-        public static void Remove(string targetType)
+        public static void Remove(AnimationTargetTypes targetType)
         {
             Targets.Remove(targetType);
         }
 
-        public static Vector3 GetTargetPosition(string targetType)
+        public static Vector3 GetTargetPosition(AnimationTargetTypes targetType)
         {
             if (Targets.TryGetValue(targetType, out var targetTransform) && targetTransform != null)
             {

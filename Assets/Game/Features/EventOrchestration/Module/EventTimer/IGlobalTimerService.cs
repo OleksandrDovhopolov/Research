@@ -1,7 +1,8 @@
 using System;
 
-namespace UIShared
+namespace EventOrchestration
 {
+    //TODO move out of EventOrchestration into another asmdef ( core  ? ) 
     public interface IGlobalTimerService
     {
         event Action<string, TimeSpan> OnTick;

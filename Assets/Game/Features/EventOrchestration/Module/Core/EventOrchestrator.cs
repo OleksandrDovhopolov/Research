@@ -1,29 +1,22 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
 using EventOrchestration.Models;
-using Newtonsoft.Json;
-using UnityEngine;
 
-namespace EventOrchestration.Core
+namespace EventOrchestration
 {
     public sealed class EventOrchestrator
     {
-        private const string DebugLogPath = @"c:\Projects\Research\.cursor\debug.log";
-        private readonly IScheduleProvider _scheduleProvider;
-        private readonly IScheduleValidator _scheduleValidator;
-        private readonly IEventRegistry _eventRegistry;
         private readonly IClock _clock;
         private readonly IStateStore _stateStore;
-        private readonly IOrchestratorTelemetry _telemetry;
+        private readonly IEventLifecycleEngine _engine;
+        private readonly IScheduleProvider _scheduleProvider;
+        private readonly IScheduleValidator _scheduleValidator;
 
         private readonly Dictionary<string, EventStateData> _states = new();
-        private readonly HashSet<string> _transitionInFlight = new();
-        private readonly HashSet<string> _hydratedControllers = new();
         private readonly UniTaskCompletionSource _initializedTcs = new();
         private List<ScheduleItem> _schedule = new();
         private bool _isInitialized;
@@ -38,88 +31,51 @@ namespace EventOrchestration.Core
         public EventOrchestrator(
             IScheduleProvider scheduleProvider,
             IScheduleValidator scheduleValidator,
-            IEventRegistry eventRegistry,
             IClock clock,
             IStateStore stateStore,
-            IOrchestratorTelemetry telemetry)
+            IEventLifecycleEngine engine)
         {
             _scheduleProvider = scheduleProvider ?? throw new ArgumentNullException(nameof(scheduleProvider));
             _scheduleValidator = scheduleValidator ?? throw new ArgumentNullException(nameof(scheduleValidator));
-            _eventRegistry = eventRegistry ?? throw new ArgumentNullException(nameof(eventRegistry));
             _clock = clock ?? throw new ArgumentNullException(nameof(clock));
             _stateStore = stateStore ?? throw new ArgumentNullException(nameof(stateStore));
-            _telemetry = telemetry ?? throw new ArgumentNullException(nameof(telemetry));
+            _engine = engine ?? throw new ArgumentNullException(nameof(engine));
+
+            _engine.OnEventStarting += item => OnEventStarting?.Invoke(item);
+            _engine.OnEventStarted += item => OnEventStarted?.Invoke(item);
+            _engine.OnEventCompleted += item => OnEventCompleted?.Invoke(item);
         }
 
         public async UniTask InitializeAsync(CancellationToken ct)
         {
-            #region agent log
-            Debug.LogWarning("[Debug] EventOrchestrator.InitializeAsync entered");
-            WriteDebugLog("H1", "EventOrchestrator.InitializeAsync", "[Debug] EventOrchestrator.InitializeAsync entered", new
-            {
-                isCancellationRequested = ct.IsCancellationRequested
-            });
-            #endregion
             ct.ThrowIfCancellationRequested();
             try
             {
-                #region agent log
-                Debug.LogWarning("[Debug] EventOrchestrator.InitializeAsync loading schedule");
-                WriteDebugLog("H3", "EventOrchestrator.InitializeAsync", "[Debug] EventOrchestrator.InitializeAsync loading schedule");
-                #endregion
                 var loadedSchedule = await _scheduleProvider.LoadAsync(ct);
-                #region agent log
-                Debug.LogWarning($"[Debug] EventOrchestrator.InitializeAsync loaded schedule count={loadedSchedule?.Count ?? -1}");
-                WriteDebugLog("H3", "EventOrchestrator.InitializeAsync", "[Debug] EventOrchestrator.InitializeAsync loaded schedule", new
-                {
-                    count = loadedSchedule?.Count ?? -1
-                });
-                #endregion
-                
+
                 var validationErrors = await _scheduleValidator.ValidateAsync(loadedSchedule, ct);
-                #region agent log
-                Debug.LogWarning($"[Debug] EventOrchestrator.InitializeAsync validation errors count={validationErrors.Count}");
-                WriteDebugLog("H4", "EventOrchestrator.InitializeAsync", "[Debug] EventOrchestrator.InitializeAsync validation errors", new
-                {
-                    count = validationErrors.Count
-                });
-                #endregion
                 if (validationErrors.Count > 0)
                 {
                     throw new InvalidOperationException("Schedule validation failed: " + string.Join("; ", validationErrors));
                 }
-                
-                #region agent log
-                Debug.LogWarning("[Debug] EventOrchestrator.InitializeAsync building upcoming schedule");
-                WriteDebugLog("H5", "EventOrchestrator.InitializeAsync", "[Debug] EventOrchestrator.InitializeAsync building upcoming schedule");
-                #endregion
+
                 _schedule = loadedSchedule
                     .OrderBy(x => x.StreamId)
                     .ThenByDescending(x => x.Priority)
                     .ThenBy(x => x.StartTimeUtc)
                     .ToList();
-                #region agent log
-                Debug.LogWarning($"[Debug] EventOrchestrator.InitializeAsync built upcoming schedule count={_schedule.Count}");
-                WriteDebugLog("H5", "EventOrchestrator.InitializeAsync", "[Debug] EventOrchestrator.InitializeAsync built upcoming schedule", new
-                {
-                    count = _schedule.Count
-                });
-                #endregion
 
-                foreach (var scheduleItem in _schedule)
-                {
-                    Debug.LogWarning($"[Debug] scheduleItem {scheduleItem.Id}, {scheduleItem.StartTimeUtc}, {scheduleItem.EndTimeUtc}" );
-                }
-                
                 var restored = await _stateStore.LoadAsync(ct);
                 _states.Clear();
-                _hydratedControllers.Clear();
                 foreach (var pair in restored)
                 {
                     _states[pair.Key] = pair.Value;
                 }
-                
+
+                _engine.BindStates(_states);
+
                 _schedule = BuildRuntimeSchedule(_schedule);
+                PruneStatesOutsideSchedule();
 
                 CreateScheduleData();
 
@@ -133,22 +89,10 @@ namespace EventOrchestration.Core
             }
             catch (OperationCanceledException)
             {
-                #region agent log
-                Debug.LogWarning("[Debug] EventOrchestrator.InitializeAsync cancelled");
-                WriteDebugLog("H2", "EventOrchestrator.InitializeAsync", "[Debug] EventOrchestrator.InitializeAsync cancelled");
-                #endregion
                 throw;
             }
             catch (Exception ex)
             {
-                #region agent log
-                Debug.LogError($"[Debug] EventOrchestrator.InitializeAsync failed: {ex}");
-                WriteDebugLog("H3", "EventOrchestrator.InitializeAsync", "[Debug] EventOrchestrator.InitializeAsync failed", new
-                {
-                    exceptionType = ex.GetType().FullName,
-                    ex.Message
-                });
-                #endregion
                 _initializedTcs.TrySetException(ex);
                 throw;
             }
@@ -166,7 +110,7 @@ namespace EventOrchestration.Core
                 await ProcessStreamAsync(stream, now, ct);
             }
         }
-        
+
         public ScheduleItem GetNextUpcomingEvent()
         {
             var now = _clock.UtcNow;
@@ -236,6 +180,18 @@ namespace EventOrchestration.Core
             return _initializedTcs.Task.AttachExternalCancellation(ct);
         }
 
+        #region Internal accessors for debug facade
+
+        internal IList<ScheduleItem> MutableSchedule => _schedule;
+        internal Dictionary<string, EventStateData> MutableStates => _states;
+
+        internal void SetSchedule(List<ScheduleItem> schedule) => _schedule = schedule;
+        internal List<ScheduleItem> RebuildRuntimeSchedule(IEnumerable<ScheduleItem> s) => BuildRuntimeSchedule(s);
+        internal void RunCreateScheduleData() => CreateScheduleData();
+        internal void RunPruneStatesOutsideSchedule() => PruneStatesOutsideSchedule();
+
+        #endregion
+
         private void CreateScheduleData()
         {
             var now = _clock.UtcNow;
@@ -299,7 +255,7 @@ namespace EventOrchestration.Core
 
             return false;
         }
-        
+
         private async UniTask ProcessStreamAsync(IEnumerable<ScheduleItem> streamItems, DateTimeOffset now, CancellationToken ct)
         {
             var items = streamItems as IList<ScheduleItem> ?? streamItems.ToList();
@@ -313,12 +269,12 @@ namespace EventOrchestration.Core
                 var active = FindActive(items);
                 if (active != null)
                 {
-                    await ProcessActiveAsync(active, now, ct);
+                    await _engine.ProcessActiveEventAsync(active, now, ct);
 
-                    var activeState = _states[active.Id].State;
-                    if (activeState is EventInstanceState.Completed
-                        or EventInstanceState.Failed
-                        or EventInstanceState.Cancelled)
+                    if (!_states.TryGetValue(active.Id, out var activeStateData)
+                        || activeStateData.State is EventInstanceState.Completed
+                            or EventInstanceState.Failed
+                            or EventInstanceState.Cancelled)
                     {
                         continue;
                     }
@@ -326,16 +282,15 @@ namespace EventOrchestration.Core
                     return;
                 }
 
-                var candidate = FindStartCandidateAsync(items, now);
+                var candidate = FindStartCandidate(items, now);
                 if (candidate == null)
                 {
                     return;
                 }
 
-                await StartAsync(candidate, ct);
+                await _engine.StartEventAsync(candidate, ct);
 
-                var state = _states[candidate.Id];
-                if (state.State != EventInstanceState.Completed)
+                if (!_states.TryGetValue(candidate.Id, out var state) || state.State != EventInstanceState.Completed)
                 {
                     return;
                 }
@@ -346,7 +301,12 @@ namespace EventOrchestration.Core
         {
             for (var i = 0; i < streamItems.Count; i++)
             {
-                var state = _states[streamItems[i].Id].State;
+                if (!_states.TryGetValue(streamItems[i].Id, out var stateData))
+                {
+                    continue;
+                }
+
+                var state = stateData.State;
                 if (state == EventInstanceState.Active ||
                     state == EventInstanceState.Starting ||
                     state == EventInstanceState.Ending ||
@@ -360,13 +320,18 @@ namespace EventOrchestration.Core
         }
 
         private static readonly TimeSpan StartSkew = TimeSpan.FromSeconds(0);
-        
-        private ScheduleItem FindStartCandidateAsync(IList<ScheduleItem> streamItems, DateTimeOffset now)
+
+        private ScheduleItem FindStartCandidate(IList<ScheduleItem> streamItems, DateTimeOffset now)
         {
             for (var i = 0; i < streamItems.Count; i++)
             {
                 var item = streamItems[i];
-                var state = _states[item.Id].State;
+                if (!_states.TryGetValue(item.Id, out var stateData))
+                {
+                    continue;
+                }
+
+                var state = stateData.State;
                 if (state != EventInstanceState.Pending)
                     continue;
 
@@ -379,362 +344,21 @@ namespace EventOrchestration.Core
 
             return null;
         }
-        
-        private async UniTask EnsureControllerHydratedAsync(
-            ScheduleItem item,
-            EventStateData state,
-            IEventController controller,
-            CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
 
-            if (_hydratedControllers.Contains(item.Id))
+        private void PruneStatesOutsideSchedule()
+        {
+            if (_states.Count == 0)
             {
                 return;
             }
 
-            await controller.InitializeAsync(item, state, ct);
+            var runtimeScheduleIds = new HashSet<string>(_schedule.Select(item => item.Id), StringComparer.Ordinal);
 
-            if (state.StartInvoked &&
-                state.State is EventInstanceState.Active
-                    or EventInstanceState.Starting
-                    or EventInstanceState.Ending
-                    or EventInstanceState.Settling)
+            var staleIds = _states.Keys.Where(id => !runtimeScheduleIds.Contains(id)).ToList();
+            for (var i = 0; i < staleIds.Count; i++)
             {
-                await controller.OnStart(ct);
-            }
-
-            _hydratedControllers.Add(item.Id);
-        }
-        
-        private async UniTask StartAsync(ScheduleItem item, CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
-
-            if (!_eventRegistry.TryGet(item.EventType, out var controller))
-            {
-                throw new InvalidOperationException($"No controller for event type '{item.EventType}'.");
-            }
-
-            if (!_transitionInFlight.Add(item.Id))
-                return;
-
-            try
-            {
-                var state = _states[item.Id];
-                await TransitionStateAsync(state, EventInstanceState.Starting, ct);
-                await _stateStore.SaveAsync(_states, ct);
-
-                await EnsureControllerHydratedAsync(item, state, controller, ct);
-                
-                OnEventStarting?.Invoke(item);
-                
-                if (!state.StartInvoked)
-                {
-                    await controller.OnStart(ct);
-                }
-                
-                if (!state.StartInvoked)
-                {
-                    state.StartInvoked = true;
-                }
-                
-                await TransitionStateAsync(state, EventInstanceState.Active, ct);
-                await _stateStore.SaveAsync(_states, ct);
-                
-                OnEventStarted?.Invoke(item);
-
-                await ProcessActiveAsync(item, _clock.UtcNow, ct);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                await MarkFailedAsync(item.Id, "Start", ex, ct);
-            }
-            finally
-            {
-                _transitionInFlight.Remove(item.Id);
-            }
-        }
-
-        private async UniTask ProcessActiveAsync(ScheduleItem item, DateTimeOffset now, CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
-
-            if (!_eventRegistry.TryGet(item.EventType, out var controller))
-            {
-                throw new InvalidOperationException($"No controller for event type '{item.EventType}'.");
-            }
-
-            var state = _states[item.Id];
-            try
-            {
-                await EnsureControllerHydratedAsync(item, state, controller, ct);
-                
-                if (state.State == EventInstanceState.Active)
-                {
-                    await controller.OnUpdate(ct);
-                }
-
-                var shouldEndByTime = now >= item.EndTimeUtc;
-
-                if (shouldEndByTime)
-                {
-                    await EndAndSettleAsync(item, controller, ct);
-                }
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                await MarkFailedAsync(item.Id, "UpdateOrEnd", ex, ct);
-            }
-        }
-
-        private async UniTask EndAndSettleAsync(ScheduleItem item, IEventController controller, CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
-
-            var state = _states[item.Id];
-            await TransitionStateAsync(state, EventInstanceState.Ending, ct);
-
-            if (!state.EndInvoked)
-            {
-                await controller.OnEnd(ct);
-                state.EndInvoked = true;
-            }
-
-            await TransitionStateAsync(state, EventInstanceState.Settling, ct);
-
-            if (!state.SettlementInvoked)
-            {
-                await controller.ExecuteSettlement(ct);
-                state.SettlementInvoked = true;
-            }
-
-            await TransitionStateAsync(state, EventInstanceState.Completed, ct);
-            OnEventCompleted?.Invoke(item);
-            await _stateStore.SaveAsync(_states, ct);
-            _hydratedControllers.Remove(item.Id);
-        }
-
-        private async UniTask TransitionStateAsync(EventStateData state, EventInstanceState to, CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
-
-            var from = state.State;
-            state.State = to;
-            state.UpdatedAtUtc = _clock.UtcNow;
-            state.Version++;
-
-            await _telemetry.TrackTransitionAsync(state.ScheduleItemId, from, to, ct);
-        }
-
-        private async UniTask MarkFailedAsync(string itemId, string stage, Exception exception, CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
-
-            var state = _states[itemId];
-            var from = state.State;
-            state.State = EventInstanceState.Failed;
-            state.LastError = $"{stage}: {exception.Message}";
-            state.UpdatedAtUtc = _clock.UtcNow;
-            state.Version++;
-
-            await _telemetry.TrackTransitionAsync(itemId, from, EventInstanceState.Failed, ct);
-            await _telemetry.TrackFailureAsync(itemId, stage, exception, ct);
-            await _stateStore.SaveAsync(_states, ct);
-            _hydratedControllers.Remove(itemId);
-        }
-
-        #region Debug
-        
-        public async UniTask AddScheduleItemForDebugAsync(ScheduleItem item, CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
-            if (item == null)
-            {
-                throw new ArgumentNullException(nameof(item));
-            }
-
-            var updatedSchedule = _schedule.ToList();
-            updatedSchedule.Add(item);
-
-            var validationErrors = await _scheduleValidator.ValidateAsync(updatedSchedule, ct);
-            if (validationErrors.Count > 0)
-            {
-                throw new InvalidOperationException("Schedule validation failed: " + string.Join("; ", validationErrors));
-            }
-            
-            _schedule = BuildRuntimeSchedule(updatedSchedule);
-
-            CreateScheduleData();
-
-            await _stateStore.SaveAsync(_states, ct);
-        }
-        
-        public async UniTask<bool> DebugCompleteCurrentEventAsync(CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
-
-            var now = _clock.UtcNow;
-
-            var current = _schedule.FirstOrDefault(item =>
-            {
-                if (!_states.TryGetValue(item.Id, out var state)) return false;
-
-                return state.State 
-                    is EventInstanceState.Active 
-                    or EventInstanceState.Starting 
-                    or EventInstanceState.Ending 
-                    or EventInstanceState.Settling;
-            });
-
-            if (current == null)
-            {
-                return false;
-            }
-
-            if (current.EndTimeUtc > now)
-            {
-                current.EndTimeUtc = now;
-            }
-
-            await TickAsync(ct);
-            await _stateStore.SaveAsync(_states, ct);
-            return true;
-        }
-
-        public async UniTask<bool> ForceNextEventAsync(CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
-
-            var now = _clock.UtcNow;
-
-            // 1) If stream has an active event, finish it first.
-            var active = FindInProgressEvent();
-            var targetStreamId = active?.StreamId;
-
-            if (active != null)
-            {
-                if (active.EndTimeUtc > now)
-                {
-                    active.EndTimeUtc = now;
-                }
-
-                await TickAsync(ct);
-                await _stateStore.SaveAsync(_states, ct);
-
-                // If still not terminal, cannot safely force "next" in same stream.
-                if (IsInProgress(active.Id))
-                {
-                    return false;
-                }
-
-                now = _clock.UtcNow;
-            }
-
-            // 2) Find next pending event (prefer same stream if we had active).
-            var next = FindNextPendingEvent(now, targetStreamId);
-            if (next == null)
-            {
-                return false;
-            }
-
-            // 3) Open start gate immediately.
-            if (next.StartTimeUtc > now)
-            {
-                next.StartTimeUtc = now;
-            }
-
-            // Safety: prevent instant end on start.
-            if (next.EndTimeUtc <= now)
-            {
-                next.EndTimeUtc = now.AddMinutes(1);
-            }
-
-            // 4) Run lifecycle.
-            await TickAsync(ct);
-            await _stateStore.SaveAsync(_states, ct);
-
-            return _states.TryGetValue(next.Id, out var state) &&
-                   state.State is EventInstanceState.Active or EventInstanceState.Starting;
-        }
-
-        private ScheduleItem FindInProgressEvent()
-        {
-            for (var i = 0; i < _schedule.Count; i++)
-            {
-                var item = _schedule[i];
-                if (IsInProgress(item.Id))
-                {
-                    return item;
-                }
-            }
-
-            return null;
-        }
-
-        private bool IsInProgress(string scheduleItemId)
-        {
-            if (!_states.TryGetValue(scheduleItemId, out var state))
-            {
-                return false;
-            }
-
-            return state.State is EventInstanceState.Active or EventInstanceState.Starting or EventInstanceState.Ending
-                or EventInstanceState.Settling;
-        }
-
-        private ScheduleItem FindNextPendingEvent(DateTimeOffset now, string streamId)
-        {
-            for (var i = 0; i < _schedule.Count; i++)
-            {
-                var item = _schedule[i];
-
-                if (!string.IsNullOrEmpty(streamId) && item.StreamId != streamId)
-                {
-                    continue;
-                }
-
-                if (!_states.TryGetValue(item.Id, out var state))
-                {
-                    continue;
-                }
-
-                if (state.State != EventInstanceState.Pending)
-                {
-                    continue;
-                }
-
-                if (item.EndTimeUtc <= now)
-                {
-                    continue;
-                }
-
-                return item;
-            }
-
-            return null;
-        }
-
-        #endregion
-
-        private static void WriteDebugLog(string hypothesisId, string location, string message, object data = null)
-        {
-            try
-            {
-                var payload = new
-                {
-                    runId = "initial",
-                    hypothesisId,
-                    location,
-                    message,
-                    data,
-                    timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                };
-                File.AppendAllText(DebugLogPath, JsonConvert.SerializeObject(payload) + Environment.NewLine);
-            }
-            catch
-            {
-                // Instrumentation must never break runtime flow.
+                _states.Remove(staleIds[i]);
+                _engine.CleanupItem(staleIds[i]);
             }
         }
     }

@@ -5,7 +5,7 @@ using EventOrchestration.Abstractions;
 using EventOrchestration.Models;
 using UnityEngine;
 
-namespace EventOrchestration.Infrastructure
+namespace EventOrchestration
 {
     public sealed class UnityDebugTelemetry : IOrchestratorTelemetry
     {

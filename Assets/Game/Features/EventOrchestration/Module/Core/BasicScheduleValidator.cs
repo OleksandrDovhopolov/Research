@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
 using EventOrchestration.Models;
 
-namespace EventOrchestration.Core
+namespace EventOrchestration
 {
     public sealed class BasicScheduleValidator : IScheduleValidator
     {

@@ -9,9 +9,8 @@ using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace core
+namespace EventOrchestration
 {
-    //TODO remove relativeFilePath from steaming assets
     public sealed class StreamingAssetsScheduleProvider : IScheduleProvider
     {
         private readonly string _relativeFilePath;

@@ -1,7 +1,7 @@
 using System;
 using EventOrchestration.Abstractions;
 
-namespace EventOrchestration.Infrastructure
+namespace EventOrchestration
 {
     public sealed class SystemClock : IClock
     {

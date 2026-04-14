@@ -143,6 +143,43 @@ namespace Inventory.Tests.Editor
             yield return null;
         }
 
+        [UnityTest]
+        public IEnumerator RemoveItemsAsync_RemovesAvailableStacksAndReturnsFailures()
+        {
+            var service = CreateService();
+
+            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "pack_blue", 3, _cardPackCategory))
+                .AsTask()
+                .ToCoroutine();
+            yield return service.AddItemAsync(new InventoryItemDelta(OwnerId, "pack_red", 1, _cardPackCategory))
+                .AsTask()
+                .ToCoroutine();
+
+            InventoryBatchRemoveResult removeResult = default;
+            var removeRequest = new List<InventoryItemDelta>
+            {
+                new(OwnerId, "pack_blue", 2, _cardPackCategory),
+                new(OwnerId, "pack_red", 1, _cardPackCategory),
+                new(OwnerId, "pack_missing", 1, _cardPackCategory),
+            };
+
+            yield return service.RemoveItemsAsync(removeRequest, CancellationToken.None)
+                .ToCoroutine(result => removeResult = result);
+
+            Assert.That(removeResult.RequestedStacks, Is.EqualTo(4));
+            Assert.That(removeResult.RemovedStacks, Is.EqualTo(3));
+            Assert.That(removeResult.FailedItems.Count, Is.EqualTo(1));
+            Assert.That(removeResult.FailedItems[0].ItemId, Is.EqualTo("pack_missing"));
+
+            IReadOnlyList<InventoryItemView> packs = null;
+            yield return service.GetItemsAsync(OwnerId, _cardPackCategory.CategoryId, CancellationToken.None)
+                .ToCoroutine(result => packs = result);
+
+            Assert.That(packs.Count, Is.EqualTo(1));
+            Assert.That(packs[0].ItemId, Is.EqualTo("pack_blue"));
+            Assert.That(packs[0].StackCount, Is.EqualTo(1));
+        }
+
         private static InventoryModuleService CreateService()
         {
             return new InventoryModuleService(new TestInventoryStorage());
@@ -157,7 +194,7 @@ namespace Inventory.Tests.Editor
 
             public override CategoryUiMetadata GetMetadata()
             {
-                throw new NotImplementedException();
+                return null;
             }
         }
 

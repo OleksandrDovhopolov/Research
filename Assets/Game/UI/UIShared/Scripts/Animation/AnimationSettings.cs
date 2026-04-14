@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using CoreResources;
+using DG.Tweening;
 using UnityEngine;
 
 namespace UIShared
@@ -13,9 +13,9 @@ namespace UIShared
         [SerializeField]
         private List<ParticleAnimationParameters> _animationParameters;
 
-        public ParticleAnimationParameters GetResourceAnimationParameters(string itemType)
+        public ParticleAnimationParameters GetResourceAnimationParameters(AnimationTargetTypes itemType)
         {
-            var animationSettings = _animationParameters.Find(parameters => parameters.ItemType == itemType);
+            var animationSettings = _animationParameters.Find(parameters => parameters.AnimatioTargetType == itemType);
             if (animationSettings != null)
             {
                 return animationSettings;
@@ -30,8 +30,11 @@ namespace UIShared
     {
         public AnimationCurve ParticleAccelerationCurve;
         public string ItemType;
+        public AnimationTargetTypes AnimatioTargetType;
         
         public Vector3 StartScaleValue = Vector3.one;
+        public PathType PathType = PathType.CubicBezier;
+        public float MinScaleValue = 0f;
         public float UpScaleDuration = 0.5f;
         public float DownScaleDuration = 0.3f;
         public float UpScaleValue = 1.5f;

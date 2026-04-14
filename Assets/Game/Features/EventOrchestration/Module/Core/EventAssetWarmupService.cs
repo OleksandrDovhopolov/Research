@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.U2D;
 using VContainer.Unity;
 
-namespace EventOrchestration.Core
+namespace EventOrchestration
 {
     public sealed class EventAssetWarmupService : IEventAssetWarmupService, IStartable, ITickable, IDisposable
     {
@@ -30,7 +30,6 @@ namespace EventOrchestration.Core
         private readonly Dictionary<string, WarmupState> _warmupByEventId = new();
 
         private CancellationTokenSource _lifetimeCts;
-        //TODO Tick blocked by one async process. other events do not processed 
         private int _tickInProgress;
 
         public EventAssetWarmupService(EventOrchestrator orchestrator, IClock clock)

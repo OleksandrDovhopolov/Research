@@ -1,7 +1,6 @@
 using UISystem;
-using UnityEngine;
 
-namespace core
+namespace UIShared
 {
     public class UIManagerSignalHandler : UIManagerEventHandlerBase
     {

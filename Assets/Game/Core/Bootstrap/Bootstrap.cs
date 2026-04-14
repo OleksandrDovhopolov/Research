@@ -1,11 +1,10 @@
+using System;
+using System.Collections.Generic;
 using System.Threading;
-using core;
-using CoreResources;
 using Cysharp.Threading.Tasks;
 using Game.Bootstrap.Loading;
-using Game.Bootstrap.Loading.Operations;
-using Infrastructure.SaveSystem;
-using UIShared.AnimationTransitionService;
+using Infrastructure;
+using UIShared;
 using UIShared.Loading;
 using UISystem;
 using UnityEngine;
@@ -85,8 +84,8 @@ namespace Game.Bootstrap
             var startRealtime = Time.realtimeSinceStartupAsDouble;
             var startPhaseIndex = 0;
             var globalTimeout = _globalLoadingTimeoutSeconds > 0f
-                ? System.TimeSpan.FromSeconds(_globalLoadingTimeoutSeconds)
-                : (System.TimeSpan?)null;
+                ? TimeSpan.FromSeconds(_globalLoadingTimeoutSeconds)
+                : (TimeSpan?)null;
 
             try
             {
@@ -112,7 +111,7 @@ namespace Game.Bootstrap
                 var delaySeconds = minSeconds - elapsed;
                 if (delaySeconds > 0d)
                 {
-                    await UniTask.Delay(System.TimeSpan.FromSeconds(delaySeconds), cancellationToken: ct);
+                    await UniTask.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken: ct);
                 }
             }
             finally
@@ -122,8 +121,7 @@ namespace Game.Bootstrap
             }
         }
 
-        //TODO move to factory ? 
-        private System.Collections.Generic.IReadOnlyList<LoadingPhase> BuildPhases(IAuthorizationGate authGate)
+        private IReadOnlyList<LoadingPhase> BuildPhases(IAuthorizationGate authGate)
         {
             var phase1 = new LoadingPhase("phase_technical_init", new[]
             {

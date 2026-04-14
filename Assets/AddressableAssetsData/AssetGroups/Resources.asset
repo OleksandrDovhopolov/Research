@@ -17,17 +17,17 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: c82ff4a130eba7f488c9eddef97fb498
   m_SerializeEntries:
-  - m_GUID: a90d15eca49af4c35a74467dea6c9c07
+  - m_GUID: 33effd6735e414dc7b70ded5e8bb47f8
     m_Address: Gold
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: baddc6138b88d4615bbd843bb59d70c0
+  - m_GUID: 6d034811652a84633bc8c63d22ce5574
     m_Address: Gems
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d37846b1ca5494942a3b7328b7b99a42
+  - m_GUID: 8865df1114fa24fed914687ef9ce0ce8
     m_Address: Energy
     m_ReadOnly: 0
     m_SerializedLabels: []

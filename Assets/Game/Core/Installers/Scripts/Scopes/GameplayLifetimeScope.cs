@@ -1,9 +1,11 @@
-using Game.Bootstrap;
 using VContainer;
 
-public class GameplayLifetimeScope : BaseLifetimeScope
+namespace Game.Bootstrap
 {
-    protected override void InstallBindings(IContainerBuilder builder)
+    public class GameplayLifetimeScope : BaseLifetimeScope
     {
+        protected override void InstallBindings(IContainerBuilder builder)
+        {
+        }
     }
 }

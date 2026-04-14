@@ -13,7 +13,6 @@ namespace Game.Bootstrap
 {
     public sealed class GameInstaller : MonoInstaller
     {
-        [SerializeField] private HUDService _hudService;
         [SerializeField] private GlobalTimerService _globalTimerService;
         [SerializeField] private RewardSpecsConfigSO _rewardSpecsConfigSo;
         [SerializeField] private string _cardCollectionScheduleFile = "card_collection_schedule.json";
@@ -21,11 +20,6 @@ namespace Game.Bootstrap
         
         public override void InstallBindings(IContainerBuilder builder)
         {
-            if (_hudService == null)
-            {
-                throw new MissingReferenceException($"{nameof(HUDService)} is not assigned on {nameof(GameInstaller)}.");
-            }
-
             if (_globalTimerService == null)
             {
                 throw new MissingReferenceException($"{nameof(GlobalTimerService)} is not assigned on {nameof(GameInstaller)}.");
@@ -37,7 +31,6 @@ namespace Game.Bootstrap
             // ResourceManager
             builder.RegisterEntryPoint<ResourceManager>().As<ResourceManager>();
             
-            builder.RegisterInstance<IHUDService>(_hudService);
             builder.RegisterComponentInHierarchy<AnimateCurrency>();
             builder.RegisterInstance<IGlobalTimerService>(_globalTimerService);
             builder.Register<IAnimationService, AnimationService>(Lifetime.Singleton);
