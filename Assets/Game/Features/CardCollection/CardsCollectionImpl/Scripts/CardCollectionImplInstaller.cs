@@ -13,7 +13,8 @@ namespace CardCollectionImpl
             
             builder.Register<IEventCardsStorage, JsonEventCardsStorage>(Lifetime.Singleton);
             builder.Register<IPackSelectionStrategy, DefaultPackStrategy>(Lifetime.Singleton);
-            builder.Register<ICardSelector, RandomCardSelector>(Lifetime.Singleton);
+            //builder.Register<ICardSelector, RandomCardSelector>(Lifetime.Singleton);
+            builder.Register<ICardSelector, ServerCardSelector>(Lifetime.Singleton);
             // Points calculator
             builder.Register<ICardCollectionCacheService, CardCollectionCardsCacheService>(Lifetime.Singleton);
             builder.Register<ICardPointsCalculator, CardsCollectionPointsCalculator>(Lifetime.Singleton);

@@ -28,7 +28,7 @@ namespace CardCollectionImpl
 
             return new CardCollectionStaticData
             {
-                EventConfig = _eventConfigProvider.Data,
+                 EventConfig = _eventConfigProvider.Data,
             };
         }
     }
