@@ -10,22 +10,30 @@ namespace Infrastructure
 {
     public sealed class HttpSaveStorage : ISaveStorage
     {
-        public static string TemporaryPlayerId = "local-dev-player";
-        public static string BaseUrl = "http://localhost:5000/api/v1/";
-        private const string SaveUrl = "save/global";
-        private string FullUrl = BaseUrl + SaveUrl;
-        
-        
-        //private const string HTTP_SAVE_ENDPOINT = "http://localhost:5000/api/save/global";
         private const string LogPrefix = "[HttpSaveStorage]";
-        
+
+        private readonly string _fullUrl;
+        private readonly string _playerId;
         private readonly string _authToken;
         private readonly SemaphoreSlim _ioSemaphore = new(1, 1);
 
-        public HttpSaveStorage(string authToken = null)
+        public HttpSaveStorage(string authToken, IPlayerIdentityProvider playerIdentityProvider)
         {
+            if (playerIdentityProvider == null)
+            {
+                throw new ArgumentNullException(nameof(playerIdentityProvider));
+            }
+
+            _fullUrl = ApiConfig.BaseUrl + ApiConfig.SaveGlobalPath;
             _authToken = string.IsNullOrWhiteSpace(authToken) ? null : authToken;
-            Debug.Log($"{LogPrefix} Created. Endpoint={FullUrl}, PlayerId={TemporaryPlayerId}, HasAuthToken={!string.IsNullOrEmpty(_authToken)}");
+            _playerId = playerIdentityProvider.GetPlayerId();
+            if (string.IsNullOrWhiteSpace(_playerId))
+            {
+                throw new InvalidOperationException("Player identity provider returned an empty player id.");
+            }
+
+            Debug.Log(
+                $"{LogPrefix} Created. Endpoint={_fullUrl}, PlayerId={MaskPlayerId(_playerId)}, HasAuthToken={!string.IsNullOrEmpty(_authToken)}");
         }
 
         public bool Exists()
@@ -44,7 +52,7 @@ namespace Infrastructure
             {
                 var requestBody = JsonUtility.ToJson(new SaveRequestPayload
                 {
-                    playerId = TemporaryPlayerId,
+                    playerId = _playerId,
                     data = data ?? string.Empty
                 });
 
@@ -251,9 +259,24 @@ namespace Infrastructure
 
         private string BuildUrlWithPlayerId()
         {
-            var separator = FullUrl.Contains("?") ? "&" : "?";
-            var encodedPlayerId = UnityWebRequest.EscapeURL(TemporaryPlayerId ?? string.Empty);
-            return $"{FullUrl}{separator}playerId={encodedPlayerId}";
+            var separator = _fullUrl.Contains("?") ? "&" : "?";
+            var encodedPlayerId = UnityWebRequest.EscapeURL(_playerId);
+            return $"{_fullUrl}{separator}playerId={encodedPlayerId}";
+        }
+
+        private static string MaskPlayerId(string playerId)
+        {
+            if (string.IsNullOrEmpty(playerId))
+            {
+                return "<empty>";
+            }
+
+            if (playerId.Length <= 8)
+            {
+                return playerId;
+            }
+
+            return $"{playerId.Substring(0, 4)}...{playerId.Substring(playerId.Length - 4, 4)}";
         }
 
         private static string TryExtractDataFromEnvelope(string responseText)

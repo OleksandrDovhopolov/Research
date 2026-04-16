@@ -12,7 +12,6 @@ namespace Game.Bootstrap
     {
         [SerializeField] private UIManager _uiManagerPrefab;
         [Header("Save Storage")]
-        //[SerializeField] private string _httpSaveEndpoint = "http://localhost:5000/api/save/global";
         [SerializeField] private string _httpSaveAuthToken;
         
         public override void InstallBindings(IContainerBuilder builder)
@@ -22,13 +21,14 @@ namespace Game.Bootstrap
             builder.Register<IAuthorizationService, MockAuthorizationService>(Lifetime.Singleton);
             builder.Register<LoadingOrchestrator>(Lifetime.Singleton);
             
-            //builder.Register<ISaveStorage>(_ => new LocalDiskStorage(), Lifetime.Singleton);
-            
             //Save
+            builder.Register<IPlayerIdentityProvider, PersistentInstallPlayerIdentityProvider>(Lifetime.Singleton);
+            //builder.Register<ISaveStorage>(_ => new LocalDiskStorage(), Lifetime.Singleton);
             builder.Register<ISaveStorage>(_ =>
             {
                 var token = string.IsNullOrWhiteSpace(_httpSaveAuthToken) ? null : _httpSaveAuthToken;
-                return new HttpSaveStorage(token);
+                var playerIdentityProvider = _.Resolve<IPlayerIdentityProvider>();
+                return new HttpSaveStorage(token, playerIdentityProvider);
             }, Lifetime.Singleton);
             builder.Register<SaveMigrationService>(Lifetime.Singleton);
             builder.Register<SaveService>(Lifetime.Singleton);
