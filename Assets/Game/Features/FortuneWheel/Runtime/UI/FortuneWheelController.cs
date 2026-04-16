@@ -332,7 +332,7 @@ namespace FortuneWheel
         {
             if (sectors == null || sectors.Count != FortuneWheelArgs.SectorCount)
             {
-                Debug.LogError($"[{nameof(FortuneWheelController)}] Wheel expects exactly {FortuneWheelArgs.SectorCount} sectors.");
+                Debug.LogError($"[{nameof(FortuneWheelController)}] Wheel expects exactly {FortuneWheelArgs.SectorCount} sectors. Now is {sectors.Count}");
                 return false;
             }
 

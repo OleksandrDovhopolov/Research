@@ -6,6 +6,7 @@ namespace FortuneWheel
 {
     public interface IFortuneWheelServerService
     {
+        UniTask<FortuneWheelDataServerItem> GetDataSync(CancellationToken ct = default);
         UniTask<IReadOnlyList<FortuneWheelRewardServerItem>> GetRewardsAsync(CancellationToken ct = default);
         UniTask<FortuneWheelSpinResult> SpinAsync(CancellationToken ct = default);
     }
@@ -20,6 +21,18 @@ namespace FortuneWheel
         }
     }
 
+    public sealed class FortuneWheelDataServerItem
+    {
+        public int AvailableSpins { get; }
+        public int NextRegenSeconds { get; }
+
+        public FortuneWheelDataServerItem(int availableSpins, int nextRegenSeconds)
+        {
+            AvailableSpins = availableSpins;
+            NextRegenSeconds = nextRegenSeconds;
+        }
+    }
+    
     public sealed class FortuneWheelSpinResult
     {
         public string RewardId { get; }

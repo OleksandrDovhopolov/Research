@@ -11,6 +11,7 @@ namespace FortuneWheel
 {
     public sealed class FortuneWheelServerService : IFortuneWheelServerService
     {
+        private const string DataUrl = "wheel/data";
         private const string RewardsUrl = "wheel/rewards";
         private const string SpinUrl = "wheel/spin";
 
@@ -20,7 +21,40 @@ namespace FortuneWheel
         {
             _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
         }
+        
+        public async UniTask<FortuneWheelDataServerItem> GetDataSync(CancellationToken ct = default)
+        {
+            var playerId = _playerIdentityProvider.GetPlayerId();
+            if (string.IsNullOrWhiteSpace(playerId))
+            {
+                throw new InvalidOperationException("Player id is empty.");
+            }
 
+            var encodedPlayerId = UnityWebRequest.EscapeURL(playerId);
+            var requestUrl = $"{ApiConfig.BaseUrl}{DataUrl}?playerId={encodedPlayerId}";
+            using var request = UnityWebRequest.Get(requestUrl);
+            request.downloadHandler = new DownloadHandlerBuffer();
+
+            await request.SendWebRequest().ToUniTask(cancellationToken: ct);
+            ThrowIfFailed(request, "GetData");
+
+            var responseText = request.downloadHandler?.text;
+            if (string.IsNullOrWhiteSpace(responseText))
+            {
+                throw new InvalidOperationException("GetData response payload is empty.");
+            }
+
+            var response = JsonUtility.FromJson<WheelDataResponseBody>(responseText);
+            if (response == null)
+            {
+                throw new InvalidOperationException("GetData response payload is invalid.");
+            }
+
+            return new FortuneWheelDataServerItem(
+                Mathf.Max(0, response.availableSpins),
+                Mathf.Max(0, response.nextRegenSeconds));
+        }
+        
         public async UniTask<IReadOnlyList<FortuneWheelRewardServerItem>> GetRewardsAsync(CancellationToken ct = default)
         {
             using var request = UnityWebRequest.Get(ApiConfig.BaseUrl + RewardsUrl);
@@ -35,17 +69,32 @@ namespace FortuneWheel
                 return Array.Empty<FortuneWheelRewardServerItem>();
             }
 
-            var wrappedJson = "{\"items\":" + responseText + "}";
-            var response = JsonUtility.FromJson<RewardsResponseWrapper>(wrappedJson);
-            if (response?.items == null || response.items.Length == 0)
+            var normalizedPayload = responseText.TrimStart().StartsWith("[", StringComparison.Ordinal)
+                ? "{\"rewards\":" + responseText + "}"
+                : responseText;
+            var response = JsonUtility.FromJson<RewardsResponseWrapper>(normalizedPayload);
+
+            var rewardItems = response?.rewards;
+            if ((rewardItems == null || rewardItems.Length == 0) && response?.items != null && response.items.Length > 0)
+            {
+                // Backward compatibility for previous payload shape using "items".
+                rewardItems = response.items;
+            }
+
+            if (rewardItems == null || rewardItems.Length == 0)
             {
                 return Array.Empty<FortuneWheelRewardServerItem>();
             }
 
-            var result = new List<FortuneWheelRewardServerItem>(response.items.Length);
-            for (var i = 0; i < response.items.Length; i++)
+            var result = new List<FortuneWheelRewardServerItem>(rewardItems.Length);
+            for (var i = 0; i < rewardItems.Length; i++)
             {
-                var rewardId = response.items[i]?.rewardId;
+                var rewardId = rewardItems[i]?.id;
+                if (string.IsNullOrWhiteSpace(rewardId))
+                {
+                    rewardId = rewardItems[i]?.rewardId;
+                }
+
                 if (string.IsNullOrWhiteSpace(rewardId))
                 {
                     continue;
@@ -109,13 +158,16 @@ namespace FortuneWheel
         [Serializable]
         private sealed class RewardsResponseWrapper
         {
+            public RewardItemBody[] rewards;
             public RewardItemBody[] items;
         }
 
         [Serializable]
         private sealed class RewardItemBody
         {
+            public string id;
             public string rewardId;
+            public int weight;
         }
 
         [Serializable]
@@ -128,6 +180,13 @@ namespace FortuneWheel
         private sealed class SpinResponseBody
         {
             public string rewardId;
+            public int availableSpins;
+            public int nextRegenSeconds;
+        }
+
+        [Serializable]
+        private sealed class WheelDataResponseBody
+        {
             public int availableSpins;
             public int nextRegenSeconds;
         }
