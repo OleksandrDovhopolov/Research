@@ -233,6 +233,7 @@ namespace FortuneWheel
                 }
 
                 var requests = new List<RewardGrantRequest>(resources.Count);
+                RewardSpecResource primaryResource = null;
                 for (var i = 0; i < resources.Count; i++)
                 {
                     var resource = resources[i];
@@ -241,12 +242,18 @@ namespace FortuneWheel
                         continue;
                     }
 
+                    primaryResource ??= resource;
                     requests.Add(new RewardGrantRequest(resource.ResourceId, resource.Amount, resource.Category));
                 }
 
                 if (requests.Count == 0)
                 {
                     throw new InvalidOperationException($"Reward spec '{response.rewardId}' has no valid resources.");
+                }
+
+                if (primaryResource == null)
+                {
+                    throw new InvalidOperationException($"Reward spec '{response.rewardId}' has no primary resource.");
                 }
 
                 var success = await _rewardGrantService.TryGrantAsync(requests, ct);
@@ -261,6 +268,9 @@ namespace FortuneWheel
                 
                 return new FortuneWheelSpinResult(
                     response.rewardId,
+                    primaryResource.Icon,
+                    primaryResource.Amount,
+                    primaryResource.ResourceId,
                     availableSpins,
                     updatedAt,
                     nextUpdateAt);

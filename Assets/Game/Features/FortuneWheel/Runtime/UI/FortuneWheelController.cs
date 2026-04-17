@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Rewards;
 using UISystem;
 using UnityEngine;
 using VContainer;
@@ -51,6 +52,7 @@ namespace FortuneWheel
         private bool _isDataValid;
         private CancellationTokenSource _requestCts;
         private TimeSpan _currentRemainingTime;
+        private FortuneWheelSpinResult _lastSuccessfulSpinResult;
 
         public override bool IsCloseBlocked => _isSpinning;
 
@@ -147,11 +149,13 @@ namespace FortuneWheel
                 var spinResult = await _fortuneWheelServerService.SpinAsync(ct);
                 Debug.LogWarning($"[{GetType().Name}] spinResult with RewardId {spinResult.RewardId}");
                 ApplySpinResult(spinResult);
-                var targetSectorIndex = FindSectorIndexByRewardId(Sectors, spinResult.RewardId);
+                _lastSuccessfulSpinResult = spinResult;
 
+                var targetSectorIndex = FindSectorIndexByRewardId(Sectors, spinResult.RewardId);
                 if (targetSectorIndex < 0)
                 {
                     Debug.LogWarning($"[{nameof(FortuneWheelController)}] Reward id '{spinResult.RewardId}' was not found in sectors.");
+                    OnSpinCompleted();
                     return;
                 }
 
@@ -163,6 +167,7 @@ namespace FortuneWheel
                 {
                     _isSpinning = false;
                     UpdateInteractionState();
+                    OnSpinCompleted();
                 }
             }
             catch (OperationCanceledException)
@@ -186,16 +191,17 @@ namespace FortuneWheel
 
         private void OnSpinCompleted()
         {
-            if (!_isSpinning)
+            var spinResult = _lastSuccessfulSpinResult;
+            _lastSuccessfulSpinResult = null;
+            if (spinResult == null)
             {
                 return;
             }
 
             _isSpinning = false;
             UpdateInteractionState();
-            
-            //TODO play animation
-            //_animationService.Animate(animationStartPosition, rewardViewData.Amount, rewardViewData.Id, rewardViewData.Icon);
+
+            ShowRewardWindow(spinResult);
         }
 
         private void UpdateInteractionState()
@@ -208,6 +214,7 @@ namespace FortuneWheel
         {
             _isSpinning = false;
             _isSpinRequestInProgress = false;
+            _lastSuccessfulSpinResult = null;
             View.StopSpinAnimation();
             UpdateInteractionState();
         }
@@ -349,6 +356,20 @@ namespace FortuneWheel
             }
 
             return -1;
+        }
+
+        private void ShowRewardWindow(FortuneWheelSpinResult spinResult)
+        {
+            if (spinResult == null)
+            {
+                return;
+            }
+
+            var rewardArgs = new RewardsWindowArgs(
+                spinResult.RewardSprite,
+                spinResult.RewardAmount,
+                spinResult.RewardResourceId);
+            UIManager.Show<RewardsWindowController>(rewardArgs);
         }
 
         private static bool ValidateSectors(IReadOnlyList<FortuneWheelSectorArgs> sectors)

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace FortuneWheel
 {
@@ -38,13 +39,26 @@ namespace FortuneWheel
     public sealed class FortuneWheelSpinResult
     {
         public string RewardId { get; }
+        public Sprite RewardSprite { get; }
+        public int RewardAmount { get; }
+        public string RewardResourceId { get; }
         public int AvailableSpins { get; }
         public long UpdatedAt { get; }
         public long NextUpdateAt { get; }
 
-        public FortuneWheelSpinResult(string rewardId, int availableSpins, long updatedAt, long nextUpdateAt)
+        public FortuneWheelSpinResult(
+            string rewardId,
+            Sprite rewardSprite,
+            int rewardAmount,
+            string rewardResourceId,
+            int availableSpins,
+            long updatedAt,
+            long nextUpdateAt)
         {
             RewardId = rewardId;
+            RewardSprite = rewardSprite;
+            RewardAmount = rewardAmount;
+            RewardResourceId = rewardResourceId;
             AvailableSpins = availableSpins;
             UpdatedAt = updatedAt;
             NextUpdateAt = nextUpdateAt;
