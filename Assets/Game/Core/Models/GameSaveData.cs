@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Core.Models
 {
@@ -105,6 +106,19 @@ namespace Core.Models
     public sealed class FortuneWheelModuleSaveData
     {
         public int AvailableSpins { get; set; }
-        public long LastResetTimestamp { get; set; }
+        public long UpdatedAt { get; set; }
+        public long NextUpdateAt { get; set; }
+
+        [JsonProperty("LastResetTimestamp")]
+        private long LegacyLastResetTimestamp
+        {
+            set
+            {
+                if (UpdatedAt <= 0)
+                {
+                    UpdatedAt = Math.Max(0, value);
+                }
+            }
+        }
     }
 }

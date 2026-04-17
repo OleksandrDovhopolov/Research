@@ -28,6 +28,7 @@ namespace FortuneWheel
         
         public async UniTask<FortuneWheelDataServerItem> GetDataSync(CancellationToken ct = default)
         {
+            var operationId = CreateOperationId("data");
             var cachedData = await GetCachedDataSafeAsync(ct);
             var playerId = _playerIdentityProvider.GetPlayerId();
             if (string.IsNullOrWhiteSpace(playerId))
@@ -39,7 +40,9 @@ namespace FortuneWheel
             {
                 var encodedPlayerId = UnityWebRequest.EscapeURL(playerId);
                 var requestUrl = $"{ApiConfig.BaseUrl}{DataUrl}?playerId={encodedPlayerId}";
-                Debug.Log($"{LogPrefix} GetData request. Url={requestUrl}, PlayerId={MaskPlayerId(playerId)}");
+                Debug.Log(
+                    $"{LogPrefix} [{operationId}] GetData request. Url={requestUrl}, PlayerId={MaskPlayerId(playerId)}, " +
+                    $"CachedBefore={BuildCacheSummary(cachedData)}");
                 using var request = UnityWebRequest.Get(requestUrl);
                 request.downloadHandler = new DownloadHandlerBuffer();
 
@@ -47,7 +50,7 @@ namespace FortuneWheel
                 ThrowIfFailed(request, "GetData");
 
                 var responseText = request.downloadHandler?.text;
-                Debug.Log($"{LogPrefix} GetData response. {BuildResponseSummary(request, responseText)}");
+                Debug.Log($"{LogPrefix} [{operationId}] GetData response. {BuildResponseSummary(request, responseText)}");
                 if (string.IsNullOrWhiteSpace(responseText))
                 {
                     throw new InvalidOperationException("GetData response payload is empty.");
@@ -63,9 +66,10 @@ namespace FortuneWheel
                 var updatedAt = Math.Max(0L, response.updatedAt);
                 var nextUpdateAt = Math.Max(0L, response.nextUpdateAt);
                 Debug.Log(
-                    $"{LogPrefix} GetData parsed. PlayerId={MaskPlayerId(playerId)}, AvailableSpins={availableSpins}, " +
-                    $"UpdatedAt={updatedAt}, NextUpdateAt={nextUpdateAt}");
-                //await TryPersistCachedDataAsync(cachedData, availableSpins, ct);
+                    $"{LogPrefix} [{operationId}] GetData parsed. PlayerId={MaskPlayerId(playerId)}, " +
+                    $"RawAvailableSpins={response.availableSpins}, RawUpdatedAt={response.updatedAt}, RawNextUpdateAt={response.nextUpdateAt}, " +
+                    $"NormalizedAvailableSpins={availableSpins}, NormalizedUpdatedAt={updatedAt}, NormalizedNextUpdateAt={nextUpdateAt}");
+                //await TryPersistCachedDataAsync(availableSpins, updatedAt, nextUpdateAt, "GetData", operationId, ct);
 
                 return new FortuneWheelDataServerItem(availableSpins, updatedAt, nextUpdateAt);
             }
@@ -76,11 +80,13 @@ namespace FortuneWheel
             catch (Exception exception)
             {
                 var fallbackSpins = Mathf.Max(0, cachedData.AvailableSpins);
+                var fallbackUpdatedAt = Math.Max(0L, cachedData.UpdatedAt);
+                var fallbackNextUpdateAt = Math.Max(0L, cachedData.NextUpdateAt);
                 var verificationUrl = BuildWheelDataUrl(playerId);
                 Debug.LogWarning(
-                    $"{LogPrefix} GetData failed. Falling back to cached data. PlayerId={MaskPlayerId(playerId)}, VerificationUrl={verificationUrl}, " +
-                    $"CachedAvailableSpins={fallbackSpins}, CachedLastResetTimestamp={Math.Max(0, cachedData.LastResetTimestamp)}, Reason={exception}");
-                return new FortuneWheelDataServerItem(fallbackSpins, 0, 0);
+                    $"{LogPrefix} [{operationId}] GetData failed. Falling back to cached data. PlayerId={MaskPlayerId(playerId)}, VerificationUrl={verificationUrl}, " +
+                    $"CachedAvailableSpins={fallbackSpins}, CachedUpdatedAt={fallbackUpdatedAt}, CachedNextUpdateAt={fallbackNextUpdateAt}, Reason={exception}");
+                return new FortuneWheelDataServerItem(fallbackSpins, fallbackUpdatedAt, fallbackNextUpdateAt);
             }
         }
         
@@ -137,7 +143,8 @@ namespace FortuneWheel
 
         public async UniTask<FortuneWheelSpinResult> SpinAsync(CancellationToken ct = default)
         {
-            var cachedData = await GetCachedDataSafeAsync(ct);
+            var operationId = CreateOperationId("spin");
+            var cachedDataBefore = await GetCachedDataSafeAsync(ct);
             var playerId = _playerIdentityProvider.GetPlayerId();
             if (string.IsNullOrWhiteSpace(playerId))
             {
@@ -150,7 +157,9 @@ namespace FortuneWheel
             });
 
             var spinUrl = ApiConfig.BaseUrl + SpinUrl;
-            Debug.Log($"{LogPrefix} Spin request. Url={spinUrl}, PlayerId={MaskPlayerId(playerId)}, RequestBodyLength={requestBody.Length}");
+            Debug.Log(
+                $"{LogPrefix} [{operationId}] Spin request. Url={spinUrl}, PlayerId={MaskPlayerId(playerId)}, " +
+                $"RequestBodyLength={requestBody.Length}, CachedBefore={BuildCacheSummary(cachedDataBefore)}");
 
             try
             {
@@ -163,7 +172,7 @@ namespace FortuneWheel
                 ThrowIfFailed(request, "Spin");
 
                 var responseText = request.downloadHandler?.text;
-                Debug.Log($"{LogPrefix} Spin response. {BuildResponseSummary(request, responseText)}");
+                Debug.Log($"{LogPrefix} [{operationId}] Spin response. {BuildResponseSummary(request, responseText)}");
                 if (string.IsNullOrWhiteSpace(responseText))
                 {
                     throw new InvalidOperationException("Spin response payload is empty.");
@@ -178,10 +187,25 @@ namespace FortuneWheel
                 var availableSpins = Mathf.Max(0, response.availableSpins);
                 var updatedAt = Math.Max(0L, response.updatedAt);
                 var nextUpdateAt = Math.Max(0L, response.nextUpdateAt);
+                var cachedBeforeSpins = Mathf.Max(0, cachedDataBefore?.AvailableSpins ?? 0);
+                var spinsDeltaVsCache = availableSpins - cachedBeforeSpins;
                 Debug.Log(
-                    $"{LogPrefix} Spin parsed. PlayerId={MaskPlayerId(playerId)}, RewardId={response.rewardId}, " +
-                    $"AvailableSpins={availableSpins}, UpdatedAt={updatedAt}, NextUpdateAt={nextUpdateAt}");
-                await TryPersistCachedDataAsync(cachedData, availableSpins, ct);
+                    $"{LogPrefix} [{operationId}] Spin parsed. PlayerId={MaskPlayerId(playerId)}, RewardId={response.rewardId}, " +
+                    $"RawAvailableSpins={response.availableSpins}, RawUpdatedAt={response.updatedAt}, RawNextUpdateAt={response.nextUpdateAt}, " +
+                    $"NormalizedAvailableSpins={availableSpins}, NormalizedUpdatedAt={updatedAt}, NormalizedNextUpdateAt={nextUpdateAt}, " +
+                    $"CachedBeforeSpins={cachedBeforeSpins}, SpinsDeltaVsCache={spinsDeltaVsCache}");
+
+                if (spinsDeltaVsCache >= 0)
+                {
+                    Debug.LogWarning(
+                        $"{LogPrefix} [{operationId}] Spin anomaly: server did not decrease spins relative to cache. " +
+                        $"CachedBeforeSpins={cachedBeforeSpins}, ServerAvailableSpins={availableSpins}, " +
+                        $"RewardId={response.rewardId}, PlayerId={MaskPlayerId(playerId)}");
+                }
+
+                await TryPersistCachedDataAsync(availableSpins, updatedAt, nextUpdateAt, "Spin", operationId, ct);
+                var cachedDataAfter = await GetCachedDataSafeAsync(ct);
+                Debug.Log($"{LogPrefix} [{operationId}] Spin cache after persist. CachedAfter={BuildCacheSummary(cachedDataAfter)}");
 
                 return new FortuneWheelSpinResult(
                     response.rewardId,
@@ -191,13 +215,13 @@ namespace FortuneWheel
             }
             catch (OperationCanceledException)
             {
-                Debug.LogWarning($"{LogPrefix} Spin canceled. PlayerId={MaskPlayerId(playerId)}");
+                Debug.LogWarning($"{LogPrefix} [{operationId}] Spin canceled. PlayerId={MaskPlayerId(playerId)}");
                 throw;
             }
             catch (Exception exception)
             {
                 Debug.LogWarning(
-                    $"{LogPrefix} Spin failed. PlayerId={MaskPlayerId(playerId)}, VerificationUrl={BuildWheelDataUrl(playerId)}, Reason={exception}");
+                    $"{LogPrefix} [{operationId}] Spin failed. PlayerId={MaskPlayerId(playerId)}, VerificationUrl={BuildWheelDataUrl(playerId)}, Reason={exception}");
                 throw;
             }
         }
@@ -209,7 +233,8 @@ namespace FortuneWheel
                 return await _saveService.GetReadonlyModuleAsync(data => new FortuneWheelModuleSaveData
                 {
                     AvailableSpins = data.FortuneWheel?.AvailableSpins ?? 0,
-                    LastResetTimestamp = data.FortuneWheel?.LastResetTimestamp ?? 0
+                    UpdatedAt = data.FortuneWheel?.UpdatedAt ?? 0,
+                    NextUpdateAt = data.FortuneWheel?.NextUpdateAt ?? 0
                 }, ct) ?? new FortuneWheelModuleSaveData();
             }
             catch (OperationCanceledException)
@@ -223,24 +248,47 @@ namespace FortuneWheel
             }
         }
 
-        private async UniTask TryPersistCachedDataAsync(FortuneWheelModuleSaveData cachedData, int availableSpins, CancellationToken ct)
+        private async UniTask TryPersistCachedDataAsync(
+            int availableSpins,
+            long updatedAt,
+            long nextUpdateAt,
+            string source,
+            string operationId,
+            CancellationToken ct)
         {
             var normalizedSpins = Mathf.Max(0, availableSpins);
-            var previousSpins = Mathf.Max(0, cachedData?.AvailableSpins ?? 0);
-            var previousResetTimestamp = Math.Max(0, cachedData?.LastResetTimestamp ?? 0);
-            var shouldUpdateResetTimestamp = normalizedSpins > previousSpins;
-            var resetTimestamp = shouldUpdateResetTimestamp
-                ? DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-                : previousResetTimestamp;
+            var normalizedUpdatedAt = Math.Max(0L, updatedAt);
+            var normalizedNextUpdateAt = Math.Max(0L, nextUpdateAt);
+            var beforeSpins = 0;
+            var beforeUpdatedAt = 0L;
+            var beforeNextUpdateAt = 0L;
+            var hasBeforeSnapshot = false;
+
+            Debug.Log(
+                $"{LogPrefix} [{operationId}] Persist cache begin. Source={source}, " +
+                $"IncomingAvailableSpins={availableSpins}, IncomingUpdatedAt={updatedAt}, IncomingNextUpdateAt={nextUpdateAt}, " +
+                $"NormalizedAvailableSpins={normalizedSpins}, NormalizedUpdatedAt={normalizedUpdatedAt}, NormalizedNextUpdateAt={normalizedNextUpdateAt}");
 
             try
             {
                 await _saveService.UpdateModuleAsync(data => data, root =>
                 {
                     root.FortuneWheel ??= new FortuneWheelModuleSaveData();
+                    hasBeforeSnapshot = true;
+                    beforeSpins = Mathf.Max(0, root.FortuneWheel.AvailableSpins);
+                    beforeUpdatedAt = Math.Max(0L, root.FortuneWheel.UpdatedAt);
+                    beforeNextUpdateAt = Math.Max(0L, root.FortuneWheel.NextUpdateAt);
                     root.FortuneWheel.AvailableSpins = normalizedSpins;
-                    root.FortuneWheel.LastResetTimestamp = Math.Max(0, resetTimestamp);
+                    root.FortuneWheel.UpdatedAt = normalizedUpdatedAt;
+                    root.FortuneWheel.NextUpdateAt = normalizedNextUpdateAt;
                 }, ct);
+
+                var beforeSummary = hasBeforeSnapshot
+                    ? $"Spins={beforeSpins}, UpdatedAt={beforeUpdatedAt}, NextUpdateAt={beforeNextUpdateAt}"
+                    : "<unknown>";
+                Debug.Log(
+                    $"{LogPrefix} [{operationId}] Persist cache completed. Source={source}, " +
+                    $"Before={beforeSummary}, After=Spins={normalizedSpins}, UpdatedAt={normalizedUpdatedAt}, NextUpdateAt={normalizedNextUpdateAt}");
             }
             catch (OperationCanceledException)
             {
@@ -248,13 +296,31 @@ namespace FortuneWheel
             }
             catch (Exception exception)
             {
-                Debug.LogWarning($"{LogPrefix} Failed to persist FortuneWheel cache: {exception.Message}");
+                Debug.LogWarning(
+                    $"{LogPrefix} [{operationId}] Failed to persist FortuneWheel cache. Source={source}, " +
+                    $"Target=Spins={normalizedSpins}, UpdatedAt={normalizedUpdatedAt}, NextUpdateAt={normalizedNextUpdateAt}, Reason={exception.Message}");
             }
         }
 
         private static string BuildResponseSummary(UnityWebRequest request, string responseText)
         {
             return $"Status={(int)request.responseCode}, Result={request.result}, Error={request.error}, BodyLength={(responseText?.Length ?? 0)}";
+        }
+
+        private static string BuildCacheSummary(FortuneWheelModuleSaveData data)
+        {
+            if (data == null)
+            {
+                return "<null>";
+            }
+
+            return $"Spins={Mathf.Max(0, data.AvailableSpins)}, UpdatedAt={Math.Max(0L, data.UpdatedAt)}, NextUpdateAt={Math.Max(0L, data.NextUpdateAt)}";
+        }
+
+        private static string CreateOperationId(string operationName)
+        {
+            var suffix = Guid.NewGuid().ToString("N").Substring(0, 8);
+            return $"{operationName}:{suffix}";
         }
 
         private static string BuildWheelDataUrl(string playerId)

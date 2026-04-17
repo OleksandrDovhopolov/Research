@@ -117,7 +117,8 @@ namespace Infrastructure.Tests.Editor
 
             Assert.That(data.FortuneWheel, Is.Not.Null);
             Assert.That(data.FortuneWheel.AvailableSpins, Is.EqualTo(0));
-            Assert.That(data.FortuneWheel.LastResetTimestamp, Is.EqualTo(0));
+            Assert.That(data.FortuneWheel.UpdatedAt, Is.EqualTo(0));
+            Assert.That(data.FortuneWheel.NextUpdateAt, Is.EqualTo(0));
         });
 
         [UnityTest]
@@ -129,7 +130,7 @@ namespace Infrastructure.Tests.Editor
                                                    "  \"CardCollections\": [],\n" +
                                                    "  \"EventStates\": [],\n" +
                                                    "  \"Resources\": { \"Version\": 1, \"Gold\": 0, \"Energy\": 0, \"Gems\": 0 },\n" +
-                                                   "  \"FortuneWheel\": { \"AvailableSpins\": -3, \"LastResetTimestamp\": -100 },\n" +
+                                                   "  \"FortuneWheel\": { \"AvailableSpins\": -3, \"UpdatedAt\": -100, \"NextUpdateAt\": -200 },\n" +
                                                    "  \"CustomModulesJson\": {}\n" +
                                                    "}";
             await File.WriteAllTextAsync(_testFilePath, invalidFortuneWheelJson, CancellationToken.None);
@@ -139,7 +140,31 @@ namespace Infrastructure.Tests.Editor
 
             Assert.That(data.FortuneWheel, Is.Not.Null);
             Assert.That(data.FortuneWheel.AvailableSpins, Is.EqualTo(0));
-            Assert.That(data.FortuneWheel.LastResetTimestamp, Is.EqualTo(0));
+            Assert.That(data.FortuneWheel.UpdatedAt, Is.EqualTo(0));
+            Assert.That(data.FortuneWheel.NextUpdateAt, Is.EqualTo(0));
+        });
+
+        [UnityTest]
+        public IEnumerator LoadAll_MapsLegacyLastResetTimestamp_ToUpdatedAt() => UniTask.ToCoroutine(async () =>
+        {
+            const string legacyFortuneWheelJson = "{\n" +
+                                                  "  \"Meta\": { \"SchemaVersion\": 2, \"LastSaveTimestamp\": 0, \"Hash\": \"\", \"SaveId\": \"legacy-fw\", \"Revision\": 0 },\n" +
+                                                  "  \"Inventory\": { \"Owners\": [] },\n" +
+                                                  "  \"CardCollections\": [],\n" +
+                                                  "  \"EventStates\": [],\n" +
+                                                  "  \"Resources\": { \"Version\": 1, \"Gold\": 0, \"Energy\": 0, \"Gems\": 0 },\n" +
+                                                  "  \"FortuneWheel\": { \"AvailableSpins\": 4, \"LastResetTimestamp\": 12345 },\n" +
+                                                  "  \"CustomModulesJson\": {}\n" +
+                                                  "}";
+            await File.WriteAllTextAsync(_testFilePath, legacyFortuneWheelJson, CancellationToken.None);
+
+            var service = CreateService();
+            var data = await service.LoadAllAsync(CancellationToken.None);
+
+            Assert.That(data.FortuneWheel, Is.Not.Null);
+            Assert.That(data.FortuneWheel.AvailableSpins, Is.EqualTo(4));
+            Assert.That(data.FortuneWheel.UpdatedAt, Is.EqualTo(12345));
+            Assert.That(data.FortuneWheel.NextUpdateAt, Is.EqualTo(0));
         });
 
         private SaveService CreateService()

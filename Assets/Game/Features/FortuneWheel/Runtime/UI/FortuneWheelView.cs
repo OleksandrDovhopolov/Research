@@ -47,7 +47,6 @@ namespace FortuneWheel
         private const float PointerAngle = 0f;
         private const float FullCircle = 360f;
         private const float MinSpinDuration = 0.01f;
-        private const float TimerTickSeconds = 1f;
         private const float SectorAngle = FullCircle / FortuneWheelArgs.SectorCount;
 
         [Header("Top")]
@@ -68,9 +67,6 @@ namespace FortuneWheel
         [SerializeField] private SectorView[] _sectors = new SectorView[FortuneWheelArgs.SectorCount];
 
         private Tween _spinTween;
-        private TimeSpan _remainingTime = TimeSpan.Zero;
-        private float _timerTickAccumulator;
-        private bool _isTimerRunning;
 
         public event Action SpinClick;
 
@@ -84,21 +80,6 @@ namespace FortuneWheel
             }
         }
 
-        private void Update()
-        {
-            if (!_isTimerRunning)
-            {
-                return;
-            }
-
-            _timerTickAccumulator += Time.unscaledDeltaTime;
-            while (_timerTickAccumulator >= TimerTickSeconds && _isTimerRunning)
-            {
-                _timerTickAccumulator -= TimerTickSeconds;
-                TickTimer();
-            }
-        }
-
         public void SetData(FortuneWheelArgs args)
         {
             if (args == null)
@@ -107,8 +88,6 @@ namespace FortuneWheel
                 return;
             }
 
-            SetSpinsAmount(Mathf.Max(0, args.SpinsAmount));
-            SetTimer(args.RemainingTime);
             SetSectors(args.Sectors);
         }
 
@@ -118,6 +97,16 @@ namespace FortuneWheel
             {
                 _spinsAmountText.text = spinsAmount.ToString();
             }
+        }
+
+        public void SetRemainingTime(TimeSpan remainingTime)
+        {
+            if (remainingTime < TimeSpan.Zero)
+            {
+                remainingTime = TimeSpan.Zero;
+            }
+
+            UpdateTimerLabel(remainingTime);
         }
 
         public void SetSpinInteractable(bool isInteractable)
@@ -183,7 +172,6 @@ namespace FortuneWheel
         private void OnDisable()
         {
             StopSpinAnimation();
-            StopTimer();
         }
 
         protected override void OnDestroy()
@@ -193,17 +181,8 @@ namespace FortuneWheel
                 _spinButton.onClick.RemoveListener(HandleSpinClick);
             }
 
-            StopTimer();
             StopSpinAnimation();
             base.OnDestroy();
-        }
-
-        private void SetTimer(TimeSpan remainingTime)
-        {
-            _remainingTime = remainingTime < TimeSpan.Zero ? TimeSpan.Zero : remainingTime;
-            _timerTickAccumulator = 0f;
-            _isTimerRunning = _remainingTime > TimeSpan.Zero;
-            UpdateTimerLabel(_remainingTime);
         }
 
         private void SetSectors(IReadOnlyList<FortuneWheelSectorArgs> sectors)
@@ -250,32 +229,6 @@ namespace FortuneWheel
         private void HandleSpinClick()
         {
             SpinClick?.Invoke();
-        }
-
-        private void TickTimer()
-        {
-            if (_remainingTime <= TimeSpan.Zero)
-            {
-                _remainingTime = TimeSpan.Zero;
-                StopTimer();
-                UpdateTimerLabel(_remainingTime);
-                return;
-            }
-
-            _remainingTime -= TimeSpan.FromSeconds(1);
-            if (_remainingTime <= TimeSpan.Zero)
-            {
-                _remainingTime = TimeSpan.Zero;
-                StopTimer();
-            }
-
-            UpdateTimerLabel(_remainingTime);
-        }
-
-        private void StopTimer()
-        {
-            _isTimerRunning = false;
-            _timerTickAccumulator = 0f;
         }
 
         private void UpdateTimerLabel(TimeSpan remainingTime)

@@ -26,14 +26,12 @@ namespace FortuneWheel
     {
         public const int SectorCount = 8;
 
-        public int SpinsAmount { get; }
-        public TimeSpan RemainingTime { get; }
+        public FortuneWheelDataServerItem InitialData { get; }
         public IReadOnlyList<FortuneWheelSectorArgs> Sectors { get; }
 
-        public FortuneWheelArgs(int spinsAmount, TimeSpan remainingTime, IReadOnlyList<FortuneWheelSectorArgs> sectors)
+        public FortuneWheelArgs(FortuneWheelDataServerItem initialData, IReadOnlyList<FortuneWheelSectorArgs> sectors)
         {
-            SpinsAmount = spinsAmount;
-            RemainingTime = remainingTime;
+            InitialData = initialData;
             Sectors = sectors;
         }
     }
@@ -42,6 +40,7 @@ namespace FortuneWheel
     public class FortuneWheelController : WindowController<FortuneWheelView>
     {
         private IFortuneWheelServerService _fortuneWheelServerService;
+        private IFortuneWheelTimerService _fortuneWheelTimerService;
 
         private FortuneWheelArgs Args => Arguments as FortuneWheelArgs;
         private IReadOnlyList<FortuneWheelSectorArgs> Sectors => Args?.Sectors ?? Array.Empty<FortuneWheelSectorArgs>();
@@ -51,15 +50,17 @@ namespace FortuneWheel
         private bool _isSpinRequestInProgress;
         private bool _isDataValid;
         private CancellationTokenSource _requestCts;
-        private FortuneWheelSpinResult _pendingSpinResult;
         private TimeSpan _currentRemainingTime;
 
         public override bool IsCloseBlocked => _isSpinning;
 
         [Inject]
-        private void Construct(IFortuneWheelServerService fortuneWheelServerService)
+        private void Construct(
+            IFortuneWheelServerService fortuneWheelServerService,
+            IFortuneWheelTimerService fortuneWheelTimerService)
         {
             _fortuneWheelServerService = fortuneWheelServerService;
+            _fortuneWheelTimerService = fortuneWheelTimerService;
         }
 
         protected override void OnShowStart()
@@ -73,15 +74,31 @@ namespace FortuneWheel
                 _isDataValid = false;
                 _currentSpinsAmount = 0;
                 _currentRemainingTime = TimeSpan.Zero;
+                RefreshViewData();
                 UpdateInteractionState();
                 return;
             }
 
-            _currentSpinsAmount = Mathf.Max(0, args.SpinsAmount);
-            _currentRemainingTime = args.RemainingTime;
+            if (args.InitialData == null)
+            {
+                Debug.LogError($"[{nameof(FortuneWheelController)}] Initial wheel data is missing.");
+                _isDataValid = false;
+                _currentSpinsAmount = 0;
+                _currentRemainingTime = TimeSpan.Zero;
+                View.SetData(args);
+                RefreshViewData();
+                UpdateInteractionState();
+                return;
+            }
+
+            _currentSpinsAmount = Mathf.Max(0, args.InitialData.AvailableSpins);
+            _currentRemainingTime = CalculateRemainingTime(args.InitialData.NextUpdateAt);
             _isDataValid = ValidateSectors(Sectors);
 
+            View.SetData(args);
             RefreshViewData();
+            SubscribeTimerService();
+            StartTimerService(args.InitialData);
             UpdateInteractionState();
         }
 
@@ -95,6 +112,8 @@ namespace FortuneWheel
         {
             View.SpinClick -= OnSpinClicked;
             View.CloseClick -= CloseWindow;
+            UnsubscribeTimerService();
+            _fortuneWheelTimerService?.Stop();
             CancelRequests();
             CancelSpin();
         }
@@ -127,16 +146,15 @@ namespace FortuneWheel
             {
                 var spinResult = await _fortuneWheelServerService.SpinAsync(ct);
                 Debug.LogWarning($"[{GetType().Name}] spinResult with RewardId {spinResult.RewardId}");
+                ApplySpinResult(spinResult);
                 var targetSectorIndex = FindSectorIndexByRewardId(Sectors, spinResult.RewardId);
 
                 if (targetSectorIndex < 0)
                 {
                     Debug.LogWarning($"[{nameof(FortuneWheelController)}] Reward id '{spinResult.RewardId}' was not found in sectors.");
-                    RestoreOptimisticSpins(previousSpinsAmount);
                     return;
                 }
 
-                _pendingSpinResult = spinResult;
                 _isSpinning = true;
                 UpdateInteractionState();
 
@@ -144,8 +162,6 @@ namespace FortuneWheel
                 if (!animationStarted)
                 {
                     _isSpinning = false;
-                    ApplySpinResult(_pendingSpinResult);
-                    _pendingSpinResult = null;
                     UpdateInteractionState();
                 }
             }
@@ -176,13 +192,6 @@ namespace FortuneWheel
             }
 
             _isSpinning = false;
-
-            if (_pendingSpinResult != null)
-            {
-                ApplySpinResult(_pendingSpinResult);
-                _pendingSpinResult = null;
-            }
-
             UpdateInteractionState();
         }
 
@@ -196,7 +205,6 @@ namespace FortuneWheel
         {
             _isSpinning = false;
             _isSpinRequestInProgress = false;
-            _pendingSpinResult = null;
             View.StopSpinAnimation();
             UpdateInteractionState();
         }
@@ -221,7 +229,8 @@ namespace FortuneWheel
 
         private void RefreshViewData()
         {
-            View.SetData(new FortuneWheelArgs(_currentSpinsAmount, _currentRemainingTime, Sectors));
+            View.SetSpinsAmount(_currentSpinsAmount);
+            View.SetRemainingTime(_currentRemainingTime);
         }
 
         private void ApplySpinResult(FortuneWheelSpinResult spinResult)
@@ -231,12 +240,16 @@ namespace FortuneWheel
                 return;
             }
 
-            _currentSpinsAmount = Mathf.Max(0, spinResult.AvailableSpins);
-            var nowUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            var nextUpdateAtUnixSeconds = NormalizeUnixTimestampToSeconds(spinResult.NextUpdateAt);
-            var remainingSeconds = Math.Max(0L, nextUpdateAtUnixSeconds - nowUnixSeconds);
-            _currentRemainingTime = TimeSpan.FromSeconds(remainingSeconds);
-            RefreshViewData();
+            if (_fortuneWheelTimerService != null)
+            {
+                _fortuneWheelTimerService.ApplySpinResult(spinResult);
+                return;
+            }
+
+            ApplyStateUpdate(new FortuneWheelDataServerItem(
+                spinResult.AvailableSpins,
+                spinResult.UpdatedAt,
+                spinResult.NextUpdateAt));
         }
 
         private void RestoreOptimisticSpins(int previousSpinsAmount)
@@ -249,6 +262,71 @@ namespace FortuneWheel
 
             _currentSpinsAmount = normalizedPrevious;
             RefreshViewData();
+        }
+
+        private void SubscribeTimerService()
+        {
+            if (_fortuneWheelTimerService == null)
+            {
+                return;
+            }
+
+            _fortuneWheelTimerService.OnTimerUpdated -= HandleTimerUpdated;
+            _fortuneWheelTimerService.OnStateUpdated -= HandleStateUpdated;
+            _fortuneWheelTimerService.OnTimerUpdated += HandleTimerUpdated;
+            _fortuneWheelTimerService.OnStateUpdated += HandleStateUpdated;
+        }
+
+        private void UnsubscribeTimerService()
+        {
+            if (_fortuneWheelTimerService == null)
+            {
+                return;
+            }
+
+            _fortuneWheelTimerService.OnTimerUpdated -= HandleTimerUpdated;
+            _fortuneWheelTimerService.OnStateUpdated -= HandleStateUpdated;
+        }
+
+        private void StartTimerService(FortuneWheelDataServerItem initialData)
+        {
+            if (_fortuneWheelTimerService == null || initialData == null)
+            {
+                return;
+            }
+
+            try
+            {
+                _fortuneWheelTimerService.Start(initialData, _requestCts?.Token ?? CancellationToken.None);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"[{nameof(FortuneWheelController)}] Failed to start timer service: {exception.Message}");
+            }
+        }
+
+        private void HandleTimerUpdated(TimeSpan remainingTime)
+        {
+            _currentRemainingTime = remainingTime < TimeSpan.Zero ? TimeSpan.Zero : remainingTime;
+            View.SetRemainingTime(_currentRemainingTime);
+        }
+
+        private void HandleStateUpdated(FortuneWheelDataServerItem state)
+        {
+            if (state == null)
+            {
+                return;
+            }
+
+            ApplyStateUpdate(state);
+        }
+
+        private void ApplyStateUpdate(FortuneWheelDataServerItem state)
+        {
+            _currentSpinsAmount = Mathf.Max(0, state.AvailableSpins);
+            _currentRemainingTime = CalculateRemainingTime(state.NextUpdateAt);
+            RefreshViewData();
+            UpdateInteractionState();
         }
 
         private static int FindSectorIndexByRewardId(IReadOnlyList<FortuneWheelSectorArgs> sectors, string rewardId)
@@ -312,6 +390,14 @@ namespace FortuneWheel
             return unixTimestamp >= 1_000_000_000_000L
                 ? unixTimestamp / 1000L
                 : unixTimestamp;
+        }
+
+        private static TimeSpan CalculateRemainingTime(long nextUpdateAt)
+        {
+            var nowUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var nextUpdateAtUnixSeconds = NormalizeUnixTimestampToSeconds(nextUpdateAt);
+            var remainingSeconds = Math.Max(0L, nextUpdateAtUnixSeconds - nowUnixSeconds);
+            return TimeSpan.FromSeconds(remainingSeconds);
         }
     }
 }
