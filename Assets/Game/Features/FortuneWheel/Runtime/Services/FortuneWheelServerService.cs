@@ -60,11 +60,14 @@ namespace FortuneWheel
                 }
 
                 var availableSpins = Mathf.Max(0, response.availableSpins);
-                var nextRegenSeconds = Mathf.Max(0, response.nextRegenSeconds);
-                Debug.Log($"{LogPrefix} GetData parsed. PlayerId={MaskPlayerId(playerId)}, AvailableSpins={availableSpins}, NextRegenSeconds={nextRegenSeconds}");
-                await TryPersistCachedDataAsync(cachedData, availableSpins, ct);
+                var updatedAt = Math.Max(0L, response.updatedAt);
+                var nextUpdateAt = Math.Max(0L, response.nextUpdateAt);
+                Debug.Log(
+                    $"{LogPrefix} GetData parsed. PlayerId={MaskPlayerId(playerId)}, AvailableSpins={availableSpins}, " +
+                    $"UpdatedAt={updatedAt}, NextUpdateAt={nextUpdateAt}");
+                //await TryPersistCachedDataAsync(cachedData, availableSpins, ct);
 
-                return new FortuneWheelDataServerItem(availableSpins, nextRegenSeconds);
+                return new FortuneWheelDataServerItem(availableSpins, updatedAt, nextUpdateAt);
             }
             catch (OperationCanceledException)
             {
@@ -77,7 +80,7 @@ namespace FortuneWheel
                 Debug.LogWarning(
                     $"{LogPrefix} GetData failed. Falling back to cached data. PlayerId={MaskPlayerId(playerId)}, VerificationUrl={verificationUrl}, " +
                     $"CachedAvailableSpins={fallbackSpins}, CachedLastResetTimestamp={Math.Max(0, cachedData.LastResetTimestamp)}, Reason={exception}");
-                return new FortuneWheelDataServerItem(fallbackSpins, 0);
+                return new FortuneWheelDataServerItem(fallbackSpins, 0, 0);
             }
         }
         
@@ -173,16 +176,18 @@ namespace FortuneWheel
                 }
 
                 var availableSpins = Mathf.Max(0, response.availableSpins);
-                var nextRegenSeconds = Mathf.Max(0, response.nextRegenSeconds);
+                var updatedAt = Math.Max(0L, response.updatedAt);
+                var nextUpdateAt = Math.Max(0L, response.nextUpdateAt);
                 Debug.Log(
                     $"{LogPrefix} Spin parsed. PlayerId={MaskPlayerId(playerId)}, RewardId={response.rewardId}, " +
-                    $"AvailableSpins={availableSpins}, NextRegenSeconds={nextRegenSeconds}");
+                    $"AvailableSpins={availableSpins}, UpdatedAt={updatedAt}, NextUpdateAt={nextUpdateAt}");
                 await TryPersistCachedDataAsync(cachedData, availableSpins, ct);
 
                 return new FortuneWheelSpinResult(
                     response.rewardId,
                     availableSpins,
-                    nextRegenSeconds);
+                    updatedAt,
+                    nextUpdateAt);
             }
             catch (OperationCanceledException)
             {
@@ -309,14 +314,16 @@ namespace FortuneWheel
         {
             public string rewardId;
             public int availableSpins;
-            public int nextRegenSeconds;
+            public long updatedAt;
+            public long nextUpdateAt;
         }
 
         [Serializable]
         private sealed class WheelDataResponseBody
         {
             public int availableSpins;
-            public int nextRegenSeconds;
+            public long updatedAt;
+            public long nextUpdateAt;
         }
     }
 }

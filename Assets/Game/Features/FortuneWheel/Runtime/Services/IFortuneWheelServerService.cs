@@ -24,12 +24,14 @@ namespace FortuneWheel
     public sealed class FortuneWheelDataServerItem
     {
         public int AvailableSpins { get; }
-        public int NextRegenSeconds { get; }
+        public long UpdatedAt { get; }
+        public long NextUpdateAt { get; }
 
-        public FortuneWheelDataServerItem(int availableSpins, int nextRegenSeconds)
+        public FortuneWheelDataServerItem(int availableSpins, long updatedAt, long nextUpdateAt)
         {
             AvailableSpins = availableSpins;
-            NextRegenSeconds = nextRegenSeconds;
+            UpdatedAt = updatedAt;
+            NextUpdateAt = nextUpdateAt;
         }
     }
     
@@ -37,13 +39,15 @@ namespace FortuneWheel
     {
         public string RewardId { get; }
         public int AvailableSpins { get; }
-        public int NextRegenSeconds { get; }
+        public long UpdatedAt { get; }
+        public long NextUpdateAt { get; }
 
-        public FortuneWheelSpinResult(string rewardId, int availableSpins, int nextRegenSeconds)
+        public FortuneWheelSpinResult(string rewardId, int availableSpins, long updatedAt, long nextUpdateAt)
         {
             RewardId = rewardId;
             AvailableSpins = availableSpins;
-            NextRegenSeconds = nextRegenSeconds;
+            UpdatedAt = updatedAt;
+            NextUpdateAt = nextUpdateAt;
         }
     }
 }

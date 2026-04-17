@@ -232,7 +232,10 @@ namespace FortuneWheel
             }
 
             _currentSpinsAmount = Mathf.Max(0, spinResult.AvailableSpins);
-            _currentRemainingTime = TimeSpan.FromSeconds(Mathf.Max(0, spinResult.NextRegenSeconds));
+            var nowUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var nextUpdateAtUnixSeconds = NormalizeUnixTimestampToSeconds(spinResult.NextUpdateAt);
+            var remainingSeconds = Math.Max(0L, nextUpdateAtUnixSeconds - nowUnixSeconds);
+            _currentRemainingTime = TimeSpan.FromSeconds(remainingSeconds);
             RefreshViewData();
         }
 
@@ -296,6 +299,19 @@ namespace FortuneWheel
             }
 
             UIManager.Hide<FortuneWheelController>();
+        }
+
+        private static long NormalizeUnixTimestampToSeconds(long unixTimestamp)
+        {
+            if (unixTimestamp <= 0)
+            {
+                return 0;
+            }
+
+            // Current Unix seconds are ~10 digits, while Unix milliseconds are ~13.
+            return unixTimestamp >= 1_000_000_000_000L
+                ? unixTimestamp / 1000L
+                : unixTimestamp;
         }
     }
 }

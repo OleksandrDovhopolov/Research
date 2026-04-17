@@ -66,7 +66,10 @@ namespace FortuneWheel
             }
             
             var data = await _fortuneWheelServerService.GetDataSync(ct);
-            var timeSpan = TimeSpan.FromSeconds(Mathf.Max(0, data.NextRegenSeconds));
+            var nowUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var nextUpdateAtUnixSeconds = NormalizeUnixTimestampToSeconds(data.NextUpdateAt);
+            var remainingSeconds = Math.Max(0L, nextUpdateAtUnixSeconds - nowUnixSeconds);
+            var timeSpan = TimeSpan.FromSeconds(remainingSeconds);
 
             IReadOnlyList<FortuneWheelRewardServerItem> rewards = await _fortuneWheelServerService.GetRewardsAsync(ct);
             if (rewards == null || rewards.Count == 0)
@@ -126,6 +129,19 @@ namespace FortuneWheel
             }
 
             return $"{playerId.Substring(0, 4)}...{playerId.Substring(playerId.Length - 4, 4)}";
+        }
+
+        private static long NormalizeUnixTimestampToSeconds(long unixTimestamp)
+        {
+            if (unixTimestamp <= 0)
+            {
+                return 0;
+            }
+
+            // Current Unix seconds are ~10 digits, while Unix milliseconds are ~13.
+            return unixTimestamp >= 1_000_000_000_000L
+                ? unixTimestamp / 1000L
+                : unixTimestamp;
         }
     }
 }
