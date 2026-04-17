@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using Core.Models;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
 using UnityEngine;
@@ -11,48 +12,73 @@ namespace FortuneWheel
 {
     public sealed class FortuneWheelServerService : IFortuneWheelServerService
     {
+        private const string LogPrefix = "[FortuneWheelServerService]";
         private const string DataUrl = "wheel/data";
         private const string RewardsUrl = "wheel/rewards";
         private const string SpinUrl = "wheel/spin";
 
         private readonly IPlayerIdentityProvider _playerIdentityProvider;
+        private readonly SaveService _saveService;
 
-        public FortuneWheelServerService(IPlayerIdentityProvider playerIdentityProvider)
+        public FortuneWheelServerService(IPlayerIdentityProvider playerIdentityProvider, SaveService saveService)
         {
             _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
+            _saveService = saveService ?? throw new ArgumentNullException(nameof(saveService));
         }
         
         public async UniTask<FortuneWheelDataServerItem> GetDataSync(CancellationToken ct = default)
         {
+            var cachedData = await GetCachedDataSafeAsync(ct);
             var playerId = _playerIdentityProvider.GetPlayerId();
             if (string.IsNullOrWhiteSpace(playerId))
             {
                 throw new InvalidOperationException("Player id is empty.");
             }
 
-            var encodedPlayerId = UnityWebRequest.EscapeURL(playerId);
-            var requestUrl = $"{ApiConfig.BaseUrl}{DataUrl}?playerId={encodedPlayerId}";
-            using var request = UnityWebRequest.Get(requestUrl);
-            request.downloadHandler = new DownloadHandlerBuffer();
-
-            await request.SendWebRequest().ToUniTask(cancellationToken: ct);
-            ThrowIfFailed(request, "GetData");
-
-            var responseText = request.downloadHandler?.text;
-            if (string.IsNullOrWhiteSpace(responseText))
+            try
             {
-                throw new InvalidOperationException("GetData response payload is empty.");
-            }
+                var encodedPlayerId = UnityWebRequest.EscapeURL(playerId);
+                var requestUrl = $"{ApiConfig.BaseUrl}{DataUrl}?playerId={encodedPlayerId}";
+                Debug.Log($"{LogPrefix} GetData request. Url={requestUrl}, PlayerId={MaskPlayerId(playerId)}");
+                using var request = UnityWebRequest.Get(requestUrl);
+                request.downloadHandler = new DownloadHandlerBuffer();
 
-            var response = JsonUtility.FromJson<WheelDataResponseBody>(responseText);
-            if (response == null)
+                await request.SendWebRequest().ToUniTask(cancellationToken: ct);
+                ThrowIfFailed(request, "GetData");
+
+                var responseText = request.downloadHandler?.text;
+                Debug.Log($"{LogPrefix} GetData response. {BuildResponseSummary(request, responseText)}");
+                if (string.IsNullOrWhiteSpace(responseText))
+                {
+                    throw new InvalidOperationException("GetData response payload is empty.");
+                }
+
+                var response = JsonUtility.FromJson<WheelDataResponseBody>(responseText);
+                if (response == null)
+                {
+                    throw new InvalidOperationException("GetData response payload is invalid.");
+                }
+
+                var availableSpins = Mathf.Max(0, response.availableSpins);
+                var nextRegenSeconds = Mathf.Max(0, response.nextRegenSeconds);
+                Debug.Log($"{LogPrefix} GetData parsed. PlayerId={MaskPlayerId(playerId)}, AvailableSpins={availableSpins}, NextRegenSeconds={nextRegenSeconds}");
+                await TryPersistCachedDataAsync(cachedData, availableSpins, ct);
+
+                return new FortuneWheelDataServerItem(availableSpins, nextRegenSeconds);
+            }
+            catch (OperationCanceledException)
             {
-                throw new InvalidOperationException("GetData response payload is invalid.");
+                throw;
             }
-
-            return new FortuneWheelDataServerItem(
-                Mathf.Max(0, response.availableSpins),
-                Mathf.Max(0, response.nextRegenSeconds));
+            catch (Exception exception)
+            {
+                var fallbackSpins = Mathf.Max(0, cachedData.AvailableSpins);
+                var verificationUrl = BuildWheelDataUrl(playerId);
+                Debug.LogWarning(
+                    $"{LogPrefix} GetData failed. Falling back to cached data. PlayerId={MaskPlayerId(playerId)}, VerificationUrl={verificationUrl}, " +
+                    $"CachedAvailableSpins={fallbackSpins}, CachedLastResetTimestamp={Math.Max(0, cachedData.LastResetTimestamp)}, Reason={exception}");
+                return new FortuneWheelDataServerItem(fallbackSpins, 0);
+            }
         }
         
         public async UniTask<IReadOnlyList<FortuneWheelRewardServerItem>> GetRewardsAsync(CancellationToken ct = default)
@@ -108,6 +134,7 @@ namespace FortuneWheel
 
         public async UniTask<FortuneWheelSpinResult> SpinAsync(CancellationToken ct = default)
         {
+            var cachedData = await GetCachedDataSafeAsync(ct);
             var playerId = _playerIdentityProvider.GetPlayerId();
             if (string.IsNullOrWhiteSpace(playerId))
             {
@@ -119,30 +146,131 @@ namespace FortuneWheel
                 playerId = playerId
             });
 
-            using var request = new UnityWebRequest(ApiConfig.BaseUrl + SpinUrl, UnityWebRequest.kHttpVerbPOST);
-            request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(requestBody));
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
+            var spinUrl = ApiConfig.BaseUrl + SpinUrl;
+            Debug.Log($"{LogPrefix} Spin request. Url={spinUrl}, PlayerId={MaskPlayerId(playerId)}, RequestBodyLength={requestBody.Length}");
 
-            await request.SendWebRequest().ToUniTask(cancellationToken: ct);
-            ThrowIfFailed(request, "Spin");
-
-            var responseText = request.downloadHandler?.text;
-            if (string.IsNullOrWhiteSpace(responseText))
+            try
             {
-                throw new InvalidOperationException("Spin response payload is empty.");
+                using var request = new UnityWebRequest(spinUrl, UnityWebRequest.kHttpVerbPOST);
+                request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(requestBody));
+                request.downloadHandler = new DownloadHandlerBuffer();
+                request.SetRequestHeader("Content-Type", "application/json");
+
+                await request.SendWebRequest().ToUniTask(cancellationToken: ct);
+                ThrowIfFailed(request, "Spin");
+
+                var responseText = request.downloadHandler?.text;
+                Debug.Log($"{LogPrefix} Spin response. {BuildResponseSummary(request, responseText)}");
+                if (string.IsNullOrWhiteSpace(responseText))
+                {
+                    throw new InvalidOperationException("Spin response payload is empty.");
+                }
+
+                var response = JsonUtility.FromJson<SpinResponseBody>(responseText);
+                if (response == null || string.IsNullOrWhiteSpace(response.rewardId))
+                {
+                    throw new InvalidOperationException("Spin response payload is invalid.");
+                }
+
+                var availableSpins = Mathf.Max(0, response.availableSpins);
+                var nextRegenSeconds = Mathf.Max(0, response.nextRegenSeconds);
+                Debug.Log(
+                    $"{LogPrefix} Spin parsed. PlayerId={MaskPlayerId(playerId)}, RewardId={response.rewardId}, " +
+                    $"AvailableSpins={availableSpins}, NextRegenSeconds={nextRegenSeconds}");
+                await TryPersistCachedDataAsync(cachedData, availableSpins, ct);
+
+                return new FortuneWheelSpinResult(
+                    response.rewardId,
+                    availableSpins,
+                    nextRegenSeconds);
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.LogWarning($"{LogPrefix} Spin canceled. PlayerId={MaskPlayerId(playerId)}");
+                throw;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning(
+                    $"{LogPrefix} Spin failed. PlayerId={MaskPlayerId(playerId)}, VerificationUrl={BuildWheelDataUrl(playerId)}, Reason={exception}");
+                throw;
+            }
+        }
+
+        private async UniTask<FortuneWheelModuleSaveData> GetCachedDataSafeAsync(CancellationToken ct)
+        {
+            try
+            {
+                return await _saveService.GetReadonlyModuleAsync(data => new FortuneWheelModuleSaveData
+                {
+                    AvailableSpins = data.FortuneWheel?.AvailableSpins ?? 0,
+                    LastResetTimestamp = data.FortuneWheel?.LastResetTimestamp ?? 0
+                }, ct) ?? new FortuneWheelModuleSaveData();
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"{LogPrefix} Failed to load cached FortuneWheel data: {exception.Message}");
+                return new FortuneWheelModuleSaveData();
+            }
+        }
+
+        private async UniTask TryPersistCachedDataAsync(FortuneWheelModuleSaveData cachedData, int availableSpins, CancellationToken ct)
+        {
+            var normalizedSpins = Mathf.Max(0, availableSpins);
+            var previousSpins = Mathf.Max(0, cachedData?.AvailableSpins ?? 0);
+            var previousResetTimestamp = Math.Max(0, cachedData?.LastResetTimestamp ?? 0);
+            var shouldUpdateResetTimestamp = normalizedSpins > previousSpins;
+            var resetTimestamp = shouldUpdateResetTimestamp
+                ? DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                : previousResetTimestamp;
+
+            try
+            {
+                await _saveService.UpdateModuleAsync(data => data, root =>
+                {
+                    root.FortuneWheel ??= new FortuneWheelModuleSaveData();
+                    root.FortuneWheel.AvailableSpins = normalizedSpins;
+                    root.FortuneWheel.LastResetTimestamp = Math.Max(0, resetTimestamp);
+                }, ct);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"{LogPrefix} Failed to persist FortuneWheel cache: {exception.Message}");
+            }
+        }
+
+        private static string BuildResponseSummary(UnityWebRequest request, string responseText)
+        {
+            return $"Status={(int)request.responseCode}, Result={request.result}, Error={request.error}, BodyLength={(responseText?.Length ?? 0)}";
+        }
+
+        private static string BuildWheelDataUrl(string playerId)
+        {
+            var encodedPlayerId = UnityWebRequest.EscapeURL(playerId ?? string.Empty);
+            return $"{ApiConfig.BaseUrl}{DataUrl}?playerId={encodedPlayerId}";
+        }
+
+        private static string MaskPlayerId(string playerId)
+        {
+            if (string.IsNullOrWhiteSpace(playerId))
+            {
+                return "<empty>";
             }
 
-            var response = JsonUtility.FromJson<SpinResponseBody>(responseText);
-            if (response == null || string.IsNullOrWhiteSpace(response.rewardId))
+            if (playerId.Length <= 8)
             {
-                throw new InvalidOperationException("Spin response payload is invalid.");
+                return playerId;
             }
 
-            return new FortuneWheelSpinResult(
-                response.rewardId,
-                Mathf.Max(0, response.availableSpins),
-                Mathf.Max(0, response.nextRegenSeconds));
+            return $"{playerId.Substring(0, 4)}...{playerId.Substring(playerId.Length - 4, 4)}";
         }
 
         private static void ThrowIfFailed(UnityWebRequest request, string operationName)

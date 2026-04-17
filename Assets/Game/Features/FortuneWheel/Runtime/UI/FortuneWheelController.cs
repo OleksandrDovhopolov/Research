@@ -117,7 +117,10 @@ namespace FortuneWheel
                 return;
             }
 
+            var previousSpinsAmount = _currentSpinsAmount;
+            _currentSpinsAmount = Mathf.Max(0, _currentSpinsAmount - 1);
             _isSpinRequestInProgress = true;
+            RefreshViewData();
             UpdateInteractionState();
 
             try
@@ -129,6 +132,7 @@ namespace FortuneWheel
                 if (targetSectorIndex < 0)
                 {
                     Debug.LogWarning($"[{nameof(FortuneWheelController)}] Reward id '{spinResult.RewardId}' was not found in sectors.");
+                    RestoreOptimisticSpins(previousSpinsAmount);
                     return;
                 }
 
@@ -147,10 +151,12 @@ namespace FortuneWheel
             }
             catch (OperationCanceledException)
             {
+                RestoreOptimisticSpins(previousSpinsAmount);
             }
             catch (Exception exception)
             {
                 Debug.LogWarning($"[{nameof(FortuneWheelController)}] Spin request failed. {exception.Message}");
+                RestoreOptimisticSpins(previousSpinsAmount);
             }
             finally
             {
@@ -227,6 +233,18 @@ namespace FortuneWheel
 
             _currentSpinsAmount = Mathf.Max(0, spinResult.AvailableSpins);
             _currentRemainingTime = TimeSpan.FromSeconds(Mathf.Max(0, spinResult.NextRegenSeconds));
+            RefreshViewData();
+        }
+
+        private void RestoreOptimisticSpins(int previousSpinsAmount)
+        {
+            var normalizedPrevious = Mathf.Max(0, previousSpinsAmount);
+            if (_currentSpinsAmount == normalizedPrevious)
+            {
+                return;
+            }
+
+            _currentSpinsAmount = normalizedPrevious;
             RefreshViewData();
         }
 

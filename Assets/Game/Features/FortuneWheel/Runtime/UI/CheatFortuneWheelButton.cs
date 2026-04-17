@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Infrastructure;
 using Rewards;
 using UISystem;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 using VContainer;
 
@@ -13,6 +15,7 @@ namespace FortuneWheel
 {
     public class CheatFortuneWheelButton : MonoBehaviour
     {
+        private const string LogPrefix = "[CheatFortuneWheelButton]";
         private const int SectorCount = 8;
 
         [SerializeField] private Button _cheatButton;
@@ -23,13 +26,19 @@ namespace FortuneWheel
         private UIManager _uiManager;
         private IRewardSpecProvider _rewardSpecProvider;
         private IFortuneWheelServerService _fortuneWheelServerService;
+        private IPlayerIdentityProvider _playerIdentityProvider;
         
         [Inject]
-        public void Install(UIManager uiManager, IRewardSpecProvider rewardSpecProvider, IFortuneWheelServerService  fortuneWheelServerService)
+        public void Install(
+            UIManager uiManager,
+            IRewardSpecProvider rewardSpecProvider,
+            IFortuneWheelServerService fortuneWheelServerService,
+            IPlayerIdentityProvider playerIdentityProvider)
         {
             _uiManager = uiManager;
             _rewardSpecProvider = rewardSpecProvider;
             _fortuneWheelServerService = fortuneWheelServerService;
+            _playerIdentityProvider = playerIdentityProvider;
         }
         
         private void Awake()
@@ -46,6 +55,15 @@ namespace FortuneWheel
         {
             ct.ThrowIfCancellationRequested();
             await UniTask.Yield();
+
+            var playerId = _playerIdentityProvider?.GetPlayerId();
+            if (!string.IsNullOrWhiteSpace(playerId))
+            {
+                var verificationUrl = BuildWheelDataUrl(playerId);
+                Debug.Log(
+                    $"{LogPrefix} Player context. PlayerId={playerId}, MaskedPlayerId={MaskPlayerId(playerId)}, " +
+                    $"VerifyWith={verificationUrl}");
+            }
             
             var data = await _fortuneWheelServerService.GetDataSync(ct);
             var timeSpan = TimeSpan.FromSeconds(Mathf.Max(0, data.NextRegenSeconds));
@@ -87,6 +105,27 @@ namespace FortuneWheel
             Debug.LogWarning($"[Debug] CheatFortuneWheelButton {data.AvailableSpins} / {timeSpan} / {rewards.Count} - {sectors.Count}");
             var args = new FortuneWheelArgs(data.AvailableSpins, timeSpan, sectors);
             _uiManager.Show<FortuneWheelController>(args);
+        }
+
+        private static string BuildWheelDataUrl(string playerId)
+        {
+            var encodedPlayerId = UnityWebRequest.EscapeURL(playerId ?? string.Empty);
+            return $"{ApiConfig.BaseUrl}wheel/data?playerId={encodedPlayerId}";
+        }
+
+        private static string MaskPlayerId(string playerId)
+        {
+            if (string.IsNullOrWhiteSpace(playerId))
+            {
+                return "<empty>";
+            }
+
+            if (playerId.Length <= 8)
+            {
+                return playerId;
+            }
+
+            return $"{playerId.Substring(0, 4)}...{playerId.Substring(playerId.Length - 4, 4)}";
         }
     }
 }

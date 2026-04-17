@@ -11,6 +11,7 @@ namespace Core.Models
         public List<CardCollectionModuleSaveData> CardCollections = new();
         public List<EventStateSaveData> EventStates = new();
         public ResourcesModuleSaveData Resources = new();
+        public FortuneWheelModuleSaveData FortuneWheel = new();
         public Dictionary<string, string> CustomModulesJson = new();
 
         public static GameSaveData CreateDefault(int schemaVersion, string saveId)
@@ -98,5 +99,12 @@ namespace Core.Models
         public int Gold;
         public int Energy;
         public int Gems;
+    }
+
+    [Serializable]
+    public sealed class FortuneWheelModuleSaveData
+    {
+        public int AvailableSpins { get; set; }
+        public long LastResetTimestamp { get; set; }
     }
 }

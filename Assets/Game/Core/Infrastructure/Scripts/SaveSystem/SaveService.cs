@@ -278,6 +278,7 @@ namespace Infrastructure
             data.CardCollections ??= new List<CardCollectionModuleSaveData>();
             data.EventStates ??= new List<EventStateSaveData>();
             data.Resources ??= new ResourcesModuleSaveData();
+            data.FortuneWheel ??= new FortuneWheelModuleSaveData();
             data.CustomModulesJson ??= new Dictionary<string, string>();
             data.Meta.SaveId ??= Guid.NewGuid().ToString("N");
             data.Meta.Hash ??= string.Empty;
@@ -289,6 +290,8 @@ namespace Infrastructure
             data.Resources.Energy = Math.Max(0, data.Resources.Energy);
             data.Resources.Gems = Math.Max(0, data.Resources.Gems);
             data.Resources.Version = Math.Max(1, data.Resources.Version);
+            data.FortuneWheel.AvailableSpins = Math.Max(0, data.FortuneWheel.AvailableSpins);
+            data.FortuneWheel.LastResetTimestamp = Math.Max(0, data.FortuneWheel.LastResetTimestamp);
 
             foreach (var owner in data.Inventory.Owners)
             {

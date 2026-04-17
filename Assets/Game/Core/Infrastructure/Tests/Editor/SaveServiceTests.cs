@@ -99,6 +99,49 @@ namespace Infrastructure.Tests.Editor
             Assert.That(File.Exists(_testFilePath), Is.True);
         });
 
+        [UnityTest]
+        public IEnumerator LoadAll_InitializesFortuneWheel_WhenFieldMissingInJson() => UniTask.ToCoroutine(async () =>
+        {
+            const string legacyJsonWithoutFortuneWheel = "{\n" +
+                                                        "  \"Meta\": { \"SchemaVersion\": 2, \"LastSaveTimestamp\": 0, \"Hash\": \"\", \"SaveId\": \"legacy\", \"Revision\": 0 },\n" +
+                                                        "  \"Inventory\": { \"Owners\": [] },\n" +
+                                                        "  \"CardCollections\": [],\n" +
+                                                        "  \"EventStates\": [],\n" +
+                                                        "  \"Resources\": { \"Version\": 1, \"Gold\": 0, \"Energy\": 0, \"Gems\": 0 },\n" +
+                                                        "  \"CustomModulesJson\": {}\n" +
+                                                        "}";
+            await File.WriteAllTextAsync(_testFilePath, legacyJsonWithoutFortuneWheel, CancellationToken.None);
+
+            var service = CreateService();
+            var data = await service.LoadAllAsync(CancellationToken.None);
+
+            Assert.That(data.FortuneWheel, Is.Not.Null);
+            Assert.That(data.FortuneWheel.AvailableSpins, Is.EqualTo(0));
+            Assert.That(data.FortuneWheel.LastResetTimestamp, Is.EqualTo(0));
+        });
+
+        [UnityTest]
+        public IEnumerator LoadAll_ClampsFortuneWheelValues_WhenNegative() => UniTask.ToCoroutine(async () =>
+        {
+            const string invalidFortuneWheelJson = "{\n" +
+                                                   "  \"Meta\": { \"SchemaVersion\": 2, \"LastSaveTimestamp\": 0, \"Hash\": \"\", \"SaveId\": \"invalid\", \"Revision\": 0 },\n" +
+                                                   "  \"Inventory\": { \"Owners\": [] },\n" +
+                                                   "  \"CardCollections\": [],\n" +
+                                                   "  \"EventStates\": [],\n" +
+                                                   "  \"Resources\": { \"Version\": 1, \"Gold\": 0, \"Energy\": 0, \"Gems\": 0 },\n" +
+                                                   "  \"FortuneWheel\": { \"AvailableSpins\": -3, \"LastResetTimestamp\": -100 },\n" +
+                                                   "  \"CustomModulesJson\": {}\n" +
+                                                   "}";
+            await File.WriteAllTextAsync(_testFilePath, invalidFortuneWheelJson, CancellationToken.None);
+
+            var service = CreateService();
+            var data = await service.LoadAllAsync(CancellationToken.None);
+
+            Assert.That(data.FortuneWheel, Is.Not.Null);
+            Assert.That(data.FortuneWheel.AvailableSpins, Is.EqualTo(0));
+            Assert.That(data.FortuneWheel.LastResetTimestamp, Is.EqualTo(0));
+        });
+
         private SaveService CreateService()
         {
             var storage = new LocalDiskStorage(TestFileName);

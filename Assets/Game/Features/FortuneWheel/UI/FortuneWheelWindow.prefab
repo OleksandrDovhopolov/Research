@@ -5143,7 +5143,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _animation: {fileID: -4344370285081404344}
   _closeButtons:
-  - {fileID: 661212151933234847}
+  - {fileID: 3116395136318051558}
   _spinsAmountText: {fileID: 4274832647896525673}
   _timerText: {fileID: 4274832647890031579}
   _spinButton: {fileID: 4274832646613014367}
@@ -42968,6 +42968,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: eb6f7fac6c784e841b548d589ee592bf, type: 3}
+--- !u!114 &3116395136318051558 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 622444053282705433, guid: eb6f7fac6c784e841b548d589ee592bf, type: 3}
+  m_PrefabInstance: {fileID: 2566195598344996095}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!224 &8725551932297049145 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6524473464639697094, guid: eb6f7fac6c784e841b548d589ee592bf, type: 3}
