@@ -107,18 +107,5 @@ namespace Core.Models
     {
         public int AvailableSpins { get; set; }
         public long UpdatedAt { get; set; }
-        public long NextUpdateAt { get; set; }
-
-        [JsonProperty("LastResetTimestamp")]
-        private long LegacyLastResetTimestamp
-        {
-            set
-            {
-                if (UpdatedAt <= 0)
-                {
-                    UpdatedAt = Math.Max(0, value);
-                }
-            }
-        }
     }
 }

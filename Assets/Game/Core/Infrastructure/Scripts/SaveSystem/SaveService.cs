@@ -292,7 +292,6 @@ namespace Infrastructure
             data.Resources.Version = Math.Max(1, data.Resources.Version);
             data.FortuneWheel.AvailableSpins = Math.Max(0, data.FortuneWheel.AvailableSpins);
             data.FortuneWheel.UpdatedAt = Math.Max(0, data.FortuneWheel.UpdatedAt);
-            data.FortuneWheel.NextUpdateAt = Math.Max(0, data.FortuneWheel.NextUpdateAt);
 
             foreach (var owner in data.Inventory.Owners)
             {

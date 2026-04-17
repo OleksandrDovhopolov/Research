@@ -69,7 +69,7 @@ namespace FortuneWheel
                     $"{LogPrefix} [{operationId}] GetData parsed. PlayerId={MaskPlayerId(playerId)}, " +
                     $"RawAvailableSpins={response.availableSpins}, RawUpdatedAt={response.updatedAt}, RawNextUpdateAt={response.nextUpdateAt}, " +
                     $"NormalizedAvailableSpins={availableSpins}, NormalizedUpdatedAt={updatedAt}, NormalizedNextUpdateAt={nextUpdateAt}");
-                //await TryPersistCachedDataAsync(availableSpins, updatedAt, nextUpdateAt, "GetData", operationId, ct);
+                //await TryPersistCachedDataAsync(availableSpins, updatedAt, "GetData", operationId, ct);
 
                 return new FortuneWheelDataServerItem(availableSpins, updatedAt, nextUpdateAt);
             }
@@ -81,11 +81,12 @@ namespace FortuneWheel
             {
                 var fallbackSpins = Mathf.Max(0, cachedData.AvailableSpins);
                 var fallbackUpdatedAt = Math.Max(0L, cachedData.UpdatedAt);
-                var fallbackNextUpdateAt = Math.Max(0L, cachedData.NextUpdateAt);
+                const long fallbackNextUpdateAt = 0L;
                 var verificationUrl = BuildWheelDataUrl(playerId);
                 Debug.LogWarning(
                     $"{LogPrefix} [{operationId}] GetData failed. Falling back to cached data. PlayerId={MaskPlayerId(playerId)}, VerificationUrl={verificationUrl}, " +
-                    $"CachedAvailableSpins={fallbackSpins}, CachedUpdatedAt={fallbackUpdatedAt}, CachedNextUpdateAt={fallbackNextUpdateAt}, Reason={exception}");
+                    $"CachedAvailableSpins={fallbackSpins}, CachedUpdatedAt={fallbackUpdatedAt}, " +
+                    $"FallbackNextUpdateAt={fallbackNextUpdateAt} (server-only field), Reason={exception}");
                 return new FortuneWheelDataServerItem(fallbackSpins, fallbackUpdatedAt, fallbackNextUpdateAt);
             }
         }
@@ -203,7 +204,7 @@ namespace FortuneWheel
                         $"RewardId={response.rewardId}, PlayerId={MaskPlayerId(playerId)}");
                 }
 
-                await TryPersistCachedDataAsync(availableSpins, updatedAt, nextUpdateAt, "Spin", operationId, ct);
+                await TryPersistCachedDataAsync(availableSpins, updatedAt, "Spin", operationId, ct);
                 var cachedDataAfter = await GetCachedDataSafeAsync(ct);
                 Debug.Log($"{LogPrefix} [{operationId}] Spin cache after persist. CachedAfter={BuildCacheSummary(cachedDataAfter)}");
 
@@ -233,8 +234,7 @@ namespace FortuneWheel
                 return await _saveService.GetReadonlyModuleAsync(data => new FortuneWheelModuleSaveData
                 {
                     AvailableSpins = data.FortuneWheel?.AvailableSpins ?? 0,
-                    UpdatedAt = data.FortuneWheel?.UpdatedAt ?? 0,
-                    NextUpdateAt = data.FortuneWheel?.NextUpdateAt ?? 0
+                    UpdatedAt = data.FortuneWheel?.UpdatedAt ?? 0
                 }, ct) ?? new FortuneWheelModuleSaveData();
             }
             catch (OperationCanceledException)
@@ -251,23 +251,20 @@ namespace FortuneWheel
         private async UniTask TryPersistCachedDataAsync(
             int availableSpins,
             long updatedAt,
-            long nextUpdateAt,
             string source,
             string operationId,
             CancellationToken ct)
         {
             var normalizedSpins = Mathf.Max(0, availableSpins);
             var normalizedUpdatedAt = Math.Max(0L, updatedAt);
-            var normalizedNextUpdateAt = Math.Max(0L, nextUpdateAt);
             var beforeSpins = 0;
             var beforeUpdatedAt = 0L;
-            var beforeNextUpdateAt = 0L;
             var hasBeforeSnapshot = false;
 
             Debug.Log(
                 $"{LogPrefix} [{operationId}] Persist cache begin. Source={source}, " +
-                $"IncomingAvailableSpins={availableSpins}, IncomingUpdatedAt={updatedAt}, IncomingNextUpdateAt={nextUpdateAt}, " +
-                $"NormalizedAvailableSpins={normalizedSpins}, NormalizedUpdatedAt={normalizedUpdatedAt}, NormalizedNextUpdateAt={normalizedNextUpdateAt}");
+                $"IncomingAvailableSpins={availableSpins}, IncomingUpdatedAt={updatedAt}, " +
+                $"NormalizedAvailableSpins={normalizedSpins}, NormalizedUpdatedAt={normalizedUpdatedAt}");
 
             try
             {
@@ -277,18 +274,16 @@ namespace FortuneWheel
                     hasBeforeSnapshot = true;
                     beforeSpins = Mathf.Max(0, root.FortuneWheel.AvailableSpins);
                     beforeUpdatedAt = Math.Max(0L, root.FortuneWheel.UpdatedAt);
-                    beforeNextUpdateAt = Math.Max(0L, root.FortuneWheel.NextUpdateAt);
                     root.FortuneWheel.AvailableSpins = normalizedSpins;
                     root.FortuneWheel.UpdatedAt = normalizedUpdatedAt;
-                    root.FortuneWheel.NextUpdateAt = normalizedNextUpdateAt;
                 }, ct);
 
                 var beforeSummary = hasBeforeSnapshot
-                    ? $"Spins={beforeSpins}, UpdatedAt={beforeUpdatedAt}, NextUpdateAt={beforeNextUpdateAt}"
+                    ? $"Spins={beforeSpins}, UpdatedAt={beforeUpdatedAt}"
                     : "<unknown>";
                 Debug.Log(
                     $"{LogPrefix} [{operationId}] Persist cache completed. Source={source}, " +
-                    $"Before={beforeSummary}, After=Spins={normalizedSpins}, UpdatedAt={normalizedUpdatedAt}, NextUpdateAt={normalizedNextUpdateAt}");
+                    $"Before={beforeSummary}, After=Spins={normalizedSpins}, UpdatedAt={normalizedUpdatedAt}");
             }
             catch (OperationCanceledException)
             {
@@ -298,7 +293,7 @@ namespace FortuneWheel
             {
                 Debug.LogWarning(
                     $"{LogPrefix} [{operationId}] Failed to persist FortuneWheel cache. Source={source}, " +
-                    $"Target=Spins={normalizedSpins}, UpdatedAt={normalizedUpdatedAt}, NextUpdateAt={normalizedNextUpdateAt}, Reason={exception.Message}");
+                    $"Target=Spins={normalizedSpins}, UpdatedAt={normalizedUpdatedAt}, Reason={exception.Message}");
             }
         }
 
@@ -314,7 +309,7 @@ namespace FortuneWheel
                 return "<null>";
             }
 
-            return $"Spins={Mathf.Max(0, data.AvailableSpins)}, UpdatedAt={Math.Max(0L, data.UpdatedAt)}, NextUpdateAt={Math.Max(0L, data.NextUpdateAt)}";
+            return $"Spins={Mathf.Max(0, data.AvailableSpins)}, UpdatedAt={Math.Max(0L, data.UpdatedAt)}";
         }
 
         private static string CreateOperationId(string operationName)
