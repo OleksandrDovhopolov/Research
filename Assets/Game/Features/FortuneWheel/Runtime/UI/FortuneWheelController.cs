@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Rewards;
 using UISystem;
 using UnityEngine;
 using VContainer;
@@ -43,10 +41,10 @@ namespace FortuneWheel
     [Window("FortuneWheelWindow")]
     public class FortuneWheelController : WindowController<FortuneWheelView>
     {
-        private IRewardSpecProvider _rewardSpecProvider;
         private IFortuneWheelServerService _fortuneWheelServerService;
 
         private FortuneWheelArgs Args => Arguments as FortuneWheelArgs;
+        private IReadOnlyList<FortuneWheelSectorArgs> Sectors => Args?.Sectors ?? Array.Empty<FortuneWheelSectorArgs>();
 
         private int _currentSpinsAmount;
         private bool _isSpinning;
@@ -55,14 +53,12 @@ namespace FortuneWheel
         private CancellationTokenSource _requestCts;
         private FortuneWheelSpinResult _pendingSpinResult;
         private TimeSpan _currentRemainingTime;
-        private IReadOnlyList<FortuneWheelSectorArgs> _currentSectors = Array.Empty<FortuneWheelSectorArgs>();
 
         public override bool IsCloseBlocked => _isSpinning;
 
         [Inject]
-        private void Construct(IFortuneWheelServerService fortuneWheelServerService, IRewardSpecProvider rewardSpecProvider)
+        private void Construct(IFortuneWheelServerService fortuneWheelServerService)
         {
-            _rewardSpecProvider = rewardSpecProvider;
             _fortuneWheelServerService = fortuneWheelServerService;
         }
 
@@ -76,7 +72,6 @@ namespace FortuneWheel
                 Debug.LogError($"[{nameof(FortuneWheelController)}] {nameof(FortuneWheelArgs)} are missing.");
                 _isDataValid = false;
                 _currentSpinsAmount = 0;
-                _currentSectors = Array.Empty<FortuneWheelSectorArgs>();
                 _currentRemainingTime = TimeSpan.Zero;
                 UpdateInteractionState();
                 return;
@@ -84,13 +79,10 @@ namespace FortuneWheel
 
             _currentSpinsAmount = Mathf.Max(0, args.SpinsAmount);
             _currentRemainingTime = args.RemainingTime;
-            _currentSectors = CloneSectors(args.Sectors);
-            _isDataValid = ValidateSectors(_currentSectors);
+            _isDataValid = ValidateSectors(Sectors);
 
             RefreshViewData();
             UpdateInteractionState();
-
-            LoadRewardsFromServerAsync(_requestCts.Token).Forget();
         }
 
         protected override void OnShowComplete()
@@ -112,37 +104,6 @@ namespace FortuneWheel
             OnSpinClickedAsync(_requestCts?.Token ?? CancellationToken.None).Forget();
         }
 
-        private async UniTaskVoid LoadRewardsFromServerAsync(CancellationToken ct)
-        {
-            if (_fortuneWheelServerService == null)
-            {
-                return;
-            }
-
-            try
-            {
-                var rewardsFromServer = await _fortuneWheelServerService.GetRewardsAsync(ct);
-                var sectors = BuildSectorsFromServerRewards(rewardsFromServer);
-                if (!ValidateSectors(sectors))
-                {
-                    Debug.LogWarning($"[{nameof(FortuneWheelController)}] Invalid sectors from server. Keeping fallback args data.");
-                    return;
-                }
-
-                _currentSectors = sectors;
-                _isDataValid = true;
-                RefreshViewData();
-                UpdateInteractionState();
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception exception)
-            {
-                Debug.LogWarning($"[{nameof(FortuneWheelController)}] Failed to load wheel rewards from server. {exception.Message}");
-            }
-        }
-
         private async UniTaskVoid OnSpinClickedAsync(CancellationToken ct)
         {
             if (_isSpinning || _isSpinRequestInProgress || !_isDataValid || _currentSpinsAmount <= 0)
@@ -162,7 +123,8 @@ namespace FortuneWheel
             try
             {
                 var spinResult = await _fortuneWheelServerService.SpinAsync(ct);
-                var targetSectorIndex = FindSectorIndexByRewardId(_currentSectors, spinResult.RewardId);
+                Debug.LogWarning($"[{GetType().Name}] spinResult with RewardId {spinResult.RewardId}");
+                var targetSectorIndex = FindSectorIndexByRewardId(Sectors, spinResult.RewardId);
 
                 if (targetSectorIndex < 0)
                 {
@@ -221,7 +183,7 @@ namespace FortuneWheel
         private void UpdateInteractionState()
         {
             View.SetSpinInteractable(_isDataValid && !_isSpinning && !_isSpinRequestInProgress && _currentSpinsAmount > 0);
-            View.SetCloseInteractable(!_isSpinning);
+            View.SetCloseInteractable(_isSpinning);
         }
 
         private void CancelSpin()
@@ -253,7 +215,7 @@ namespace FortuneWheel
 
         private void RefreshViewData()
         {
-            View.SetData(new FortuneWheelArgs(_currentSpinsAmount, _currentRemainingTime, _currentSectors));
+            View.SetData(new FortuneWheelArgs(_currentSpinsAmount, _currentRemainingTime, Sectors));
         }
 
         private void ApplySpinResult(FortuneWheelSpinResult spinResult)
@@ -266,47 +228,6 @@ namespace FortuneWheel
             _currentSpinsAmount = Mathf.Max(0, spinResult.AvailableSpins);
             _currentRemainingTime = TimeSpan.FromSeconds(Mathf.Max(0, spinResult.NextRegenSeconds));
             RefreshViewData();
-        }
-
-        private IReadOnlyList<FortuneWheelSectorArgs> BuildSectorsFromServerRewards(IReadOnlyList<FortuneWheelRewardServerItem> rewardsFromServer)
-        {
-            if (rewardsFromServer == null || rewardsFromServer.Count != FortuneWheelArgs.SectorCount)
-            {
-                return Array.Empty<FortuneWheelSectorArgs>();
-            }
-
-            var existingById = _currentSectors
-                .Where(sector => sector != null && !string.IsNullOrWhiteSpace(sector.RewardId))
-                .GroupBy(sector => sector.RewardId, StringComparer.Ordinal)
-                .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
-
-            var sectors = new FortuneWheelSectorArgs[FortuneWheelArgs.SectorCount];
-            for (var i = 0; i < rewardsFromServer.Count; i++)
-            {
-                var rewardId = rewardsFromServer[i]?.RewardId;
-                if (string.IsNullOrWhiteSpace(rewardId))
-                {
-                    return Array.Empty<FortuneWheelSectorArgs>();
-                }
-
-                var icon = default(Sprite);
-                var amount = 0;
-
-                if (_rewardSpecProvider != null && _rewardSpecProvider.TryGet(rewardId, out var rewardSpec))
-                {
-                    icon = rewardSpec.Icon;
-                    amount = rewardSpec.TotalAmountForUi;
-                }
-                else if (existingById.TryGetValue(rewardId, out var fallbackSector))
-                {
-                    icon = fallbackSector.RewardIcon;
-                    amount = fallbackSector.RewardAmount;
-                }
-
-                sectors[i] = new FortuneWheelSectorArgs(rewardId, icon, amount);
-            }
-
-            return sectors;
         }
 
         private static int FindSectorIndexByRewardId(IReadOnlyList<FortuneWheelSectorArgs> sectors, string rewardId)
@@ -332,7 +253,8 @@ namespace FortuneWheel
         {
             if (sectors == null || sectors.Count != FortuneWheelArgs.SectorCount)
             {
-                Debug.LogError($"[{nameof(FortuneWheelController)}] Wheel expects exactly {FortuneWheelArgs.SectorCount} sectors. Now is {sectors.Count}");
+                var currentCount = sectors?.Count ?? 0;
+                Debug.LogError($"[{nameof(FortuneWheelController)}] Wheel expects exactly {FortuneWheelArgs.SectorCount} sectors. Now is {currentCount}");
                 return false;
             }
 
@@ -346,25 +268,6 @@ namespace FortuneWheel
             }
 
             return true;
-        }
-
-        private static IReadOnlyList<FortuneWheelSectorArgs> CloneSectors(IReadOnlyList<FortuneWheelSectorArgs> sectors)
-        {
-            if (sectors == null)
-            {
-                return Array.Empty<FortuneWheelSectorArgs>();
-            }
-
-            var result = new FortuneWheelSectorArgs[sectors.Count];
-            for (var i = 0; i < sectors.Count; i++)
-            {
-                var sector = sectors[i];
-                result[i] = sector == null
-                    ? null
-                    : new FortuneWheelSectorArgs(sector.RewardId, sector.RewardIcon, sector.RewardAmount);
-            }
-
-            return result;
         }
 
         private void CloseWindow()

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Rewards;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,12 +21,14 @@ namespace FortuneWheel
         private CancellationToken _destroyCt;
         
         private UIManager _uiManager;
+        private IRewardSpecProvider _rewardSpecProvider;
         private IFortuneWheelServerService _fortuneWheelServerService;
         
         [Inject]
-        public void Install(UIManager uiManager, IFortuneWheelServerService  fortuneWheelServerService)
+        public void Install(UIManager uiManager, IRewardSpecProvider rewardSpecProvider, IFortuneWheelServerService  fortuneWheelServerService)
         {
             _uiManager = uiManager;
+            _rewardSpecProvider = rewardSpecProvider;
             _fortuneWheelServerService = fortuneWheelServerService;
         }
         
@@ -62,8 +66,16 @@ namespace FortuneWheel
                     continue;
                 }
 
-                var sectorData = new FortuneWheelSectorArgs(reward.RewardId, _defaultSprite, 1);
-                sectors.Add(sectorData);
+                if (_rewardSpecProvider.TryGet(reward.RewardId, out var spec))
+                {
+                    var rewardConfig = spec.Resources.First();
+                    var sectorData = new FortuneWheelSectorArgs(reward.RewardId,rewardConfig.Icon, rewardConfig.Amount);
+                    sectors.Add(sectorData);
+                }
+                else
+                {
+                    Debug.LogError($"[CheatFortuneWheelButton] Failed to find reward spec for {reward.RewardId}");
+                }
             }
 
             if (sectors.Count != SectorCount)
@@ -72,9 +84,8 @@ namespace FortuneWheel
                 return;
             }
 
-            var args = new FortuneWheelArgs(data.AvailableSpins, timeSpan, sectors);
-
             Debug.LogWarning($"[Debug] CheatFortuneWheelButton {data.AvailableSpins} / {timeSpan} / {rewards.Count} - {sectors.Count}");
+            var args = new FortuneWheelArgs(data.AvailableSpins, timeSpan, sectors);
             _uiManager.Show<FortuneWheelController>(args);
         }
     }

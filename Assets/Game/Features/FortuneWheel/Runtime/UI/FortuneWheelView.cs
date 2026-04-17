@@ -59,7 +59,8 @@ namespace FortuneWheel
         [SerializeField] private int _spinFullTurns = 4;
 
         [Header("Close Lock")]
-        [SerializeField] private Button[] _closeButtonsToBlock;
+        //[SerializeField] private Button[] _closeButtonsToBlock;
+        [SerializeField] private GameObject _clickLocker;
 
         [Header("Sectors")]
         [SerializeField] private SectorView[] _sectors = new SectorView[FortuneWheelArgs.SectorCount];
@@ -109,18 +110,14 @@ namespace FortuneWheel
 
         public void SetCloseInteractable(bool isInteractable)
         {
-            if (_closeButtonsToBlock == null)
-            {
-                return;
-            }
-
-            for (var i = 0; i < _closeButtonsToBlock.Length; i++)
+            _clickLocker.gameObject.SetActive(isInteractable);
+            /*for (var i = 0; i < _closeButtonsToBlock.Length; i++)
             {
                 if (_closeButtonsToBlock[i] != null)
                 {
                     _closeButtonsToBlock[i].interactable = isInteractable;
                 }
-            }
+            }*/
         }
 
         public bool PlaySpinToSector(int sectorIndex, Action onComplete)
