@@ -193,6 +193,9 @@ namespace FortuneWheel
 
             _isSpinning = false;
             UpdateInteractionState();
+            
+            //TODO play animation
+            //_animationService.Animate(animationStartPosition, rewardViewData.Amount, rewardViewData.Id, rewardViewData.Icon);
         }
 
         private void UpdateInteractionState()

@@ -5,6 +5,7 @@ using System.Threading;
 using Core.Models;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
+using Rewards;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -17,11 +18,19 @@ namespace FortuneWheel
         private const string RewardsUrl = "wheel/rewards";
         private const string SpinUrl = "wheel/spin";
 
+        private readonly IRewardSpecProvider _rewardSpecProvider;
+        private readonly IRewardGrantService _rewardGrantService;
         private readonly IPlayerIdentityProvider _playerIdentityProvider;
         private readonly SaveService _saveService;
 
-        public FortuneWheelServerService(IPlayerIdentityProvider playerIdentityProvider, SaveService saveService)
+        public FortuneWheelServerService(
+            IPlayerIdentityProvider playerIdentityProvider, 
+            IRewardGrantService rewardGrantService,
+            IRewardSpecProvider rewardSpecProvider,
+            SaveService saveService)
         {
+            _rewardSpecProvider = rewardSpecProvider ?? throw new ArgumentNullException(nameof(rewardSpecProvider));
+            _rewardGrantService = rewardGrantService ?? throw new ArgumentNullException(nameof(rewardGrantService));
             _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
             _saveService = saveService ?? throw new ArgumentNullException(nameof(saveService));
         }
@@ -208,6 +217,48 @@ namespace FortuneWheel
                 var cachedDataAfter = await GetCachedDataSafeAsync(ct);
                 Debug.Log($"{LogPrefix} [{operationId}] Spin cache after persist. CachedAfter={BuildCacheSummary(cachedDataAfter)}");
 
+                /*
+                 * --------------------------------------------------
+                 */
+                
+                if (!_rewardSpecProvider.TryGet(response.rewardId, out RewardSpec rewardSpec))
+                {
+                    throw new InvalidOperationException($"Unknown reward id: {response.rewardId}");
+                }
+
+                var resources = rewardSpec?.Resources;
+                if (resources == null || resources.Count == 0)
+                {
+                    throw new InvalidOperationException($"Reward spec '{response.rewardId}' has no resources.");
+                }
+
+                var requests = new List<RewardGrantRequest>(resources.Count);
+                for (var i = 0; i < resources.Count; i++)
+                {
+                    var resource = resources[i];
+                    if (resource == null || string.IsNullOrWhiteSpace(resource.ResourceId) || resource.Amount <= 0)
+                    {
+                        continue;
+                    }
+
+                    requests.Add(new RewardGrantRequest(resource.ResourceId, resource.Amount, resource.Category));
+                }
+
+                if (requests.Count == 0)
+                {
+                    throw new InvalidOperationException($"Reward spec '{response.rewardId}' has no valid resources.");
+                }
+
+                var success = await _rewardGrantService.TryGrantAsync(requests, ct);
+                if (!success)
+                {
+                    throw new InvalidOperationException($"Failed to grant reward {response.rewardId}");
+                }
+                
+                /*
+                 * --------------------------------------------------
+                 */
+                
                 return new FortuneWheelSpinResult(
                     response.rewardId,
                     availableSpins,

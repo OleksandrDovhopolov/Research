@@ -14,17 +14,14 @@ namespace Rewards
         private readonly IInventoryService _inventoryService;
         private readonly string _inventoryOwnerId;
 
-        public GameRewardGrantService(
-            ResourceManager resourceManager,
-            IInventoryService inventoryService,
-            string inventoryOwnerId)
+        public GameRewardGrantService(ResourceManager resourceManager, IInventoryService inventoryService, string inventoryOwnerId)
         {
             _resourceManager = resourceManager;
             _inventoryService = inventoryService;
             _inventoryOwnerId = inventoryOwnerId;
         }
 
-        public async UniTask<bool> TryGrantAsync(RewardGrantRequest rewardRequest, CancellationToken ct = default)
+        private async UniTask<bool> TryGrantAsync(RewardGrantRequest rewardRequest, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
             if (rewardRequest.Amount <= 0 || string.IsNullOrWhiteSpace(rewardRequest.RewardId))
