@@ -26,6 +26,7 @@ namespace CardCollectionImpl
             Assert.AreEqual(1, grantService.GrantListCallsCount);
             Assert.AreEqual(1, grantService.LastGrantedRequests.Count);
             Assert.AreEqual("coins", grantService.LastGrantedRequests[0].RewardId);
+            Assert.AreEqual(RewardKind.Resource, grantService.LastGrantedRequests[0].Kind);
             Assert.AreEqual(25, grantService.LastGrantedRequests[0].Amount);
         }
 
@@ -166,7 +167,7 @@ namespace CardCollectionImpl
                 RewardId = rewardId,
                 Resources = new List<RewardSpecResource>
                 {
-                    new() { ResourceId = "coins", Amount = 25, Category = "soft" }
+                    new() { ResourceId = "coins", Kind = RewardKind.Resource, Amount = 25, Category = "soft" }
                 }
             };
         }

@@ -5,6 +5,8 @@ using EventOrchestration;
 using FortuneWheel;
 using Inventory.API;
 using Rewards;
+using System.Collections.Generic;
+using System.Linq;
 using UIShared;
 using UnityEngine;
 using VContainer;
@@ -41,12 +43,12 @@ namespace Game.Bootstrap
             builder.RegisterFortuneWheel();
             
             // Rewards
+            builder.Register<ResourceRewardHandler>(Lifetime.Singleton).As<IRewardHandler>();
+            builder.Register<InventoryRewardHandler>(Lifetime.Singleton).As<IRewardHandler>();
             builder.Register<IRewardGrantService>(resolver =>
             {
-                var resourceManager = resolver.Resolve<ResourceManager>();
-                var inventoryService = resolver.Resolve<IInventoryService>();
-                var inventoryOwnerId = resolver.Resolve<string>();
-                return new GameRewardGrantService(resourceManager, inventoryService, inventoryOwnerId);
+                var handlers = resolver.Resolve<IEnumerable<IRewardHandler>>().ToList();
+                return new GameRewardGrantService(handlers);
             }, Lifetime.Singleton);
             builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(_rewardSpecsConfigSo), Lifetime.Singleton); 
             

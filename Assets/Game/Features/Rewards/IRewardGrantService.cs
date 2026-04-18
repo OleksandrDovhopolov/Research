@@ -6,8 +6,6 @@ namespace Rewards
 {
     public interface IRewardGrantService
     {
-        //UniTask<bool> TryGrantAsync(RewardGrantRequest rewardRequest, CancellationToken ct = default);
-        
-        UniTask<bool> TryGrantAsync(List<RewardGrantRequest> rewardRequest, CancellationToken ct = default);
+        UniTask<bool> TryGrantAsync(List<RewardGrantRequest> rewards, CancellationToken ct = default);
     }
 }

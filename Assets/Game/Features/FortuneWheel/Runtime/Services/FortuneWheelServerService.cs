@@ -243,7 +243,7 @@ namespace FortuneWheel
                     }
 
                     primaryResource ??= resource;
-                    requests.Add(new RewardGrantRequest(resource.ResourceId, resource.Amount, resource.Category));
+                    requests.Add(new RewardGrantRequest(resource.ResourceId, resource.Kind, resource.Amount, resource.Category));
                 }
 
                 if (requests.Count == 0)

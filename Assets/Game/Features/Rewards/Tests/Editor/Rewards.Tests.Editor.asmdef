@@ -1,0 +1,26 @@
+{
+    "name": "Rewards.Tests.Editor",
+    "rootNamespace": "Rewards.Tests.Editor",
+    "references": [
+        "Rewards",
+        "CoreResources",
+        "Infrastructure",
+        "Inventory.API",
+        "UniTask",
+        "R3.Unity"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "R3.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
