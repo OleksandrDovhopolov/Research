@@ -28,8 +28,9 @@ namespace CardCollection.Tests
                     new() { CardId = "a1", IsUnlocked = false }
                 }
             });
-            var progress = new CardProgressService(storage);
-            var useCase = new UnlockCardsUseCase(progress, new StubCardDefinitionProvider(definitions));
+            var definitionProvider = new StubCardDefinitionProvider(definitions);
+            var progress = new CardProgressService(storage, definitionProvider, new StubPointsCalculator());
+            var useCase = new UnlockCardsUseCase(progress, definitionProvider);
 
             var result = await useCase.ExecuteAsync(eventId, new[] { "a1" }, CancellationToken.None);
 
@@ -44,7 +45,8 @@ namespace CardCollection.Tests
         {
             const string eventId = "evt";
             var storage = new InMemoryEventCardsStorage(new EventCardsSaveData { EventId = eventId });
-            var progress = new CardProgressService(storage);
+            var definitionProvider = new StubCardDefinitionProvider(new List<CardDefinition>());
+            var progress = new CardProgressService(storage, definitionProvider, new StubPointsCalculator());
             var points = new PointsAccountService(progress);
             var query = new CollectionProgressQueryService(progress);
             var packProvider = new StubPackProvider();
@@ -52,7 +54,7 @@ namespace CardCollection.Tests
 
             var facade = new CardCollectionApplicationFacade(
                 eventId,
-                new StubCardDefinitionProvider(new List<CardDefinition>()),
+                definitionProvider,
                 cardPackService,
                 progress,
                 new StubOpenPackUseCase(),
@@ -86,14 +88,15 @@ namespace CardCollection.Tests
                     new() { CardId = "c1", IsUnlocked = true, IsNew = false },
                 }
             });
-            var progress = new CardProgressService(storage);
+            var definitionProvider = new StubCardDefinitionProvider(new List<CardDefinition>());
+            var progress = new CardProgressService(storage, definitionProvider, new StubPointsCalculator());
             var points = new PointsAccountService(progress);
             var query = new CollectionProgressQueryService(progress);
             var cardPackService = new CardPackService(new List<CardPackConfig>());
 
             var facade = new CardCollectionApplicationFacade(
                 eventId,
-                new StubCardDefinitionProvider(new List<CardDefinition>()),
+                definitionProvider,
                 cardPackService,
                 progress,
                 new StubOpenPackUseCase(),
@@ -154,6 +157,14 @@ namespace CardCollection.Tests
 
             public List<CardDefinition> GetCardDefinitions() => _definitions;
             public IReadOnlyDictionary<string, CardDefinition> GetCardDefinitionsById() => _definitionsById;
+        }
+
+        private sealed class StubPointsCalculator : ICardPointsCalculator
+        {
+            public int GetPoints(int stars, bool isPremium)
+            {
+                return 0;
+            }
         }
 
         private sealed class InMemoryEventCardsStorage : IEventCardsStorage

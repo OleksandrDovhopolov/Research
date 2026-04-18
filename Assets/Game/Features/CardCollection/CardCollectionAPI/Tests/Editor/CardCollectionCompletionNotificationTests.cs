@@ -123,10 +123,9 @@ namespace CardCollection.Tests
             var pointsCalculator = new CardCollectionDuplicatePointsTests.MockCardPointsCalculator();
             var cardPackService = new CardPackService(packProvider.Data);
             var cardRandomizer = new PackBasedCardsRandomizer(selector, definitionProvider);
-            var cardProgressService = new CardProgressService(storage);
-            var duplicateCalculator = new DuplicateCardPointsCalculator(definitionProvider, pointsCalculator);
+            var cardProgressService = new CardProgressService(storage, definitionProvider, pointsCalculator);
 
-            var openUseCase = new OpenPackUseCase(cardPackService, cardRandomizer, cardProgressService, duplicateCalculator, definitionProvider);
+            var openUseCase = new OpenPackUseCase(cardPackService, cardRandomizer, cardProgressService, definitionProvider);
             var unlockUseCase = new UnlockCardsUseCase(cardProgressService, definitionProvider);
             var pointsService = new PointsAccountService(cardProgressService);
             var queryService = new CollectionProgressQueryService(cardProgressService);

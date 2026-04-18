@@ -151,7 +151,7 @@ namespace Infrastructure.Tests.Editor
                                                   "  \"CardCollections\": [],\n" +
                                                   "  \"EventStates\": [],\n" +
                                                   "  \"Resources\": { \"Version\": 1, \"Gold\": 0, \"Energy\": 0, \"Gems\": 0 },\n" +
-                                                  "  \"FortuneWheel\": { \"AvailableSpins\": 4, \"LastResetTimestamp\": 12345 },\n" +
+                                                  "  \"FortuneWheel\": { \"AvailableSpins\": 4, \"UpdatedAt\": 12345 },\n" +
                                                   "  \"CustomModulesJson\": {}\n" +
                                                   "}";
             await File.WriteAllTextAsync(_testFilePath, legacyFortuneWheelJson, CancellationToken.None);

@@ -24,14 +24,12 @@ namespace CardCollectionImpl
         {
             var cardDefinitionProvider = new DefaultCardDefinitionProvider(staticData.Cards);
             var cardPackService = new CardPackService(staticData.Packs);
-            var cardProgressService = new CardProgressService(_eventCardsStorage);
+            var cardProgressService = new CardProgressService(_eventCardsStorage, cardDefinitionProvider, _cardPointsCalculator);
             var cardRandomizer = new PackBasedCardsRandomizer(_cardSelector, cardDefinitionProvider);
-            var duplicatePointsCalculator = new DuplicateCardPointsCalculator(cardDefinitionProvider, _cardPointsCalculator);
             var openPackUseCase = new OpenPackUseCase(
                 cardPackService,
                 cardRandomizer,
                 cardProgressService,
-                duplicatePointsCalculator,
                 cardDefinitionProvider);
             var unlockCardsUseCase = new UnlockCardsUseCase(cardProgressService, cardDefinitionProvider);
             var pointsAccountService = new PointsAccountService(cardProgressService);

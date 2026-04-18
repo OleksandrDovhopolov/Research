@@ -9,13 +9,20 @@ namespace CardCollection.Core
     public class CardProgressService : IDisposable
     {
         private readonly IEventCardsStorage _storage;
+        private readonly ICardDefinitionProvider _cardDefinitionProvider;
+        private readonly ICardPointsCalculator _pointsCalculator;
         private readonly Dictionary<string, EventCardsSaveData> _cache = new();
         private bool _isInitialized;
         private bool _disposed;
 
-        public CardProgressService(IEventCardsStorage storage)
+        public CardProgressService(
+            IEventCardsStorage storage,
+            ICardDefinitionProvider cardDefinitionProvider,
+            ICardPointsCalculator pointsCalculator)
         {
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
+            _cardDefinitionProvider = cardDefinitionProvider ?? throw new ArgumentNullException(nameof(cardDefinitionProvider));
+            _pointsCalculator = pointsCalculator ?? throw new ArgumentNullException(nameof(pointsCalculator));
         }
 
         public async UniTask InitializeAsync(CancellationToken ct = default)
@@ -77,6 +84,70 @@ namespace CardCollection.Core
             currentData.Points += pointsToAdd;
 
             await SaveAsync(currentData, ct);
+        }
+
+        public async UniTask<int> AddDuplicatePointsAsync(
+            string eventId,
+            IReadOnlyList<string> openedCardIds,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrEmpty(eventId))
+                throw new ArgumentException("Event ID cannot be null or empty", nameof(eventId));
+
+            if (openedCardIds == null || openedCardIds.Count == 0)
+                return 0;
+
+            await EnsureInitializedAsync(ct);
+
+            var currentData = await LoadAsync(eventId, ct);
+            if (currentData?.Cards == null || currentData.Cards.Count == 0)
+                return 0;
+
+            var cardDefinitionsById = _cardDefinitionProvider.GetCardDefinitionsById();
+            if (cardDefinitionsById == null || cardDefinitionsById.Count == 0)
+                return 0;
+
+            var unlockedCardIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (CardProgressData cardProgress in currentData.Cards)
+            {
+                if (cardProgress is { IsUnlocked: true } && !string.IsNullOrEmpty(cardProgress.CardId))
+                {
+                    unlockedCardIds.Add(cardProgress.CardId);
+                }
+            }
+
+            if (unlockedCardIds.Count == 0)
+                return 0;
+
+            var awardedPoints = 0;
+            foreach (var cardId in openedCardIds)
+            {
+                if (string.IsNullOrEmpty(cardId) || !unlockedCardIds.Contains(cardId))
+                {
+                    continue;
+                }
+
+                if (!cardDefinitionsById.TryGetValue(cardId, out var cardDefinition))
+                {
+                    continue;
+                }
+
+                var pointsForCard = _pointsCalculator.GetPoints(cardDefinition.Stars, cardDefinition.PremiumCard);
+                if (pointsForCard <= 0)
+                {
+                    continue;
+                }
+
+                awardedPoints += pointsForCard;
+            }
+
+            if (awardedPoints <= 0)
+                return 0;
+
+            currentData.Points += awardedPoints;
+            await SaveAsync(currentData, ct);
+
+            return awardedPoints;
         }
 
         public async UniTask<bool> TrySpendPointsAsync(string eventId, int pointsToSpend, CancellationToken ct = default)
