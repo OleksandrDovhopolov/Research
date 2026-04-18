@@ -11,20 +11,17 @@ namespace CardCollection.Core
         private readonly CardPackService _cardPackService;
         private readonly PackBasedCardsRandomizer _cardRandomizer;
         private readonly CardProgressService _cardProgressService;
-        private readonly IDuplicateCardPointsCalculator _duplicateCardPointsCalculator;
         private readonly ICardDefinitionProvider _cardDefinitionProvider;
 
         public OpenPackUseCase(
             CardPackService cardPackService,
             PackBasedCardsRandomizer cardRandomizer,
             CardProgressService cardProgressService,
-            IDuplicateCardPointsCalculator duplicateCardPointsCalculator,
             ICardDefinitionProvider cardDefinitionProvider)
         {
             _cardPackService = cardPackService ?? throw new ArgumentNullException(nameof(cardPackService));
             _cardRandomizer = cardRandomizer ?? throw new ArgumentNullException(nameof(cardRandomizer));
             _cardProgressService = cardProgressService ?? throw new ArgumentNullException(nameof(cardProgressService));
-            _duplicateCardPointsCalculator = duplicateCardPointsCalculator ?? throw new ArgumentNullException(nameof(duplicateCardPointsCalculator));
             _cardDefinitionProvider = cardDefinitionProvider ?? throw new ArgumentNullException(nameof(cardDefinitionProvider));
         }
 
@@ -44,18 +41,13 @@ namespace CardCollection.Core
                     .Select(card => card.CardId),
                 StringComparer.Ordinal);
 
-            var openedCardIds = await _cardRandomizer.GetRandomNewCardsAsync(pack, ct);
+            var openedCardIds = await _cardRandomizer.GetRandomNewCardsAsync(pack, eventId, ct);
             if (openedCardIds == null || openedCardIds.Count == 0)
             {
                 return OpenPackResultDto.Empty;
             }
 
-            var openedCardsProgress = await _cardProgressService.GetCardsByIdsAsync(eventId, openedCardIds, ct);
-            var duplicatePoints = _duplicateCardPointsCalculator.Calculate(openedCardIds, openedCardsProgress);
-            if (duplicatePoints.HasPoints)
-            {
-                await _cardProgressService.AddPointsAsync(eventId, duplicatePoints.TotalPoints, ct);
-            }
+            var awardedDuplicatePoints = await _cardProgressService.AddDuplicatePointsAsync(eventId, openedCardIds, ct);
 
             await _cardProgressService.UnlockCardsAsync(eventId, openedCardIds, ct);
 
@@ -75,7 +67,7 @@ namespace CardCollection.Core
                 completion.NewlyCompletedGroupIds,
                 completion.CollectionCompleted,
                 afterData.Points,
-                duplicatePoints.TotalPoints);
+                awardedDuplicatePoints);
         }
     }
 }

@@ -11,6 +11,8 @@ namespace Game.Bootstrap
     public class BootstrapInstaller : ScriptableObjectInstaller
     {
         [SerializeField] private UIManager _uiManagerPrefab;
+        [Header("Save Storage")]
+        [SerializeField] private string _httpSaveAuthToken;
         
         public override void InstallBindings(IContainerBuilder builder)
         {
@@ -20,7 +22,14 @@ namespace Game.Bootstrap
             builder.Register<LoadingOrchestrator>(Lifetime.Singleton);
             
             //Save
-            builder.Register<ISaveStorage>(_ => new LocalDiskStorage(), Lifetime.Singleton);
+            builder.Register<IPlayerIdentityProvider, PersistentInstallPlayerIdentityProvider>(Lifetime.Singleton);
+            //builder.Register<ISaveStorage>(_ => new LocalDiskStorage(), Lifetime.Singleton);
+            builder.Register<ISaveStorage>(_ =>
+            {
+                var token = string.IsNullOrWhiteSpace(_httpSaveAuthToken) ? null : _httpSaveAuthToken;
+                var playerIdentityProvider = _.Resolve<IPlayerIdentityProvider>();
+                return new HttpSaveStorage(token, playerIdentityProvider);
+            }, Lifetime.Singleton);
             builder.Register<SaveMigrationService>(Lifetime.Singleton);
             builder.Register<SaveService>(Lifetime.Singleton);
             

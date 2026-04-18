@@ -129,3 +129,43 @@ MonoBehaviour:
       Amount: 1
       Category: card_pack
       Icon: {fileID: 21300000, guid: 9e9881d78756a504da763c5f6e644412, type: 3}
+  - RewardId: Lazurite_Pack
+    Icon: {fileID: 21300000, guid: ad6290e5e00b7b54c89272c27b5a5661, type: 3}
+    TotalAmountForUi: 1
+    Resources:
+    - ResourceId: Lazurite_Pack
+      Amount: 1
+      Category: card_pack
+      Icon: {fileID: 21300000, guid: 1092e3bfb2feca44294c05bc48c5b989, type: 3}
+  - RewardId: Bronze_Pack
+    Icon: {fileID: 21300000, guid: ad6290e5e00b7b54c89272c27b5a5661, type: 3}
+    TotalAmountForUi: 1
+    Resources:
+    - ResourceId: Bronze_Pack
+      Amount: 1
+      Category: card_pack
+      Icon: {fileID: 21300000, guid: 46806fdc6ca128d46972600a49df3ffc, type: 3}
+  - RewardId: Emerald_Pack
+    Icon: {fileID: 21300000, guid: ad6290e5e00b7b54c89272c27b5a5661, type: 3}
+    TotalAmountForUi: 1
+    Resources:
+    - ResourceId: Emerald_Pack
+      Amount: 1
+      Category: card_pack
+      Icon: {fileID: 21300000, guid: 9e9881d78756a504da763c5f6e644412, type: 3}
+  - RewardId: Sapphire_Pack
+    Icon: {fileID: 21300000, guid: ad6290e5e00b7b54c89272c27b5a5661, type: 3}
+    TotalAmountForUi: 1
+    Resources:
+    - ResourceId: Sapphire_Pack
+      Amount: 1
+      Category: card_pack
+      Icon: {fileID: 21300000, guid: 6d8515a205588524f8bff84418cc9b3f, type: 3}
+  - RewardId: Ruby_Pack
+    Icon: {fileID: 21300000, guid: ad6290e5e00b7b54c89272c27b5a5661, type: 3}
+    TotalAmountForUi: 1
+    Resources:
+    - ResourceId: Ruby_Pack
+      Amount: 1
+      Category: card_pack
+      Icon: {fileID: 21300000, guid: 9e9881d78756a504da763c5f6e644412, type: 3}

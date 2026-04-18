@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: FortuneWheel
+  m_EditorClassIdentifier: 
+  m_GroupName: FortuneWheel
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 9c43c60df97890f4b874e981b52eb625
+  m_SerializeEntries:
+  - m_GUID: 454f141f4185ed245895b7ce611c932e
+    m_Address: FortuneWheelWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: c7236b2e70f2a9f4eb9a1c78df452a70, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 6227519afa64b6440a1beed4c8b6860e, type: 2}
+    - {fileID: 11400000, guid: f3af9de13b9a7f546aa2aa4438c8b301, type: 2}

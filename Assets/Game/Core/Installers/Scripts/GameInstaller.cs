@@ -2,6 +2,7 @@ using CardCollectionImpl;
 using core;
 using CoreResources;
 using EventOrchestration;
+using FortuneWheel;
 using Inventory.API;
 using Rewards;
 using UIShared;
@@ -37,6 +38,7 @@ namespace Game.Bootstrap
             
             builder.RegisterInventoryService();
             builder.RegisterCardCollectionImpl();
+            builder.RegisterFortuneWheel();
             
             // Rewards
             builder.Register<IRewardGrantService>(resolver =>

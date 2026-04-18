@@ -45,15 +45,26 @@ namespace CardCollection.Tests
                 ("5", true),
                 ("6", true));
 
-            yield return CreateFacadeInitialized(eventId, packId, openedCardIds.Count, cardDefinitions, openedCardIds, initialData)
+            string receivedEventId = null;
+            yield return CreateFacadeInitialized(
+                    eventId,
+                    packId,
+                    openedCardIds.Count,
+                    cardDefinitions,
+                    openedCardIds,
+                    initialData,
+                    selectedEventId => receivedEventId = selectedEventId)
                 .ToCoroutine(result => _facade = result);
-            yield return _facade.OpenPackAsync(packId).ToCoroutine(_ => { });
+            OpenPackResultDto openResult = default;
+            yield return _facade.OpenPackAsync(packId).ToCoroutine(result => openResult = result);
 
             EventCardsSaveData updatedData = null;
             yield return _facade.Load().ToCoroutine(result => updatedData = result);
 
             Assert.NotNull(updatedData);
             Assert.AreEqual(31, updatedData.Points, "Expected duplicate points: 1+2+3+5+10+10 = 31");
+            Assert.AreEqual(31, openResult.AwardedDuplicatePoints);
+            Assert.AreEqual(eventId, receivedEventId);
         }
 
         [UnityTest]
@@ -77,13 +88,15 @@ namespace CardCollection.Tests
 
             yield return CreateFacadeInitialized(eventId, packId, openedCardIds.Count, cardDefinitions, openedCardIds, initialData)
                 .ToCoroutine(result => _facade = result);
-            yield return _facade.OpenPackAsync(packId).ToCoroutine(_ => { });
+            OpenPackResultDto openResult = default;
+            yield return _facade.OpenPackAsync(packId).ToCoroutine(result => openResult = result);
 
             EventCardsSaveData updatedData = null;
             yield return _facade.Load().ToCoroutine(result => updatedData = result);
 
             Assert.NotNull(updatedData);
             Assert.AreEqual(10, updatedData.Points, "Expected only card 5 and 10 to add points: 7 + 1 + 2 = 10");
+            Assert.AreEqual(3, openResult.AwardedDuplicatePoints);
 
             var newlyOpenedCard = updatedData.Cards.Find(card => card.CardId == "150");
             Assert.NotNull(newlyOpenedCard);
@@ -115,12 +128,13 @@ namespace CardCollection.Tests
             yield return CreateFacadeInitialized(eventId, packId, packCardCount, cardDefinitions, selectorOrder, initialData)
                 .ToCoroutine(result => _facade = result);
 
-            IReadOnlyList<string> openedCardIds = null;
-            yield return _facade.OpenPackAsync(packId).ToCoroutine(result => openedCardIds = result.OpenedCardIds);
+            OpenPackResultDto openResult = default;
+            yield return _facade.OpenPackAsync(packId).ToCoroutine(result => openResult = result);
 
-            Assert.NotNull(openedCardIds);
-            Assert.AreEqual(packCardCount, openedCardIds.Count);
-            Assert.That(openedCardIds, Is.EquivalentTo(selectorOrder.Take(packCardCount)));
+            Assert.NotNull(openResult.OpenedCardIds);
+            Assert.AreEqual(packCardCount, openResult.OpenedCardIds.Count);
+            Assert.That(openResult.OpenedCardIds, Is.EquivalentTo(selectorOrder.Take(packCardCount)));
+            Assert.AreEqual(0, openResult.AwardedDuplicatePoints);
         }
 
         private static async UniTask<ICardCollectionApplicationFacade> CreateFacadeInitialized(
@@ -129,9 +143,10 @@ namespace CardCollection.Tests
             int packCardCount,
             List<CardDefinition> cardDefinitions,
             List<string> openedCardIds,
-            EventCardsSaveData initialData)
+            EventCardsSaveData initialData,
+            System.Action<string> onSelectCards = null)
         {
-            var facade = CreateFacade(eventId, packId, packCardCount, cardDefinitions, openedCardIds, initialData);
+            var facade = CreateFacade(eventId, packId, packCardCount, cardDefinitions, openedCardIds, initialData, onSelectCards);
             await facade.InitializeAsync(CancellationToken.None);
             return facade;
         }
@@ -142,19 +157,19 @@ namespace CardCollection.Tests
             int packCardCount,
             List<CardDefinition> cardDefinitions,
             List<string> openedCardIds,
-            EventCardsSaveData initialData)
+            EventCardsSaveData initialData,
+            System.Action<string> onSelectCards = null)
         {
             var packProvider = new StubPackProvider(packId, packCardCount);
             var storage = new InMemoryEventCardsStorage(initialData);
             var definitionProvider = new StubCardDefinitionProvider(cardDefinitions);
-            var selector = new StubCardSelector(openedCardIds);
+            var selector = new StubCardSelector(openedCardIds, onSelectCards);
             var pointsCalculator = new MockCardPointsCalculator();
             var cardPackService = new CardPackService(packProvider.Data);
             var cardRandomizer = new PackBasedCardsRandomizer(selector, definitionProvider);
-            var cardProgressService = new CardProgressService(storage);
-            var duplicateCalculator = new DuplicateCardPointsCalculator(definitionProvider, pointsCalculator);
+            var cardProgressService = new CardProgressService(storage, definitionProvider, pointsCalculator);
 
-            var openUseCase = new OpenPackUseCase(cardPackService, cardRandomizer, cardProgressService, duplicateCalculator, definitionProvider);
+            var openUseCase = new OpenPackUseCase(cardPackService, cardRandomizer, cardProgressService, definitionProvider);
             var unlockUseCase = new UnlockCardsUseCase(cardProgressService, definitionProvider);
             var pointsService = new PointsAccountService(cardProgressService);
             var queryService = new CollectionProgressQueryService(cardProgressService);
@@ -246,19 +261,23 @@ namespace CardCollection.Tests
         private sealed class StubCardSelector : ICardSelector
         {
             private readonly List<string> _openedCardIds;
+            private readonly System.Action<string> _onSelectCards;
 
-            public StubCardSelector(List<string> openedCardIds)
+            public StubCardSelector(List<string> openedCardIds, System.Action<string> onSelectCards = null)
             {
                 _openedCardIds = openedCardIds;
+                _onSelectCards = onSelectCards;
             }
 
             public async UniTask<List<string>> SelectCardsAsync(
                 CardPack pack,
                 List<CardDefinition> allCards,
+                string eventId,
                 CancellationToken ct = default)
             {
                 await UniTask.Yield(ct);
                 ct.ThrowIfCancellationRequested();
+                _onSelectCards?.Invoke(eventId);
                 return _openedCardIds.Take(pack.CardCount).ToList();
             }
         }
