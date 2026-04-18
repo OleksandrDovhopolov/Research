@@ -15,7 +15,11 @@ namespace CardCollectionImpl
             _packSelectionStrategy = packSelectionStrategy;
         }
         
-        public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards, CancellationToken ct = default)
+        public async UniTask<List<string>> SelectCardsAsync(
+            CardPack pack,
+            List<CardDefinition> allCards,
+            string eventId,
+            CancellationToken ct = default)
         {
             await UniTask.Yield(ct);
 

@@ -41,7 +41,7 @@ namespace CardCollection.Core
                     .Select(card => card.CardId),
                 StringComparer.Ordinal);
 
-            var openedCardIds = await _cardRandomizer.GetRandomNewCardsAsync(pack, ct);
+            var openedCardIds = await _cardRandomizer.GetRandomNewCardsAsync(pack, eventId, ct);
             if (openedCardIds == null || openedCardIds.Count == 0)
             {
                 return OpenPackResultDto.Empty;

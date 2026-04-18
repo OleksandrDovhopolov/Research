@@ -14,11 +14,16 @@ namespace CardCollectionImpl
     {
         private const string OpenPackUrl = "packs/open";
         
-        public async UniTask<List<string>> SelectCardsAsync(CardPack pack, List<CardDefinition> allCards, CancellationToken ct = default)
+        public async UniTask<List<string>> SelectCardsAsync(
+            CardPack pack,
+            List<CardDefinition> allCards,
+            string eventId,
+            CancellationToken ct = default)
         {
             var request = new OpenPackRequest
             {
                 PlayerId = ApiConfig.TemporaryPlayerId,
+                EventId = eventId,
                 PackId = pack.PackId,
                 OpenPackRequestId = Guid.NewGuid().ToString("N")
             };

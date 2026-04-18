@@ -45,7 +45,15 @@ namespace CardCollection.Tests
                 ("5", true),
                 ("6", true));
 
-            yield return CreateFacadeInitialized(eventId, packId, openedCardIds.Count, cardDefinitions, openedCardIds, initialData)
+            string receivedEventId = null;
+            yield return CreateFacadeInitialized(
+                    eventId,
+                    packId,
+                    openedCardIds.Count,
+                    cardDefinitions,
+                    openedCardIds,
+                    initialData,
+                    selectedEventId => receivedEventId = selectedEventId)
                 .ToCoroutine(result => _facade = result);
             OpenPackResultDto openResult = default;
             yield return _facade.OpenPackAsync(packId).ToCoroutine(result => openResult = result);
@@ -56,6 +64,7 @@ namespace CardCollection.Tests
             Assert.NotNull(updatedData);
             Assert.AreEqual(31, updatedData.Points, "Expected duplicate points: 1+2+3+5+10+10 = 31");
             Assert.AreEqual(31, openResult.AwardedDuplicatePoints);
+            Assert.AreEqual(eventId, receivedEventId);
         }
 
         [UnityTest]
@@ -134,9 +143,10 @@ namespace CardCollection.Tests
             int packCardCount,
             List<CardDefinition> cardDefinitions,
             List<string> openedCardIds,
-            EventCardsSaveData initialData)
+            EventCardsSaveData initialData,
+            System.Action<string> onSelectCards = null)
         {
-            var facade = CreateFacade(eventId, packId, packCardCount, cardDefinitions, openedCardIds, initialData);
+            var facade = CreateFacade(eventId, packId, packCardCount, cardDefinitions, openedCardIds, initialData, onSelectCards);
             await facade.InitializeAsync(CancellationToken.None);
             return facade;
         }
@@ -147,12 +157,13 @@ namespace CardCollection.Tests
             int packCardCount,
             List<CardDefinition> cardDefinitions,
             List<string> openedCardIds,
-            EventCardsSaveData initialData)
+            EventCardsSaveData initialData,
+            System.Action<string> onSelectCards = null)
         {
             var packProvider = new StubPackProvider(packId, packCardCount);
             var storage = new InMemoryEventCardsStorage(initialData);
             var definitionProvider = new StubCardDefinitionProvider(cardDefinitions);
-            var selector = new StubCardSelector(openedCardIds);
+            var selector = new StubCardSelector(openedCardIds, onSelectCards);
             var pointsCalculator = new MockCardPointsCalculator();
             var cardPackService = new CardPackService(packProvider.Data);
             var cardRandomizer = new PackBasedCardsRandomizer(selector, definitionProvider);
@@ -250,19 +261,23 @@ namespace CardCollection.Tests
         private sealed class StubCardSelector : ICardSelector
         {
             private readonly List<string> _openedCardIds;
+            private readonly System.Action<string> _onSelectCards;
 
-            public StubCardSelector(List<string> openedCardIds)
+            public StubCardSelector(List<string> openedCardIds, System.Action<string> onSelectCards = null)
             {
                 _openedCardIds = openedCardIds;
+                _onSelectCards = onSelectCards;
             }
 
             public async UniTask<List<string>> SelectCardsAsync(
                 CardPack pack,
                 List<CardDefinition> allCards,
+                string eventId,
                 CancellationToken ct = default)
             {
                 await UniTask.Yield(ct);
                 ct.ThrowIfCancellationRequested();
+                _onSelectCards?.Invoke(eventId);
                 return _openedCardIds.Take(pack.CardCount).ToList();
             }
         }
