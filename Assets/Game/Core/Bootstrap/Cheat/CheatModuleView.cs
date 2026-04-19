@@ -23,6 +23,7 @@ namespace Game.Cheat
         private List<ICheatsModule> _cheatsModules;
         
         private ResourceManager _resourceManager;
+        private IResourceOperationsService _resourceOperationsService;
         private IInventoryService _inventoryService;
         private OrchestratorRunner _orchestratorRunner;
         private AnimateCurrency _animateCurrency;
@@ -32,12 +33,14 @@ namespace Game.Cheat
         private void Construct(
             AnimateCurrency animateCurrency,
             ResourceManager resourceManager,
+            IResourceOperationsService resourceOperationsService,
             IInventoryService inventoryService, 
             OrchestratorRunner orchestratorRunner,
             ICardCollectionSessionFacade cardCollectionSessionFacade)
         {
             _inventoryService = inventoryService;
             _resourceManager = resourceManager;
+            _resourceOperationsService = resourceOperationsService;
             _animateCurrency = animateCurrency;
             _orchestratorRunner = orchestratorRunner;
             _cardCollectionSessionFacade = cardCollectionSessionFacade;
@@ -97,7 +100,7 @@ namespace Game.Cheat
             {
                 new CardCollectionCheatModule(_cardCollectionSessionFacade, _orchestratorRunner, destroyCt),
                 new AddCardsCheatModule(_cardCollectionSessionFacade, destroyCt),
-                new ResourcesCheatModule(_resourceManager, _animateCurrency),
+                new ResourcesCheatModule(_resourceManager, _resourceOperationsService, _animateCurrency),
                 //new InventoryCheatModule(_inventoryService),
             };
             

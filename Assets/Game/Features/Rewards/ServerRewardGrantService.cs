@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
+using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -50,8 +51,10 @@ namespace Rewards
 
             try
             {
+                var payload = JsonConvert.SerializeObject(command);
+
                 using var request = new UnityWebRequest(ApiConfig.BaseUrl + GrantRewardPath, UnityWebRequest.kHttpVerbPOST);
-                request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(JsonUtility.ToJson(command)));
+                request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(payload));
                 request.downloadHandler = new DownloadHandlerBuffer();
                 request.SetRequestHeader("Content-Type", "application/json");
 
@@ -70,27 +73,27 @@ namespace Rewards
                     return false;
                 }
 
-                var body = JsonUtility.FromJson<GrantRewardResponseBody>(responseText);
+                var body = JsonConvert.DeserializeObject<GrantRewardResponse>(responseText);
                 if (body == null)
                 {
                     Debug.LogWarning($"[Rewards] Grant response is invalid JSON. RewardId={rewardId}");
                     return false;
                 }
 
-                if (!body.success)
+                if (!body.Success)
                 {
                     Debug.LogWarning(
-                        $"[Rewards] Grant rejected. RewardId={rewardId}, Code={body.errorCode ?? "<none>"}, Message={body.errorMessage ?? "<none>"}");
+                        $"[Rewards] Grant rejected. RewardId={rewardId}, Code={body.ErrorCode ?? "<none>"}, Message={body.ErrorMessage ?? "<none>"}");
                     return false;
                 }
 
-                if (body.snapshot == null)
+                if (body.PlayerState == null)
                 {
-                    Debug.LogWarning($"[Rewards] Grant response has no snapshot. RewardId={rewardId}");
+                    Debug.LogWarning($"[Rewards] Grant response has no playerState. RewardId={rewardId}");
                     return false;
                 }
 
-                await _snapshotHandler.ApplyAsync(body.snapshot, ct);
+                await _snapshotHandler.ApplyAsync(body.PlayerState, ct);
                 return true;
             }
             catch (OperationCanceledException)
@@ -108,36 +111,5 @@ namespace Rewards
         {
             throw new NotSupportedException("Use TryGrantAsync(string rewardId, ...)");
         }
-    }
-
-    [Serializable]
-    public sealed class GrantRewardCommand
-    {
-        public string PlayerId = string.Empty;
-        public string RewardSource = string.Empty;
-        public string RewardId = string.Empty;
-    }
-
-    [Serializable]
-    public sealed class GrantRewardResponse
-    {
-        public bool Success;
-        public string ErrorCode;
-        public string ErrorMessage;
-        public GrantRewardSnapshotDto Snapshot;
-    }
-
-    [Serializable]
-    public sealed class GrantRewardSnapshotDto
-    {
-    }
-
-    [Serializable]
-    internal sealed class GrantRewardResponseBody
-    {
-        public bool success;
-        public string errorCode;
-        public string errorMessage;
-        public GrantRewardSnapshotDto snapshot;
     }
 }

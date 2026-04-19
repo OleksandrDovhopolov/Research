@@ -7,11 +7,11 @@ namespace Rewards
 {
     public sealed class ResourceRewardHandler : IRewardHandler
     {
-        private readonly ResourceManager _resourceManager;
+        private readonly IResourceOperationsService _resourceOperationsService;
 
-        public ResourceRewardHandler(ResourceManager resourceManager)
+        public ResourceRewardHandler(IResourceOperationsService resourceOperationsService)
         {
-            _resourceManager = resourceManager ?? throw new ArgumentNullException(nameof(resourceManager));
+            _resourceOperationsService = resourceOperationsService ?? throw new ArgumentNullException(nameof(resourceOperationsService));
         }
 
         public bool CanHandle(RewardGrantRequest request)
@@ -42,7 +42,7 @@ namespace Rewards
                 throw new InvalidOperationException($"Unsupported resource reward id: {request.RewardId}");
             }
 
-            await _resourceManager.Add(resourceType, request.Amount, ResourceManager.RewardGrantReason, ct);
+            await _resourceOperationsService.AddAsync(resourceType, request.Amount, ResourceManager.RewardGrantReason, ct);
         }
     }
 }

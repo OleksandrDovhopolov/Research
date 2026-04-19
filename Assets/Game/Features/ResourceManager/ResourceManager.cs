@@ -1,24 +1,22 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using Core.Models;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
 using UnityEngine;
-using UnityEngine.Networking;
 using VContainer.Unity;
 
 namespace CoreResources
 {
-    public class ResourceManager : IStartable
+    public class ResourceManager : IStartable, IDisposable
     {
         public delegate void ResourceAmountChangedHandler(ResourceType type, int newAmount);
 
         public event ResourceAmountChangedHandler ResourceAmountChanged;
 
-        public const string RewardGrantReason = "reward_grant";
         public const string CheatAddReason = "cheat_add";
+        public const string RewardGrantReason = "reward_grant";
         public const string CheatRemoveReason = "cheat_remove";
 
         private readonly Dictionary<ResourceType, int> _amountByType = new()
@@ -27,30 +25,20 @@ namespace CoreResources
         };
 
         private readonly SaveService _saveService;
-        private readonly IPlayerIdentityProvider _playerIdentityProvider;
-        private readonly IResourceAdjustApi _resourceAdjustApi;
-        private readonly SemaphoreSlim _adjustSemaphore = new(1, 1);
         private readonly CancellationTokenSource _saveCts = new();
         private bool _isInitialized;
         private bool _isDisposed;
 
-        public ResourceManager(SaveService saveService, IPlayerIdentityProvider playerIdentityProvider)
-            : this(saveService, playerIdentityProvider, null)
-        {
-        }
-
-        public ResourceManager(SaveService saveService, IPlayerIdentityProvider playerIdentityProvider, IResourceAdjustApi resourceAdjustApi)
+        public ResourceManager(SaveService saveService)
         {
             _saveService = saveService;
-            _playerIdentityProvider = playerIdentityProvider;
-            _resourceAdjustApi = resourceAdjustApi ?? new UnityWebRequestResourceAdjustApi();
         }
-        
+
         void IStartable.Start()
         {
             InitializeAsync(_saveCts.Token).Forget();
         }
-        
+
         public async UniTask InitializeAsync(CancellationToken ct)
         {
             ThrowIfDisposed();
@@ -78,46 +66,84 @@ namespace CoreResources
             _isInitialized = true;
         }
 
-        public async UniTask Add(
-            ResourceType type,
-            int amount,
-            string reason = RewardGrantReason,
-            CancellationToken ct = default)
-        {
-            ThrowIfDisposed();
-            if (amount <= 0)
-            {
-                return;
-            }
-
-            await AdjustInternalAsync(type, amount, reason, ct);
-        }
-
         public void NotifyAmountChanged(ResourceType type)
         {
             ThrowIfDisposed();
             ResourceAmountChanged?.Invoke(type, _amountByType[type]);
         }
 
-        public async UniTask<bool> Remove(
-            ResourceType type,
-            int amount,
-            string reason = CheatRemoveReason,
-            CancellationToken ct = default)
-        {
-            ThrowIfDisposed();
-            if (amount <= 0)
-            {
-                return false;
-            }
-
-            await AdjustInternalAsync(type, -amount, reason, ct);
-            return true;
-        }
-
         public int Get(ResourceType type)
         {
             return _amountByType[type];
+        }
+
+        public async UniTask ApplySnapshotAsync(ResourceSnapshotDto snapshot, CancellationToken ct = default)
+        {
+            ThrowIfDisposed();
+            ct.ThrowIfCancellationRequested();
+            if (snapshot == null)
+            {
+                return;
+            }
+
+            if (!_isInitialized)
+            {
+                await InitializeAsync(ct);
+            }
+
+            var normalizedSnapshot = new ResourceSnapshotDto
+            {
+                Gold = Mathf.Max(0, snapshot.Gold),
+                Energy = Mathf.Max(0, snapshot.Energy),
+                Gems = Mathf.Max(0, snapshot.Gems)
+            };
+
+            ApplyNormalizedAmounts(normalizedSnapshot.Gold, normalizedSnapshot.Energy, normalizedSnapshot.Gems);
+            //await TryPersistSnapshotAsync(normalizedSnapshot, ct);
+        }
+
+        public async UniTask ApplySnapshotAsync(IReadOnlyDictionary<string, int> resourcesById, CancellationToken ct = default)
+        {
+            ThrowIfDisposed();
+            ct.ThrowIfCancellationRequested();
+            if (resourcesById == null || resourcesById.Count == 0)
+            {
+                return;
+            }
+
+            if (!_isInitialized)
+            {
+                await InitializeAsync(ct);
+            }
+
+            var gold = _amountByType[ResourceType.Gold];
+            var energy = _amountByType[ResourceType.Energy];
+            var gems = _amountByType[ResourceType.Gems];
+
+            if (TryGetResourceAmount(resourcesById, ResourceType.Gold, out var snapshotGold))
+            {
+                gold = snapshotGold;
+            }
+
+            if (TryGetResourceAmount(resourcesById, ResourceType.Energy, out var snapshotEnergy))
+            {
+                energy = snapshotEnergy;
+            }
+
+            if (TryGetResourceAmount(resourcesById, ResourceType.Gems, out var snapshotGems))
+            {
+                gems = snapshotGems;
+            }
+
+            var normalizedSnapshot = new ResourceSnapshotDto
+            {
+                Gold = Mathf.Max(0, gold),
+                Energy = Mathf.Max(0, energy),
+                Gems = Mathf.Max(0, gems)
+            };
+
+            ApplyNormalizedAmounts(normalizedSnapshot.Gold, normalizedSnapshot.Energy, normalizedSnapshot.Gems);
+            //await TryPersistSnapshotAsync(normalizedSnapshot, ct);
         }
 
         public void Dispose()
@@ -130,7 +156,6 @@ namespace CoreResources
             _isDisposed = true;
             _saveCts.Cancel();
             _saveCts.Dispose();
-            _adjustSemaphore.Dispose();
         }
 
         private void ApplySaveData(ResourcesModuleSaveData saveData)
@@ -145,94 +170,33 @@ namespace CoreResources
             _amountByType[ResourceType.Gems] = Mathf.Max(0, saveData.Gems);
         }
 
-        private async UniTask AdjustInternalAsync(ResourceType type, int delta, string reason, CancellationToken ct)
+        private void ApplyNormalizedAmounts(int gold, int energy, int gems)
         {
-            ThrowIfDisposed();
-            if (!_isInitialized)
-            {
-                await InitializeAsync(ct);
-            }
+            var changedGold = _amountByType[ResourceType.Gold] != gold;
+            var changedEnergy = _amountByType[ResourceType.Energy] != energy;
+            var changedGems = _amountByType[ResourceType.Gems] != gems;
 
-            if (_playerIdentityProvider == null)
-            {
-                throw new InvalidOperationException("Player identity provider is missing.");
-            }
-
-            ct.ThrowIfCancellationRequested();
-            var playerId = _playerIdentityProvider.GetPlayerId();
-            if (string.IsNullOrWhiteSpace(playerId))
-            {
-                throw new InvalidOperationException("Player id is empty.");
-            }
-
-            await _adjustSemaphore.WaitAsync(ct);
-            try
-            {
-                var request = new AdjustResourceCommand
-                {
-                    PlayerId = playerId,
-                    ResourceId = type.ToString(),
-                    Delta = delta,
-                    Reason = string.IsNullOrWhiteSpace(reason) ? RewardGrantReason : reason
-                };
-
-                var response = await _resourceAdjustApi.AdjustAsync(request, ct);
-                if (response == null)
-                {
-                    throw new InvalidOperationException("Resource adjust response is null.");
-                }
-
-                if (!response.Success)
-                {
-                    throw new InvalidOperationException(
-                        $"Resource adjust rejected. Code={response.ErrorCode ?? "<none>"}, Message={response.ErrorMessage ?? "<none>"}");
-                }
-
-                if (response.Resources == null)
-                {
-                    throw new InvalidOperationException("Resource adjust response does not contain resources snapshot.");
-                }
-
-                ApplySnapshot(response.Resources);
-                //await TryPersistSnapshotAsync(response.Resources, ct);
-            }
-            finally
-            {
-                _adjustSemaphore.Release();
-            }
-        }
-
-        private void ApplySnapshot(ResourceSnapshotDto snapshot)
-        {
-            var normalizedGold = Mathf.Max(0, snapshot.Gold);
-            var normalizedEnergy = Mathf.Max(0, snapshot.Energy);
-            var normalizedGems = Mathf.Max(0, snapshot.Gems);
-
-            var changedGold = _amountByType[ResourceType.Gold] != normalizedGold;
-            var changedEnergy = _amountByType[ResourceType.Energy] != normalizedEnergy;
-            var changedGems = _amountByType[ResourceType.Gems] != normalizedGems;
-
-            _amountByType[ResourceType.Gold] = normalizedGold;
-            _amountByType[ResourceType.Energy] = normalizedEnergy;
-            _amountByType[ResourceType.Gems] = normalizedGems;
+            _amountByType[ResourceType.Gold] = gold;
+            _amountByType[ResourceType.Energy] = energy;
+            _amountByType[ResourceType.Gems] = gems;
 
             if (changedGold)
             {
-                ResourceAmountChanged?.Invoke(ResourceType.Gold, normalizedGold);
+                ResourceAmountChanged?.Invoke(ResourceType.Gold, gold);
             }
 
             if (changedEnergy)
             {
-                ResourceAmountChanged?.Invoke(ResourceType.Energy, normalizedEnergy);
+                ResourceAmountChanged?.Invoke(ResourceType.Energy, energy);
             }
 
             if (changedGems)
             {
-                ResourceAmountChanged?.Invoke(ResourceType.Gems, normalizedGems);
+                ResourceAmountChanged?.Invoke(ResourceType.Gems, gems);
             }
         }
 
-        private async UniTask TryPersistSnapshotAsync(ResourceSnapshotDto snapshot, CancellationToken ct)
+        /*private async UniTask TryPersistSnapshotAsync(ResourceSnapshotDto snapshot, CancellationToken ct)
         {
             if (_saveService == null || !_isInitialized)
             {
@@ -244,9 +208,9 @@ namespace CoreResources
                 await _saveService.UpdateModuleAsync(data => data.Resources, resources =>
                 {
                     resources.Version = Math.Max(1, resources.Version);
-                    resources.Gold = Mathf.Max(0, snapshot.Gold);
-                    resources.Energy = Mathf.Max(0, snapshot.Energy);
-                    resources.Gems = Mathf.Max(0, snapshot.Gems);
+                    resources.Gold = snapshot.Gold;
+                    resources.Energy = snapshot.Energy;
+                    resources.Gems = snapshot.Gems;
                 }, ct);
             }
             catch (OperationCanceledException)
@@ -257,6 +221,30 @@ namespace CoreResources
             {
                 Debug.LogWarning($"[ResourceManager] Failed to persist resource snapshot: {exception}");
             }
+        }*/
+
+        private static bool TryGetResourceAmount(
+            IReadOnlyDictionary<string, int> resourcesById,
+            ResourceType type,
+            out int value)
+        {
+            var resourceId = type.ToString();
+            if (resourcesById.TryGetValue(resourceId, out value))
+            {
+                return true;
+            }
+
+            foreach (var pair in resourcesById)
+            {
+                if (string.Equals(pair.Key, resourceId, StringComparison.OrdinalIgnoreCase))
+                {
+                    value = pair.Value;
+                    return true;
+                }
+            }
+
+            value = 0;
+            return false;
         }
 
         private void ThrowIfDisposed()
@@ -265,125 +253,6 @@ namespace CoreResources
             {
                 throw new ObjectDisposedException(nameof(ResourceManager));
             }
-        }
-    }
-
-    public interface IResourceAdjustApi
-    {
-        UniTask<AdjustResourceResponse> AdjustAsync(AdjustResourceCommand command, CancellationToken ct);
-    }
-
-    [Serializable]
-    public sealed class AdjustResourceCommand
-    {
-        public string PlayerId = string.Empty;
-        public string ResourceId = string.Empty;
-        public int Delta;
-        public string Reason = string.Empty;
-    }
-
-    [Serializable]
-    public sealed class AdjustResourceResponse
-    {
-        public bool Success;
-        public string ErrorCode;
-        public string ErrorMessage;
-        public ResourceSnapshotDto Resources;
-    }
-
-    [Serializable]
-    public sealed class ResourceSnapshotDto
-    {
-        public int Gold;
-        public int Energy;
-        public int Gems;
-    }
-
-    public sealed class UnityWebRequestResourceAdjustApi : IResourceAdjustApi
-    {
-        private const string AdjustResourcePath = "resources/adjust";
-
-        public async UniTask<AdjustResourceResponse> AdjustAsync(AdjustResourceCommand command, CancellationToken ct)
-        {
-            if (command == null)
-            {
-                throw new ArgumentNullException(nameof(command));
-            }
-
-            var payload = JsonUtility.ToJson(new AdjustResourceRequestBody
-            {
-                playerId = command.PlayerId,
-                resourceId = command.ResourceId,
-                delta = command.Delta,
-                reason = command.Reason
-            });
-
-            using var request = new UnityWebRequest(ApiConfig.BaseUrl + AdjustResourcePath, UnityWebRequest.kHttpVerbPOST);
-            request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(payload));
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
-
-            await request.SendWebRequest().ToUniTask(cancellationToken: ct);
-
-            if (request.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
-            {
-                var body = request.downloadHandler?.text;
-                throw new InvalidOperationException(
-                    $"Resource adjust request failed. Status={(int)request.responseCode}, Error={request.error}, Body={body}");
-            }
-
-            var responseText = request.downloadHandler?.text;
-            if (string.IsNullOrWhiteSpace(responseText))
-            {
-                throw new InvalidOperationException("Resource adjust response is empty.");
-            }
-
-            var parsed = JsonUtility.FromJson<AdjustResourceResponseBody>(responseText);
-            if (parsed == null)
-            {
-                throw new InvalidOperationException("Resource adjust response payload is invalid.");
-            }
-
-            return new AdjustResourceResponse
-            {
-                Success = parsed.success,
-                ErrorCode = parsed.errorCode,
-                ErrorMessage = parsed.errorMessage,
-                Resources = parsed.resources == null
-                    ? null
-                    : new ResourceSnapshotDto
-                    {
-                        Gold = parsed.resources.gold,
-                        Energy = parsed.resources.energy,
-                        Gems = parsed.resources.gems
-                    }
-            };
-        }
-
-        [Serializable]
-        private sealed class AdjustResourceRequestBody
-        {
-            public string playerId;
-            public string resourceId;
-            public int delta;
-            public string reason;
-        }
-
-        [Serializable]
-        private sealed class AdjustResourceResponseBody
-        {
-            public bool success;
-            public string errorCode;
-            public string errorMessage;
-            public ResourceSnapshotResponseBody resources;
-        }
-
-        [Serializable]
-        private sealed class ResourceSnapshotResponseBody
-        {
-            public int gold;
-            public int energy;
-            public int gems;
         }
     }
 }

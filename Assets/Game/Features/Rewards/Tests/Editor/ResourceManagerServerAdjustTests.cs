@@ -63,8 +63,9 @@ namespace Rewards.Tests.Editor
 
             var manager = fixture.CreateManager();
             manager.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+            var operationsService = fixture.CreateOperationsService(manager);
 
-            manager.Add(ResourceType.Gold, 25, ResourceManager.RewardGrantReason, CancellationToken.None)
+            operationsService.AddAsync(ResourceType.Gold, 25, ResourceManager.RewardGrantReason, CancellationToken.None)
                 .GetAwaiter()
                 .GetResult();
 
@@ -112,8 +113,9 @@ namespace Rewards.Tests.Editor
 
             var manager = fixture.CreateManager();
             manager.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+            var operationsService = fixture.CreateOperationsService(manager);
 
-            var removed = manager.Remove(ResourceType.Energy, 6, ResourceManager.CheatRemoveReason, CancellationToken.None)
+            var removed = operationsService.RemoveAsync(ResourceType.Energy, 6, ResourceManager.CheatRemoveReason, CancellationToken.None)
                 .GetAwaiter()
                 .GetResult();
 
@@ -148,9 +150,10 @@ namespace Rewards.Tests.Editor
 
             var manager = fixture.CreateManager();
             manager.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+            var operationsService = fixture.CreateOperationsService(manager);
 
             Assert.Throws<InvalidOperationException>(() =>
-                manager.Add(ResourceType.Gold, 1, ResourceManager.RewardGrantReason, CancellationToken.None)
+                operationsService.AddAsync(ResourceType.Gold, 1, ResourceManager.RewardGrantReason, CancellationToken.None)
                     .GetAwaiter()
                     .GetResult());
 
@@ -176,9 +179,10 @@ namespace Rewards.Tests.Editor
 
             var manager = fixture.CreateManager();
             manager.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+            var operationsService = fixture.CreateOperationsService(manager);
 
             Assert.Throws<InvalidOperationException>(() =>
-                manager.Add(ResourceType.Gold, 1, ResourceManager.RewardGrantReason, CancellationToken.None)
+                operationsService.AddAsync(ResourceType.Gold, 1, ResourceManager.RewardGrantReason, CancellationToken.None)
                     .GetAwaiter()
                     .GetResult());
 
@@ -209,7 +213,12 @@ namespace Rewards.Tests.Editor
 
             public ResourceManager CreateManager()
             {
-                return new ResourceManager(SaveService, new StubPlayerIdentityProvider(), _resourceAdjustApi);
+                return new ResourceManager(SaveService);
+            }
+
+            public ResourceOperationsService CreateOperationsService(ResourceManager manager)
+            {
+                return new ResourceOperationsService(manager, new StubPlayerIdentityProvider(), _resourceAdjustApi);
             }
         }
 

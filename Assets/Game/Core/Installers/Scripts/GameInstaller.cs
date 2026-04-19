@@ -34,6 +34,7 @@ namespace Game.Bootstrap
             // ResourceManager
             
             builder.Register<IResourceAdjustApi, UnityWebRequestResourceAdjustApi>(Lifetime.Singleton);
+            builder.Register<IResourceOperationsService, ResourceOperationsService>(Lifetime.Singleton);
             builder.RegisterEntryPoint<ResourceManager>().As<ResourceManager>();
             
             builder.RegisterComponentInHierarchy<AnimateCurrency>();
@@ -53,7 +54,9 @@ namespace Game.Bootstrap
                 var rewardSpecProvider = resolver.Resolve<IRewardSpecProvider>();
                 return new GameRewardGrantService(handlers, rewardSpecProvider);
             }, Lifetime.Singleton);
-            builder.Register<IRewardGrantSnapshotHandler, NoOpRewardGrantSnapshotHandler>(Lifetime.Singleton);
+            builder.Register<ResourcePlayerStateSnapshotHandler>(Lifetime.Singleton).As<IPlayerStateSnapshotHandler>();
+            builder.Register<InventoryPlayerStateSnapshotHandler>(Lifetime.Singleton).As<IPlayerStateSnapshotHandler>();
+            builder.Register<IRewardGrantSnapshotHandler, CompositeRewardGrantSnapshotHandler>(Lifetime.Singleton);
             builder.Register<IRewardGrantService, ServerRewardGrantService>(Lifetime.Singleton);
             builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(_rewardSpecsConfigSo), Lifetime.Singleton); 
             

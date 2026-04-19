@@ -3,7 +3,7 @@ using Cysharp.Threading.Tasks;
 
 namespace Rewards
 {
-    public interface IRewardGrantSnapshotHandler
+    public interface IPlayerStateSnapshotHandler
     {
         UniTask ApplyAsync(PlayerStateSnapshotDto snapshot, CancellationToken ct);
     }
