@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -16,14 +17,19 @@ namespace Rewards
         private const string GrantRewardPath = "rewards/grant";
 
         private readonly IPlayerIdentityProvider _playerIdentityProvider;
-        private readonly IRewardGrantSnapshotHandler _snapshotHandler;
+        private readonly IReadOnlyList<IPlayerStateSnapshotHandler> _snapshotHandlers;
 
         public ServerRewardGrantService(
             IPlayerIdentityProvider playerIdentityProvider,
-            IRewardGrantSnapshotHandler snapshotHandler)
+            IEnumerable<IPlayerStateSnapshotHandler> snapshotHandlers)
         {
             _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
-            _snapshotHandler = snapshotHandler ?? throw new ArgumentNullException(nameof(snapshotHandler));
+            if (snapshotHandlers == null)
+            {
+                throw new ArgumentNullException(nameof(snapshotHandlers));
+            }
+
+            _snapshotHandlers = snapshotHandlers.Where(handler => handler != null).ToList();
         }
 
         public async UniTask<bool> TryGrantAsync(string rewardId, CancellationToken ct = default)
@@ -79,22 +85,8 @@ namespace Rewards
                     Debug.LogWarning($"[Rewards] Grant response is invalid JSON. RewardId={rewardId}");
                     return false;
                 }
-
-                if (!body.Success)
-                {
-                    Debug.LogWarning(
-                        $"[Rewards] Grant rejected. RewardId={rewardId}, Code={body.ErrorCode ?? "<none>"}, Message={body.ErrorMessage ?? "<none>"}");
-                    return false;
-                }
-
-                if (body.PlayerState == null)
-                {
-                    Debug.LogWarning($"[Rewards] Grant response has no playerState. RewardId={rewardId}");
-                    return false;
-                }
-
-                await _snapshotHandler.ApplyAsync(body.PlayerState, ct);
-                return true;
+                
+                return await TryApplyGrantResponseAsync(body, ct);
             }
             catch (OperationCanceledException)
             {
@@ -110,6 +102,48 @@ namespace Rewards
         public UniTask<bool> TryGrantAsync(List<RewardGrantRequest> rewards, CancellationToken ct = default)
         {
             throw new NotSupportedException("Use TryGrantAsync(string rewardId, ...)");
+        }
+
+        public async UniTask<bool> TryApplyGrantResponseAsync(GrantRewardResponse grantResponse, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (grantResponse == null)
+            {
+                Debug.LogWarning("[Rewards] Grant response is null.");
+                return false;
+            }
+
+            var rewardId = string.IsNullOrWhiteSpace(grantResponse.RewardId) ? "<unknown>" : grantResponse.RewardId;
+            if (!grantResponse.Success)
+            {
+                Debug.LogWarning(
+                    $"[Rewards] Grant rejected. RewardId={rewardId}, Code={grantResponse.ErrorCode ?? "<none>"}, Message={grantResponse.ErrorMessage ?? "<none>"}");
+                return false;
+            }
+
+            if (grantResponse.PlayerState == null)
+            {
+                Debug.LogWarning($"[Rewards] Grant response has no playerState. RewardId={rewardId}");
+                return false;
+            }
+
+            await ApplySnapshotAsync(grantResponse.PlayerState, ct);
+            return true;
+        }
+
+        private async UniTask ApplySnapshotAsync(PlayerStateSnapshotDto snapshot, CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (snapshot == null)
+            {
+                return;
+            }
+
+            foreach (var snapshotHandler in _snapshotHandlers)
+            {
+                ct.ThrowIfCancellationRequested();
+                await snapshotHandler.ApplyAsync(snapshot, ct);
+            }
         }
     }
 }

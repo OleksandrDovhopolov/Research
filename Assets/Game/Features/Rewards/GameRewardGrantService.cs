@@ -88,6 +88,13 @@ namespace Rewards
             return allSuccess;
         }
 
+        public UniTask<bool> TryApplyGrantResponseAsync(GrantRewardResponse grantResponse, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            Debug.LogWarning("[Rewards] Applying server grant response is not supported in GameRewardGrantService.");
+            return UniTask.FromResult(false);
+        }
+
         private static bool IsValidRequest(RewardGrantRequest request)
         {
             if (request == null)

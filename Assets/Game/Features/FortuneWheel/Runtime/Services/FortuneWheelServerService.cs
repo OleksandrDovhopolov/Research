@@ -5,6 +5,7 @@ using System.Threading;
 using Core.Models;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
+using Newtonsoft.Json;
 using Rewards;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -188,7 +189,7 @@ namespace FortuneWheel
                     throw new InvalidOperationException("Spin response payload is empty.");
                 }
 
-                var response = JsonUtility.FromJson<SpinResponseBody>(responseText);
+                var response = JsonConvert.DeserializeObject<SpinResponseBody>(responseText);
                 if (response == null || string.IsNullOrWhiteSpace(response.rewardId))
                 {
                     throw new InvalidOperationException("Spin response payload is invalid.");
@@ -227,7 +228,7 @@ namespace FortuneWheel
                 }
 
                 var primaryResource = GetPrimaryRewardResource(rewardSpec, response.rewardId);
-                var success = await _rewardGrantService.TryGrantAsync(response.rewardId, ct);
+                var success = await _rewardGrantService.TryApplyGrantResponseAsync(response.rewardGrant, ct);
                 if (!success)
                 {
                     throw new InvalidOperationException($"Failed to grant reward {response.rewardId}");
@@ -431,6 +432,7 @@ namespace FortuneWheel
             public int availableSpins;
             public long updatedAt;
             public long nextUpdateAt;
+            public GrantRewardResponse rewardGrant;
         }
 
         [Serializable]

@@ -99,7 +99,6 @@ namespace CoreResources
             };
 
             ApplyNormalizedAmounts(normalizedSnapshot.Gold, normalizedSnapshot.Energy, normalizedSnapshot.Gems);
-            //await TryPersistSnapshotAsync(normalizedSnapshot, ct);
         }
 
         public async UniTask ApplySnapshotAsync(IReadOnlyDictionary<string, int> resourcesById, CancellationToken ct = default)
@@ -143,7 +142,6 @@ namespace CoreResources
             };
 
             ApplyNormalizedAmounts(normalizedSnapshot.Gold, normalizedSnapshot.Energy, normalizedSnapshot.Gems);
-            //await TryPersistSnapshotAsync(normalizedSnapshot, ct);
         }
 
         public void Dispose()
@@ -195,33 +193,6 @@ namespace CoreResources
                 ResourceAmountChanged?.Invoke(ResourceType.Gems, gems);
             }
         }
-
-        /*private async UniTask TryPersistSnapshotAsync(ResourceSnapshotDto snapshot, CancellationToken ct)
-        {
-            if (_saveService == null || !_isInitialized)
-            {
-                return;
-            }
-
-            try
-            {
-                await _saveService.UpdateModuleAsync(data => data.Resources, resources =>
-                {
-                    resources.Version = Math.Max(1, resources.Version);
-                    resources.Gold = snapshot.Gold;
-                    resources.Energy = snapshot.Energy;
-                    resources.Gems = snapshot.Gems;
-                }, ct);
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception exception)
-            {
-                Debug.LogWarning($"[ResourceManager] Failed to persist resource snapshot: {exception}");
-            }
-        }*/
 
         private static bool TryGetResourceAmount(
             IReadOnlyDictionary<string, int> resourcesById,

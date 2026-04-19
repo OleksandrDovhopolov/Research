@@ -196,6 +196,12 @@ namespace CardCollectionImpl
                 GrantListCallsCount++;
                 return UniTask.FromResult(_grantResult);
             }
+
+            public UniTask<bool> TryApplyGrantResponseAsync(GrantRewardResponse grantResponse, CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+                return UniTask.FromResult(_grantResult);
+            }
         }
 
         private sealed class FakeRewardSpecProvider : IRewardSpecProvider
