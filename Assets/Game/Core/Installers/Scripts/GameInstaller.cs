@@ -3,6 +3,7 @@ using core;
 using CoreResources;
 using EventOrchestration;
 using FortuneWheel;
+using Infrastructure;
 using Inventory.API;
 using Rewards;
 using System.Collections.Generic;
@@ -32,7 +33,15 @@ namespace Game.Bootstrap
             builder.Register<IGameplayReadyGate, GameplayReadyGate>(Lifetime.Singleton);
             
             // ResourceManager
-            
+            builder.RegisterInstance(new WebClientOptions
+            {
+                BaseUrl = Infrastructure.ApiConfig.BaseUrl,
+                TimeoutSeconds = 30,
+                DefaultHeaders = new Dictionary<string, string>()
+            });
+            builder.Register<IAuthTokenProvider, NoOpAuthTokenProvider>(Lifetime.Singleton);
+            builder.Register<IWebClient, UnityWebRequestWebClient>(Lifetime.Singleton);
+
             builder.Register<IResourceAdjustApi, UnityWebRequestResourceAdjustApi>(Lifetime.Singleton);
             builder.Register<IResourceOperationsService, ResourceOperationsService>(Lifetime.Singleton);
             builder.RegisterEntryPoint<ResourceManager>().As<ResourceManager>();

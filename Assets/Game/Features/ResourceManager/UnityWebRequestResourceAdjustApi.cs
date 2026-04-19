@@ -1,16 +1,19 @@
 using System;
-using System.Text;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
-using UnityEngine;
-using UnityEngine.Networking;
 
 namespace CoreResources
 {
     public sealed class UnityWebRequestResourceAdjustApi : IResourceAdjustApi
     {
         private const string AdjustResourcePath = "resources/adjust";
+        private readonly IWebClient _webClient;
+
+        public UnityWebRequestResourceAdjustApi(IWebClient webClient)
+        {
+            _webClient = webClient ?? throw new ArgumentNullException(nameof(webClient));
+        }
 
         public async UniTask<AdjustResourceResponse> AdjustAsync(AdjustResourceCommand command, CancellationToken ct)
         {
@@ -19,35 +22,18 @@ namespace CoreResources
                 throw new ArgumentNullException(nameof(command));
             }
 
-            var payload = JsonUtility.ToJson(new AdjustResourceRequestBody
+            var payload = new AdjustResourceRequestBody
             {
                 playerId = command.PlayerId,
                 resourceId = command.ResourceId,
                 delta = command.Delta,
                 reason = command.Reason
-            });
+            };
 
-            using var request = new UnityWebRequest(ApiConfig.BaseUrl + AdjustResourcePath, UnityWebRequest.kHttpVerbPOST);
-            request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(payload));
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
-
-            await request.SendWebRequest().ToUniTask(cancellationToken: ct);
-
-            if (request.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
-            {
-                var body = request.downloadHandler?.text;
-                throw new InvalidOperationException(
-                    $"Resource adjust request failed. Status={(int)request.responseCode}, Error={request.error}, Body={body}");
-            }
-
-            var responseText = request.downloadHandler?.text;
-            if (string.IsNullOrWhiteSpace(responseText))
-            {
-                throw new InvalidOperationException("Resource adjust response is empty.");
-            }
-
-            var parsed = JsonUtility.FromJson<AdjustResourceResponseBody>(responseText);
+            var parsed = await _webClient.PostAsync<AdjustResourceRequestBody, AdjustResourceResponseBody>(
+                AdjustResourcePath,
+                payload,
+                ct);
             if (parsed == null)
             {
                 throw new InvalidOperationException("Resource adjust response payload is invalid.");

@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
-using Newtonsoft.Json;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace Rewards
 {
@@ -18,12 +15,15 @@ namespace Rewards
 
         private readonly IPlayerIdentityProvider _playerIdentityProvider;
         private readonly IReadOnlyList<IPlayerStateSnapshotHandler> _snapshotHandlers;
+        private readonly IWebClient _webClient;
 
         public ServerRewardGrantService(
             IPlayerIdentityProvider playerIdentityProvider,
+            IWebClient webClient,
             IEnumerable<IPlayerStateSnapshotHandler> snapshotHandlers)
         {
             _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
+            _webClient = webClient ?? throw new ArgumentNullException(nameof(webClient));
             if (snapshotHandlers == null)
             {
                 throw new ArgumentNullException(nameof(snapshotHandlers));
@@ -57,32 +57,10 @@ namespace Rewards
 
             try
             {
-                var payload = JsonConvert.SerializeObject(command);
-
-                using var request = new UnityWebRequest(ApiConfig.BaseUrl + GrantRewardPath, UnityWebRequest.kHttpVerbPOST);
-                request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(payload));
-                request.downloadHandler = new DownloadHandlerBuffer();
-                request.SetRequestHeader("Content-Type", "application/json");
-
-                await request.SendWebRequest().ToUniTask(cancellationToken: ct);
-                if (request.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
-                {
-                    Debug.LogWarning(
-                        $"[Rewards] Grant request failed. Status={(int)request.responseCode}, Error={request.error}, RewardId={rewardId}");
-                    return false;
-                }
-
-                var responseText = request.downloadHandler?.text;
-                if (string.IsNullOrWhiteSpace(responseText))
-                {
-                    Debug.LogWarning($"[Rewards] Grant response is empty. RewardId={rewardId}");
-                    return false;
-                }
-
-                var body = JsonConvert.DeserializeObject<GrantRewardResponse>(responseText);
+                var body = await _webClient.PostAsync<GrantRewardCommand, GrantRewardResponse>(GrantRewardPath, command, ct);
                 if (body == null)
                 {
-                    Debug.LogWarning($"[Rewards] Grant response is invalid JSON. RewardId={rewardId}");
+                    Debug.LogWarning($"[Rewards] Grant response is empty. RewardId={rewardId}");
                     return false;
                 }
                 
