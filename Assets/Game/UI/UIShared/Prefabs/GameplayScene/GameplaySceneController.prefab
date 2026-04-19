@@ -1642,7 +1642,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _cheatButton: {fileID: 2535598735164330076}
-  _ownerId: player_1
 --- !u!114 &2535598735164330076 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2650869240653061375, guid: b373a0f3d1f3e8d4b96d27d0692bfadd, type: 3}

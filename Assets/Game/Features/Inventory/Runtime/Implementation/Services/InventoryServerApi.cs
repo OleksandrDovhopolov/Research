@@ -8,7 +8,6 @@ namespace Inventory.Implementation.Services
 {
     public sealed class InventoryServerApi : IInventoryServerApi
     {
-        private const string LoadPath = "inventory/load";
         private const string RemovePath = "inventory/remove";
         private const string RemoveBatchPath = "inventory/remove-batch";
 
@@ -17,11 +16,6 @@ namespace Inventory.Implementation.Services
         public InventoryServerApi(IWebClient webClient)
         {
             _webClient = webClient ?? throw new ArgumentNullException(nameof(webClient));
-        }
-
-        public UniTask<InventoryOperationResponse> LoadAsync(InventoryLoadCommand command, CancellationToken cancellationToken = default)
-        {
-            return _webClient.PostAsync<InventoryLoadCommand, InventoryOperationResponse>(LoadPath, command, cancellationToken);
         }
 
         public UniTask<InventoryOperationResponse> RemoveAsync(RemoveInventoryItemCommand command, CancellationToken cancellationToken = default)

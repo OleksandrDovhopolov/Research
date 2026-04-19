@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Core.Models
 {
@@ -45,6 +46,7 @@ namespace Core.Models
     public sealed class InventoryModuleSaveData
     {
         public List<InventoryOwnerSaveData> Owners = new();
+        public JToken InventoryItems = new JObject();
     }
 
     [Serializable]

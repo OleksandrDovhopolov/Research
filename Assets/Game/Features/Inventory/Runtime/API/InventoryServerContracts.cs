@@ -4,12 +4,6 @@ using System.Collections.Generic;
 namespace Inventory.API
 {
     [Serializable]
-    public sealed class InventoryLoadCommand
-    {
-        public string PlayerId { get; set; } = string.Empty;
-    }
-
-    [Serializable]
     public sealed class RemoveInventoryItemCommand
     {
         public string PlayerId { get; set; } = string.Empty;

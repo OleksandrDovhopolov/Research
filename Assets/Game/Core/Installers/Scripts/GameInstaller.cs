@@ -49,6 +49,7 @@ namespace Game.Bootstrap
             builder.RegisterComponentInHierarchy<AnimateCurrency>();
             builder.RegisterInstance<IGlobalTimerService>(_globalTimerService);
             builder.Register<IAnimationService, AnimationService>(Lifetime.Singleton);
+            builder.Register<IInventoryItemCategoryResolver>(_ => new RewardSpecInventoryItemCategoryResolver(_rewardSpecsConfigSo), Lifetime.Singleton);
             
             builder.RegisterInventoryService();
             builder.RegisterCardCollectionImpl();
@@ -65,7 +66,6 @@ namespace Game.Bootstrap
             }, Lifetime.Singleton);
             builder.Register<ResourcePlayerStateSnapshotHandler>(Lifetime.Singleton).As<IPlayerStateSnapshotHandler>();
             builder.Register<InventoryPlayerStateSnapshotHandler>(Lifetime.Singleton).As<IPlayerStateSnapshotHandler>();
-            builder.Register<IInventoryItemCategoryResolver>(_ => new RewardSpecInventoryItemCategoryResolver(_rewardSpecsConfigSo), Lifetime.Singleton);
             builder.Register<IRewardGrantService, ServerRewardGrantService>(Lifetime.Singleton);
             builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(_rewardSpecsConfigSo), Lifetime.Singleton); 
             

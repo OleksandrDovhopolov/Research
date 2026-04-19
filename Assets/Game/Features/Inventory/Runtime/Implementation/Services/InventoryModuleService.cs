@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Core.Models;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
 using Inventory.API;
 using Inventory.Implementation.Core;
+using Newtonsoft.Json.Linq;
+using Rewards;
 using R3;
 using UnityEngine;
 
@@ -26,17 +29,26 @@ namespace Inventory.Implementation.Services
         private readonly InventoryWorld _world;
         private readonly IInventoryServerApi _inventoryServerApi;
         private readonly IPlayerIdentityProvider _playerIdentityProvider;
+        private readonly SaveService _saveService;
+        private readonly IInventoryItemCategoryResolver _itemCategoryResolver;
         private readonly Subject<InventoryChangedEvent> _inventoryChangedSubject = new();
         private readonly SemaphoreSlim _loadSemaphore = new(1, 1);
         private readonly HashSet<string> _loadedOwners = new(StringComparer.Ordinal);
         private readonly List<IInventoryItemUseHandler> _inventoryItemUseHandlers;
+        private bool _isInitialized;
         
         public Observable<InventoryChangedEvent> OnInventoryChanged => _inventoryChangedSubject;
         
-        public InventoryModuleService(IInventoryServerApi inventoryServerApi, IPlayerIdentityProvider playerIdentityProvider)
+        public InventoryModuleService(
+            IInventoryServerApi inventoryServerApi,
+            IPlayerIdentityProvider playerIdentityProvider,
+            SaveService saveService,
+            IInventoryItemCategoryResolver itemCategoryResolver)
         {
             _inventoryServerApi = inventoryServerApi ?? throw new ArgumentNullException(nameof(inventoryServerApi));
             _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
+            _saveService = saveService ?? throw new ArgumentNullException(nameof(saveService));
+            _itemCategoryResolver = itemCategoryResolver ?? throw new ArgumentNullException(nameof(itemCategoryResolver));
 
             _world = new InventoryWorld();
             _querySystem = new InventoryQuerySystem(_world);
@@ -202,9 +214,14 @@ namespace Inventory.Implementation.Services
 
         internal async UniTask EnsureOwnerLoadedAsync(CancellationToken cancellationToken)
         {
+            await InitializeAsync(cancellationToken);
+        }
+
+        internal async UniTask InitializeAsync(CancellationToken cancellationToken)
+        {
             cancellationToken.ThrowIfCancellationRequested();
-            var resolvedOwnerId = ResolveCurrentOwnerId();
-            if (_loadedOwners.Contains(resolvedOwnerId))
+            var ownerId = ResolveCurrentOwnerId();
+            if (_isInitialized && _loadedOwners.Contains(ownerId))
             {
                 return;
             }
@@ -212,19 +229,17 @@ namespace Inventory.Implementation.Services
             await _loadSemaphore.WaitAsync(cancellationToken);
             try
             {
-                if (_loadedOwners.Contains(resolvedOwnerId))
+                ownerId = ResolveCurrentOwnerId();
+                if (_isInitialized && _loadedOwners.Contains(ownerId))
                 {
                     return;
                 }
 
-                var response = await _inventoryServerApi.LoadAsync(new InventoryLoadCommand
-                {
-                    PlayerId = resolvedOwnerId
-                }, cancellationToken);
-                EnsureServerSuccess(response, "load");
-
-                var snapshotItems = MapSnapshotItems(resolvedOwnerId, response.Inventory);
+                await _saveService.LoadAllAsync(cancellationToken);
+                var inventorySaveData = await _saveService.GetReadonlyModuleAsync(data => data.Inventory, cancellationToken);
+                var snapshotItems = MapSnapshotItemsFromSave(ownerId, inventorySaveData);
                 await ApplySnapshotAsync(snapshotItems, cancellationToken);
+                _isInitialized = true;
             }
             finally
             {
@@ -246,6 +261,7 @@ namespace Inventory.Implementation.Services
             var ownerId = ResolveCurrentOwnerId();
             _world.ReplaceOwnerSnapshot(ownerId, items ?? Array.Empty<InventoryItemView>());
             _loadedOwners.Add(ownerId);
+            _isInitialized = true;
             PublishChanged(ownerId);
             return UniTask.CompletedTask;
         }
@@ -270,16 +286,136 @@ namespace Inventory.Implementation.Services
                 var item = snapshot.Items[i];
                 if (item == null ||
                     string.IsNullOrWhiteSpace(item.ItemId) ||
-                    string.IsNullOrWhiteSpace(item.CategoryId) ||
                     item.Amount <= 0)
                 {
                     continue;
                 }
 
-                mapped.Add(new InventoryItemView(ownerId, item.ItemId, item.Amount, item.CategoryId));
+                mapped.Add(new InventoryItemView(
+                    ownerId,
+                    item.ItemId,
+                    item.Amount,
+                    ResolveCategoryId(item.ItemId, item.CategoryId)));
             }
 
             return mapped;
+        }
+
+        private IReadOnlyList<InventoryItemView> MapSnapshotItemsFromSave(string ownerId, InventoryModuleSaveData inventorySaveData)
+        {
+            if (inventorySaveData == null)
+            {
+                return Array.Empty<InventoryItemView>();
+            }
+
+            if (inventorySaveData.InventoryItems is JObject inventoryItemsObject && inventoryItemsObject.HasValues)
+            {
+                var mapped = new List<InventoryItemView>(inventoryItemsObject.Count);
+                foreach (var property in inventoryItemsObject.Properties())
+                {
+                    if (string.IsNullOrWhiteSpace(property.Name) ||
+                        !TryExtractSnapshotAmount(property.Value, out var amount) ||
+                        amount <= 0)
+                    {
+                        continue;
+                    }
+
+                    mapped.Add(new InventoryItemView(
+                        ownerId,
+                        property.Name,
+                        amount,
+                        ResolveCategoryId(property.Name, null)));
+                }
+
+                return mapped;
+            }
+
+            if (inventorySaveData.Owners == null || inventorySaveData.Owners.Count == 0)
+            {
+                return Array.Empty<InventoryItemView>();
+            }
+
+            var ownerData = inventorySaveData.Owners.FirstOrDefault(x =>
+                x != null && string.Equals(x.OwnerId, ownerId, StringComparison.Ordinal));
+            if (ownerData?.Items == null || ownerData.Items.Count == 0)
+            {
+                return Array.Empty<InventoryItemView>();
+            }
+
+            var legacyMapped = new List<InventoryItemView>(ownerData.Items.Count);
+            for (var i = 0; i < ownerData.Items.Count; i++)
+            {
+                var item = ownerData.Items[i];
+                if (item == null || string.IsNullOrWhiteSpace(item.ItemId) || item.StackCount <= 0)
+                {
+                    continue;
+                }
+
+                legacyMapped.Add(new InventoryItemView(
+                    ownerId,
+                    item.ItemId,
+                    item.StackCount,
+                    ResolveCategoryId(item.ItemId, item.CategoryId)));
+            }
+
+            return legacyMapped;
+        }
+
+        private string ResolveCategoryId(string itemId, string preferredCategoryId)
+        {
+            if (!string.IsNullOrWhiteSpace(preferredCategoryId))
+            {
+                return preferredCategoryId;
+            }
+
+            var resolved = _itemCategoryResolver.ResolveCategoryId(itemId);
+            return string.IsNullOrWhiteSpace(resolved)
+                ? InventoryBuiltInCategoryIds.Regular
+                : resolved;
+        }
+
+        private static bool TryExtractSnapshotAmount(JToken token, out int amount)
+        {
+            amount = 0;
+            if (token == null || token.Type == JTokenType.Null)
+            {
+                return false;
+            }
+
+            if (token.Type == JTokenType.Integer)
+            {
+                amount = token.Value<int>();
+                return true;
+            }
+
+            if (token.Type == JTokenType.String)
+            {
+                return int.TryParse(token.Value<string>(), out amount);
+            }
+
+            if (token.Type != JTokenType.Object)
+            {
+                return false;
+            }
+
+            var amountToken = token["amount"] ?? token["Amount"] ?? token["stackCount"] ?? token["StackCount"];
+            if (amountToken == null || amountToken.Type == JTokenType.Null)
+            {
+                return false;
+            }
+
+            if (amountToken.Type == JTokenType.Integer)
+            {
+                amount = amountToken.Value<int>();
+                return true;
+            }
+
+            if (amountToken.Type == JTokenType.String)
+            {
+                return int.TryParse(amountToken.Value<string>(), out amount);
+            }
+
+            return false;
         }
 
         private void PublishChanged(string ownerId)

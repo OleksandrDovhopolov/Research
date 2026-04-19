@@ -6,6 +6,7 @@ using Infrastructure;
 using Inventory.API;
 using Inventory.Implementation.Services;
 using NUnit.Framework;
+using Rewards;
 
 namespace Inventory.Tests.Editor
 {
@@ -14,7 +15,7 @@ namespace Inventory.Tests.Editor
         [Test]
         public void AddItemAsync_ThrowsNotSupportedException()
         {
-            var service = CreateService(new StubInventoryServerApi());
+            var service = CreateService(new StubInventoryServerApi(), "{}");
 
             Assert.Throws<NotSupportedException>(() =>
                 service.AddItemAsync(new InventoryItemDelta("ignored", "gold", 1, "regular"), CancellationToken.None)
@@ -23,23 +24,10 @@ namespace Inventory.Tests.Editor
         }
 
         [Test]
-        public void GetItemsAsync_LoadsSnapshot_FromServer()
+        public void GetItemsAsync_LoadsSnapshot_FromGlobalSaveInventoryItems()
         {
-            var api = new StubInventoryServerApi
-            {
-                LoadResponse = new InventoryOperationResponse
-                {
-                    Success = true,
-                    Inventory = new InventorySnapshotDto
-                    {
-                        Items = new List<InventorySnapshotItemDto>
-                        {
-                            new() { ItemId = "pack_a", Amount = 2, CategoryId = "card_pack" }
-                        }
-                    }
-                }
-            };
-            var service = CreateService(api);
+            var json = "{ \"Inventory\": { \"InventoryItems\": { \"pack_a\": 2 } } }";
+            var service = CreateService(new StubInventoryServerApi(), json);
 
             var items = service.GetItemsAsync("legacy_owner", "card_pack", CancellationToken.None)
                 .GetAwaiter()
@@ -52,21 +40,27 @@ namespace Inventory.Tests.Editor
         }
 
         [Test]
+        public void GetItemsAsync_FallsBackToLegacyOwners_WhenInventoryItemsMissing()
+        {
+            var json =
+                "{ \"Inventory\": { \"Owners\": [ { \"OwnerId\": \"player-1\", \"Items\": [ { \"OwnerId\": \"player-1\", \"ItemId\": \"legacy_pack\", \"StackCount\": 3, \"CategoryId\": \"card_pack\" } ] } ] } }";
+            var service = CreateService(new StubInventoryServerApi(), json);
+
+            var items = service.GetItemsAsync("legacy_owner", "card_pack", CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.That(items.Count, Is.EqualTo(1));
+            Assert.That(items[0].ItemId, Is.EqualTo("legacy_pack"));
+            Assert.That(items[0].StackCount, Is.EqualTo(3));
+            Assert.That(items[0].CategoryId, Is.EqualTo("card_pack"));
+        }
+
+        [Test]
         public void RemoveItemAsync_CallsServerAndAppliesSnapshot()
         {
             var api = new StubInventoryServerApi
             {
-                LoadResponse = new InventoryOperationResponse
-                {
-                    Success = true,
-                    Inventory = new InventorySnapshotDto
-                    {
-                        Items = new List<InventorySnapshotItemDto>
-                        {
-                            new() { ItemId = "pack_a", Amount = 3, CategoryId = "card_pack" }
-                        }
-                    }
-                },
                 RemoveResponse = new InventoryOperationResponse
                 {
                     Success = true,
@@ -79,7 +73,7 @@ namespace Inventory.Tests.Editor
                     }
                 }
             };
-            var service = CreateService(api);
+            var service = CreateService(api, "{ \"Inventory\": { \"InventoryItems\": { \"pack_a\": 3 } } }");
 
             service.RemoveItemAsync(new InventoryItemDelta("legacy", "pack_a", 2, "card_pack"), CancellationToken.None)
                 .GetAwaiter()
@@ -102,18 +96,6 @@ namespace Inventory.Tests.Editor
         {
             var api = new StubInventoryServerApi
             {
-                LoadResponse = new InventoryOperationResponse
-                {
-                    Success = true,
-                    Inventory = new InventorySnapshotDto
-                    {
-                        Items = new List<InventorySnapshotItemDto>
-                        {
-                            new() { ItemId = "pack_a", Amount = 2, CategoryId = "card_pack" },
-                            new() { ItemId = "pack_b", Amount = 1, CategoryId = "card_pack" }
-                        }
-                    }
-                },
                 RemoveBatchResponse = new InventoryOperationResponse
                 {
                     Success = true,
@@ -123,7 +105,7 @@ namespace Inventory.Tests.Editor
                     }
                 }
             };
-            var service = CreateService(api);
+            var service = CreateService(api, "{ \"Inventory\": { \"InventoryItems\": { \"pack_a\": 2, \"pack_b\": 1 } } }");
 
             var result = service.RemoveItemsAsync(new List<InventoryItemDelta>
             {
@@ -138,9 +120,36 @@ namespace Inventory.Tests.Editor
             Assert.That(result.RemovedStacks, Is.EqualTo(3));
         }
 
-        private static InventoryModuleService CreateService(StubInventoryServerApi api)
+        [Test]
+        public void GetItemsAsync_UsesRegularFallbackCategory_ForUnknownItem()
         {
-            return new InventoryModuleService(api, new StubPlayerIdentityProvider("player-1"));
+            var json = "{ \"Inventory\": { \"InventoryItems\": { \"unknown_box\": 1 } } }";
+            var service = CreateService(new StubInventoryServerApi(), json);
+
+            var items = service.GetItemsAsync("legacy_owner", InventoryBuiltInCategoryIds.Regular, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.That(items.Count, Is.EqualTo(1));
+            Assert.That(items[0].CategoryId, Is.EqualTo(InventoryBuiltInCategoryIds.Regular));
+        }
+
+        private static InventoryModuleService CreateService(StubInventoryServerApi api, string saveJson)
+        {
+            var storage = new InMemorySaveStorage(saveJson);
+            var saveService = new SaveService(storage, new SaveMigrationService());
+            var resolver = new StubInventoryItemCategoryResolver(new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["pack_a"] = InventoryBuiltInCategoryIds.CardPack,
+                ["pack_b"] = InventoryBuiltInCategoryIds.CardPack,
+                ["legacy_pack"] = InventoryBuiltInCategoryIds.CardPack
+            });
+
+            return new InventoryModuleService(
+                api,
+                new StubPlayerIdentityProvider("player-1"),
+                saveService,
+                resolver);
         }
 
         private sealed class StubPlayerIdentityProvider : IPlayerIdentityProvider
@@ -160,22 +169,11 @@ namespace Inventory.Tests.Editor
 
         private sealed class StubInventoryServerApi : IInventoryServerApi
         {
-            public InventoryOperationResponse LoadResponse { get; set; }
             public InventoryOperationResponse RemoveResponse { get; set; }
             public InventoryOperationResponse RemoveBatchResponse { get; set; }
 
             public RemoveInventoryItemCommand LastRemoveCommand { get; private set; }
             public RemoveInventoryBatchCommand LastRemoveBatchCommand { get; private set; }
-
-            public UniTask<InventoryOperationResponse> LoadAsync(InventoryLoadCommand command, CancellationToken cancellationToken = default)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                return UniTask.FromResult(LoadResponse ?? new InventoryOperationResponse
-                {
-                    Success = true,
-                    Inventory = new InventorySnapshotDto()
-                });
-            }
 
             public UniTask<InventoryOperationResponse> RemoveAsync(RemoveInventoryItemCommand command, CancellationToken cancellationToken = default)
             {
@@ -197,6 +195,69 @@ namespace Inventory.Tests.Editor
                     Success = true,
                     Inventory = new InventorySnapshotDto()
                 });
+            }
+        }
+
+        private sealed class InMemorySaveStorage : ISaveStorage
+        {
+            private string _json;
+
+            public InMemorySaveStorage(string json)
+            {
+                _json = json ?? "{}";
+            }
+
+            public UniTask SaveAsync(string data, CancellationToken cancellationToken)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                _json = data ?? "{}";
+                return UniTask.CompletedTask;
+            }
+
+            public UniTask<string> LoadAsync(CancellationToken cancellationToken)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return UniTask.FromResult(_json);
+            }
+
+            public bool Exists()
+            {
+                return true;
+            }
+
+            public UniTask DeleteAsync(CancellationToken cancellationToken)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                _json = "{}";
+                return UniTask.CompletedTask;
+            }
+
+            public UniTask<long> GetLastModifiedTimestampAsync(CancellationToken cancellationToken)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return UniTask.FromResult(0L);
+            }
+        }
+
+        private sealed class StubInventoryItemCategoryResolver : IInventoryItemCategoryResolver
+        {
+            private readonly IReadOnlyDictionary<string, string> _categoryByItemId;
+
+            public StubInventoryItemCategoryResolver(IReadOnlyDictionary<string, string> categoryByItemId)
+            {
+                _categoryByItemId = categoryByItemId;
+            }
+
+            public string ResolveCategoryId(string itemId)
+            {
+                if (!string.IsNullOrWhiteSpace(itemId) &&
+                    _categoryByItemId.TryGetValue(itemId, out var categoryId) &&
+                    !string.IsNullOrWhiteSpace(categoryId))
+                {
+                    return categoryId;
+                }
+
+                return InventoryBuiltInCategoryIds.Regular;
             }
         }
     }

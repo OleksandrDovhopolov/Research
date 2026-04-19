@@ -5,7 +5,8 @@
         "Inventory.API",
         "Inventory.Implementation",
         "UniTask",
-        "Infrastructure"
+        "Infrastructure",
+        "Rewards"
     ],
     "includePlatforms": [
         "Editor"
