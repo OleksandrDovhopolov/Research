@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Infrastructure;
 using Inventory.API;
 using Inventory.Implementation.Core;
 using R3;
@@ -16,26 +17,29 @@ namespace Inventory.Implementation.Services
         public const string CardPack = "card_pack";
     }
     
-    public sealed class InventoryModuleService : IInventoryService, IInventoryReadService, IInventoryItemUseService, IInventoryUseHandlerStorage, IDisposable
+    public sealed class InventoryModuleService : IInventoryService, IInventoryReadService, IInventoryItemUseService, IInventoryUseHandlerStorage, IInventorySnapshotService, IDisposable
     {
-        private readonly AddItemSystem _addItemSystem;
-        private readonly RemoveItemSystem _removeItemSystem;
+        private const string RemoveReason = "inventory_consume";
+        private const string RemoveBatchReason = "inventory_remove_batch";
+
         private readonly InventoryQuerySystem _querySystem;
-        private readonly IInventoryStorage _storage;
+        private readonly InventoryWorld _world;
+        private readonly IInventoryServerApi _inventoryServerApi;
+        private readonly IPlayerIdentityProvider _playerIdentityProvider;
         private readonly Subject<InventoryChangedEvent> _inventoryChangedSubject = new();
         private readonly SemaphoreSlim _loadSemaphore = new(1, 1);
-        private readonly HashSet<string> _loadedOwners = new();
+        private readonly HashSet<string> _loadedOwners = new(StringComparer.Ordinal);
         private readonly List<IInventoryItemUseHandler> _inventoryItemUseHandlers;
         
         public Observable<InventoryChangedEvent> OnInventoryChanged => _inventoryChangedSubject;
         
-        public InventoryModuleService(IInventoryStorage storage)
+        public InventoryModuleService(IInventoryServerApi inventoryServerApi, IPlayerIdentityProvider playerIdentityProvider)
         {
-            var world = new InventoryWorld();
-            _addItemSystem = new AddItemSystem(world);
-            _removeItemSystem = new RemoveItemSystem(world);
-            _querySystem = new InventoryQuerySystem(world);
-            _storage = storage;
+            _inventoryServerApi = inventoryServerApi ?? throw new ArgumentNullException(nameof(inventoryServerApi));
+            _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
+
+            _world = new InventoryWorld();
+            _querySystem = new InventoryQuerySystem(_world);
 
             _inventoryItemUseHandlers =  new List<IInventoryItemUseHandler>();
         }
@@ -59,28 +63,35 @@ namespace Inventory.Implementation.Services
         public async UniTask AddItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            await EnsureOwnerLoadedAsync(itemDelta.OwnerId, cancellationToken);
-            var changed = _addItemSystem.Execute(itemDelta);
-            if (!changed)
-            {
-                return;
-            }
-
-            await PublishAndPersistAsync(itemDelta.OwnerId, cancellationToken);
+            throw new NotSupportedException("Inventory add operation is server-authoritative and not supported on client.");
         }
 
         public async UniTask RemoveItemAsync(InventoryItemDelta itemDelta, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            await EnsureOwnerLoadedAsync(itemDelta.OwnerId, cancellationToken);
-            var changed = _removeItemSystem.Execute(itemDelta);
-            if (!changed)
+            var ownerId = ResolveCurrentOwnerId();
+            await EnsureOwnerLoadedAsync(cancellationToken);
+
+            if (string.IsNullOrWhiteSpace(itemDelta.ItemId) || itemDelta.Amount <= 0)
             {
-                Debug.LogWarning($"[InventoryWindowView] Failed to remove item '{itemDelta.ItemId}'");
-                return;
+                throw new ArgumentException("ItemId and Amount must be valid for remove command.", nameof(itemDelta));
             }
 
-            await PublishAndPersistAsync(itemDelta.OwnerId, cancellationToken);
+            var response = await _inventoryServerApi.RemoveAsync(new RemoveInventoryItemCommand
+            {
+                PlayerId = ownerId,
+                ItemId = itemDelta.ItemId,
+                Amount = itemDelta.Amount,
+                Reason = RemoveReason
+            }, cancellationToken);
+
+            EnsureServerSuccess(response, "remove");
+            if (response.Inventory == null)
+            {
+                throw new InvalidOperationException("Inventory remove response does not contain inventory snapshot.");
+            }
+
+            await ApplySnapshotAsync(response.Inventory, cancellationToken);
         }
         
         public async UniTask<InventoryBatchRemoveResult> RemoveItemsAsync(
@@ -94,61 +105,64 @@ namespace Inventory.Implementation.Services
                 return new InventoryBatchRemoveResult(0, 0, Array.Empty<InventoryItemDelta>());
             }
 
-            var requestedStacks = 0;
-            var removedStacks = 0;
-            var failedItems = new List<InventoryItemDelta>();
-            var changedOwners = new HashSet<string>(StringComparer.Ordinal);
+            var ownerId = ResolveCurrentOwnerId();
+            await EnsureOwnerLoadedAsync(cancellationToken);
 
+            var commandItems = new List<RemoveInventoryBatchItem>(itemDeltas.Count);
+            var requestedStacks = 0;
             for (var i = 0; i < itemDeltas.Count; i++)
             {
-                cancellationToken.ThrowIfCancellationRequested();
                 var itemDelta = itemDeltas[i];
-
-                if (itemDelta.Amount <= 0 ||
-                    string.IsNullOrWhiteSpace(itemDelta.OwnerId) ||
-                    string.IsNullOrWhiteSpace(itemDelta.ItemId) ||
-                    string.IsNullOrWhiteSpace(itemDelta.CategoryId))
+                if (string.IsNullOrWhiteSpace(itemDelta.ItemId) || itemDelta.Amount <= 0)
                 {
-                    failedItems.Add(itemDelta);
                     continue;
                 }
 
+                commandItems.Add(new RemoveInventoryBatchItem
+                {
+                    ItemId = itemDelta.ItemId,
+                    Amount = itemDelta.Amount
+                });
                 requestedStacks += itemDelta.Amount;
-
-                await EnsureOwnerLoadedAsync(itemDelta.OwnerId, cancellationToken);
-                var changed = _removeItemSystem.Execute(itemDelta);
-                if (!changed)
-                {
-                    failedItems.Add(itemDelta);
-                    continue;
-                }
-
-                removedStacks += itemDelta.Amount;
-                changedOwners.Add(itemDelta.OwnerId);
             }
 
-            foreach (var ownerId in changedOwners)
+            if (commandItems.Count == 0)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                await PublishAndPersistAsync(ownerId, cancellationToken);
+                return new InventoryBatchRemoveResult(0, 0, Array.Empty<InventoryItemDelta>());
             }
 
-            return new InventoryBatchRemoveResult(requestedStacks, removedStacks, failedItems);
+            var response = await _inventoryServerApi.RemoveBatchAsync(new RemoveInventoryBatchCommand
+            {
+                PlayerId = ownerId,
+                Items = commandItems,
+                Reason = RemoveBatchReason
+            }, cancellationToken);
+
+            EnsureServerSuccess(response, "remove-batch");
+            if (response.Inventory == null)
+            {
+                throw new InvalidOperationException("Inventory remove-batch response does not contain inventory snapshot.");
+            }
+
+            await ApplySnapshotAsync(response.Inventory, cancellationToken);
+            return new InventoryBatchRemoveResult(requestedStacks, requestedStacks, Array.Empty<InventoryItemDelta>());
         }
 
         public async UniTask<IReadOnlyList<InventoryItemView>> GetItemsAsync(string ownerId, string categoryId, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            await EnsureOwnerLoadedAsync(ownerId, cancellationToken);
-            var items = _querySystem.Execute(ownerId, categoryId);
-            WarnOnCategoryIdMismatch(ownerId, categoryId, items);
+            var resolvedOwnerId = ResolveCurrentOwnerId();
+            await EnsureOwnerLoadedAsync(cancellationToken);
+            var items = _querySystem.Execute(resolvedOwnerId, categoryId);
+            WarnOnCategoryIdMismatch(resolvedOwnerId, categoryId, items);
             return items;
         }
         
         public async UniTask ConsumeItemAsync(InventoryItemDelta item, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            await EnsureOwnerLoadedAsync(item.OwnerId, cancellationToken);
+            var ownerId = ResolveCurrentOwnerId();
+            await EnsureOwnerLoadedAsync(cancellationToken);
 
             var handler = _inventoryItemUseHandlers.FirstOrDefault(x => x.CanHandle(item));
             if (handler == null)
@@ -157,9 +171,9 @@ namespace Inventory.Implementation.Services
                 return;
             }
 
-            if (!HasEnoughItems(item.OwnerId, item))
+            if (!HasEnoughItems(ownerId, item))
             {
-                Debug.LogError($"Not enough items for item type: {item.ItemId} with category: {item.CategoryId}. item.OwnerId {item.OwnerId}");
+                Debug.LogError($"Not enough items for item type: {item.ItemId} with category: {item.CategoryId}. item.OwnerId {ownerId}");
                 return;
             }
 
@@ -167,7 +181,7 @@ namespace Inventory.Implementation.Services
             
             try
             {
-                await handler.UseAsync(item, item.OwnerId, cancellationToken);
+                await handler.UseAsync(item, ownerId, cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -175,8 +189,8 @@ namespace Inventory.Implementation.Services
             }
             catch (Exception ex)
             {
-                await AddItemAsync(item, cancellationToken);
-                Debug.LogError($"Failed to use item {item.ItemId}. Item restored. Error: {ex.Message}");
+                Debug.LogError($"Failed to use item {item.ItemId}. Inventory rollback is not supported in server-authoritative mode. Error: {ex.Message}");
+                throw;
             }
         }
 
@@ -185,28 +199,12 @@ namespace Inventory.Implementation.Services
             var items = _querySystem.Execute(ownerId, item.CategoryId);
             return items.Any(x => x.ItemId == item.ItemId && x.StackCount >= item.Amount);
         }
-        
-        private async UniTask PublishAndPersistAsync(string ownerId, CancellationToken cancellationToken)
+
+        internal async UniTask EnsureOwnerLoadedAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
-            var allItems = _querySystem.ExecuteAll(ownerId);
-            var itemsByCategory = allItems
-                .GroupBy(item => item.CategoryId)
-                .ToDictionary(group => group.Key, group => (IReadOnlyList<InventoryItemView>)group.ToList());
-
-            await _storage.SaveAsync(ownerId, allItems, cancellationToken);
-
-            _inventoryChangedSubject.OnNext(new InventoryChangedEvent(
-                ownerId,
-                itemsByCategory,
-                DateTime.UtcNow));
-        }
-
-        internal async UniTask EnsureOwnerLoadedAsync(string ownerId, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            if (_loadedOwners.Contains(ownerId))
+            var resolvedOwnerId = ResolveCurrentOwnerId();
+            if (_loadedOwners.Contains(resolvedOwnerId))
             {
                 return;
             }
@@ -214,24 +212,19 @@ namespace Inventory.Implementation.Services
             await _loadSemaphore.WaitAsync(cancellationToken);
             try
             {
-                if (_loadedOwners.Contains(ownerId))
+                if (_loadedOwners.Contains(resolvedOwnerId))
                 {
                     return;
                 }
 
-                var loadedItems = await _storage.LoadAsync(ownerId, cancellationToken);
-
-                foreach (var item in loadedItems)
+                var response = await _inventoryServerApi.LoadAsync(new InventoryLoadCommand
                 {
-                    var delta = new InventoryItemDelta(
-                        item.OwnerId,
-                        item.ItemId,
-                        item.StackCount,
-                        item.CategoryId);
-                    _addItemSystem.Execute(delta);
-                }
+                    PlayerId = resolvedOwnerId
+                }, cancellationToken);
+                EnsureServerSuccess(response, "load");
 
-                _loadedOwners.Add(ownerId);
+                var snapshotItems = MapSnapshotItems(resolvedOwnerId, response.Inventory);
+                await ApplySnapshotAsync(snapshotItems, cancellationToken);
             }
             finally
             {
@@ -239,11 +232,92 @@ namespace Inventory.Implementation.Services
             }
         }
 
+        public async UniTask ApplySnapshotAsync(InventorySnapshotDto snapshot, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var ownerId = ResolveCurrentOwnerId();
+            var mapped = MapSnapshotItems(ownerId, snapshot);
+            await ApplySnapshotAsync(mapped, cancellationToken);
+        }
+
+        public UniTask ApplySnapshotAsync(IReadOnlyList<InventoryItemView> items, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var ownerId = ResolveCurrentOwnerId();
+            _world.ReplaceOwnerSnapshot(ownerId, items ?? Array.Empty<InventoryItemView>());
+            _loadedOwners.Add(ownerId);
+            PublishChanged(ownerId);
+            return UniTask.CompletedTask;
+        }
+
         public void Dispose()
         {
             _inventoryChangedSubject?.OnCompleted();
             _inventoryChangedSubject?.Dispose();
             _loadSemaphore.Dispose();
+        }
+
+        private IReadOnlyList<InventoryItemView> MapSnapshotItems(string ownerId, InventorySnapshotDto snapshot)
+        {
+            if (snapshot?.Items == null || snapshot.Items.Count == 0)
+            {
+                return Array.Empty<InventoryItemView>();
+            }
+
+            var mapped = new List<InventoryItemView>(snapshot.Items.Count);
+            for (var i = 0; i < snapshot.Items.Count; i++)
+            {
+                var item = snapshot.Items[i];
+                if (item == null ||
+                    string.IsNullOrWhiteSpace(item.ItemId) ||
+                    string.IsNullOrWhiteSpace(item.CategoryId) ||
+                    item.Amount <= 0)
+                {
+                    continue;
+                }
+
+                mapped.Add(new InventoryItemView(ownerId, item.ItemId, item.Amount, item.CategoryId));
+            }
+
+            return mapped;
+        }
+
+        private void PublishChanged(string ownerId)
+        {
+            var allItems = _querySystem.ExecuteAll(ownerId);
+            var itemsByCategory = allItems
+                .GroupBy(item => item.CategoryId)
+                .ToDictionary(group => group.Key, group => (IReadOnlyList<InventoryItemView>)group.ToList());
+
+            _inventoryChangedSubject.OnNext(new InventoryChangedEvent(
+                ownerId,
+                itemsByCategory,
+                DateTime.UtcNow));
+        }
+
+        private string ResolveCurrentOwnerId()
+        {
+            var playerId = _playerIdentityProvider.GetPlayerId();
+            if (string.IsNullOrWhiteSpace(playerId))
+            {
+                throw new InvalidOperationException("Player id is empty.");
+            }
+
+            return playerId;
+        }
+
+        private static void EnsureServerSuccess(InventoryOperationResponse response, string operationName)
+        {
+            if (response == null)
+            {
+                throw new InvalidOperationException($"Inventory {operationName} response is null.");
+            }
+
+            if (!response.Success)
+            {
+                throw new InvalidOperationException(
+                    $"Inventory {operationName} rejected. Code={response.ErrorCode ?? "<none>"}, Message={response.ErrorMessage ?? "<none>"}");
+            }
         }
         
         #region CategoryMismatchHandler

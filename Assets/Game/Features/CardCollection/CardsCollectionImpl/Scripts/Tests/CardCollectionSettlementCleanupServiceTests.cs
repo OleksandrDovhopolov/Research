@@ -4,6 +4,7 @@ using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Models;
+using Infrastructure;
 using Inventory.API;
 using NUnit.Framework;
 using R3;
@@ -39,7 +40,7 @@ namespace CardCollectionImpl.Tests
                 failedItems: Array.Empty<InventoryItemDelta>()));
 
             var service = new CardCollectionSettlementCleanupService(
-                "player_1",
+                new StubPlayerIdentityProvider("player_1"),
                 inventoryService,
                 readService,
                 staticDataLoader
@@ -58,6 +59,21 @@ namespace CardCollectionImpl.Tests
             Assert.That(inventoryService.LastRemoveRequest[0].Amount, Is.EqualTo(2));
             Assert.That(result.RemovedPacksCount, Is.EqualTo(2));
             Assert.That(result.ExchangeGems, Is.EqualTo(20));
+        }
+
+        private sealed class StubPlayerIdentityProvider : IPlayerIdentityProvider
+        {
+            private readonly string _playerId;
+
+            public StubPlayerIdentityProvider(string playerId)
+            {
+                _playerId = playerId;
+            }
+
+            public string GetPlayerId()
+            {
+                return _playerId;
+            }
         }
 
         private sealed class StubStaticDataLoader : ICardCollectionStaticDataLoader

@@ -1,19 +1,21 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Infrastructure;
 using Inventory.API;
+using UnityEngine;
 
 namespace Rewards
 {
     public sealed class InventoryRewardHandler : IRewardHandler
     {
         private readonly IInventoryService _inventoryService;
-        private readonly string _inventoryOwnerId;
+        private readonly IPlayerIdentityProvider _playerIdentityProvider;
 
-        public InventoryRewardHandler(IInventoryService inventoryService, string inventoryOwnerId)
+        public InventoryRewardHandler(IInventoryService inventoryService, IPlayerIdentityProvider playerIdentityProvider)
         {
             _inventoryService = inventoryService ?? throw new ArgumentNullException(nameof(inventoryService));
-            _inventoryOwnerId = inventoryOwnerId ?? throw new ArgumentNullException(nameof(inventoryOwnerId));
+            _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
         }
 
         public bool CanHandle(RewardGrantRequest request)
@@ -29,7 +31,8 @@ namespace Rewards
                 throw new ArgumentNullException(nameof(request));
             }
 
-            if (string.IsNullOrWhiteSpace(_inventoryOwnerId))
+            var ownerId = _playerIdentityProvider.GetPlayerId();
+            if (string.IsNullOrWhiteSpace(ownerId))
             {
                 throw new InvalidOperationException("Inventory owner id is empty.");
             }
@@ -45,12 +48,20 @@ namespace Rewards
             }
 
             var itemDelta = new InventoryItemDelta(
-                _inventoryOwnerId,
+                ownerId,
                 request.RewardId,
                 request.Amount,
                 request.Category ?? string.Empty);
 
-            await _inventoryService.AddItemAsync(itemDelta, ct);
+            try
+            {
+                await _inventoryService.AddItemAsync(itemDelta, ct);
+            }
+            catch (NotSupportedException)
+            {
+                // In server-authoritative mode inventory updates should come from server snapshots.
+                Debug.LogWarning($"[Rewards] Client-side inventory add is not supported. RewardId={request.RewardId}.");
+            }
         }
     }
 }
