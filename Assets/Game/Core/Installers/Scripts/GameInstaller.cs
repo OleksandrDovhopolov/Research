@@ -32,6 +32,8 @@ namespace Game.Bootstrap
             builder.Register<IGameplayReadyGate, GameplayReadyGate>(Lifetime.Singleton);
             
             // ResourceManager
+            
+            builder.Register<IResourceAdjustApi, UnityWebRequestResourceAdjustApi>(Lifetime.Singleton);
             builder.RegisterEntryPoint<ResourceManager>().As<ResourceManager>();
             
             builder.RegisterComponentInHierarchy<AnimateCurrency>();

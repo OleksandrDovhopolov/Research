@@ -19,7 +19,7 @@ namespace Rewards
             return request != null && request.Kind == RewardKind.Resource;
         }
 
-        public UniTask HandleAsync(RewardGrantRequest request, CancellationToken ct)
+        public async UniTask HandleAsync(RewardGrantRequest request, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
             if (request == null)
@@ -42,8 +42,7 @@ namespace Rewards
                 throw new InvalidOperationException($"Unsupported resource reward id: {request.RewardId}");
             }
 
-            _resourceManager.Add(resourceType, request.Amount);
-            return UniTask.CompletedTask;
+            await _resourceManager.Add(resourceType, request.Amount, ResourceManager.RewardGrantReason, ct);
         }
     }
 }
