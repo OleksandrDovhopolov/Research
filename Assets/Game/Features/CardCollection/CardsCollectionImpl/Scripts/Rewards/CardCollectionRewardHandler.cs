@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using CardCollection.Core;
@@ -33,13 +32,8 @@ namespace CardCollectionImpl
                 Debug.LogWarning($"Failed to find GroupRewardDefinition for group with ID {groupCompletedData.GroupType}");
                 return false;
             }
-            
-            if (!_rewardSpecProvider.TryGet(groupRewardConfig.rewardItemId, out var spec))
-            {
-                throw new Exception($"Unknown reward id: {groupRewardConfig.rewardItemId}");
-            }
-            
-            return await ReceiveRewardsAsync(spec, ct);
+
+            return await ReceiveRewardsAsync(groupRewardConfig.rewardItemId, ct);
         }
 
         public async UniTask<bool> TryHandleCollectionCompleted(CardCollectionCompletedData collectionCompletedData, CancellationToken ct = default)
@@ -53,13 +47,8 @@ namespace CardCollectionImpl
                 return false;
             }
             var rewardId = groupRewardConfig.rewardItemId; 
-            
-            if (!_rewardSpecProvider.TryGet(rewardId, out var spec))
-            {
-                throw new Exception($"Unknown reward id: {rewardId}");
-            }
-            
-            var success = await ReceiveRewardsAsync(spec, ct);
+
+            var success = await ReceiveRewardsAsync(rewardId, ct);
             if (success) return true;
             
             Debug.LogError($"Failed to find reward ID {rewardId} for event ID {collectionCompletedData.EventId}");
@@ -69,52 +58,23 @@ namespace CardCollectionImpl
         public async UniTask<bool> TryHandleBuyPointsOffer(string offerId, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
-            
-            if (!_rewardSpecProvider.TryGet(offerId, out var spec))
-            {
-                throw new Exception($"Unknown reward id: {offerId}");
-            }
-            
-            var success = await ReceiveRewardsAsync(spec, ct);
+
+            var success = await ReceiveRewardsAsync(offerId, ct);
             if (success) return true;
             
             Debug.LogError($"Failed to find offer reward ID {offerId}");
             return false;
         }
         
-        private async UniTask<bool> ReceiveRewardsAsync(RewardSpec rewardSpec, CancellationToken ct = default)
+        private async UniTask<bool> ReceiveRewardsAsync(string rewardId, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
-            if (rewardSpec == null || _rewardGrantService == null)
+            if (string.IsNullOrWhiteSpace(rewardId) || _rewardGrantService == null)
             {
                 return false;
             }
 
-            var resources = rewardSpec.Resources;
-            if (resources == null || resources.Count == 0)
-            {
-                return false;
-            }
-
-            var requests = new List<RewardGrantRequest>(resources.Count);
-            foreach (var resource in resources)
-            {
-                ct.ThrowIfCancellationRequested();
-                if (resource == null || string.IsNullOrWhiteSpace(resource.ResourceId) || resource.Amount <= 0)
-                {
-                    continue;
-                }
-
-                requests.Add(new RewardGrantRequest(resource.ResourceId, resource.Kind, resource.Amount, resource.Category));
-            }
-
-            if (requests.Count == 0)
-            {
-                Debug.LogWarning($"[Rewards] RewardSpec {rewardSpec.RewardId} has no valid resources");
-                return false;
-            }
-
-            return await _rewardGrantService.TryGrantAsync(requests, ct);
+            return await _rewardGrantService.TryGrantAsync(rewardId, ct);
         }
         
         public RewardViewData CreateRewardViewData(string groupType)

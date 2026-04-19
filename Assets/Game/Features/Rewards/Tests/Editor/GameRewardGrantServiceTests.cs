@@ -14,7 +14,7 @@ namespace Rewards.Tests.Editor
         {
             var resourceHandler = new SpyRewardHandler(RewardKind.Resource);
             var inventoryHandler = new SpyRewardHandler(RewardKind.InventoryItem);
-            var service = new GameRewardGrantService(new List<IRewardHandler> { resourceHandler, inventoryHandler });
+            var service = new GameRewardGrantService(new List<IRewardHandler> { resourceHandler, inventoryHandler }, new StubRewardSpecProvider());
 
             var rewards = new List<RewardGrantRequest>
             {
@@ -33,7 +33,7 @@ namespace Rewards.Tests.Editor
         public void TryGrantAsync_InvalidReward_ContinuesBatchAndReturnsFalse()
         {
             var resourceHandler = new SpyRewardHandler(RewardKind.Resource);
-            var service = new GameRewardGrantService(new List<IRewardHandler> { resourceHandler });
+            var service = new GameRewardGrantService(new List<IRewardHandler> { resourceHandler }, new StubRewardSpecProvider());
 
             var rewards = new List<RewardGrantRequest>
             {
@@ -52,7 +52,7 @@ namespace Rewards.Tests.Editor
         public void TryGrantAsync_UnsupportedReward_ContinuesBatchAndReturnsFalse()
         {
             var resourceHandler = new SpyRewardHandler(RewardKind.Resource);
-            var service = new GameRewardGrantService(new List<IRewardHandler> { resourceHandler });
+            var service = new GameRewardGrantService(new List<IRewardHandler> { resourceHandler }, new StubRewardSpecProvider());
 
             var rewards = new List<RewardGrantRequest>
             {
@@ -72,7 +72,7 @@ namespace Rewards.Tests.Editor
         {
             var throwingHandler = new SpyRewardHandler(RewardKind.Resource, shouldThrow: true);
             var inventoryHandler = new SpyRewardHandler(RewardKind.InventoryItem);
-            var service = new GameRewardGrantService(new List<IRewardHandler> { throwingHandler, inventoryHandler });
+            var service = new GameRewardGrantService(new List<IRewardHandler> { throwingHandler, inventoryHandler }, new StubRewardSpecProvider());
 
             var rewards = new List<RewardGrantRequest>
             {
@@ -91,7 +91,7 @@ namespace Rewards.Tests.Editor
         public void TryGrantAsync_CancelledBeforeStart_ThrowsOperationCanceledException()
         {
             var resourceHandler = new SpyRewardHandler(RewardKind.Resource);
-            var service = new GameRewardGrantService(new List<IRewardHandler> { resourceHandler });
+            var service = new GameRewardGrantService(new List<IRewardHandler> { resourceHandler }, new StubRewardSpecProvider());
             using var cts = new CancellationTokenSource();
             cts.Cancel();
 
@@ -109,7 +109,7 @@ namespace Rewards.Tests.Editor
             using var cts = new CancellationTokenSource();
             var firstHandler = new SpyRewardHandler(RewardKind.Resource, onHandle: () => cts.Cancel());
             var secondHandler = new SpyRewardHandler(RewardKind.InventoryItem);
-            var service = new GameRewardGrantService(new List<IRewardHandler> { firstHandler, secondHandler });
+            var service = new GameRewardGrantService(new List<IRewardHandler> { firstHandler, secondHandler }, new StubRewardSpecProvider());
 
             var rewards = new List<RewardGrantRequest>
             {
@@ -122,6 +122,48 @@ namespace Rewards.Tests.Editor
 
             Assert.AreEqual(1, firstHandler.HandleCallsCount);
             Assert.AreEqual(0, secondHandler.HandleCallsCount);
+        }
+
+        [Test]
+        public void TryGrantAsync_ByRewardId_UnknownRewardId_ReturnsFalse()
+        {
+            var resourceHandler = new SpyRewardHandler(RewardKind.Resource);
+            var service = new GameRewardGrantService(new List<IRewardHandler> { resourceHandler }, new StubRewardSpecProvider());
+
+            var result = service.TryGrantAsync("missing", CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.IsFalse(result);
+            Assert.AreEqual(0, resourceHandler.HandleCallsCount);
+        }
+
+        [Test]
+        public void TryGrantAsync_ByRewardId_ValidSpec_DelegatesAndReturnsTrue()
+        {
+            var resourceHandler = new SpyRewardHandler(RewardKind.Resource);
+            var service = new GameRewardGrantService(
+                new List<IRewardHandler> { resourceHandler },
+                new StubRewardSpecProvider(CreateSpec("reward_a")));
+
+            var result = service.TryGrantAsync("reward_a", CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.IsTrue(result);
+            Assert.AreEqual(1, resourceHandler.HandleCallsCount);
+            Assert.AreEqual("Gold", resourceHandler.LastRequest.RewardId);
+            Assert.AreEqual(10, resourceHandler.LastRequest.Amount);
+        }
+
+        [Test]
+        public void TryGrantAsync_ByRewardId_EmptyResources_ReturnsFalse()
+        {
+            var resourceHandler = new SpyRewardHandler(RewardKind.Resource);
+            var service = new GameRewardGrantService(
+                new List<IRewardHandler> { resourceHandler },
+                new StubRewardSpecProvider(new RewardSpec { RewardId = "empty", Resources = new List<RewardSpecResource>() }));
+
+            var result = service.TryGrantAsync("empty", CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.IsFalse(result);
+            Assert.AreEqual(0, resourceHandler.HandleCallsCount);
         }
 
         private sealed class SpyRewardHandler : IRewardHandler
@@ -159,6 +201,46 @@ namespace Rewards.Tests.Editor
 
                 return UniTask.CompletedTask;
             }
+        }
+
+        private sealed class StubRewardSpecProvider : IRewardSpecProvider
+        {
+            private readonly Dictionary<string, RewardSpec> _specsById = new(StringComparer.Ordinal);
+
+            public StubRewardSpecProvider(params RewardSpec[] specs)
+            {
+                if (specs == null)
+                {
+                    return;
+                }
+
+                foreach (var spec in specs)
+                {
+                    if (spec == null || string.IsNullOrWhiteSpace(spec.RewardId))
+                    {
+                        continue;
+                    }
+
+                    _specsById[spec.RewardId] = spec;
+                }
+            }
+
+            public bool TryGet(string rewardId, out RewardSpec spec)
+            {
+                return _specsById.TryGetValue(rewardId, out spec);
+            }
+        }
+
+        private static RewardSpec CreateSpec(string rewardId)
+        {
+            return new RewardSpec
+            {
+                RewardId = rewardId,
+                Resources = new List<RewardSpecResource>
+                {
+                    new() { ResourceId = "Gold", Kind = RewardKind.Resource, Amount = 10, Category = "regular" }
+                }
+            };
         }
     }
 }

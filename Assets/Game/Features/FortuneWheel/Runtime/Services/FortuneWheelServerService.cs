@@ -226,37 +226,8 @@ namespace FortuneWheel
                     throw new InvalidOperationException($"Unknown reward id: {response.rewardId}");
                 }
 
-                var resources = rewardSpec?.Resources;
-                if (resources == null || resources.Count == 0)
-                {
-                    throw new InvalidOperationException($"Reward spec '{response.rewardId}' has no resources.");
-                }
-
-                var requests = new List<RewardGrantRequest>(resources.Count);
-                RewardSpecResource primaryResource = null;
-                for (var i = 0; i < resources.Count; i++)
-                {
-                    var resource = resources[i];
-                    if (resource == null || string.IsNullOrWhiteSpace(resource.ResourceId) || resource.Amount <= 0)
-                    {
-                        continue;
-                    }
-
-                    primaryResource ??= resource;
-                    requests.Add(new RewardGrantRequest(resource.ResourceId, resource.Kind, resource.Amount, resource.Category));
-                }
-
-                if (requests.Count == 0)
-                {
-                    throw new InvalidOperationException($"Reward spec '{response.rewardId}' has no valid resources.");
-                }
-
-                if (primaryResource == null)
-                {
-                    throw new InvalidOperationException($"Reward spec '{response.rewardId}' has no primary resource.");
-                }
-
-                var success = await _rewardGrantService.TryGrantAsync(requests, ct);
+                var primaryResource = GetPrimaryRewardResource(rewardSpec, response.rewardId);
+                var success = await _rewardGrantService.TryGrantAsync(response.rewardId, ct);
                 if (!success)
                 {
                     throw new InvalidOperationException($"Failed to grant reward {response.rewardId}");
@@ -286,6 +257,28 @@ namespace FortuneWheel
                     $"{LogPrefix} [{operationId}] Spin failed. PlayerId={MaskPlayerId(playerId)}, VerificationUrl={BuildWheelDataUrl(playerId)}, Reason={exception}");
                 throw;
             }
+        }
+
+        private static RewardSpecResource GetPrimaryRewardResource(RewardSpec rewardSpec, string rewardId)
+        {
+            var resources = rewardSpec?.Resources;
+            if (resources == null || resources.Count == 0)
+            {
+                throw new InvalidOperationException($"Reward spec '{rewardId}' has no resources.");
+            }
+
+            for (var i = 0; i < resources.Count; i++)
+            {
+                var resource = resources[i];
+                if (resource == null || string.IsNullOrWhiteSpace(resource.ResourceId) || resource.Amount <= 0)
+                {
+                    continue;
+                }
+
+                return resource;
+            }
+
+            throw new InvalidOperationException($"Reward spec '{rewardId}' has no primary resource.");
         }
 
         private async UniTask<FortuneWheelModuleSaveData> GetCachedDataSafeAsync(CancellationToken ct)

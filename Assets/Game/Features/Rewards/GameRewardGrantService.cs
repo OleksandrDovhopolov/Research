@@ -10,10 +10,36 @@ namespace Rewards
     public sealed class GameRewardGrantService : IRewardGrantService
     {
         private readonly IReadOnlyList<IRewardHandler> _handlers;
+        private readonly IRewardSpecProvider _rewardSpecProvider;
 
-        public GameRewardGrantService(IReadOnlyList<IRewardHandler> handlers)
+        public GameRewardGrantService(IReadOnlyList<IRewardHandler> handlers, IRewardSpecProvider rewardSpecProvider)
         {
             _handlers = handlers ?? throw new ArgumentNullException(nameof(handlers));
+            _rewardSpecProvider = rewardSpecProvider ?? throw new ArgumentNullException(nameof(rewardSpecProvider));
+        }
+
+        public UniTask<bool> TryGrantAsync(string rewardId, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (string.IsNullOrWhiteSpace(rewardId))
+            {
+                Debug.LogWarning("[Rewards] Reward id is empty.");
+                return UniTask.FromResult(false);
+            }
+
+            if (!_rewardSpecProvider.TryGet(rewardId, out var rewardSpec) || rewardSpec == null)
+            {
+                Debug.LogWarning($"[Rewards] Unknown reward id: {rewardId}");
+                return UniTask.FromResult(false);
+            }
+
+            if (!TryBuildRequests(rewardSpec, out var requests))
+            {
+                Debug.LogWarning($"[Rewards] RewardSpec '{rewardId}' has no valid resources.");
+                return UniTask.FromResult(false);
+            }
+
+            return TryGrantAsync(requests, ct);
         }
 
         public async UniTask<bool> TryGrantAsync(List<RewardGrantRequest> rewards, CancellationToken ct = default)
@@ -90,6 +116,37 @@ namespace Rewards
         private static bool RequiresPositiveAmount(RewardKind kind)
         {
             return kind == RewardKind.Resource || kind == RewardKind.InventoryItem;
+        }
+
+        private static bool TryBuildRequests(RewardSpec rewardSpec, out List<RewardGrantRequest> requests)
+        {
+            requests = null;
+            if (rewardSpec?.Resources == null || rewardSpec.Resources.Count == 0)
+            {
+                return false;
+            }
+
+            var builtRequests = new List<RewardGrantRequest>(rewardSpec.Resources.Count);
+            foreach (var resource in rewardSpec.Resources)
+            {
+                if (resource == null ||
+                    string.IsNullOrWhiteSpace(resource.ResourceId) ||
+                    resource.Amount <= 0 ||
+                    resource.Kind == RewardKind.Unknown)
+                {
+                    continue;
+                }
+
+                builtRequests.Add(new RewardGrantRequest(resource.ResourceId, resource.Kind, resource.Amount, resource.Category));
+            }
+
+            if (builtRequests.Count == 0)
+            {
+                return false;
+            }
+
+            requests = builtRequests;
+            return true;
         }
     }
 }
