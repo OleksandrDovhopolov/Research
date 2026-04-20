@@ -451,32 +451,25 @@ namespace Inventory.Implementation.Services
             string operationName,
             CancellationToken cancellationToken)
         {
-            if (response?.PlayerState?.InventoryItems != null)
+            if (response?.PlayerState?.InventoryItems == null)
             {
-                var snapshot = new InventorySnapshotDto
-                {
-                    Items = response.PlayerState.InventoryItems
-                        .Where(item => item != null)
-                        .Select(item => new InventorySnapshotItemDto
-                        {
-                            ItemId = item.ItemId,
-                            Amount = item.Amount
-                        })
-                        .ToList()
-                };
-
-                await ApplySnapshotAsync(snapshot, cancellationToken);
-                return;
+                throw new InvalidOperationException(
+                    $"Inventory {operationName} response does not contain playerState.inventoryItems.");
             }
 
-            if (response?.Inventory != null)
+            var snapshot = new InventorySnapshotDto
             {
-                await ApplySnapshotAsync(response.Inventory, cancellationToken);
-                return;
-            }
+                Items = response.PlayerState.InventoryItems
+                    .Where(item => item != null)
+                    .Select(item => new InventorySnapshotItemDto
+                    {
+                        ItemId = item.ItemId,
+                        Amount = item.Amount
+                    })
+                    .ToList()
+            };
 
-            throw new InvalidOperationException(
-                $"Inventory {operationName} response does not contain playerState.inventoryItems or inventory snapshot.");
+            await ApplySnapshotAsync(snapshot, cancellationToken);
         }
         
         #region CategoryMismatchHandler

@@ -64,11 +64,11 @@ namespace Inventory.Tests.Editor
                 RemoveResponse = new InventoryOperationResponse
                 {
                     Success = true,
-                    Inventory = new InventorySnapshotDto
+                    PlayerState = new PlayerStateSnapshotResponseDto
                     {
-                        Items = new List<InventorySnapshotItemDto>
+                        InventoryItems = new List<PlayerStateInventoryItemDto>
                         {
-                            new() { ItemId = "pack_a", Amount = 1, CategoryId = "card_pack" }
+                            new() { ItemId = "pack_a", Amount = 1 }
                         }
                     }
                 }
@@ -99,9 +99,9 @@ namespace Inventory.Tests.Editor
                 RemoveBatchResponse = new InventoryOperationResponse
                 {
                     Success = true,
-                    Inventory = new InventorySnapshotDto
+                    PlayerState = new PlayerStateSnapshotResponseDto
                     {
-                        Items = new List<InventorySnapshotItemDto>()
+                        InventoryItems = new List<PlayerStateInventoryItemDto>()
                     }
                 }
             };
@@ -132,6 +132,27 @@ namespace Inventory.Tests.Editor
 
             Assert.That(items.Count, Is.EqualTo(1));
             Assert.That(items[0].CategoryId, Is.EqualTo(InventoryBuiltInCategoryIds.Regular));
+        }
+
+        [Test]
+        public void RemoveItemAsync_Throws_WhenPlayerStateInventoryItemsMissing()
+        {
+            var api = new StubInventoryServerApi
+            {
+                RemoveResponse = new InventoryOperationResponse
+                {
+                    Success = true,
+                    PlayerState = null
+                }
+            };
+            var service = CreateService(api, "{ \"Inventory\": { \"InventoryItems\": { \"pack_a\": 3 } } }");
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                service.RemoveItemAsync(new InventoryItemDelta("legacy", "pack_a", 1, "card_pack"), CancellationToken.None)
+                    .GetAwaiter()
+                    .GetResult());
+
+            Assert.That(exception.Message, Does.Contain("playerState.inventoryItems"));
         }
 
         private static InventoryModuleService CreateService(StubInventoryServerApi api, string saveJson)
@@ -182,7 +203,10 @@ namespace Inventory.Tests.Editor
                 return UniTask.FromResult(RemoveResponse ?? new InventoryOperationResponse
                 {
                     Success = true,
-                    Inventory = new InventorySnapshotDto()
+                    PlayerState = new PlayerStateSnapshotResponseDto
+                    {
+                        InventoryItems = new List<PlayerStateInventoryItemDto>()
+                    }
                 });
             }
 
@@ -193,7 +217,10 @@ namespace Inventory.Tests.Editor
                 return UniTask.FromResult(RemoveBatchResponse ?? new InventoryOperationResponse
                 {
                     Success = true,
-                    Inventory = new InventorySnapshotDto()
+                    PlayerState = new PlayerStateSnapshotResponseDto
+                    {
+                        InventoryItems = new List<PlayerStateInventoryItemDto>()
+                    }
                 });
             }
         }
