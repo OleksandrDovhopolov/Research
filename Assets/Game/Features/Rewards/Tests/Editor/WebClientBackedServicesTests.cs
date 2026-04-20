@@ -63,6 +63,77 @@ namespace Rewards.Tests.Editor
         }
 
         [Test]
+        public void ServerRewardGrantService_TryGrantDetailedAsync_ReturnsBalance_WhenResponseSuccessful()
+        {
+            var snapshotHandler = new StubSnapshotHandler();
+            var webClient = new StubWebClient
+            {
+                PostResponder = (url, requestType, responseType, request) =>
+                {
+                    return new GrantRewardResponse
+                    {
+                        Success = true,
+                        RewardId = "Gems",
+                        PlayerState = new PlayerStateSnapshotDto
+                        {
+                            Resources = new Dictionary<string, int> { { "Gems", 456 } }
+                        }
+                    };
+                }
+            };
+            var service = new ServerRewardGrantService(new StubPlayerIdentityProvider("player-1"), webClient, new[] { snapshotHandler });
+
+            var result = service.TryGrantDetailedAsync("Gems", CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.NewCrystalsBalance, Is.EqualTo(456));
+            Assert.That(snapshotHandler.AppliedCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ServerRewardGrantService_TryGrantDetailedAsync_ReturnsRejected_WhenResponseRejected()
+        {
+            var snapshotHandler = new StubSnapshotHandler();
+            var webClient = new StubWebClient
+            {
+                PostResponder = (url, requestType, responseType, request) =>
+                {
+                    return new GrantRewardResponse
+                    {
+                        Success = false,
+                        RewardId = "Gems",
+                        ErrorCode = "REJECTED",
+                        ErrorMessage = "No reward."
+                    };
+                }
+            };
+            var service = new ServerRewardGrantService(new StubPlayerIdentityProvider("player-1"), webClient, new[] { snapshotHandler });
+
+            var result = service.TryGrantDetailedAsync("Gems", CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.FailureType, Is.EqualTo(RewardGrantFailureType.Rejected));
+            Assert.That(snapshotHandler.AppliedCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void ServerRewardGrantService_TryGrantDetailedAsync_ReturnsNetworkFailure_WhenNetworkExceptionThrown()
+        {
+            var snapshotHandler = new StubSnapshotHandler();
+            var webClient = new StubWebClient
+            {
+                PostException = new WebClientNetworkException("https://test/rewards/grant", "No internet")
+            };
+            var service = new ServerRewardGrantService(new StubPlayerIdentityProvider("player-1"), webClient, new[] { snapshotHandler });
+
+            var result = service.TryGrantDetailedAsync("Gems", CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.FailureType, Is.EqualTo(RewardGrantFailureType.Network));
+            Assert.That(snapshotHandler.AppliedCount, Is.EqualTo(0));
+        }
+
+        [Test]
         public void UnityWebRequestResourceAdjustApi_AdjustAsync_MapsResponse()
         {
             var webClient = new StubWebClient
@@ -126,6 +197,7 @@ namespace Rewards.Tests.Editor
         private sealed class StubWebClient : IWebClient
         {
             public Func<string, Type, Type, object, object> PostResponder { get; set; }
+            public Exception PostException { get; set; }
 
             public UniTask<TResponse> GetAsync<TResponse>(string url, CancellationToken ct = default)
             {
@@ -135,6 +207,11 @@ namespace Rewards.Tests.Editor
             public UniTask<TResponse> PostAsync<TRequest, TResponse>(string url, TRequest data, CancellationToken ct = default)
             {
                 ct.ThrowIfCancellationRequested();
+                if (PostException != null)
+                {
+                    throw PostException;
+                }
+
                 if (PostResponder == null)
                 {
                     return UniTask.FromResult(default(TResponse));

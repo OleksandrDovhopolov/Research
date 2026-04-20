@@ -1040,6 +1040,10 @@ PrefabInstance:
       propertyPath: _globalTimerService
       value: 
       objectReference: {fileID: 430775085}
+    - target: {fileID: 3711819036832241099, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
+      propertyPath: _rewardedAdsConfigSo
+      value: 
+      objectReference: {fileID: 11400000, guid: 9119883fa543a00409777752b096c1b4, type: 2}
     - target: {fileID: 6776598713480429475, guid: b6f12187ffe57424193bc469d07342ee, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1293.7606

@@ -202,6 +202,21 @@ namespace CardCollectionImpl
                 ct.ThrowIfCancellationRequested();
                 return UniTask.FromResult(_grantResult);
             }
+
+            public UniTask<RewardGrantDetailedResult> TryGrantDetailedAsync(string rewardId, CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+                GrantByRewardIdCallsCount++;
+                LastGrantedRewardId = rewardId;
+                var result = _grantResult
+                    ? RewardGrantDetailedResult.BuildSuccess(rewardId, null)
+                    : RewardGrantDetailedResult.BuildFailure(
+                        rewardId,
+                        RewardGrantFailureType.Rejected,
+                        "REJECTED",
+                        "Rejected by fake reward service.");
+                return UniTask.FromResult(result);
+            }
         }
 
         private sealed class FakeRewardSpecProvider : IRewardSpecProvider

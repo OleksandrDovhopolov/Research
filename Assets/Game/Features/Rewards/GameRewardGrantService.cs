@@ -95,6 +95,18 @@ namespace Rewards
             return UniTask.FromResult(false);
         }
 
+        public UniTask<RewardGrantDetailedResult> TryGrantDetailedAsync(string rewardId, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            Debug.LogWarning("[Rewards] Detailed grant is not supported in GameRewardGrantService.");
+            var result = RewardGrantDetailedResult.BuildFailure(
+                rewardId,
+                RewardGrantFailureType.Unknown,
+                "UNSUPPORTED",
+                "Detailed grant is not supported in GameRewardGrantService.");
+            return UniTask.FromResult(result);
+        }
+
         private static bool IsValidRequest(RewardGrantRequest request)
         {
             if (request == null)

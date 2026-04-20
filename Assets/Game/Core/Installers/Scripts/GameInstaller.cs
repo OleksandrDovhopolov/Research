@@ -19,6 +19,7 @@ namespace Game.Bootstrap
     {
         [SerializeField] private GlobalTimerService _globalTimerService;
         [SerializeField] private RewardSpecsConfigSO _rewardSpecsConfigSo;
+        [SerializeField] private RewardedAdsConfigSO _rewardedAdsConfigSo;
         [SerializeField] private string _cardCollectionScheduleFile = "card_collection_schedule.json";
         [SerializeField] private string _removeCardCollectionConfigSchedule = "cards_event_schedule";
         
@@ -67,7 +68,18 @@ namespace Game.Bootstrap
             builder.Register<ResourcePlayerStateSnapshotHandler>(Lifetime.Singleton).As<IPlayerStateSnapshotHandler>();
             builder.Register<InventoryPlayerStateSnapshotHandler>(Lifetime.Singleton).As<IPlayerStateSnapshotHandler>();
             builder.Register<IRewardGrantService, ServerRewardGrantService>(Lifetime.Singleton);
-            builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(_rewardSpecsConfigSo), Lifetime.Singleton); 
+            builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(_rewardSpecsConfigSo), Lifetime.Singleton);
+
+            var rewardedAdsConfig = _rewardedAdsConfigSo != null
+                ? _rewardedAdsConfigSo
+                : ScriptableObject.CreateInstance<RewardedAdsConfigSO>();
+            builder.RegisterInstance(rewardedAdsConfig);
+            builder.Register<IRewardedAdsProvider>(resolver =>
+            {
+                var config = resolver.Resolve<RewardedAdsConfigSO>().GetOrCreate();
+                return RewardedAdsProviderFactory.Create(config);
+            }, Lifetime.Singleton);
+            builder.Register<AdsRewardFlowService>(Lifetime.Singleton);
             
             // Orchestration
             builder.RegisterOrchestration(_cardCollectionScheduleFile, _removeCardCollectionConfigSchedule);
@@ -76,6 +88,15 @@ namespace Game.Bootstrap
             builder.RegisterBuildCallback(resolver =>
             {
                 resolver.Resolve<WindowFactoryDI>().SetResolver(resolver);
+
+                var rewardedAdPresenters = Object.FindObjectsOfType<RewardedAdButtonPresenter>(true);
+                foreach (var rewardedAdPresenter in rewardedAdPresenters)
+                {
+                    if (rewardedAdPresenter != null)
+                    {
+                        resolver.Inject(rewardedAdPresenter);
+                    }
+                }
             });
         }
     }
