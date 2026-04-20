@@ -77,7 +77,7 @@ namespace CoreResources
             return _amountByType[type];
         }
 
-        public async UniTask ApplySnapshotAsync(ResourceSnapshotDto snapshot, CancellationToken ct = default)
+        public async UniTask ApplySnapshotAsync(ResourceSnapshotDto snapshot, bool instantUpdate = false, CancellationToken ct = default)
         {
             ThrowIfDisposed();
             ct.ThrowIfCancellationRequested();
@@ -97,11 +97,14 @@ namespace CoreResources
                 Energy = Mathf.Max(0, snapshot.Energy),
                 Gems = Mathf.Max(0, snapshot.Gems)
             };
-
-            ApplyNormalizedAmounts(normalizedSnapshot.Gold, normalizedSnapshot.Energy, normalizedSnapshot.Gems);
+            
+            if (instantUpdate)
+            {
+                ApplyNormalizedAmounts(normalizedSnapshot.Gold, normalizedSnapshot.Energy, normalizedSnapshot.Gems);
+            }
         }
 
-        public async UniTask ApplySnapshotAsync(IReadOnlyDictionary<string, int> resourcesById, CancellationToken ct = default)
+        public async UniTask ApplySnapshotAsync(IReadOnlyDictionary<string, int> resourcesById, bool instantUpdate = false, CancellationToken ct = default)
         {
             ThrowIfDisposed();
             ct.ThrowIfCancellationRequested();
@@ -141,7 +144,10 @@ namespace CoreResources
                 Gems = Mathf.Max(0, gems)
             };
 
-            ApplyNormalizedAmounts(normalizedSnapshot.Gold, normalizedSnapshot.Energy, normalizedSnapshot.Gems);
+            if (instantUpdate)
+            {
+                ApplyNormalizedAmounts(normalizedSnapshot.Gold, normalizedSnapshot.Energy, normalizedSnapshot.Gems);
+            }
         }
 
         public void Dispose()

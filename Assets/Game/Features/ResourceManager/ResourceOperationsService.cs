@@ -120,7 +120,7 @@ namespace CoreResources
                     throw new InvalidOperationException("Resource adjust response does not contain resources snapshot.");
                 }
 
-                await _resourceManager.ApplySnapshotAsync(response.Resources, ct);
+                await _resourceManager.ApplySnapshotAsync(response.Resources, ct : ct);
             }
             finally
             {

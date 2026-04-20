@@ -33,7 +33,7 @@ namespace Rewards.Tests.Editor
                     _ => new ResourceSnapshotDto()
                 };
 
-                return resourceManager.ApplySnapshotAsync(snapshot, ct);
+                return resourceManager.ApplySnapshotAsync(snapshot, ct : ct);
             };
             var handler = new ResourceRewardHandler(operationsService);
 
