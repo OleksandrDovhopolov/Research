@@ -48,62 +48,97 @@ namespace FortuneWheel
 
         private void Start()
         {
+            if (_cheatButton == null)
+            {
+                Debug.LogError($"{LogPrefix} Cheat button is not assigned.");
+                return;
+            }
+
             _cheatButton.onClick.AddListener(() => OpenCheatsPanelAsync(_destroyCt).Forget());
         }
 
         private async UniTask OpenCheatsPanelAsync(CancellationToken ct)
         {
-            ct.ThrowIfCancellationRequested();
-            await UniTask.Yield();
-
-            var playerId = _playerIdentityProvider?.GetPlayerId();
-            if (!string.IsNullOrWhiteSpace(playerId))
+            try
             {
-                var verificationUrl = BuildWheelDataUrl(playerId);
-                Debug.Log(
-                    $"{LogPrefix} Player context. PlayerId={playerId}, MaskedPlayerId={MaskPlayerId(playerId)}, " +
-                    $"VerifyWith={verificationUrl}");
-            }
-            
-            var data = await _fortuneWheelServerService.GetDataSync(ct);
+                ct.ThrowIfCancellationRequested();
+                await UniTask.Yield();
 
-            IReadOnlyList<FortuneWheelRewardServerItem> rewards = await _fortuneWheelServerService.GetRewardsAsync(ct);
-            if (rewards == null || rewards.Count == 0)
-            {
-                Debug.LogWarning("[CheatFortuneWheelButton] Rewards list is empty.");
-                return;
-            }
-
-            var sectors = new List<FortuneWheelSectorArgs>(SectorCount);
-            for (var i = 0; i < SectorCount; i++)
-            {
-                var reward = rewards[i % rewards.Count];
-                if (reward == null || string.IsNullOrWhiteSpace(reward.RewardId))
+                if (_uiManager == null || _rewardSpecProvider == null || _fortuneWheelServerService == null)
                 {
-                    continue;
+                    Debug.LogError(
+                        $"{LogPrefix} Dependencies are not installed. " +
+                        $"HasUIManager={_uiManager != null}, HasRewardSpecProvider={_rewardSpecProvider != null}, " +
+                        $"HasFortuneWheelServerService={_fortuneWheelServerService != null}");
+                    return;
                 }
 
-                if (_rewardSpecProvider.TryGet(reward.RewardId, out var spec))
+                var playerId = _playerIdentityProvider?.GetPlayerId();
+                if (!string.IsNullOrWhiteSpace(playerId))
                 {
-                    var rewardConfig = spec.Resources.First();
-                    var sectorData = new FortuneWheelSectorArgs(reward.RewardId,rewardConfig.Icon, rewardConfig.Amount);
-                    sectors.Add(sectorData);
+                    var verificationUrl = BuildWheelDataUrl(playerId);
+                    Debug.Log(
+                        $"{LogPrefix} Player context. PlayerId={playerId}, MaskedPlayerId={MaskPlayerId(playerId)}, " +
+                        $"VerifyWith={verificationUrl}");
                 }
-                else
-                {
-                    Debug.LogError($"[CheatFortuneWheelButton] Failed to find reward spec for {reward.RewardId}");
-                }
-            }
 
-            if (sectors.Count != SectorCount)
+                var data = await _fortuneWheelServerService.GetDataSync(ct);
+
+                IReadOnlyList<FortuneWheelRewardServerItem> rewards = await _fortuneWheelServerService.GetRewardsAsync(ct);
+                if (rewards == null || rewards.Count == 0)
+                {
+                    Debug.LogWarning($"{LogPrefix} Rewards list is empty.");
+                    return;
+                }
+
+                var sectors = new List<FortuneWheelSectorArgs>(SectorCount);
+                for (var i = 0; i < SectorCount; i++)
+                {
+                    var reward = rewards[i % rewards.Count];
+                    if (reward == null || string.IsNullOrWhiteSpace(reward.RewardId))
+                    {
+                        continue;
+                    }
+
+                    if (_rewardSpecProvider.TryGet(reward.RewardId, out var spec))
+                    {
+                        var rewardConfig = spec?.Resources?.FirstOrDefault(resource =>
+                            resource != null &&
+                            !string.IsNullOrWhiteSpace(resource.ResourceId) &&
+                            resource.Amount > 0);
+                        if (rewardConfig == null)
+                        {
+                            Debug.LogError($"{LogPrefix} Reward spec has no valid resources. RewardId={reward.RewardId}");
+                            continue;
+                        }
+
+                        var sectorData = new FortuneWheelSectorArgs(reward.RewardId, rewardConfig.Icon, rewardConfig.Amount);
+                        sectors.Add(sectorData);
+                    }
+                    else
+                    {
+                        Debug.LogError($"{LogPrefix} Failed to find reward spec for {reward.RewardId}");
+                    }
+                }
+
+                if (sectors.Count != SectorCount)
+                {
+                    Debug.LogWarning($"{LogPrefix} Failed to build {SectorCount} sectors. Built: {sectors.Count}.");
+                    return;
+                }
+
+                Debug.LogWarning($"{LogPrefix} Open wheel. Spins={data.AvailableSpins}, nextAt={data.NextUpdateAt}, rewards={rewards.Count}, sectors={sectors.Count}");
+                var args = new FortuneWheelArgs(data, sectors);
+                _uiManager.Show<FortuneWheelController>(args);
+            }
+            catch (OperationCanceledException)
             {
-                Debug.LogWarning($"[CheatFortuneWheelButton] Failed to build {SectorCount} sectors. Built: {sectors.Count}.");
-                return;
+                throw;
             }
-
-            Debug.LogWarning($"[Debug] CheatFortuneWheelButton {data.AvailableSpins} / nextAt={data.NextUpdateAt} / {rewards.Count} - {sectors.Count}");
-            var args = new FortuneWheelArgs(data, sectors);
-            _uiManager.Show<FortuneWheelController>(args);
+            catch (Exception exception)
+            {
+                Debug.LogError($"{LogPrefix} Failed to open wheel: {exception}");
+            }
         }
 
         private static string BuildWheelDataUrl(string playerId)

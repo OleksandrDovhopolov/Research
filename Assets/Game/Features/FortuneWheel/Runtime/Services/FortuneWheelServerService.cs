@@ -5,7 +5,6 @@ using Core.Models;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Rewards;
 using UnityEngine;
 
@@ -95,11 +94,6 @@ namespace FortuneWheel
             var response = await _webClient.GetAsync<RewardsResponseWrapper>(RewardsUrl, ct);
 
             var rewardItems = response?.rewards;
-            if ((rewardItems == null || rewardItems.Length == 0) && response?.items != null && response.items.Length > 0)
-            {
-                // Backward compatibility for previous payload shape using "items".
-                rewardItems = response.items;
-            }
 
             if (rewardItems == null || rewardItems.Length == 0)
             {
@@ -351,43 +345,9 @@ namespace FortuneWheel
         }
 
         [Serializable]
-        [JsonConverter(typeof(RewardsResponseWrapperConverter))]
         private sealed class RewardsResponseWrapper
         {
             public RewardItemBody[] rewards;
-            public RewardItemBody[] items;
-        }
-
-        private sealed class RewardsResponseWrapperConverter : JsonConverter
-        {
-            public override bool CanConvert(Type objectType)
-            {
-                return objectType == typeof(RewardsResponseWrapper);
-            }
-
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-            {
-                if (reader.TokenType == JsonToken.Null)
-                {
-                    return null;
-                }
-
-                var token = JToken.Load(reader);
-                if (token.Type == JTokenType.Array)
-                {
-                    return new RewardsResponseWrapper
-                    {
-                        rewards = token.ToObject<RewardItemBody[]>(serializer)
-                    };
-                }
-
-                return token.ToObject<RewardsResponseWrapper>(serializer);
-            }
-
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-            {
-                serializer.Serialize(writer, value);
-            }
         }
 
         [Serializable]
