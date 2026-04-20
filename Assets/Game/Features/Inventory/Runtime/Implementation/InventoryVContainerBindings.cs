@@ -9,13 +9,9 @@ namespace core
 {
     public static class InventoryVContainerBindings
     {
-        public const string InventoryOwnerId = "player_1";
-
         public static void RegisterInventoryService(this IContainerBuilder builder)
         {
-            builder.RegisterInstance(InventoryOwnerId);
-
-            builder.Register<IInventoryStorage, InMemoryInventoryStorage>(Lifetime.Singleton);
+            builder.Register<IInventoryServerApi, InventoryServerApi>(Lifetime.Singleton);
             
             builder.Register<IItemCategoryRegistry>(_ =>
             {
@@ -28,6 +24,7 @@ namespace core
                 .As<IInventoryService>()
                 .As<IInventoryReadService>()
                 .As<IInventoryItemUseService>()
+                .As<IInventorySnapshotService>()
                 .As<IInventoryUseHandlerStorage>()
                 .As<IDisposable>();
         }

@@ -7,6 +7,7 @@ using System.Threading;
 using Core.Models;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 namespace Infrastructure
@@ -56,7 +57,11 @@ namespace Infrastructure
                 if (_storage.Exists())
                 {
                     var json = await _storage.LoadAsync(cancellationToken);
-                    _data = DeserializeOrDefault(json);
+                    _data = DeserializeOrDefault(json, out var usedDefault, out var deserializeReason);
+                    Debug.Log(
+                        $"[SaveService] LoadAllAsync storage payload processed. " +
+                        $"RawLength={(json?.Length ?? 0)}, UsedDefault={usedDefault}, Reason={deserializeReason}, " +
+                        $"Preview={TruncateForLog(json)}");
                 }
                 else
                 {
@@ -69,6 +74,13 @@ namespace Infrastructure
                 EnsureDefaults(_data);
                 ValidateData(_data);
                 VerifyHash(_data);
+                Debug.Log(
+                    $"[SaveService] LoadAllAsync normalized snapshot. " +
+                    $"Resources(G={_data.Resources.Gold},E={_data.Resources.Energy},Gem={_data.Resources.Gems}), " +
+                    $"InventoryOwners={_data.Inventory.Owners.Count}, " +
+                    $"InventoryItemsTokenType={_data.Inventory.InventoryItems?.Type}, " +
+                    $"CardCollections={_data.CardCollections.Count}, EventStates={_data.EventStates.Count}, " +
+                    $"SaveId={_data.Meta.SaveId}, Revision={_data.Meta.Revision}");
                 _isLoaded = true;
                 loadedSnapshot = CloneDetached(_data);
             }
@@ -247,20 +259,34 @@ namespace Infrastructure
             }
         }
 
-        private static GameSaveData DeserializeOrDefault(string json)
+        private static GameSaveData DeserializeOrDefault(string json, out bool usedDefault, out string reason)
         {
             if (string.IsNullOrWhiteSpace(json))
             {
+                usedDefault = true;
+                reason = "empty-payload";
                 return CreateDefaultSave();
             }
 
             try
             {
-                return JsonConvert.DeserializeObject<GameSaveData>(json) ?? CreateDefaultSave();
+                var parsed = JsonConvert.DeserializeObject<GameSaveData>(json);
+                if (parsed != null)
+                {
+                    usedDefault = false;
+                    reason = "ok";
+                    return parsed;
+                }
+
+                usedDefault = true;
+                reason = "deserialized-null";
+                return CreateDefaultSave();
             }
             catch (Exception ex)
             {
                 Debug.LogWarning($"[SaveService] Save file is corrupted or invalid. Falling back to defaults. {ex.Message}");
+                usedDefault = true;
+                reason = $"exception:{ex.GetType().Name}";
                 return CreateDefaultSave();
             }
         }
@@ -275,6 +301,7 @@ namespace Infrastructure
             data.Meta ??= new MetaData();
             data.Inventory ??= new InventoryModuleSaveData();
             data.Inventory.Owners ??= new List<InventoryOwnerSaveData>();
+            data.Inventory.InventoryItems ??= new JObject();
             data.CardCollections ??= new List<CardCollectionModuleSaveData>();
             data.EventStates ??= new List<EventStateSaveData>();
             data.Resources ??= new ResourcesModuleSaveData();
@@ -308,6 +335,28 @@ namespace Infrastructure
                     .ToList();
             }
 
+            if (data.Inventory.InventoryItems is not JObject inventoryItemsObject)
+            {
+                data.Inventory.InventoryItems = new JObject();
+            }
+            else
+            {
+                var normalizedInventoryItems = new JObject();
+                foreach (var property in inventoryItemsObject.Properties())
+                {
+                    if (string.IsNullOrWhiteSpace(property.Name) ||
+                        !TryExtractInventoryAmount(property.Value, out var amount) ||
+                        amount <= 0)
+                    {
+                        continue;
+                    }
+
+                    normalizedInventoryItems[property.Name] = amount;
+                }
+
+                data.Inventory.InventoryItems = normalizedInventoryItems;
+            }
+
             data.CardCollections = data.CardCollections
                 .Where(x => !string.IsNullOrWhiteSpace(x.EventId))
                 .ToList();
@@ -335,6 +384,50 @@ namespace Infrastructure
             {
                 Debug.LogWarning("[SaveService] Save hash mismatch detected. Continuing with loaded data.");
             }
+        }
+
+        private static bool TryExtractInventoryAmount(JToken token, out int amount)
+        {
+            amount = 0;
+            if (token == null || token.Type == JTokenType.Null)
+            {
+                return false;
+            }
+
+            if (token.Type == JTokenType.Integer)
+            {
+                amount = token.Value<int>();
+                return true;
+            }
+
+            if (token.Type == JTokenType.String)
+            {
+                return int.TryParse(token.Value<string>(), out amount);
+            }
+
+            if (token.Type != JTokenType.Object)
+            {
+                return false;
+            }
+
+            var amountToken = token["amount"] ?? token["Amount"] ?? token["stackCount"] ?? token["StackCount"];
+            if (amountToken == null || amountToken.Type == JTokenType.Null)
+            {
+                return false;
+            }
+
+            if (amountToken.Type == JTokenType.Integer)
+            {
+                amount = amountToken.Value<int>();
+                return true;
+            }
+
+            if (amountToken.Type == JTokenType.String)
+            {
+                return int.TryParse(amountToken.Value<string>(), out amount);
+            }
+
+            return false;
         }
 
         private static string ComputeHash(GameSaveData data)
@@ -365,6 +458,19 @@ namespace Infrastructure
 
             var json = JsonConvert.SerializeObject(source, Formatting.None);
             return JsonConvert.DeserializeObject<T>(json);
+        }
+
+        private static string TruncateForLog(string value, int maxLength = 320)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return "<empty>";
+            }
+
+            var normalized = value.Replace("\r", "\\r").Replace("\n", "\\n");
+            return normalized.Length <= maxLength
+                ? normalized
+                : normalized.Substring(0, maxLength) + "...";
         }
 
         private void ThrowIfDisposed()

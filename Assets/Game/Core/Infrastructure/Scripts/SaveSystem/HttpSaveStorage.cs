@@ -118,8 +118,11 @@ namespace Infrastructure
 
                 ThrowIfFailed(request, "Load");
                 var rawResponseText = request.downloadHandler?.text;
-                var normalizedData = TryExtractDataFromEnvelope(rawResponseText);
-                Debug.Log($"{LogPrefix} LoadAsync() completed. RawLength={(rawResponseText?.Length ?? 0)}, NormalizedLength={(normalizedData?.Length ?? 0)}");
+                var normalizedData = TryExtractDataFromEnvelope(rawResponseText, out var extractionMode);
+                Debug.Log(
+                    $"{LogPrefix} LoadAsync() completed. ExtractionMode={extractionMode}, " +
+                    $"RawLength={(rawResponseText?.Length ?? 0)}, NormalizedLength={(normalizedData?.Length ?? 0)}, " +
+                    $"RawPreview={TruncateForLog(rawResponseText)}, NormalizedPreview={TruncateForLog(normalizedData)}");
                 return normalizedData;
             }
             catch (OperationCanceledException)
@@ -279,10 +282,11 @@ namespace Infrastructure
             return $"{playerId.Substring(0, 4)}...{playerId.Substring(playerId.Length - 4, 4)}";
         }
 
-        private static string TryExtractDataFromEnvelope(string responseText)
+        private static string TryExtractDataFromEnvelope(string responseText, out string extractionMode)
         {
             if (string.IsNullOrWhiteSpace(responseText))
             {
+                extractionMode = "empty";
                 return responseText;
             }
 
@@ -292,15 +296,39 @@ namespace Infrastructure
                 var dataToken = obj["data"];
                 if (dataToken?.Type == JTokenType.String)
                 {
+                    extractionMode = "data-string";
                     return dataToken.Value<string>();
                 }
+
+                if (dataToken is { Type: JTokenType.Object or JTokenType.Array })
+                {
+                    extractionMode = "data-json";
+                    return dataToken.ToString();
+                }
+
+                extractionMode = "raw-json";
+                return responseText;
             }
             catch (Exception)
             {
                 // Response can be raw JSON save blob; return as-is.
+                extractionMode = "raw-text";
             }
 
             return responseText;
+        }
+
+        private static string TruncateForLog(string value, int maxLength = 320)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return "<empty>";
+            }
+
+            var normalized = value.Replace("\r", "\\r").Replace("\n", "\\n");
+            return normalized.Length <= maxLength
+                ? normalized
+                : normalized.Substring(0, maxLength) + "...";
         }
 
         private static void ThrowIfFailed(UnityWebRequest request, string operationName)

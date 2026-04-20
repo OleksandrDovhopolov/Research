@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Infrastructure;
 using Inventory.API;
 using UnityEngine;
 
@@ -31,20 +32,20 @@ namespace CardCollectionImpl
     {
         private const int GemsPerRemovedPack = 10;
 
-        private readonly string _inventoryOwnerId;
+        private readonly IPlayerIdentityProvider _playerIdentityProvider;
         private readonly IInventoryService _inventoryService;
         private readonly IInventoryReadService _inventoryReadService;
         private readonly ICardCollectionStaticDataLoader _staticDataLoader;
 
         public CardCollectionSettlementCleanupService(
-            string inventoryOwnerId,
+            IPlayerIdentityProvider playerIdentityProvider,
             IInventoryService inventoryService,
             IInventoryReadService inventoryReadService,
             ICardCollectionStaticDataLoader staticDataLoader)
         {
             _staticDataLoader = staticDataLoader ?? throw new ArgumentNullException(nameof(staticDataLoader));
             _inventoryService = inventoryService ?? throw new ArgumentNullException(nameof(inventoryService));
-            _inventoryOwnerId = inventoryOwnerId ?? throw new ArgumentNullException(nameof(inventoryOwnerId));
+            _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
             _inventoryReadService = inventoryReadService ?? throw new ArgumentNullException(nameof(inventoryReadService));
         }
 
@@ -67,7 +68,13 @@ namespace CardCollectionImpl
                 return new CardCollectionSettlementCleanupResult(0, 0);
             }
 
-            var inventoryPacks = await _inventoryReadService.GetItemsAsync(_inventoryOwnerId, CardCollectionGeneralConfig.CardPack, ct);
+            var ownerId = _playerIdentityProvider.GetPlayerId();
+            if (string.IsNullOrWhiteSpace(ownerId))
+            {
+                throw new InvalidOperationException("Player id is empty.");
+            }
+
+            var inventoryPacks = await _inventoryReadService.GetItemsAsync(ownerId, CardCollectionGeneralConfig.CardPack, ct);
             var removeDeltas = inventoryPacks
                 .Where(item => item.StackCount > 0 && eventPackIds.Contains(item.ItemId))
                 .Select(item => new InventoryItemDelta(item.OwnerId, item.ItemId, item.StackCount, item.CategoryId))

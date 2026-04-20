@@ -22,11 +22,9 @@ namespace CardCollectionImpl
                 .GetResult();
 
             Assert.IsTrue(result);
-            Assert.AreEqual(1, specProvider.TryGetCallsCount);
-            Assert.AreEqual(1, grantService.GrantListCallsCount);
-            Assert.AreEqual(1, grantService.LastGrantedRequests.Count);
-            Assert.AreEqual("coins", grantService.LastGrantedRequests[0].RewardId);
-            Assert.AreEqual(25, grantService.LastGrantedRequests[0].Amount);
+            Assert.AreEqual(0, specProvider.TryGetCallsCount);
+            Assert.AreEqual(1, grantService.GrantByRewardIdCallsCount);
+            Assert.AreEqual("group-reward", grantService.LastGrantedRewardId);
         }
 
         [Test]
@@ -42,24 +40,24 @@ namespace CardCollectionImpl
 
             Assert.IsFalse(result);
             Assert.AreEqual(0, specProvider.TryGetCallsCount);
-            Assert.AreEqual(0, grantService.GrantListCallsCount);
+            Assert.AreEqual(0, grantService.GrantByRewardIdCallsCount);
         }
 
         [Test]
-        public void TryHandleGroupCompleted_WhenRewardSpecMissing_Throws()
+        public void TryHandleGroupCompleted_WhenRewardSpecMissing_ReturnsFalse()
         {
-            var grantService = new FakeRewardGrantService(grantResult: true);
+            var grantService = new FakeRewardGrantService(grantResult: false);
             var specProvider = new FakeRewardSpecProvider(null);
             var handler = CreateHandler(grantService, specProvider, ("group-a", "missing-reward"));
 
-            var ex = Assert.Throws<Exception>(() =>
-                handler.TryHandleGroupCompleted(new CardGroupCompletedData { GroupType = "group-a" }, CancellationToken.None)
-                    .GetAwaiter()
-                    .GetResult());
+            var result = handler.TryHandleGroupCompleted(new CardGroupCompletedData { GroupType = "group-a" }, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
 
-            StringAssert.Contains("Unknown reward id", ex.Message);
-            Assert.AreEqual(1, specProvider.TryGetCallsCount);
-            Assert.AreEqual(0, grantService.GrantListCallsCount);
+            Assert.IsFalse(result);
+            Assert.AreEqual(0, specProvider.TryGetCallsCount);
+            Assert.AreEqual(1, grantService.GrantByRewardIdCallsCount);
+            Assert.AreEqual("missing-reward", grantService.LastGrantedRewardId);
         }
 
         [Test]
@@ -74,7 +72,7 @@ namespace CardCollectionImpl
                 .GetResult();
 
             Assert.IsFalse(result);
-            Assert.AreEqual(1, grantService.GrantListCallsCount);
+            Assert.AreEqual(1, grantService.GrantByRewardIdCallsCount);
         }
 
         [Test]
@@ -106,8 +104,8 @@ namespace CardCollectionImpl
             }
 
             Assert.IsTrue(allGranted);
-            Assert.AreEqual(2, specProvider.TryGetCallsCount);
-            Assert.AreEqual(2, grantService.GrantListCallsCount);
+            Assert.AreEqual(0, specProvider.TryGetCallsCount);
+            Assert.AreEqual(2, grantService.GrantByRewardIdCallsCount);
         }
 
         [Test]
@@ -126,7 +124,7 @@ namespace CardCollectionImpl
                     .GetResult());
 
             Assert.AreEqual(0, specProvider.TryGetCallsCount);
-            Assert.AreEqual(0, grantService.GrantListCallsCount);
+            Assert.AreEqual(0, grantService.GrantByRewardIdCallsCount);
         }
 
         private static CardCollectionRewardHandler CreateHandler(
@@ -166,7 +164,7 @@ namespace CardCollectionImpl
                 RewardId = rewardId,
                 Resources = new List<RewardSpecResource>
                 {
-                    new() { ResourceId = "coins", Amount = 25, Category = "soft" }
+                    new() { ResourceId = "coins", Kind = RewardKind.Resource, Amount = 25, Category = "soft" }
                 }
             };
         }
@@ -175,20 +173,20 @@ namespace CardCollectionImpl
         {
             private readonly bool _grantResult;
 
-            public int GrantSingleCallsCount { get; private set; }
+            public int GrantByRewardIdCallsCount { get; private set; }
             public int GrantListCallsCount { get; private set; }
-            public List<RewardGrantRequest> LastGrantedRequests { get; private set; } = new();
+            public string LastGrantedRewardId { get; private set; }
 
             public FakeRewardGrantService(bool grantResult)
             {
                 _grantResult = grantResult;
             }
 
-            public UniTask<bool> TryGrantAsync(RewardGrantRequest rewardRequest, CancellationToken ct = default)
+            public UniTask<bool> TryGrantAsync(string rewardId, CancellationToken ct = default)
             {
                 ct.ThrowIfCancellationRequested();
-                GrantSingleCallsCount++;
-                LastGrantedRequests = new List<RewardGrantRequest> { rewardRequest };
+                GrantByRewardIdCallsCount++;
+                LastGrantedRewardId = rewardId;
                 return UniTask.FromResult(_grantResult);
             }
 
@@ -196,7 +194,12 @@ namespace CardCollectionImpl
             {
                 ct.ThrowIfCancellationRequested();
                 GrantListCallsCount++;
-                LastGrantedRequests = rewardRequest ?? new List<RewardGrantRequest>();
+                return UniTask.FromResult(_grantResult);
+            }
+
+            public UniTask<bool> TryApplyGrantResponseAsync(GrantRewardResponse grantResponse, CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
                 return UniTask.FromResult(_grantResult);
             }
         }

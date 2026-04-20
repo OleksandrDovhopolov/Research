@@ -1,5 +1,7 @@
 using cheatModule;
+using Infrastructure;
 using Inventory.API;
+using UnityEngine;
 
 namespace Game.Cheat
 {
@@ -11,26 +13,29 @@ namespace Game.Cheat
         public const string CardPack = "card_pack";
         
         private readonly IInventoryService _inventoryService;
+        private readonly IPlayerIdentityProvider _playerIdentityProvider;
         
-        public InventoryCheatModule(IInventoryService inventoryService)
+        public InventoryCheatModule(IInventoryService inventoryService, IPlayerIdentityProvider playerIdentityProvider)
         {
-            _inventoryService = inventoryService;
+            _inventoryService = inventoryService ?? throw new System.ArgumentNullException(nameof(inventoryService));
+            _playerIdentityProvider = playerIdentityProvider ?? throw new System.ArgumentNullException(nameof(playerIdentityProvider));
         }
         public void Initialize(ICheatsContainer cheatsContainer)
         {
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Add gold", amount =>
             {
-                const string ownerId = "player_1";
-                const string itemId = "Gold";
-                const string categoryId = Regular;
-                
-                var inventoryItemDelta = new InventoryItemDelta(ownerId, itemId, amount, categoryId);
-                _inventoryService.AddItemAsync(inventoryItemDelta);
+                Debug.LogWarning("[InventoryCheatModule] Add is disabled in server-authoritative inventory mode.");
             }).WithGroup(InventoryGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Remove gold", amount =>
             {
-                const string ownerId = "player_1";
+                var ownerId = _playerIdentityProvider.GetPlayerId();
+                if (string.IsNullOrWhiteSpace(ownerId))
+                {
+                    Debug.LogWarning("[InventoryCheatModule] Player id is empty.");
+                    return;
+                }
+
                 const string itemId = "Gold";
                 const string categoryId = Regular;
                 

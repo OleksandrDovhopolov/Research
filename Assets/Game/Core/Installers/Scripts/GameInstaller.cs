@@ -3,8 +3,11 @@ using core;
 using CoreResources;
 using EventOrchestration;
 using FortuneWheel;
+using Infrastructure;
 using Inventory.API;
 using Rewards;
+using System.Collections.Generic;
+using System.Linq;
 using UIShared;
 using UnityEngine;
 using VContainer;
@@ -30,24 +33,40 @@ namespace Game.Bootstrap
             builder.Register<IGameplayReadyGate, GameplayReadyGate>(Lifetime.Singleton);
             
             // ResourceManager
+            builder.RegisterInstance(new WebClientOptions
+            {
+                BaseUrl = Infrastructure.ApiConfig.BaseUrl,
+                TimeoutSeconds = 30,
+                DefaultHeaders = new Dictionary<string, string>()
+            });
+            builder.Register<IAuthTokenProvider, NoOpAuthTokenProvider>(Lifetime.Singleton);
+            builder.Register<IWebClient, UnityWebRequestWebClient>(Lifetime.Singleton);
+
+            builder.Register<IResourceAdjustApi, UnityWebRequestResourceAdjustApi>(Lifetime.Singleton);
+            builder.Register<IResourceOperationsService, ResourceOperationsService>(Lifetime.Singleton);
             builder.RegisterEntryPoint<ResourceManager>().As<ResourceManager>();
             
             builder.RegisterComponentInHierarchy<AnimateCurrency>();
             builder.RegisterInstance<IGlobalTimerService>(_globalTimerService);
             builder.Register<IAnimationService, AnimationService>(Lifetime.Singleton);
+            builder.Register<IInventoryItemCategoryResolver>(_ => new RewardSpecInventoryItemCategoryResolver(_rewardSpecsConfigSo), Lifetime.Singleton);
             
             builder.RegisterInventoryService();
             builder.RegisterCardCollectionImpl();
             builder.RegisterFortuneWheel();
             
             // Rewards
-            builder.Register<IRewardGrantService>(resolver =>
+            builder.Register<ResourceRewardHandler>(Lifetime.Singleton).As<IRewardHandler>();
+            builder.Register<InventoryRewardHandler>(Lifetime.Singleton).As<IRewardHandler>();
+            builder.Register<GameRewardGrantService>(resolver =>
             {
-                var resourceManager = resolver.Resolve<ResourceManager>();
-                var inventoryService = resolver.Resolve<IInventoryService>();
-                var inventoryOwnerId = resolver.Resolve<string>();
-                return new GameRewardGrantService(resourceManager, inventoryService, inventoryOwnerId);
+                var handlers = resolver.Resolve<IEnumerable<IRewardHandler>>().ToList();
+                var rewardSpecProvider = resolver.Resolve<IRewardSpecProvider>();
+                return new GameRewardGrantService(handlers, rewardSpecProvider);
             }, Lifetime.Singleton);
+            builder.Register<ResourcePlayerStateSnapshotHandler>(Lifetime.Singleton).As<IPlayerStateSnapshotHandler>();
+            builder.Register<InventoryPlayerStateSnapshotHandler>(Lifetime.Singleton).As<IPlayerStateSnapshotHandler>();
+            builder.Register<IRewardGrantService, ServerRewardGrantService>(Lifetime.Singleton);
             builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(_rewardSpecsConfigSo), Lifetime.Singleton); 
             
             // Orchestration

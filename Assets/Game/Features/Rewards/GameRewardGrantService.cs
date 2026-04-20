@@ -1,61 +1,86 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
-using CoreResources;
 using Cysharp.Threading.Tasks;
-using Inventory.API;
 using UnityEngine;
 
 namespace Rewards
 {
     public sealed class GameRewardGrantService : IRewardGrantService
     {
-        private readonly ResourceManager _resourceManager;
-        private readonly IInventoryService _inventoryService;
-        private readonly string _inventoryOwnerId;
+        private readonly IReadOnlyList<IRewardHandler> _handlers;
+        private readonly IRewardSpecProvider _rewardSpecProvider;
 
-        public GameRewardGrantService(ResourceManager resourceManager, IInventoryService inventoryService, string inventoryOwnerId)
+        public GameRewardGrantService(IReadOnlyList<IRewardHandler> handlers, IRewardSpecProvider rewardSpecProvider)
         {
-            _resourceManager = resourceManager;
-            _inventoryService = inventoryService;
-            _inventoryOwnerId = inventoryOwnerId;
+            _handlers = handlers ?? throw new ArgumentNullException(nameof(handlers));
+            _rewardSpecProvider = rewardSpecProvider ?? throw new ArgumentNullException(nameof(rewardSpecProvider));
         }
 
-        private async UniTask<bool> TryGrantAsync(RewardGrantRequest rewardRequest, CancellationToken ct = default)
+        public UniTask<bool> TryGrantAsync(string rewardId, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
-            if (rewardRequest.Amount <= 0 || string.IsNullOrWhiteSpace(rewardRequest.RewardId))
+            if (string.IsNullOrWhiteSpace(rewardId))
             {
-                Debug.LogWarning($"Failed to add reward. Amount < 0 or RewardId is empty");
-                return false;
+                Debug.LogWarning("[Rewards] Reward id is empty.");
+                return UniTask.FromResult(false);
             }
 
-            if (Enum.TryParse<ResourceType>(rewardRequest.RewardId, true, out var resourceType))
+            if (!_rewardSpecProvider.TryGet(rewardId, out var rewardSpec) || rewardSpec == null)
             {
-                _resourceManager.Add(resourceType, rewardRequest.Amount);
-                
-                return true;
+                Debug.LogWarning($"[Rewards] Unknown reward id: {rewardId}");
+                return UniTask.FromResult(false);
             }
 
-            return await AddToInventoryAsync(rewardRequest, ct);
+            if (!TryBuildRequests(rewardSpec, out var requests))
+            {
+                Debug.LogWarning($"[Rewards] RewardSpec '{rewardId}' has no valid resources.");
+                return UniTask.FromResult(false);
+            }
+
+            return TryGrantAsync(requests, ct);
         }
 
-        public async UniTask<bool> TryGrantAsync(List<RewardGrantRequest> rewardRequest, CancellationToken ct = default)
+        public async UniTask<bool> TryGrantAsync(List<RewardGrantRequest> rewards, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
-            if (rewardRequest == null || rewardRequest.Count == 0)
+            if (rewards == null || rewards.Count == 0)
             {
                 Debug.LogWarning("Failed to add reward list. List is null or empty");
                 return false;
             }
 
             var allSuccess = true;
-            foreach (var request in rewardRequest)
+            foreach (var request in rewards)
             {
                 ct.ThrowIfCancellationRequested();
-                var success = await TryGrantAsync(request, ct);
-                if (!success)
+                if (!IsValidRequest(request))
                 {
+                    Debug.LogWarning("[Rewards] Invalid reward request. Reward will be skipped.");
+                    allSuccess = false;
+                    continue;
+                }
+
+                var handler = _handlers.FirstOrDefault(x => x != null && x.CanHandle(request));
+                if (handler == null)
+                {
+                    Debug.LogWarning($"[Rewards] Unsupported reward. Id={request.RewardId}, Kind={request.Kind}");
+                    allSuccess = false;
+                    continue;
+                }
+
+                try
+                {
+                    await handler.HandleAsync(request, ct);
+                }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[Rewards] Failed to grant reward. Id={request.RewardId}, Kind={request.Kind}. Error={e}");
                     allSuccess = false;
                 }
             }
@@ -63,22 +88,71 @@ namespace Rewards
             return allSuccess;
         }
 
-        private async UniTask<bool> AddToInventoryAsync(RewardGrantRequest rewardRequest, CancellationToken ct)
+        public UniTask<bool> TryApplyGrantResponseAsync(GrantRewardResponse grantResponse, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
-            if (_inventoryService == null || string.IsNullOrWhiteSpace(_inventoryOwnerId))
+            Debug.LogWarning("[Rewards] Applying server grant response is not supported in GameRewardGrantService.");
+            return UniTask.FromResult(false);
+        }
+
+        private static bool IsValidRequest(RewardGrantRequest request)
+        {
+            if (request == null)
             {
-                Debug.LogWarning($"Failed to add to Inventory. IInventoryService not initialized or empty _inventoryOwnerId");
                 return false;
             }
 
-            var itemDelta = new InventoryItemDelta(
-                _inventoryOwnerId,
-                rewardRequest.RewardId,
-                rewardRequest.Amount,
-                rewardRequest.Category);
+            if (string.IsNullOrWhiteSpace(request.RewardId))
+            {
+                return false;
+            }
 
-            await _inventoryService.AddItemAsync(itemDelta, ct);
+            if (request.Kind == RewardKind.Unknown)
+            {
+                return false;
+            }
+
+            if (RequiresPositiveAmount(request.Kind) && request.Amount <= 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool RequiresPositiveAmount(RewardKind kind)
+        {
+            return kind == RewardKind.Resource || kind == RewardKind.InventoryItem;
+        }
+
+        private static bool TryBuildRequests(RewardSpec rewardSpec, out List<RewardGrantRequest> requests)
+        {
+            requests = null;
+            if (rewardSpec?.Resources == null || rewardSpec.Resources.Count == 0)
+            {
+                return false;
+            }
+
+            var builtRequests = new List<RewardGrantRequest>(rewardSpec.Resources.Count);
+            foreach (var resource in rewardSpec.Resources)
+            {
+                if (resource == null ||
+                    string.IsNullOrWhiteSpace(resource.ResourceId) ||
+                    resource.Amount <= 0 ||
+                    resource.Kind == RewardKind.Unknown)
+                {
+                    continue;
+                }
+
+                builtRequests.Add(new RewardGrantRequest(resource.ResourceId, resource.Kind, resource.Amount, resource.Category));
+            }
+
+            if (builtRequests.Count == 0)
+            {
+                return false;
+            }
+
+            requests = builtRequests;
             return true;
         }
     }

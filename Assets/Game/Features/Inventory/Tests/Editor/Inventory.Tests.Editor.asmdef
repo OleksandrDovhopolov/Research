@@ -4,7 +4,9 @@
     "references": [
         "Inventory.API",
         "Inventory.Implementation",
-        "UniTask"
+        "UniTask",
+        "Infrastructure",
+        "Rewards"
     ],
     "includePlatforms": [
         "Editor"

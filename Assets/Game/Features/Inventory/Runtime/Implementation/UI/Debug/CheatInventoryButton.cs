@@ -1,5 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Infrastructure;
 using Inventory.API;
 using Inventory.Implementation.UI;
 using UISystem;
@@ -12,7 +13,6 @@ namespace Inventory.Implementation
     public class CheatInventoryButton : MonoBehaviour
     {
         [SerializeField] private Button _cheatButton;
-        [SerializeField] private string _ownerId = "player_1";
 
         private CancellationToken _destroyCt;
         
@@ -21,6 +21,7 @@ namespace Inventory.Implementation
         private IInventoryReadService _inventoryReadService;
         private IInventoryItemUseService _inventoryItemUseService;
         private IItemCategoryRegistry _itemCategoryRegistry;
+        private IPlayerIdentityProvider _playerIdentityProvider;
         
         [Inject]
         public void Install(
@@ -28,13 +29,15 @@ namespace Inventory.Implementation
             IInventoryService inventoryService,
             IInventoryReadService  inventoryReadService, 
             IInventoryItemUseService inventoryItemUseService,
-            IItemCategoryRegistry  itemCategoryRegistry)
+            IItemCategoryRegistry  itemCategoryRegistry,
+            IPlayerIdentityProvider playerIdentityProvider)
         {
             _uiManager = uiManager;
             _inventoryService = inventoryService;
             _inventoryReadService = inventoryReadService;
             _inventoryItemUseService = inventoryItemUseService;
             _itemCategoryRegistry = itemCategoryRegistry;
+            _playerIdentityProvider = playerIdentityProvider;
         }
         
         private void Awake()
@@ -62,7 +65,14 @@ namespace Inventory.Implementation
                 return;
             }
             
-            var tabsPresenter = new InventoryTabsPresenter(_ownerId, _inventoryService, _inventoryReadService, _itemCategoryRegistry);
+            var ownerId = _playerIdentityProvider.GetPlayerId();
+            if (string.IsNullOrWhiteSpace(ownerId))
+            {
+                Debug.LogWarning("Failed to open inventory window. Player id is empty.");
+                return;
+            }
+
+            var tabsPresenter = new InventoryTabsPresenter(ownerId, _inventoryService, _inventoryReadService, _itemCategoryRegistry);
             await tabsPresenter.InitializeAsync(ct);
 
             var args = new InventoryArgs(_uiManager, _inventoryItemUseService, tabsPresenter, _itemCategoryRegistry.GetAllCategories());

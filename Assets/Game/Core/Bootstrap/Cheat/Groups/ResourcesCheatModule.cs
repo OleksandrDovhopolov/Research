@@ -1,5 +1,6 @@
 using cheatModule;
 using CoreResources;
+using Cysharp.Threading.Tasks;
 using UIShared;
 using UnityEngine;
 
@@ -10,11 +11,16 @@ namespace Game.Cheat
         private const string SampleGroup = "Resources";
         
         private readonly ResourceManager _resourceManager;
+        private readonly IResourceOperationsService _resourceOperationsService;
         private readonly AnimateCurrency _animateCurrency;
         
-        public ResourcesCheatModule(ResourceManager resourceManager, AnimateCurrency animateCurrency)
+        public ResourcesCheatModule(
+            ResourceManager resourceManager,
+            IResourceOperationsService resourceOperationsService,
+            AnimateCurrency animateCurrency)
         {
             _resourceManager = resourceManager;
+            _resourceOperationsService = resourceOperationsService;
             _animateCurrency = animateCurrency;
         }
 
@@ -25,12 +31,12 @@ namespace Game.Cheat
                 var screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
                 var animationArgs = new ArgAnimateCurrency(screenCenter, AnimationTargetTypes.Gold,  amount, null);
                 _animateCurrency.Animate(animationArgs, () => _resourceManager.NotifyAmountChanged(ResourceType.Gold));
-                _resourceManager.Add(ResourceType.Gold, amount);
+                _resourceOperationsService.AddAsync(ResourceType.Gold, amount, ResourceManager.CheatAddReason).Forget();
             }).WithGroup(SampleGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Remove gold", amount =>
             {
-                _resourceManager.Remove(ResourceType.Gold, amount);
+                _resourceOperationsService.RemoveAsync(ResourceType.Gold, amount, ResourceManager.CheatRemoveReason).Forget();
             }).WithGroup(SampleGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Add energy", amount =>
@@ -38,17 +44,17 @@ namespace Game.Cheat
                 var screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
                 var animationArgs = new ArgAnimateCurrency(screenCenter, AnimationTargetTypes.Energy,  amount, null);
                 _animateCurrency.Animate(animationArgs, () => _resourceManager.NotifyAmountChanged(ResourceType.Energy));
-                _resourceManager.Add(ResourceType.Energy, amount);
+                _resourceOperationsService.AddAsync(ResourceType.Energy, amount, ResourceManager.CheatAddReason).Forget();
             }).WithGroup(SampleGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Remove energy", amount =>
             {
-                _resourceManager.Remove(ResourceType.Energy, amount);
+                _resourceOperationsService.RemoveAsync(ResourceType.Energy, amount, ResourceManager.CheatRemoveReason).Forget();
             }).WithGroup(SampleGroup));
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Add gems", amount =>
             {
-                _resourceManager.Add(ResourceType.Gems, amount);
+                _resourceOperationsService.AddAsync(ResourceType.Gems, amount, ResourceManager.CheatAddReason).Forget();
                 var screenCenter = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
                 var animationArgs = new ArgAnimateCurrency(screenCenter, AnimationTargetTypes.Gems,  amount, null);
                 _animateCurrency.Animate(animationArgs, () => _resourceManager.NotifyAmountChanged(ResourceType.Gems));
@@ -56,7 +62,7 @@ namespace Game.Cheat
             
             cheatsContainer.AddItem<CheatInputItem>(item => item.OnInputChange<int>("Remove gems", amount =>
             {
-                _resourceManager.Remove(ResourceType.Gems, amount);
+                _resourceOperationsService.RemoveAsync(ResourceType.Gems, amount, ResourceManager.CheatRemoveReason).Forget();
             }).WithGroup(SampleGroup));
         }
     }

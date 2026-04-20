@@ -107,6 +107,57 @@ namespace Inventory.Implementation.Core
             return result;
         }
 
+        public void ReplaceOwnerSnapshot(string ownerId, IReadOnlyList<InventoryItemView> items)
+        {
+            if (string.IsNullOrWhiteSpace(ownerId))
+            {
+                throw new ArgumentException("OwnerId is required.", nameof(ownerId));
+            }
+
+            var entitiesToRemove = new List<int>();
+            foreach (var entityId in _entities)
+            {
+                if (_owners.TryGetValue(entityId, out var owner) &&
+                    string.Equals(owner.OwnerId, ownerId, StringComparison.Ordinal))
+                {
+                    entitiesToRemove.Add(entityId);
+                }
+            }
+
+            foreach (var entityId in entitiesToRemove)
+            {
+                if (_owners.TryGetValue(entityId, out var ownerComponent) &&
+                    _items.TryGetValue(entityId, out var itemComponent))
+                {
+                    var stackKey = new InventoryStackKey(ownerComponent.OwnerId, itemComponent.ItemId, itemComponent.CategoryId);
+                    _stackIndex.Remove(stackKey);
+                }
+
+                _entities.Remove(entityId);
+                _owners.Remove(entityId);
+                _items.Remove(entityId);
+                _stacks.Remove(entityId);
+            }
+
+            if (items == null || items.Count == 0)
+            {
+                return;
+            }
+
+            for (var i = 0; i < items.Count; i++)
+            {
+                var item = items[i];
+                if (string.IsNullOrWhiteSpace(item.ItemId) ||
+                    string.IsNullOrWhiteSpace(item.CategoryId) ||
+                    item.StackCount <= 0)
+                {
+                    continue;
+                }
+
+                AddOrStack(new InventoryItemDelta(ownerId, item.ItemId, item.StackCount, item.CategoryId));
+            }
+        }
+
         private bool TryBuildItemView(int entityId, string ownerId, out InventoryItemView view)
         {
             if (!_owners.TryGetValue(entityId, out var owner) || owner.OwnerId != ownerId)

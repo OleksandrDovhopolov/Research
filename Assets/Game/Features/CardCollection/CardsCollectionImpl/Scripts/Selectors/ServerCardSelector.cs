@@ -1,18 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using CardCollection.Core;
 using Cysharp.Threading.Tasks;
-using Newtonsoft.Json;
+using Infrastructure;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace CardCollectionImpl
 {
     public class ServerCardSelector : ICardSelector
     {
         private const string OpenPackUrl = "packs/open";
+        private readonly IWebClient _webClient;
+
+        public ServerCardSelector(IWebClient webClient)
+        {
+            _webClient = webClient ?? throw new ArgumentNullException(nameof(webClient));
+        }
         
         public async UniTask<List<string>> SelectCardsAsync(
             CardPack pack,
@@ -50,28 +54,13 @@ namespace CardCollectionImpl
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var payload = JsonConvert.SerializeObject(request);
-            using var webRequest = new UnityWebRequest(ApiConfig.BaseUrl + OpenPackUrl, UnityWebRequest.kHttpVerbPOST);
-            webRequest.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(payload));
-            webRequest.downloadHandler = new DownloadHandlerBuffer();
-            webRequest.SetRequestHeader("Content-Type", "application/json");
-
-            await webRequest.SendWebRequest().WithCancellation(ct);
-
-            if (webRequest.result != UnityWebRequest.Result.Success)
-            {
-                throw new InvalidOperationException(
-                    $"Pack open request failed: {webRequest.responseCode}, {webRequest.error}");
-            }
-
-            var responseJson = webRequest.downloadHandler.text;
-            if (string.IsNullOrWhiteSpace(responseJson))
+            var response = await _webClient.PostAsync<OpenPackRequest, OpenPackResponse>(OpenPackUrl, request, ct);
+            if (response == null)
             {
                 return new OpenPackResponse();
             }
 
-            Debug.LogWarning($"[Debug] responseJson {responseJson}");
-            return JsonConvert.DeserializeObject<OpenPackResponse>(responseJson) ?? new OpenPackResponse();
+            return response;
         }
     }
 }

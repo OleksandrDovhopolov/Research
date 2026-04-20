@@ -9,11 +9,15 @@ using VContainer.Unity;
 
 namespace CoreResources
 {
-    public class ResourceManager : IStartable
+    public class ResourceManager : IStartable, IDisposable
     {
         public delegate void ResourceAmountChangedHandler(ResourceType type, int newAmount);
 
         public event ResourceAmountChangedHandler ResourceAmountChanged;
+
+        public const string CheatAddReason = "cheat_add";
+        public const string RewardGrantReason = "reward_grant";
+        public const string CheatRemoveReason = "cheat_remove";
 
         private readonly Dictionary<ResourceType, int> _amountByType = new()
         {
@@ -29,17 +33,23 @@ namespace CoreResources
         {
             _saveService = saveService;
         }
-        
+
         void IStartable.Start()
         {
             InitializeAsync(_saveCts.Token).Forget();
         }
-        
+
         public async UniTask InitializeAsync(CancellationToken ct)
         {
             ThrowIfDisposed();
             if (_isInitialized)
             {
+                return;
+            }
+
+            if (_saveService == null)
+            {
+                _isInitialized = true;
                 return;
             }
 
@@ -56,60 +66,82 @@ namespace CoreResources
             _isInitialized = true;
         }
 
-        public UniTask SaveAsync(CancellationToken ct)
-        {
-            ThrowIfDisposed();
-            var saveData = CreateSaveData();
-            return _saveService.UpdateModuleAsync(data => data.Resources, resources =>
-            {
-                resources.Version = saveData.Version;
-                resources.Gold = saveData.Gold;
-                resources.Energy = saveData.Energy;
-                resources.Gems = saveData.Gems;
-            }, ct);
-        }
-
-        public void Add(ResourceType type, int amount)
-        {
-            ThrowIfDisposed();
-            if (amount <= 0)
-            {
-                return;
-            }
-
-            _amountByType[type] += amount;
-            QueueSave();
-        }
-
         public void NotifyAmountChanged(ResourceType type)
         {
             ThrowIfDisposed();
             ResourceAmountChanged?.Invoke(type, _amountByType[type]);
         }
 
-        public bool Remove(ResourceType type, int amount)
-        {
-            ThrowIfDisposed();
-            if (amount <= 0)
-            {
-                return false;
-            }
-
-            var currentAmount = _amountByType[type];
-            if (currentAmount < amount)
-            {
-                return false;
-            }
-
-            _amountByType[type] = currentAmount - amount;
-            ResourceAmountChanged?.Invoke(type, _amountByType[type]);
-            QueueSave();
-            return true;
-        }
-
         public int Get(ResourceType type)
         {
             return _amountByType[type];
+        }
+
+        public async UniTask ApplySnapshotAsync(ResourceSnapshotDto snapshot, CancellationToken ct = default)
+        {
+            ThrowIfDisposed();
+            ct.ThrowIfCancellationRequested();
+            if (snapshot == null)
+            {
+                return;
+            }
+
+            if (!_isInitialized)
+            {
+                await InitializeAsync(ct);
+            }
+
+            var normalizedSnapshot = new ResourceSnapshotDto
+            {
+                Gold = Mathf.Max(0, snapshot.Gold),
+                Energy = Mathf.Max(0, snapshot.Energy),
+                Gems = Mathf.Max(0, snapshot.Gems)
+            };
+
+            ApplyNormalizedAmounts(normalizedSnapshot.Gold, normalizedSnapshot.Energy, normalizedSnapshot.Gems);
+        }
+
+        public async UniTask ApplySnapshotAsync(IReadOnlyDictionary<string, int> resourcesById, CancellationToken ct = default)
+        {
+            ThrowIfDisposed();
+            ct.ThrowIfCancellationRequested();
+            if (resourcesById == null || resourcesById.Count == 0)
+            {
+                return;
+            }
+
+            if (!_isInitialized)
+            {
+                await InitializeAsync(ct);
+            }
+
+            var gold = _amountByType[ResourceType.Gold];
+            var energy = _amountByType[ResourceType.Energy];
+            var gems = _amountByType[ResourceType.Gems];
+
+            if (TryGetResourceAmount(resourcesById, ResourceType.Gold, out var snapshotGold))
+            {
+                gold = snapshotGold;
+            }
+
+            if (TryGetResourceAmount(resourcesById, ResourceType.Energy, out var snapshotEnergy))
+            {
+                energy = snapshotEnergy;
+            }
+
+            if (TryGetResourceAmount(resourcesById, ResourceType.Gems, out var snapshotGems))
+            {
+                gems = snapshotGems;
+            }
+
+            var normalizedSnapshot = new ResourceSnapshotDto
+            {
+                Gold = Mathf.Max(0, gold),
+                Energy = Mathf.Max(0, energy),
+                Gems = Mathf.Max(0, gems)
+            };
+
+            ApplyNormalizedAmounts(normalizedSnapshot.Gold, normalizedSnapshot.Energy, normalizedSnapshot.Gems);
         }
 
         public void Dispose()
@@ -136,40 +168,54 @@ namespace CoreResources
             _amountByType[ResourceType.Gems] = Mathf.Max(0, saveData.Gems);
         }
 
-        private ResourcesModuleSaveData CreateSaveData()
+        private void ApplyNormalizedAmounts(int gold, int energy, int gems)
         {
-            return new ResourcesModuleSaveData
+            var changedGold = _amountByType[ResourceType.Gold] != gold;
+            var changedEnergy = _amountByType[ResourceType.Energy] != energy;
+            var changedGems = _amountByType[ResourceType.Gems] != gems;
+
+            _amountByType[ResourceType.Gold] = gold;
+            _amountByType[ResourceType.Energy] = energy;
+            _amountByType[ResourceType.Gems] = gems;
+
+            if (changedGold)
             {
-                Version = 1,
-                Gold = _amountByType[ResourceType.Gold],
-                Energy = _amountByType[ResourceType.Energy],
-                Gems = _amountByType[ResourceType.Gems],
-            };
+                ResourceAmountChanged?.Invoke(ResourceType.Gold, gold);
+            }
+
+            if (changedEnergy)
+            {
+                ResourceAmountChanged?.Invoke(ResourceType.Energy, energy);
+            }
+
+            if (changedGems)
+            {
+                ResourceAmountChanged?.Invoke(ResourceType.Gems, gems);
+            }
         }
 
-        private void QueueSave()
+        private static bool TryGetResourceAmount(
+            IReadOnlyDictionary<string, int> resourcesById,
+            ResourceType type,
+            out int value)
         {
-            if (!_isInitialized || _isDisposed)
+            var resourceId = type.ToString();
+            if (resourcesById.TryGetValue(resourceId, out value))
             {
-                return;
+                return true;
             }
 
-            SaveSilentlyAsync(_saveCts.Token).Forget();
-        }
+            foreach (var pair in resourcesById)
+            {
+                if (string.Equals(pair.Key, resourceId, StringComparison.OrdinalIgnoreCase))
+                {
+                    value = pair.Value;
+                    return true;
+                }
+            }
 
-        private async UniTaskVoid SaveSilentlyAsync(CancellationToken ct)
-        {
-            try
-            {
-                await SaveAsync(ct);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[ResourceManager] Autosave failed: {e}");
-            }
+            value = 0;
+            return false;
         }
 
         private void ThrowIfDisposed()
