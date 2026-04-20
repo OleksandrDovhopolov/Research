@@ -98,12 +98,7 @@ namespace Inventory.Implementation.Services
             }, cancellationToken);
 
             EnsureServerSuccess(response, "remove");
-            if (response.Inventory == null)
-            {
-                throw new InvalidOperationException("Inventory remove response does not contain inventory snapshot.");
-            }
-
-            await ApplySnapshotAsync(response.Inventory, cancellationToken);
+            await ApplyResponseSnapshotAsync(response, "remove", cancellationToken);
         }
         
         public async UniTask<InventoryBatchRemoveResult> RemoveItemsAsync(
@@ -151,12 +146,7 @@ namespace Inventory.Implementation.Services
             }, cancellationToken);
 
             EnsureServerSuccess(response, "remove-batch");
-            if (response.Inventory == null)
-            {
-                throw new InvalidOperationException("Inventory remove-batch response does not contain inventory snapshot.");
-            }
-
-            await ApplySnapshotAsync(response.Inventory, cancellationToken);
+            await ApplyResponseSnapshotAsync(response, "remove-batch", cancellationToken);
             return new InventoryBatchRemoveResult(requestedStacks, requestedStacks, Array.Empty<InventoryItemDelta>());
         }
 
@@ -454,6 +444,39 @@ namespace Inventory.Implementation.Services
                 throw new InvalidOperationException(
                     $"Inventory {operationName} rejected. Code={response.ErrorCode ?? "<none>"}, Message={response.ErrorMessage ?? "<none>"}");
             }
+        }
+
+        private async UniTask ApplyResponseSnapshotAsync(
+            InventoryOperationResponse response,
+            string operationName,
+            CancellationToken cancellationToken)
+        {
+            if (response?.PlayerState?.InventoryItems != null)
+            {
+                var snapshot = new InventorySnapshotDto
+                {
+                    Items = response.PlayerState.InventoryItems
+                        .Where(item => item != null)
+                        .Select(item => new InventorySnapshotItemDto
+                        {
+                            ItemId = item.ItemId,
+                            Amount = item.Amount
+                        })
+                        .ToList()
+                };
+
+                await ApplySnapshotAsync(snapshot, cancellationToken);
+                return;
+            }
+
+            if (response?.Inventory != null)
+            {
+                await ApplySnapshotAsync(response.Inventory, cancellationToken);
+                return;
+            }
+
+            throw new InvalidOperationException(
+                $"Inventory {operationName} response does not contain playerState.inventoryItems or inventory snapshot.");
         }
         
         #region CategoryMismatchHandler

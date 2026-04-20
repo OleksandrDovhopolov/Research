@@ -98,10 +98,7 @@ namespace CoreResources
                 Gems = Mathf.Max(0, snapshot.Gems)
             };
             
-            if (instantUpdate)
-            {
-                ApplyNormalizedAmounts(normalizedSnapshot.Gold, normalizedSnapshot.Energy, normalizedSnapshot.Gems);
-            }
+            ApplyNormalizedAmounts(normalizedSnapshot.Gold, normalizedSnapshot.Energy, normalizedSnapshot.Gems, instantUpdate);
         }
 
         public async UniTask ApplySnapshotAsync(IReadOnlyDictionary<string, int> resourcesById, bool instantUpdate = false, CancellationToken ct = default)
@@ -143,11 +140,8 @@ namespace CoreResources
                 Energy = Mathf.Max(0, energy),
                 Gems = Mathf.Max(0, gems)
             };
-
-            if (instantUpdate)
-            {
-                ApplyNormalizedAmounts(normalizedSnapshot.Gold, normalizedSnapshot.Energy, normalizedSnapshot.Gems);
-            }
+            
+            ApplyNormalizedAmounts(normalizedSnapshot.Gold, normalizedSnapshot.Energy, normalizedSnapshot.Gems, instantUpdate);
         }
 
         public void Dispose()
@@ -174,7 +168,7 @@ namespace CoreResources
             _amountByType[ResourceType.Gems] = Mathf.Max(0, saveData.Gems);
         }
 
-        private void ApplyNormalizedAmounts(int gold, int energy, int gems)
+        private void ApplyNormalizedAmounts(int gold, int energy, int gems, bool riseEvents = false)
         {
             var changedGold = _amountByType[ResourceType.Gold] != gold;
             var changedEnergy = _amountByType[ResourceType.Energy] != energy;
@@ -184,6 +178,8 @@ namespace CoreResources
             _amountByType[ResourceType.Energy] = energy;
             _amountByType[ResourceType.Gems] = gems;
 
+            if (!riseEvents) return;
+            
             if (changedGold)
             {
                 ResourceAmountChanged?.Invoke(ResourceType.Gold, gold);
