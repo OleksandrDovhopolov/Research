@@ -18,6 +18,10 @@ MonoBehaviour:
     IosGameId: 6095470
     AndroidRewardedAdUnitId: Rewarded_Android
     IosRewardedAdUnitId: 
+    AndroidLevelPlayAppKey: 
+    IosLevelPlayAppKey: 
+    AndroidLevelPlayRewardedAdUnitId: 
+    IosLevelPlayRewardedAdUnitId: 
     RewardId: Gems
     TestMode: 1
     GrantTimeoutSeconds: 15

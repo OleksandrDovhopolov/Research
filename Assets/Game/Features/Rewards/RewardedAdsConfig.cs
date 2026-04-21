@@ -11,6 +11,10 @@ namespace Rewards
         public string IosGameId = string.Empty;
         public string AndroidRewardedAdUnitId = string.Empty;
         public string IosRewardedAdUnitId = string.Empty;
+        public string AndroidLevelPlayAppKey = string.Empty;
+        public string IosLevelPlayAppKey = string.Empty;
+        public string AndroidLevelPlayRewardedAdUnitId = string.Empty;
+        public string IosLevelPlayRewardedAdUnitId = string.Empty;
         public string RewardId = "Gems";
         public bool TestMode = true;
         public int GrantTimeoutSeconds = 15;
@@ -40,6 +44,30 @@ namespace Rewards
             return !string.IsNullOrWhiteSpace(AndroidRewardedAdUnitId)
                 ? AndroidRewardedAdUnitId
                 : IosRewardedAdUnitId;
+#endif
+        }
+
+        public string GetLevelPlayAppKeyForCurrentPlatform()
+        {
+#if UNITY_ANDROID
+            return AndroidLevelPlayAppKey;
+#elif UNITY_IOS
+            return IosLevelPlayAppKey;
+#else
+            return !string.IsNullOrWhiteSpace(AndroidLevelPlayAppKey) ? AndroidLevelPlayAppKey : IosLevelPlayAppKey;
+#endif
+        }
+
+        public string GetLevelPlayRewardedAdUnitIdForCurrentPlatform()
+        {
+#if UNITY_ANDROID
+            return AndroidLevelPlayRewardedAdUnitId;
+#elif UNITY_IOS
+            return IosLevelPlayRewardedAdUnitId;
+#else
+            return !string.IsNullOrWhiteSpace(AndroidLevelPlayRewardedAdUnitId)
+                ? AndroidLevelPlayRewardedAdUnitId
+                : IosLevelPlayRewardedAdUnitId;
 #endif
         }
 

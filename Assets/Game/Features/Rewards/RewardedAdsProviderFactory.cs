@@ -21,6 +21,9 @@ namespace Rewards
                 case RewardedAdsMode.UnityAdsTestMode:
                     provider = new UnityAdsRewardedAdsProvider(config);
                     break;
+                case RewardedAdsMode.LevelPlay:
+                    provider = new LevelPlayRewardedAdsProvider(config);
+                    break;
                 default:
                     provider = new MockRewardedAdsProvider(config);
                     break;
