@@ -177,12 +177,6 @@ namespace FortuneWheel
                  * --------------------------------------------------
                  */
                 
-                if (!_rewardSpecProvider.TryGet(response.rewardId, out RewardSpec rewardSpec))
-                {
-                    throw new InvalidOperationException($"Unknown reward id: {response.rewardId}");
-                }
-
-                var primaryResource = GetPrimaryRewardResource(rewardSpec, response.rewardId);
                 var success = await _rewardGrantService.TryApplyGrantResponseAsync(response.rewardGrant, ct);
                 if (!success)
                 {
@@ -195,9 +189,6 @@ namespace FortuneWheel
                 
                 return new FortuneWheelSpinResult(
                     response.rewardId,
-                    primaryResource.Icon,
-                    primaryResource.Amount,
-                    primaryResource.ResourceId,
                     availableSpins,
                     updatedAt,
                     nextUpdateAt);
@@ -213,28 +204,6 @@ namespace FortuneWheel
                     $"{LogPrefix} [{operationId}] Spin failed. PlayerId={MaskPlayerId(playerId)}, VerificationUrl={BuildWheelDataUrl(playerId)}, Reason={exception}");
                 throw;
             }
-        }
-
-        private static RewardSpecResource GetPrimaryRewardResource(RewardSpec rewardSpec, string rewardId)
-        {
-            var resources = rewardSpec?.Resources;
-            if (resources == null || resources.Count == 0)
-            {
-                throw new InvalidOperationException($"Reward spec '{rewardId}' has no resources.");
-            }
-
-            for (var i = 0; i < resources.Count; i++)
-            {
-                var resource = resources[i];
-                if (resource == null || string.IsNullOrWhiteSpace(resource.ResourceId) || resource.Amount <= 0)
-                {
-                    continue;
-                }
-
-                return resource;
-            }
-
-            throw new InvalidOperationException($"Reward spec '{rewardId}' has no primary resource.");
         }
 
         private async UniTask<FortuneWheelModuleSaveData> GetCachedDataSafeAsync(CancellationToken ct)

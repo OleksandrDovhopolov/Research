@@ -411,6 +411,7 @@ namespace Rewards.Tests.Editor
             };
 
             return new AdsRewardFlowService(
+                null,
                 provider,
                 grantService,
                 intentService,

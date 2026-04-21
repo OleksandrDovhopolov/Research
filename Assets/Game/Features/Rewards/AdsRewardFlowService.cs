@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
+using UISystem;
 using UnityEngine;
 
 namespace Rewards
@@ -13,6 +14,8 @@ namespace Rewards
         private const int DefaultGrantConfirmationTimeoutSeconds = 20;
         private const float DefaultGrantPollingIntervalSeconds = 1f;
 
+        // TODO replace this UI logic from AdsRewardFlowService
+        private readonly UIManager _uiManager;
         private readonly IRewardedAdsProvider _adsProvider;
         private readonly IRewardGrantService _rewardGrantService;
         private readonly IRewardIntentService _rewardIntentService;
@@ -24,12 +27,14 @@ namespace Rewards
         private int _isFlowInProgress;
 
         public AdsRewardFlowService(
+            UIManager uiManager,
             IRewardedAdsProvider adsProvider,
             IRewardGrantService rewardGrantService,
             IRewardIntentService rewardIntentService,
             IRewardPlayerStateSyncService rewardPlayerStateSyncService,
             RewardedAdsConfigSO configSo)
         {
+            _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
             _adsProvider = adsProvider ?? throw new ArgumentNullException(nameof(adsProvider));
             _rewardGrantService = rewardGrantService ?? throw new ArgumentNullException(nameof(rewardGrantService));
             _rewardIntentService = rewardIntentService ?? throw new ArgumentNullException(nameof(rewardIntentService));
@@ -300,7 +305,7 @@ namespace Rewards
 
                     try
                     {
-                        var statusResult = await _rewardIntentService.GetStatusAsync(rewardIntentId, timeoutCts.Token);
+                        GetRewardIntentStatusResult statusResult = await _rewardIntentService.GetStatusAsync(rewardIntentId, timeoutCts.Token);
                         receivedAnyStatus = true;
                         var status = statusResult?.Status ?? RewardIntentStatus.Unknown;
 
@@ -315,7 +320,18 @@ namespace Rewards
                                 try
                                 {
                                     Debug.Log($"[AdsRewardFlow] Intent fulfilled. Starting save/global sync. RewardIntentId={rewardIntentId}");
+                                    
+                                    //TODO
                                     await _rewardPlayerStateSyncService.SyncFromGlobalSaveAsync(timeoutCts.Token);
+
+                                    if (_uiManager != null)
+                                    {
+                                        //TODO "Gems" is hard code. change response from server side with data
+                                        var rewardArgs = new RewardsWindowArgs("Gems");
+                                        _uiManager.Show<RewardsWindowController>(rewardArgs);
+                                    }
+                                    
+                                    
                                     SetState(RewardAdFlowState.Success);
                                     return RewardGrantFlowResult.Build(RewardGrantFlowResultType.Success);
                                 }
@@ -398,7 +414,7 @@ namespace Rewards
                     errorMessage: "Reward confirmation timed out.");
             }
         }
-
+        
         private async UniTask ReloadAfterShowAsync()
         {
             var adUnitId = GetAdUnitId();

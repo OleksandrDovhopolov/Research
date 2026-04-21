@@ -80,7 +80,8 @@ namespace Game.Bootstrap
             {
                 var config = resolver.Resolve<RewardedAdsConfigSO>().GetOrCreate();
                 var playerIdentityProvider = resolver.Resolve<IPlayerIdentityProvider>();
-                return RewardedAdsProviderFactory.Create(config, playerIdentityProvider);
+                var webClient = resolver.Resolve<IWebClient>();
+                return RewardedAdsProviderFactory.Create(config, playerIdentityProvider, webClient);
             }, Lifetime.Singleton);
             builder.Register<AdsRewardFlowService>(Lifetime.Singleton);
             

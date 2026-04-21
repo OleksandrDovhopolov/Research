@@ -365,10 +365,7 @@ namespace FortuneWheel
                 return;
             }
 
-            var rewardArgs = new RewardsWindowArgs(
-                spinResult.RewardSprite,
-                spinResult.RewardAmount,
-                spinResult.RewardResourceId);
+            var rewardArgs = new RewardsWindowArgs(spinResult.RewardId);
             UIManager.Show<RewardsWindowController>(rewardArgs);
         }
 
