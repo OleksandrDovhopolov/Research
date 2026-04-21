@@ -7,14 +7,24 @@ namespace Rewards
     public sealed class RewardedAdsConfig
     {
         public RewardedAdsMode Mode = RewardedAdsMode.Mock;
+        
+        [Space, Header("Legacy IDs")]
         public string AndroidGameId = string.Empty;
         public string IosGameId = string.Empty;
+        
+        [Space, Header("Legacy Rewards")]
         public string AndroidRewardedAdUnitId = string.Empty;
         public string IosRewardedAdUnitId = string.Empty;
+        
+        [Space, Header("LevelPlay Keys")]
         public string AndroidLevelPlayAppKey = string.Empty;
         public string IosLevelPlayAppKey = string.Empty;
+        
+        [Space, Header("LevelPlay Rewards")]
         public string AndroidLevelPlayRewardedAdUnitId = string.Empty;
         public string IosLevelPlayRewardedAdUnitId = string.Empty;
+        
+        [Space, Header("General")]
         public string RewardId = "Gems";
         public bool TestMode = true;
         public int GrantTimeoutSeconds = 15;

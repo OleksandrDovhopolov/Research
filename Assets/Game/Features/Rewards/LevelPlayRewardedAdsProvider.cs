@@ -1,16 +1,33 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+#if UNITY_LEVELPLAY
+using System.Collections.Generic;
+using Unity.Services.LevelPlay;
+#endif
 
 namespace Rewards
 {
 #if UNITY_LEVELPLAY
     public sealed class LevelPlayRewardedAdsProvider : IRewardedAdsProvider
     {
+        private sealed class RewardedAdContext
+        {
+            public LevelPlayRewardedAd Ad;
+            public bool IsReady;
+            public bool HasReward;
+            public bool HasClosed;
+            public UniTaskCompletionSource<bool> LoadOperation;
+            public UniTaskCompletionSource<RewardedShowResult> ShowOperation;
+        }
+
+        private const float RewardAfterCloseGraceSeconds = 2f;
         private readonly RewardedAdsConfig _config;
-        private readonly HashSet<string> _readyAdUnits = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, RewardedAdContext> _adContexts = new(StringComparer.Ordinal);
+
+        private UniTaskCompletionSource<bool> _initializeOperation;
+        private bool _initializationCallbacksRegistered;
 
         public LevelPlayRewardedAdsProvider(RewardedAdsConfig config)
         {
@@ -21,15 +38,25 @@ namespace Rewards
 
         public bool IsAdReady(string adUnitId)
         {
-            return !string.IsNullOrWhiteSpace(adUnitId) && _readyAdUnits.Contains(adUnitId);
+            if (string.IsNullOrWhiteSpace(adUnitId))
+            {
+                return false;
+            }
+
+            if (!_adContexts.TryGetValue(adUnitId, out var context))
+            {
+                return false;
+            }
+
+            return context.IsReady || context.Ad.IsAdReady();
         }
 
-        public UniTask InitializeAsync(CancellationToken ct = default)
+        public async UniTask InitializeAsync(CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
             if (IsInitialized)
             {
-                return UniTask.CompletedTask;
+                return;
             }
 
             var appKey = _config.GetLevelPlayAppKeyForCurrentPlatform();
@@ -38,49 +65,263 @@ namespace Rewards
                 throw new InvalidOperationException("LevelPlay app key is not configured for the current platform.");
             }
 
-            // NOTE: SDK wiring point for real LevelPlay initialization callbacks.
-            IsInitialized = true;
-            Debug.Log("[RewardAdsLevelPlay] Initialize success.");
-            return UniTask.CompletedTask;
-        }
-
-        public UniTask PreloadAsync(string adUnitId, CancellationToken ct = default)
-        {
-            ct.ThrowIfCancellationRequested();
-            if (!IsInitialized)
+            if (_initializeOperation != null)
             {
-                throw new InvalidOperationException("LevelPlay SDK is not initialized.");
+                await _initializeOperation.Task.AttachExternalCancellation(ct);
+                return;
             }
 
+            RegisterInitializationCallbacks();
+
+            Debug.Log("[RewardAdsLevelPlay] Initialize started.");
+            _initializeOperation = new UniTaskCompletionSource<bool>();
+            LevelPlay.Init(appKey);
+
+            try
+            {
+                await _initializeOperation.Task.AttachExternalCancellation(ct);
+            }
+            finally
+            {
+                _initializeOperation = null;
+            }
+        }
+
+        public async UniTask PreloadAsync(string adUnitId, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            EnsureInitialized();
             if (string.IsNullOrWhiteSpace(adUnitId))
             {
                 throw new InvalidOperationException("LevelPlay rewarded ad unit id is empty.");
             }
 
-            // NOTE: SDK wiring point for real LevelPlay load callbacks.
-            _readyAdUnits.Add(adUnitId);
-            Debug.Log($"[RewardAdsLevelPlay] Load success. AdUnitId={adUnitId}");
-            return UniTask.CompletedTask;
+            var context = GetOrCreateContext(adUnitId);
+            if (context.IsReady || context.Ad.IsAdReady())
+            {
+                context.IsReady = true;
+                return;
+            }
+
+            if (context.LoadOperation != null)
+            {
+                await context.LoadOperation.Task.AttachExternalCancellation(ct);
+                return;
+            }
+
+            var loadOperation = new UniTaskCompletionSource<bool>();
+            context.LoadOperation = loadOperation;
+            Debug.Log($"[RewardAdsLevelPlay] Load started. AdUnitId={adUnitId}");
+            context.Ad.LoadAd();
+
+            try
+            {
+                await loadOperation.Task.AttachExternalCancellation(ct);
+            }
+            finally
+            {
+                if (ReferenceEquals(context.LoadOperation, loadOperation))
+                {
+                    context.LoadOperation = null;
+                }
+            }
         }
 
-        public UniTask<RewardedShowResult> ShowAsync(string adUnitId, CancellationToken ct = default)
+        public async UniTask<RewardedShowResult> ShowAsync(string adUnitId, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
+            EnsureInitialized();
+
+            var context = GetOrCreateContext(adUnitId);
+            var isReady = context.IsReady || context.Ad.IsAdReady();
+            context.IsReady = isReady;
+            if (!isReady)
+            {
+                Debug.LogWarning($"[RewardAdsLevelPlay] Show skipped, ad is not ready. AdUnitId={adUnitId}");
+                return RewardedShowResult.Failed;
+            }
+
+            if (context.ShowOperation != null)
+            {
+                throw new InvalidOperationException("Another LevelPlay rewarded show operation is already in progress.");
+            }
+
+            context.IsReady = false;
+            context.HasReward = false;
+            context.HasClosed = false;
+
+            var showOperation = new UniTaskCompletionSource<RewardedShowResult>();
+            context.ShowOperation = showOperation;
+
+            Debug.Log($"[RewardAdsLevelPlay] Show started. AdUnitId={adUnitId}");
+            context.Ad.ShowAd();
+
+            try
+            {
+                return await showOperation.Task.AttachExternalCancellation(ct);
+            }
+            finally
+            {
+                if (ReferenceEquals(context.ShowOperation, showOperation))
+                {
+                    context.ShowOperation = null;
+                }
+
+                context.HasReward = false;
+                context.HasClosed = false;
+            }
+        }
+
+        private void RegisterInitializationCallbacks()
+        {
+            if (_initializationCallbacksRegistered)
+            {
+                return;
+            }
+
+            LevelPlay.OnInitSuccess += OnInitSuccess;
+            LevelPlay.OnInitFailed += OnInitFailed;
+            _initializationCallbacksRegistered = true;
+        }
+
+        private RewardedAdContext GetOrCreateContext(string adUnitId)
+        {
+            if (string.IsNullOrWhiteSpace(adUnitId))
+            {
+                throw new InvalidOperationException("LevelPlay rewarded ad unit id is empty.");
+            }
+
+            if (_adContexts.TryGetValue(adUnitId, out var context))
+            {
+                return context;
+            }
+
+            var rewardedAd = new LevelPlayRewardedAd(adUnitId);
+            context = new RewardedAdContext
+            {
+                Ad = rewardedAd
+            };
+
+            rewardedAd.OnAdLoaded += adInfo => OnAdLoaded(adUnitId, context, adInfo);
+            rewardedAd.OnAdLoadFailed += error => OnAdLoadFailed(adUnitId, context, error);
+            rewardedAd.OnAdDisplayed += adInfo => Debug.Log($"[RewardAdsLevelPlay] Show callback started. AdUnitId={adUnitId}");
+            rewardedAd.OnAdDisplayFailed += (adInfo, error) => OnAdDisplayFailed(adUnitId, context, adInfo, error);
+            rewardedAd.OnAdRewarded += (adInfo, reward) => OnAdRewarded(adUnitId, context, reward);
+            rewardedAd.OnAdClicked += adInfo => Debug.Log($"[RewardAdsLevelPlay] Show clicked. AdUnitId={adUnitId}");
+            rewardedAd.OnAdClosed += adInfo => OnAdClosed(adUnitId, context);
+            rewardedAd.OnAdInfoChanged += adInfo => Debug.Log($"[RewardAdsLevelPlay] Ad info changed. AdUnitId={adUnitId}");
+
+            _adContexts[adUnitId] = context;
+            return context;
+        }
+
+        private void EnsureInitialized()
+        {
             if (!IsInitialized)
             {
                 throw new InvalidOperationException("LevelPlay SDK is not initialized.");
             }
+        }
 
-            if (!IsAdReady(adUnitId))
+        private void OnInitSuccess(LevelPlayConfiguration configuration)
+        {
+            IsInitialized = true;
+            Debug.Log("[RewardAdsLevelPlay] Initialize success.");
+            _initializeOperation?.TrySetResult(true);
+        }
+
+        private void OnInitFailed(LevelPlayInitError error)
+        {
+            IsInitialized = false;
+            var message = $"LevelPlay initialization failed. ErrorCode={error?.ErrorCode}, ErrorMessage={error?.ErrorMessage}";
+            Debug.LogError($"[RewardAdsLevelPlay] {message}");
+            _initializeOperation?.TrySetException(new InvalidOperationException(message));
+        }
+
+        private void OnAdLoaded(string adUnitId, RewardedAdContext context, LevelPlayAdInfo adInfo)
+        {
+            context.IsReady = true;
+            Debug.Log($"[RewardAdsLevelPlay] Load success. AdUnitId={adUnitId}");
+            context.LoadOperation?.TrySetResult(true);
+        }
+
+        private void OnAdLoadFailed(string adUnitId, RewardedAdContext context, LevelPlayAdError error)
+        {
+            context.IsReady = false;
+            var message = $"LevelPlay load failed. AdUnitId={adUnitId}, ErrorCode={error?.ErrorCode}, ErrorMessage={error?.ErrorMessage}";
+            Debug.LogWarning($"[RewardAdsLevelPlay] {message}");
+            context.LoadOperation?.TrySetException(new InvalidOperationException(message));
+        }
+
+        private void OnAdDisplayFailed(string adUnitId, RewardedAdContext context, LevelPlayAdInfo adInfo, LevelPlayAdError error)
+        {
+            context.IsReady = false;
+            context.HasReward = false;
+            context.HasClosed = false;
+            Debug.LogWarning($"[RewardAdsLevelPlay] Show failed. AdUnitId={adUnitId}, ErrorCode={error?.ErrorCode}, ErrorMessage={error?.ErrorMessage}");
+            context.ShowOperation?.TrySetResult(RewardedShowResult.Failed);
+        }
+
+        private void OnAdRewarded(string adUnitId, RewardedAdContext context, LevelPlayReward reward)
+        {
+            context.HasReward = true;
+            Debug.Log($"[RewardAdsLevelPlay] Reward callback received. AdUnitId={adUnitId}, RewardName={reward?.Name}, RewardAmount={reward?.Amount}");
+
+            if (context.HasClosed && context.ShowOperation != null)
             {
-                Debug.LogWarning($"[RewardAdsLevelPlay] Show skipped, ad is not ready. AdUnitId={adUnitId}");
-                return UniTask.FromResult(RewardedShowResult.Failed);
+                CompleteShow(adUnitId, context, RewardedShowResult.Completed);
+            }
+        }
+
+        private void OnAdClosed(string adUnitId, RewardedAdContext context)
+        {
+            var showOperation = context.ShowOperation;
+            if (showOperation == null)
+            {
+                Debug.Log($"[RewardAdsLevelPlay] Ad closed without active show operation. AdUnitId={adUnitId}");
+                return;
             }
 
-            // NOTE: SDK wiring point for real LevelPlay show callbacks and completion mapping.
-            _readyAdUnits.Remove(adUnitId);
-            Debug.LogWarning($"[RewardAdsLevelPlay] Show flow is not wired to SDK callbacks yet. AdUnitId={adUnitId}");
-            return UniTask.FromResult(RewardedShowResult.Failed);
+            context.HasClosed = true;
+            if (context.HasReward)
+            {
+                CompleteShow(adUnitId, context, RewardedShowResult.Completed);
+                return;
+            }
+
+            Debug.Log($"[RewardAdsLevelPlay] Ad closed. Waiting {RewardAfterCloseGraceSeconds:0.##}s for reward callback. AdUnitId={adUnitId}");
+            CompleteCanceledAfterGraceAsync(adUnitId, context, showOperation).Forget();
+        }
+
+        private async UniTaskVoid CompleteCanceledAfterGraceAsync(
+            string adUnitId,
+            RewardedAdContext context,
+            UniTaskCompletionSource<RewardedShowResult> showOperation)
+        {
+            try
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(RewardAfterCloseGraceSeconds));
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[RewardAdsLevelPlay] Close grace delay failed. AdUnitId={adUnitId}, Exception={ex.Message}");
+            }
+
+            if (!ReferenceEquals(context.ShowOperation, showOperation))
+            {
+                return;
+            }
+
+            var result = context.HasReward ? RewardedShowResult.Completed : RewardedShowResult.Canceled;
+            CompleteShow(adUnitId, context, result);
+        }
+
+        private void CompleteShow(string adUnitId, RewardedAdContext context, RewardedShowResult result)
+        {
+            context.HasReward = false;
+            context.HasClosed = false;
+            Debug.Log($"[RewardAdsLevelPlay] Show completed. AdUnitId={adUnitId}, Result={result}");
+            context.ShowOperation?.TrySetResult(result);
         }
     }
 #else

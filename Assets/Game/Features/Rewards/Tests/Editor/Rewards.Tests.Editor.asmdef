@@ -23,6 +23,12 @@
     ],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.services.levelplay",
+            "expression": "0.0.0",
+            "define": "UNITY_LEVELPLAY"
+        }
+    ],
     "noEngineReferences": false
 }
