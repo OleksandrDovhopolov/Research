@@ -127,7 +127,10 @@ namespace Rewards
             }
         }
 
-        public async UniTask<RewardedShowResult> ShowAsync(string adUnitId, CancellationToken ct = default)
+        public async UniTask<RewardedShowResult> ShowAsync(
+            string adUnitId,
+            string rewardIntentId,
+            CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
             EnsureInitialized();
@@ -153,7 +156,7 @@ namespace Rewards
             var showOperation = new UniTaskCompletionSource<RewardedShowResult>();
             context.ShowOperation = showOperation;
 
-            Debug.Log($"[RewardAdsLevelPlay] Show started. AdUnitId={adUnitId}");
+            Debug.Log($"[RewardAdsLevelPlay] Show started. AdUnitId={adUnitId}, RewardIntentId={rewardIntentId}");
             context.Ad.ShowAd();
 
             try
@@ -350,7 +353,10 @@ namespace Rewards
                 "UNITY_LEVELPLAY scripting define is not enabled. Install/enable the LevelPlay SDK package.");
         }
 
-        public UniTask<RewardedShowResult> ShowAsync(string adUnitId, CancellationToken ct = default)
+        public UniTask<RewardedShowResult> ShowAsync(
+            string adUnitId,
+            string rewardIntentId,
+            CancellationToken ct = default)
         {
             throw new InvalidOperationException(
                 "UNITY_LEVELPLAY scripting define is not enabled. Install/enable the LevelPlay SDK package.");

@@ -33,7 +33,7 @@ namespace Rewards.Tests.Editor
             Assert.Throws<InvalidOperationException>(() =>
                 provider.PreloadAsync("rewarded", CancellationToken.None).GetAwaiter().GetResult());
             Assert.Throws<InvalidOperationException>(() =>
-                provider.ShowAsync("rewarded", CancellationToken.None).GetAwaiter().GetResult());
+                provider.ShowAsync("rewarded", "ri_test", CancellationToken.None).GetAwaiter().GetResult());
         }
 #endif
     }
