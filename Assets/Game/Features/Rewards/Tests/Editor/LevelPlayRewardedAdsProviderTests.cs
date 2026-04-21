@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using Infrastructure;
 using NUnit.Framework;
 
 namespace Rewards.Tests.Editor
@@ -14,7 +15,7 @@ namespace Rewards.Tests.Editor
                 Mode = RewardedAdsMode.LevelPlay
             };
 
-            var provider = RewardedAdsProviderFactory.Create(config);
+            var provider = RewardedAdsProviderFactory.Create(config, new StubPlayerIdentityProvider("player_1"));
 
             Assert.That(provider, Is.TypeOf<LevelPlayRewardedAdsProvider>());
         }
@@ -36,5 +37,19 @@ namespace Rewards.Tests.Editor
                 provider.ShowAsync("rewarded", "ri_test", CancellationToken.None).GetAwaiter().GetResult());
         }
 #endif
+        private sealed class StubPlayerIdentityProvider : IPlayerIdentityProvider
+        {
+            private readonly string _playerId;
+
+            public StubPlayerIdentityProvider(string playerId)
+            {
+                _playerId = playerId;
+            }
+
+            public string GetPlayerId()
+            {
+                return _playerId;
+            }
+        }
     }
 }

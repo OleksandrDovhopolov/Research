@@ -79,7 +79,8 @@ namespace Game.Bootstrap
             builder.Register<IRewardedAdsProvider>(resolver =>
             {
                 var config = resolver.Resolve<RewardedAdsConfigSO>().GetOrCreate();
-                return RewardedAdsProviderFactory.Create(config);
+                var playerIdentityProvider = resolver.Resolve<IPlayerIdentityProvider>();
+                return RewardedAdsProviderFactory.Create(config, playerIdentityProvider);
             }, Lifetime.Singleton);
             builder.Register<AdsRewardFlowService>(Lifetime.Singleton);
             

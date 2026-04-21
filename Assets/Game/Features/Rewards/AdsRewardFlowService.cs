@@ -467,7 +467,7 @@ namespace Rewards
 
         private string GetAdUnitId()
         {
-            return _config.GetRewardedAdUnitIdForCurrentPlatform();
+            return _config.GetLevelPlayRewardedAdUnitIdForCurrentPlatform();
         }
 
         private void SetState(RewardAdFlowState state)

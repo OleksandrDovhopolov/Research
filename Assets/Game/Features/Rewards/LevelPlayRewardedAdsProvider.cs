@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Infrastructure;
 using UnityEngine;
 #if UNITY_LEVELPLAY
 using System.Collections.Generic;
@@ -12,6 +13,8 @@ namespace Rewards
 #if UNITY_LEVELPLAY
     public sealed class LevelPlayRewardedAdsProvider : IRewardedAdsProvider
     {
+        private const string RewardedServerParamsMetaDataKey = "LevelPlay_Rewarded_Server_Params";
+
         private sealed class RewardedAdContext
         {
             public LevelPlayRewardedAd Ad;
@@ -24,14 +27,16 @@ namespace Rewards
 
         private const float RewardAfterCloseGraceSeconds = 2f;
         private readonly RewardedAdsConfig _config;
+        private readonly IPlayerIdentityProvider _identityProvider;
         private readonly Dictionary<string, RewardedAdContext> _adContexts = new(StringComparer.Ordinal);
 
         private UniTaskCompletionSource<bool> _initializeOperation;
         private bool _initializationCallbacksRegistered;
 
-        public LevelPlayRewardedAdsProvider(RewardedAdsConfig config)
+        public LevelPlayRewardedAdsProvider(RewardedAdsConfig config, IPlayerIdentityProvider playerIdentityProvider)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
+            _identityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
         }
 
         public bool IsInitialized { get; private set; }
@@ -75,7 +80,7 @@ namespace Rewards
 
             Debug.Log("[RewardAdsLevelPlay] Initialize started.");
             _initializeOperation = new UniTaskCompletionSource<bool>();
-            LevelPlay.Init(appKey);
+            LevelPlay.Init(appKey, _identityProvider.GetPlayerId());
 
             try
             {
@@ -156,6 +161,7 @@ namespace Rewards
             var showOperation = new UniTaskCompletionSource<RewardedShowResult>();
             context.ShowOperation = showOperation;
 
+            ApplyRewardIntentForServerCallback(rewardIntentId);
             Debug.Log($"[RewardAdsLevelPlay] Show started. AdUnitId={adUnitId}, RewardIntentId={rewardIntentId}");
             context.Ad.ShowAd();
 
@@ -173,6 +179,26 @@ namespace Rewards
                 context.HasReward = false;
                 context.HasClosed = false;
             }
+        }
+
+        private static void ApplyRewardIntentForServerCallback(string rewardIntentId)
+        {
+            if (string.IsNullOrWhiteSpace(rewardIntentId))
+            {
+                LevelPlay.SetMetaData(RewardedServerParamsMetaDataKey, Array.Empty<string>());
+                Debug.LogWarning("[RewardAdsLevelPlay] RewardIntentId is empty. Cleared rewarded S2S custom params.");
+                return;
+            }
+
+            var isDynamicUserIdSet = LevelPlay.SetDynamicUserId(rewardIntentId);
+            
+            if (!isDynamicUserIdSet)
+            {
+                Debug.LogWarning($"[RewardAdsLevelPlay] Failed to set dynamic user id for callback. RewardIntentId={rewardIntentId}");
+            }
+
+            //LevelPlay.SetMetaData(RewardedServerParamsMetaDataKey, $"rewardIntentId={rewardIntentId}");
+            //Debug.Log($"[RewardAdsLevelPlay] Applied rewarded S2S params. RewardIntentId={rewardIntentId}");
         }
 
         private void RegisterInitializationCallbacks()

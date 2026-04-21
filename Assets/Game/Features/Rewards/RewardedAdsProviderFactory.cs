@@ -1,11 +1,12 @@
 using System;
+using Infrastructure;
 using UnityEngine;
 
 namespace Rewards
 {
     public static class RewardedAdsProviderFactory
     {
-        public static IRewardedAdsProvider Create(RewardedAdsConfig config)
+        public static IRewardedAdsProvider Create(RewardedAdsConfig config, IPlayerIdentityProvider playerIdentityProvider)
         {
             if (config == null)
             {
@@ -22,7 +23,7 @@ namespace Rewards
                     provider = new UnityAdsRewardedAdsProvider(config);
                     break;
                 case RewardedAdsMode.LevelPlay:
-                    provider = new LevelPlayRewardedAdsProvider(config);
+                    provider = new LevelPlayRewardedAdsProvider(config, playerIdentityProvider);
                     break;
                 default:
                     provider = new MockRewardedAdsProvider(config);
