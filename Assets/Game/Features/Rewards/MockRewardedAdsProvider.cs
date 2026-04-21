@@ -42,7 +42,7 @@ namespace Rewards
             return UniTask.CompletedTask;
         }
 
-        public async UniTask<RewardedShowResult> ShowAsync(string adUnitId, CancellationToken ct = default)
+        public async UniTask<RewardedShowResult> ShowAsync(string adUnitId, string rewardIntentId, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
             if (!_isInitialized)
@@ -51,7 +51,7 @@ namespace Rewards
             }
 
             var delaySeconds = _config.GetMockDelaySeconds();
-            Debug.Log($"[RewardAdsMock] Show started. AdUnitId={adUnitId}, DelaySeconds={delaySeconds:0.00}, Outcome={_config.MockOutcome}");
+            Debug.Log($"[RewardAdsMock] Show started. AdUnitId={adUnitId}, RewardIntentId={rewardIntentId}, DelaySeconds={delaySeconds:0.00}, Outcome={_config.MockOutcome}");
             await UniTask.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken: ct);
 
             return _config.MockOutcome switch
