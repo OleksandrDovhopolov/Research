@@ -72,16 +72,23 @@ namespace Rewards.Tests.Editor
                     RewardIntentId = "ri_123"
                 }
             };
+            var syncService = new StubRewardPlayerStateSyncService();
             intentService.EnqueueStatus(new GetRewardIntentStatusResult { Status = RewardIntentStatus.Pending });
-            intentService.EnqueueStatus(new GetRewardIntentStatusResult { Status = RewardIntentStatus.Fulfilled, NewCrystalsBalance = 250 });
+            intentService.EnqueueStatus(new GetRewardIntentStatusResult { Status = RewardIntentStatus.Fulfilled });
 
-            var service = CreateService(provider, grantService, intentService, useServerConfirmedGrantFlow: true);
+            var service = CreateService(
+                provider,
+                grantService,
+                intentService,
+                useServerConfirmedGrantFlow: true,
+                syncService: syncService);
             var result = service.TryRunFlowAsync(CancellationToken.None).GetAwaiter().GetResult();
 
             Assert.That(result.Type, Is.EqualTo(RewardGrantFlowResultType.Success));
-            Assert.That(result.NewCrystalsBalance, Is.EqualTo(250));
+            Assert.That(result.NewCrystalsBalance, Is.Null);
             Assert.That(intentService.CreateCalls, Is.EqualTo(1));
             Assert.That(intentService.GetStatusCalls, Is.GreaterThanOrEqualTo(2));
+            Assert.That(syncService.SyncCalls, Is.EqualTo(1));
             Assert.That(grantService.TryGrantDetailedCalls, Is.EqualTo(0));
             Assert.That(provider.LastShowRewardIntentId, Is.EqualTo("ri_123"));
             Assert.That(provider.PreloadCalls, Is.GreaterThanOrEqualTo(1));
@@ -157,12 +164,93 @@ namespace Rewards.Tests.Editor
                     RewardIntentId = "ri_123"
                 }
             };
+            var syncService = new StubRewardPlayerStateSyncService();
 
-            var service = CreateService(provider, grantService, intentService, useServerConfirmedGrantFlow: true);
+            var service = CreateService(
+                provider,
+                grantService,
+                intentService,
+                useServerConfirmedGrantFlow: true,
+                syncService: syncService);
             var result = service.TryRunFlowAsync(CancellationToken.None).GetAwaiter().GetResult();
 
             Assert.That(result.Type, Is.EqualTo(RewardGrantFlowResultType.AdCanceled));
             Assert.That(intentService.GetStatusCalls, Is.EqualTo(0));
+            Assert.That(syncService.SyncCalls, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void TryRunFlowAsync_ServerConfirmed_ReturnsNetworkError_WhenSaveSyncFailsWithNetworkError()
+        {
+            var provider = new StubRewardedAdsProvider
+            {
+                IsInitializedValue = true,
+                IsReadyValue = true,
+                ShowResult = RewardedShowResult.Completed
+            };
+            var grantService = new StubRewardGrantService();
+            var intentService = new StubRewardIntentService
+            {
+                CreateResult = new CreateRewardIntentResult
+                {
+                    IsSuccess = true,
+                    RewardIntentId = "ri_123"
+                }
+            };
+            var syncService = new StubRewardPlayerStateSyncService
+            {
+                ExceptionToThrow = new WebClientNetworkException("https://test/save/global", "No internet")
+            };
+            intentService.EnqueueStatus(new GetRewardIntentStatusResult { Status = RewardIntentStatus.Fulfilled });
+
+            var service = CreateService(
+                provider,
+                grantService,
+                intentService,
+                useServerConfirmedGrantFlow: true,
+                syncService: syncService);
+            var result = service.TryRunFlowAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(result.Type, Is.EqualTo(RewardGrantFlowResultType.NetworkError));
+            Assert.That(result.ErrorCode, Is.EqualTo("SAVE_SYNC_NETWORK_ERROR"));
+            Assert.That(syncService.SyncCalls, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void TryRunFlowAsync_ServerConfirmed_ReturnsServerFailed_WhenSaveSyncFails()
+        {
+            var provider = new StubRewardedAdsProvider
+            {
+                IsInitializedValue = true,
+                IsReadyValue = true,
+                ShowResult = RewardedShowResult.Completed
+            };
+            var grantService = new StubRewardGrantService();
+            var intentService = new StubRewardIntentService
+            {
+                CreateResult = new CreateRewardIntentResult
+                {
+                    IsSuccess = true,
+                    RewardIntentId = "ri_123"
+                }
+            };
+            var syncService = new StubRewardPlayerStateSyncService
+            {
+                ExceptionToThrow = new InvalidOperationException("Bad payload")
+            };
+            intentService.EnqueueStatus(new GetRewardIntentStatusResult { Status = RewardIntentStatus.Fulfilled });
+
+            var service = CreateService(
+                provider,
+                grantService,
+                intentService,
+                useServerConfirmedGrantFlow: true,
+                syncService: syncService);
+            var result = service.TryRunFlowAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(result.Type, Is.EqualTo(RewardGrantFlowResultType.ServerFailed));
+            Assert.That(result.ErrorCode, Is.EqualTo("SAVE_SYNC_FAILED"));
+            Assert.That(syncService.SyncCalls, Is.EqualTo(1));
         }
 
         [Test]
@@ -286,7 +374,7 @@ namespace Rewards.Tests.Editor
             {
                 CreateResult = new CreateRewardIntentResult { IsSuccess = true, RewardIntentId = "ri_123" }
             };
-            intentService.EnqueueStatus(new GetRewardIntentStatusResult { Status = RewardIntentStatus.Fulfilled, NewCrystalsBalance = 100 });
+            intentService.EnqueueStatus(new GetRewardIntentStatusResult { Status = RewardIntentStatus.Fulfilled });
 
             var service = CreateService(provider, grantService, intentService, useServerConfirmedGrantFlow: true);
 
@@ -306,7 +394,8 @@ namespace Rewards.Tests.Editor
             bool useServerConfirmedGrantFlow,
             int grantTimeoutSeconds = 15,
             int grantConfirmationTimeoutSeconds = 20,
-            float grantPollingIntervalSeconds = 1f)
+            float grantPollingIntervalSeconds = 1f,
+            StubRewardPlayerStateSyncService syncService = null)
         {
             var configSo = ScriptableObject.CreateInstance<RewardedAdsConfigSO>();
             configSo.Config = new RewardedAdsConfig
@@ -321,7 +410,12 @@ namespace Rewards.Tests.Editor
                 IosRewardedAdUnitId = "rewarded"
             };
 
-            return new AdsRewardFlowService(provider, grantService, intentService, configSo);
+            return new AdsRewardFlowService(
+                provider,
+                grantService,
+                intentService,
+                syncService ?? new StubRewardPlayerStateSyncService(),
+                configSo);
         }
 
         private sealed class StubRewardedAdsProvider : IRewardedAdsProvider
@@ -454,6 +548,24 @@ namespace Rewards.Tests.Editor
             public void EnqueueStatus(GetRewardIntentStatusResult status)
             {
                 _statuses.Enqueue(status);
+            }
+        }
+
+        private sealed class StubRewardPlayerStateSyncService : IRewardPlayerStateSyncService
+        {
+            public int SyncCalls { get; private set; }
+            public Exception ExceptionToThrow { get; set; }
+
+            public UniTask SyncFromGlobalSaveAsync(CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+                SyncCalls++;
+                if (ExceptionToThrow != null)
+                {
+                    throw ExceptionToThrow;
+                }
+
+                return UniTask.CompletedTask;
             }
         }
     }

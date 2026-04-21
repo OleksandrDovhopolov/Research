@@ -16,6 +16,7 @@ namespace Rewards
         private readonly IRewardedAdsProvider _adsProvider;
         private readonly IRewardGrantService _rewardGrantService;
         private readonly IRewardIntentService _rewardIntentService;
+        private readonly IRewardPlayerStateSyncService _rewardPlayerStateSyncService;
         private readonly RewardedAdsConfig _config;
         private readonly SemaphoreSlim _initializeGate = new(1, 1);
 
@@ -26,11 +27,13 @@ namespace Rewards
             IRewardedAdsProvider adsProvider,
             IRewardGrantService rewardGrantService,
             IRewardIntentService rewardIntentService,
+            IRewardPlayerStateSyncService rewardPlayerStateSyncService,
             RewardedAdsConfigSO configSo)
         {
             _adsProvider = adsProvider ?? throw new ArgumentNullException(nameof(adsProvider));
             _rewardGrantService = rewardGrantService ?? throw new ArgumentNullException(nameof(rewardGrantService));
             _rewardIntentService = rewardIntentService ?? throw new ArgumentNullException(nameof(rewardIntentService));
+            _rewardPlayerStateSyncService = rewardPlayerStateSyncService ?? throw new ArgumentNullException(nameof(rewardPlayerStateSyncService));
             _config = (configSo ?? throw new ArgumentNullException(nameof(configSo))).GetOrCreate();
         }
 
@@ -309,10 +312,37 @@ namespace Rewards
                         switch (status)
                         {
                             case RewardIntentStatus.Fulfilled:
-                                SetState(RewardAdFlowState.Success);
-                                return RewardGrantFlowResult.Build(
-                                    RewardGrantFlowResultType.Success,
-                                    newCrystalsBalance: statusResult?.NewCrystalsBalance);
+                                try
+                                {
+                                    Debug.Log($"[AdsRewardFlow] Intent fulfilled. Starting save/global sync. RewardIntentId={rewardIntentId}");
+                                    await _rewardPlayerStateSyncService.SyncFromGlobalSaveAsync(timeoutCts.Token);
+                                    SetState(RewardAdFlowState.Success);
+                                    return RewardGrantFlowResult.Build(RewardGrantFlowResultType.Success);
+                                }
+                                catch (OperationCanceledException)
+                                {
+                                    throw;
+                                }
+                                catch (WebClientNetworkException exception)
+                                {
+                                    SetState(RewardAdFlowState.Failed);
+                                    Debug.LogWarning(
+                                        $"[AdsRewardFlow] Save/global sync network failure. RewardIntentId={rewardIntentId}, Reason={exception.Message}");
+                                    return RewardGrantFlowResult.Build(
+                                        RewardGrantFlowResultType.NetworkError,
+                                        errorCode: "SAVE_SYNC_NETWORK_ERROR",
+                                        errorMessage: exception.Message);
+                                }
+                                catch (Exception exception)
+                                {
+                                    SetState(RewardAdFlowState.Failed);
+                                    Debug.LogWarning(
+                                        $"[AdsRewardFlow] Save/global sync failed. RewardIntentId={rewardIntentId}, Reason={exception.Message}");
+                                    return RewardGrantFlowResult.Build(
+                                        RewardGrantFlowResultType.ServerFailed,
+                                        errorCode: "SAVE_SYNC_FAILED",
+                                        errorMessage: exception.Message);
+                                }
 
                             case RewardIntentStatus.Rejected:
                                 SetState(RewardAdFlowState.Failed);

@@ -24,7 +24,6 @@ namespace Rewards
     public sealed class GetRewardIntentStatusResult
     {
         public RewardIntentStatus Status;
-        public int? NewCrystalsBalance;
         public string ErrorCode;
         public string ErrorMessage;
     }
@@ -60,9 +59,6 @@ namespace Rewards
     {
         [JsonProperty("status")]
         public string Status { get; set; }
-
-        [JsonProperty("newCrystalsBalance")]
-        public int? NewCrystalsBalance { get; set; }
 
         [JsonProperty("errorCode")]
         public string ErrorCode { get; set; }

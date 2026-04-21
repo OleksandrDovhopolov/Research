@@ -69,6 +69,7 @@ namespace Game.Bootstrap
             builder.Register<InventoryPlayerStateSnapshotHandler>(Lifetime.Singleton).As<IPlayerStateSnapshotHandler>();
             builder.Register<IRewardGrantService, ServerRewardGrantService>(Lifetime.Singleton);
             builder.Register<IRewardIntentService, ServerRewardIntentService>(Lifetime.Singleton);
+            builder.Register<IRewardPlayerStateSyncService, ServerRewardPlayerStateSyncService>(Lifetime.Singleton);
             builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(_rewardSpecsConfigSo), Lifetime.Singleton);
 
             var rewardedAdsConfig = _rewardedAdsConfigSo != null

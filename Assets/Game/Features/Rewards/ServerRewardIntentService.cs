@@ -139,7 +139,6 @@ namespace Rewards
             return new GetRewardIntentStatusResult
             {
                 Status = ParseStatus(response.Status),
-                NewCrystalsBalance = response.NewCrystalsBalance,
                 ErrorCode = response.ErrorCode,
                 ErrorMessage = response.ErrorMessage
             };

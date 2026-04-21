@@ -8,6 +8,7 @@ using UnityEngine.Networking;
 
 namespace Infrastructure
 {
+    //TODO refactor. the same GET logic in ServerRewardPlayerStateSyncService
     public sealed class HttpSaveStorage : ISaveStorage
     {
         private const string LogPrefix = "[HttpSaveStorage]";

@@ -24,7 +24,11 @@ MonoBehaviour:
     IosLevelPlayRewardedAdUnitId: 
     RewardId: Gems
     TestMode: 1
+    UseServerConfirmedGrantFlow: 1
     GrantTimeoutSeconds: 15
+    GrantConfirmationTimeoutSeconds: 20
+    GrantPollingIntervalSeconds: 1
+    EnableIntentPollingLogs: 1
     MockOutcome: 0
     UseRandomMockDelay: 1
     MockDelayRangeSeconds: {x: 1, y: 2}
