@@ -18,7 +18,7 @@ namespace Rewards.Tests.Editor
 
             provider.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
             provider.PreloadAsync("rewarded", CancellationToken.None).GetAwaiter().GetResult();
-            var result = provider.ShowAsync("rewarded", CancellationToken.None).GetAwaiter().GetResult();
+            var result = provider.ShowAsync("rewarded", "ri_test", CancellationToken.None).GetAwaiter().GetResult();
 
             Assert.That(result, Is.EqualTo(RewardedShowResult.Completed));
         }
@@ -36,7 +36,7 @@ namespace Rewards.Tests.Editor
 
             provider.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
             provider.PreloadAsync("rewarded", CancellationToken.None).GetAwaiter().GetResult();
-            var result = provider.ShowAsync("rewarded", CancellationToken.None).GetAwaiter().GetResult();
+            var result = provider.ShowAsync("rewarded", "ri_test", CancellationToken.None).GetAwaiter().GetResult();
 
             Assert.That(result, Is.EqualTo(RewardedShowResult.Canceled));
         }
@@ -54,7 +54,7 @@ namespace Rewards.Tests.Editor
 
             provider.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
             provider.PreloadAsync("rewarded", CancellationToken.None).GetAwaiter().GetResult();
-            var result = provider.ShowAsync("rewarded", CancellationToken.None).GetAwaiter().GetResult();
+            var result = provider.ShowAsync("rewarded", "ri_test", CancellationToken.None).GetAwaiter().GetResult();
 
             Assert.That(result, Is.EqualTo(RewardedShowResult.Failed));
         }

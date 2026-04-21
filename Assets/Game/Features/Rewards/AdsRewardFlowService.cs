@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Infrastructure;
 using UnityEngine;
 
 namespace Rewards
@@ -8,10 +9,13 @@ namespace Rewards
     public sealed class AdsRewardFlowService
     {
         private const int PreloadRetryDelaySeconds = 2;
-        private const int DefaultGrantTimeoutSeconds = 15;
+        private const int DefaultLegacyGrantTimeoutSeconds = 15;
+        private const int DefaultGrantConfirmationTimeoutSeconds = 20;
+        private const float DefaultGrantPollingIntervalSeconds = 1f;
 
         private readonly IRewardedAdsProvider _adsProvider;
         private readonly IRewardGrantService _rewardGrantService;
+        private readonly IRewardIntentService _rewardIntentService;
         private readonly RewardedAdsConfig _config;
         private readonly SemaphoreSlim _initializeGate = new(1, 1);
 
@@ -21,10 +25,12 @@ namespace Rewards
         public AdsRewardFlowService(
             IRewardedAdsProvider adsProvider,
             IRewardGrantService rewardGrantService,
+            IRewardIntentService rewardIntentService,
             RewardedAdsConfigSO configSo)
         {
             _adsProvider = adsProvider ?? throw new ArgumentNullException(nameof(adsProvider));
             _rewardGrantService = rewardGrantService ?? throw new ArgumentNullException(nameof(rewardGrantService));
+            _rewardIntentService = rewardIntentService ?? throw new ArgumentNullException(nameof(rewardIntentService));
             _config = (configSo ?? throw new ArgumentNullException(nameof(configSo))).GetOrCreate();
         }
 
@@ -53,10 +59,10 @@ namespace Rewards
                     throw new InvalidOperationException("Rewarded ad unit id is not configured for the current platform.");
                 }
 
-                Debug.Log("[RewardAds] Ads init started.");
+                Debug.Log("[AdsRewardFlow] Ads init started.");
                 SetState(RewardAdFlowState.InitializingAds);
                 await _adsProvider.InitializeAsync(ct);
-                Debug.Log("[RewardAds] Ads init success.");
+                Debug.Log("[AdsRewardFlow] Ads init success.");
 
                 var preloadSuccess = await TryPreloadWithRetryAsync(adUnitId, ct);
                 SetState(preloadSuccess ? RewardAdFlowState.Ready : RewardAdFlowState.Failed);
@@ -67,7 +73,7 @@ namespace Rewards
             }
             catch (Exception exception)
             {
-                Debug.LogError($"[RewardAds] Ads init failed. {exception.Message}");
+                Debug.LogError($"[AdsRewardFlow] Ads init failed. {exception.Message}");
                 SetState(RewardAdFlowState.Failed);
                 throw;
             }
@@ -88,6 +94,8 @@ namespace Rewards
             }
 
             var showWasAttempted = false;
+            RewardGrantFlowResult finalResult = null;
+
             try
             {
                 await EnsureInitializedAsync(ct);
@@ -95,35 +103,88 @@ namespace Rewards
                 var adUnitId = GetAdUnitId();
                 if (!_adsProvider.IsAdReady(adUnitId))
                 {
-                    Debug.LogWarning($"[RewardAds] Ad is not ready. AdUnitId={adUnitId}");
-                    return RewardGrantFlowResult.Build(
+                    Debug.LogWarning($"[AdsRewardFlow] Ad is not ready. AdUnitId={adUnitId}");
+                    finalResult = RewardGrantFlowResult.Build(
                         RewardGrantFlowResultType.AdNotReady,
                         errorCode: "AD_NOT_READY",
                         errorMessage: "Ad is not ready.");
+                    return finalResult;
+                }
+
+                if (_config.UseServerConfirmedGrantFlow)
+                {
+                    Debug.Log($"[AdsRewardFlow] Intent create started. RewardId={_config.RewardId}");
+                    var createResult = await _rewardIntentService.CreateAsync(_config.RewardId, ct);
+                    if (!createResult.IsSuccess || string.IsNullOrWhiteSpace(createResult.RewardIntentId))
+                    {
+                        SetState(RewardAdFlowState.Failed);
+                        var isNetworkFailure = IsNetworkCreateFailure(createResult);
+                        var errorCode = isNetworkFailure ? "INTENT_CREATE_NETWORK_ERROR" : "INTENT_CREATE_FAILED";
+                        Debug.LogWarning(
+                            $"[AdsRewardFlow] Intent create failed. Code={createResult.ErrorCode}, Message={createResult.ErrorMessage}, MappedCode={errorCode}");
+                        finalResult = RewardGrantFlowResult.Build(
+                            isNetworkFailure ? RewardGrantFlowResultType.NetworkError : RewardGrantFlowResultType.ServerFailed,
+                            errorCode: errorCode,
+                            errorMessage: createResult.ErrorMessage);
+                        return finalResult;
+                    }
+
+                    var rewardIntentId = createResult.RewardIntentId;
+                    Debug.Log($"[AdsRewardFlow] Intent create success. RewardIntentId={rewardIntentId}");
+
+                    SetState(RewardAdFlowState.ShowingAd);
+                    Debug.Log($"[AdsRewardFlow] Ad show started. AdUnitId={adUnitId}, RewardIntentId={rewardIntentId}");
+                    showWasAttempted = true;
+                    var showResult = await _adsProvider.ShowAsync(adUnitId, rewardIntentId, ct);
+                    switch (showResult)
+                    {
+                        case RewardedShowResult.Completed:
+                            Debug.Log("[AdsRewardFlow] Ad show completed.");
+                            finalResult = await WaitForIntentConfirmationAsync(rewardIntentId, ct);
+                            return finalResult;
+
+                        case RewardedShowResult.Canceled:
+                            Debug.Log("[AdsRewardFlow] Ad show canceled.");
+                            finalResult = RewardGrantFlowResult.Build(RewardGrantFlowResultType.AdCanceled);
+                            return finalResult;
+
+                        case RewardedShowResult.Failed:
+                        default:
+                            Debug.LogWarning("[AdsRewardFlow] Ad show failed.");
+                            SetState(RewardAdFlowState.Failed);
+                            finalResult = RewardGrantFlowResult.Build(
+                                RewardGrantFlowResultType.AdFailed,
+                                errorCode: "AD_SHOW_FAILED",
+                                errorMessage: "Failed to show ad.");
+                            return finalResult;
+                    }
                 }
 
                 SetState(RewardAdFlowState.ShowingAd);
-                Debug.Log("[RewardAds] Ad show started.");
+                Debug.Log($"[AdsRewardFlow] Ad show started (legacy). AdUnitId={adUnitId}");
                 showWasAttempted = true;
-                var showResult = await _adsProvider.ShowAsync(adUnitId, ct);
-                switch (showResult)
+                var legacyShowResult = await _adsProvider.ShowAsync(adUnitId, string.Empty, ct);
+                switch (legacyShowResult)
                 {
                     case RewardedShowResult.Completed:
-                        Debug.Log("[RewardAds] Ad show completed.");
-                        return await ExecuteGrantRequestAsync(ct);
+                        Debug.Log("[AdsRewardFlow] Ad show completed (legacy).");
+                        finalResult = await ExecuteLegacyGrantRequestAsync(ct);
+                        return finalResult;
 
                     case RewardedShowResult.Canceled:
-                        Debug.Log("[RewardAds] Ad show canceled.");
-                        return RewardGrantFlowResult.Build(RewardGrantFlowResultType.AdCanceled);
+                        Debug.Log("[AdsRewardFlow] Ad show canceled (legacy).");
+                        finalResult = RewardGrantFlowResult.Build(RewardGrantFlowResultType.AdCanceled);
+                        return finalResult;
 
                     case RewardedShowResult.Failed:
                     default:
-                        Debug.LogWarning("[RewardAds] Ad show failed.");
+                        Debug.LogWarning("[AdsRewardFlow] Ad show failed (legacy).");
                         SetState(RewardAdFlowState.Failed);
-                        return RewardGrantFlowResult.Build(
+                        finalResult = RewardGrantFlowResult.Build(
                             RewardGrantFlowResultType.AdFailed,
                             errorCode: "AD_SHOW_FAILED",
                             errorMessage: "Failed to show ad.");
+                        return finalResult;
                 }
             }
             catch (OperationCanceledException)
@@ -132,12 +193,13 @@ namespace Rewards
             }
             catch (Exception exception)
             {
-                Debug.LogError($"[RewardAds] Flow failed. {exception.Message}");
+                Debug.LogError($"[AdsRewardFlow] Flow failed. {exception.Message}");
                 SetState(RewardAdFlowState.Failed);
-                return RewardGrantFlowResult.Build(
+                finalResult = RewardGrantFlowResult.Build(
                     RewardGrantFlowResultType.UnknownError,
                     errorCode: "FLOW_ERROR",
                     errorMessage: exception.Message);
+                return finalResult;
             }
             finally
             {
@@ -149,6 +211,11 @@ namespace Rewards
                 else if (State == RewardAdFlowState.Success)
                 {
                     SetState(RewardAdFlowState.Ready);
+                }
+
+                if (finalResult != null)
+                {
+                    Debug.Log($"[AdsRewardFlow] Final flow result. Type={finalResult.Type}, ErrorCode={finalResult.ErrorCode}, ErrorMessage={finalResult.ErrorMessage}, Balance={finalResult.NewCrystalsBalance}");
                 }
             }
         }
@@ -164,20 +231,20 @@ namespace Rewards
             await InitializeAsync(ct);
         }
 
-        private async UniTask<RewardGrantFlowResult> ExecuteGrantRequestAsync(CancellationToken ct)
+        private async UniTask<RewardGrantFlowResult> ExecuteLegacyGrantRequestAsync(CancellationToken ct)
         {
             SetState(RewardAdFlowState.WaitingServerGrant);
-            Debug.Log($"[RewardAds] Grant request started. RewardId={_config.RewardId}");
+            Debug.Log($"[AdsRewardFlow] Legacy grant request started. RewardId={_config.RewardId}");
 
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            timeoutCts.CancelAfter(TimeSpan.FromSeconds(_config.GetGrantTimeoutSecondsOrDefault(DefaultGrantTimeoutSeconds)));
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(_config.GetGrantTimeoutSecondsOrDefault(DefaultLegacyGrantTimeoutSeconds)));
 
             try
             {
                 RewardGrantDetailedResult grantResult = await _rewardGrantService.TryGrantDetailedAsync(_config.RewardId, timeoutCts.Token);
                 if (grantResult.Success)
                 {
-                    Debug.Log("[RewardAds] Grant request success.");
+                    Debug.Log("[AdsRewardFlow] Legacy grant request success.");
                     SetState(RewardAdFlowState.Success);
                     return RewardGrantFlowResult.Build(
                         RewardGrantFlowResultType.Success,
@@ -185,7 +252,7 @@ namespace Rewards
                 }
 
                 Debug.LogWarning(
-                    $"[RewardAds] Grant request failed. FailureType={grantResult.FailureType}, Code={grantResult.ErrorCode}, Message={grantResult.ErrorMessage}");
+                    $"[AdsRewardFlow] Legacy grant request failed. FailureType={grantResult.FailureType}, Code={grantResult.ErrorCode}, Message={grantResult.ErrorMessage}");
 
                 SetState(RewardAdFlowState.Failed);
                 return grantResult.FailureType == RewardGrantFailureType.Network
@@ -200,12 +267,105 @@ namespace Rewards
             }
             catch (OperationCanceledException) when (!ct.IsCancellationRequested)
             {
-                Debug.LogWarning("[RewardAds] Grant request timed out.");
+                Debug.LogWarning("[AdsRewardFlow] Legacy grant request timed out.");
                 SetState(RewardAdFlowState.Failed);
                 return RewardGrantFlowResult.Build(
                     RewardGrantFlowResultType.NetworkError,
                     errorCode: "TIMEOUT",
                     errorMessage: "Grant request timed out.");
+            }
+        }
+
+        private async UniTask<RewardGrantFlowResult> WaitForIntentConfirmationAsync(string rewardIntentId, CancellationToken ct)
+        {
+            SetState(RewardAdFlowState.WaitingServerGrant);
+            Debug.Log($"[AdsRewardFlow] Waiting for reward confirmation started. RewardIntentId={rewardIntentId}");
+
+            var timeoutSeconds = _config.GetGrantConfirmationTimeoutSecondsOrDefault(DefaultGrantConfirmationTimeoutSeconds);
+            var pollingIntervalSeconds = _config.GetGrantPollingIntervalSecondsOrDefault(DefaultGrantPollingIntervalSeconds);
+            var hadNetworkError = false;
+            var receivedAnyStatus = false;
+
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+
+            try
+            {
+                while (true)
+                {
+                    timeoutCts.Token.ThrowIfCancellationRequested();
+
+                    try
+                    {
+                        var statusResult = await _rewardIntentService.GetStatusAsync(rewardIntentId, timeoutCts.Token);
+                        receivedAnyStatus = true;
+                        var status = statusResult?.Status ?? RewardIntentStatus.Unknown;
+
+                        if (_config.EnableIntentPollingLogs || status != RewardIntentStatus.Pending)
+                        {
+                            Debug.Log($"[AdsRewardFlow] Intent status received. RewardIntentId={rewardIntentId}, Status={status}, ErrorCode={statusResult?.ErrorCode}");
+                        }
+
+                        switch (status)
+                        {
+                            case RewardIntentStatus.Fulfilled:
+                                SetState(RewardAdFlowState.Success);
+                                return RewardGrantFlowResult.Build(
+                                    RewardGrantFlowResultType.Success,
+                                    newCrystalsBalance: statusResult?.NewCrystalsBalance);
+
+                            case RewardIntentStatus.Rejected:
+                                SetState(RewardAdFlowState.Failed);
+                                return RewardGrantFlowResult.Build(
+                                    RewardGrantFlowResultType.ServerFailed,
+                                    errorCode: "REWARD_REJECTED",
+                                    errorMessage: statusResult?.ErrorMessage);
+
+                            case RewardIntentStatus.Expired:
+                                SetState(RewardAdFlowState.Failed);
+                                return RewardGrantFlowResult.Build(
+                                    RewardGrantFlowResultType.ServerFailed,
+                                    errorCode: "REWARD_EXPIRED",
+                                    errorMessage: statusResult?.ErrorMessage);
+
+                            case RewardIntentStatus.Failed:
+                                SetState(RewardAdFlowState.Failed);
+                                return RewardGrantFlowResult.Build(
+                                    RewardGrantFlowResultType.ServerFailed,
+                                    errorCode: "REWARD_CONFIRM_FAILED",
+                                    errorMessage: statusResult?.ErrorMessage);
+
+                            case RewardIntentStatus.Pending:
+                            case RewardIntentStatus.Unknown:
+                            default:
+                                break;
+                        }
+                    }
+                    catch (WebClientNetworkException exception)
+                    {
+                        hadNetworkError = true;
+                        Debug.LogWarning($"[AdsRewardFlow] Reward confirmation polling network error. RewardIntentId={rewardIntentId}, Reason={exception.Message}");
+                    }
+                    catch (WebClientException exception)
+                    {
+                        hadNetworkError = true;
+                        Debug.LogWarning($"[AdsRewardFlow] Reward confirmation polling transient error. RewardIntentId={rewardIntentId}, Reason={exception.Message}");
+                    }
+
+                    await UniTask.Delay(TimeSpan.FromSeconds(pollingIntervalSeconds), cancellationToken: timeoutCts.Token);
+                }
+            }
+            catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+            {
+                SetState(RewardAdFlowState.Failed);
+                var timeoutErrorCode = hadNetworkError && !receivedAnyStatus
+                    ? "REWARD_CONFIRM_NETWORK_ERROR"
+                    : "REWARD_CONFIRM_TIMEOUT";
+                Debug.LogWarning($"[AdsRewardFlow] Reward confirmation wait ended by timeout. RewardIntentId={rewardIntentId}, ErrorCode={timeoutErrorCode}");
+                return RewardGrantFlowResult.Build(
+                    RewardGrantFlowResultType.ServerFailed,
+                    errorCode: timeoutErrorCode,
+                    errorMessage: "Reward confirmation timed out.");
             }
         }
 
@@ -225,11 +385,11 @@ namespace Rewards
         private async UniTask<bool> TryPreloadWithRetryAsync(string adUnitId, CancellationToken ct)
         {
             SetState(RewardAdFlowState.LoadingAd);
-            Debug.Log($"[RewardAds] Ad load started. AdUnitId={adUnitId}");
+            Debug.Log($"[AdsRewardFlow] Ad load started. AdUnitId={adUnitId}");
             try
             {
                 await _adsProvider.PreloadAsync(adUnitId, ct);
-                Debug.Log($"[RewardAds] Ad load success. AdUnitId={adUnitId}");
+                Debug.Log($"[AdsRewardFlow] Ad load success. AdUnitId={adUnitId}");
                 return _adsProvider.IsAdReady(adUnitId);
             }
             catch (OperationCanceledException)
@@ -238,18 +398,18 @@ namespace Rewards
             }
             catch (Exception firstException)
             {
-                Debug.LogWarning($"[RewardAds] Ad load failed. AdUnitId={adUnitId}, Reason={firstException.Message}");
+                Debug.LogWarning($"[AdsRewardFlow] Ad load failed. AdUnitId={adUnitId}, Reason={firstException.Message}");
             }
 
             try
             {
                 await UniTask.Delay(TimeSpan.FromSeconds(PreloadRetryDelaySeconds), cancellationToken: ct);
-                Debug.Log($"[RewardAds] Ad load retry started. AdUnitId={adUnitId}");
+                Debug.Log($"[AdsRewardFlow] Ad load retry started. AdUnitId={adUnitId}");
                 await _adsProvider.PreloadAsync(adUnitId, ct);
                 var ready = _adsProvider.IsAdReady(adUnitId);
                 Debug.Log(ready
-                    ? $"[RewardAds] Ad load retry success. AdUnitId={adUnitId}"
-                    : $"[RewardAds] Ad load retry completed but ad is not ready. AdUnitId={adUnitId}");
+                    ? $"[AdsRewardFlow] Ad load retry success. AdUnitId={adUnitId}"
+                    : $"[AdsRewardFlow] Ad load retry completed but ad is not ready. AdUnitId={adUnitId}");
                 return ready;
             }
             catch (OperationCanceledException)
@@ -258,9 +418,21 @@ namespace Rewards
             }
             catch (Exception secondException)
             {
-                Debug.LogError($"[RewardAds] Ad load retry failed. AdUnitId={adUnitId}, Reason={secondException.Message}");
+                Debug.LogError($"[AdsRewardFlow] Ad load retry failed. AdUnitId={adUnitId}, Reason={secondException.Message}");
                 return false;
             }
+        }
+
+        private static bool IsNetworkCreateFailure(CreateRewardIntentResult createResult)
+        {
+            if (createResult == null)
+            {
+                return false;
+            }
+
+            return string.Equals(createResult.ErrorCode, "NETWORK_ERROR", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(createResult.ErrorCode, "TIMEOUT", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(createResult.ErrorCode, "REWARD_CONFIRM_NETWORK_ERROR", StringComparison.OrdinalIgnoreCase);
         }
 
         private string GetAdUnitId()

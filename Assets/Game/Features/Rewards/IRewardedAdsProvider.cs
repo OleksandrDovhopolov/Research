@@ -10,6 +10,6 @@ namespace Rewards
 
         UniTask InitializeAsync(CancellationToken ct = default);
         UniTask PreloadAsync(string adUnitId, CancellationToken ct = default);
-        UniTask<RewardedShowResult> ShowAsync(string adUnitId, CancellationToken ct = default);
+        UniTask<RewardedShowResult> ShowAsync(string adUnitId, string rewardIntentId, CancellationToken ct = default);
     }
 }

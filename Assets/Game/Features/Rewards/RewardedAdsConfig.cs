@@ -27,7 +27,11 @@ namespace Rewards
         [Space, Header("General")]
         public string RewardId = "Gems";
         public bool TestMode = true;
+        public bool UseServerConfirmedGrantFlow;
         public int GrantTimeoutSeconds = 15;
+        public int GrantConfirmationTimeoutSeconds = 20;
+        public float GrantPollingIntervalSeconds = 1f;
+        public bool EnableIntentPollingLogs = true;
         public MockAdsOutcome MockOutcome = MockAdsOutcome.Success;
         public bool UseRandomMockDelay = true;
         public Vector2 MockDelayRangeSeconds = new(1f, 2f);
@@ -84,6 +88,17 @@ namespace Rewards
         public int GetGrantTimeoutSecondsOrDefault(int fallback)
         {
             return GrantTimeoutSeconds > 0 ? GrantTimeoutSeconds : fallback;
+        }
+
+        public int GetGrantConfirmationTimeoutSecondsOrDefault(int fallback)
+        {
+            return GrantConfirmationTimeoutSeconds > 0 ? GrantConfirmationTimeoutSeconds : fallback;
+        }
+
+        public float GetGrantPollingIntervalSecondsOrDefault(float fallback)
+        {
+            var interval = GrantPollingIntervalSeconds > 0f ? GrantPollingIntervalSeconds : fallback;
+            return Mathf.Max(0.1f, interval);
         }
 
         public float GetMockDelaySeconds()
