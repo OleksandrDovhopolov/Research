@@ -326,6 +326,7 @@ namespace Rewards
 
                                     if (_uiManager != null)
                                     {
+                                        Debug.Log($"[AdsRewardFlow] Intent fulfilled. Show reward window");
                                         //TODO "Gems" is hard code. change response from server side with data
                                         var rewardArgs = new RewardsWindowArgs("Gems");
                                         _uiManager.Show<RewardsWindowController>(rewardArgs);
