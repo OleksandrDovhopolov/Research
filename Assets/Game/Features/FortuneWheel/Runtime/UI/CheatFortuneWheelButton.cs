@@ -59,6 +59,7 @@ namespace FortuneWheel
 
         private async UniTask OpenCheatsPanelAsync(CancellationToken ct)
         {
+            IReadOnlyList<FortuneWheelRewardServerItem> rewards = await _fortuneWheelServerService.GetRewardsAsync(ct);
             try
             {
                 ct.ThrowIfCancellationRequested();
@@ -84,7 +85,6 @@ namespace FortuneWheel
 
                 var data = await _fortuneWheelServerService.GetDataSync(ct);
 
-                IReadOnlyList<FortuneWheelRewardServerItem> rewards = await _fortuneWheelServerService.GetRewardsAsync(ct);
                 if (rewards == null || rewards.Count == 0)
                 {
                     Debug.LogWarning($"{LogPrefix} Rewards list is empty.");

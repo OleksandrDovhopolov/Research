@@ -60,13 +60,16 @@ namespace FortuneWheel
                 var availableSpins = Mathf.Max(0, response.availableSpins);
                 var updatedAt = Math.Max(0L, response.updatedAt);
                 var nextUpdateAt = Math.Max(0L, response.nextUpdateAt);
+                var adSpinAvailable = response.adSpinAvailable;
                 Debug.Log(
                     $"{LogPrefix} [{operationId}] GetData parsed. PlayerId={MaskPlayerId(playerId)}, " +
                     $"RawAvailableSpins={response.availableSpins}, RawUpdatedAt={response.updatedAt}, RawNextUpdateAt={response.nextUpdateAt}, " +
-                    $"NormalizedAvailableSpins={availableSpins}, NormalizedUpdatedAt={updatedAt}, NormalizedNextUpdateAt={nextUpdateAt}");
+                    $"RawAdSpinAvailable={response.adSpinAvailable}, NormalizedAvailableSpins={availableSpins}, " +
+                    $"NormalizedUpdatedAt={updatedAt}, NormalizedNextUpdateAt={nextUpdateAt}, " +
+                    $"NormalizedAdSpinAvailable={adSpinAvailable}");
                 //await TryPersistCachedDataAsync(availableSpins, updatedAt, "GetData", operationId, ct);
 
-                return new FortuneWheelDataServerItem(availableSpins, updatedAt, nextUpdateAt);
+                return new FortuneWheelDataServerItem(availableSpins, updatedAt, nextUpdateAt, adSpinAvailable);
             }
             catch (OperationCanceledException)
             {
@@ -77,12 +80,13 @@ namespace FortuneWheel
                 var fallbackSpins = Mathf.Max(0, cachedData.AvailableSpins);
                 var fallbackUpdatedAt = Math.Max(0L, cachedData.UpdatedAt);
                 const long fallbackNextUpdateAt = 0L;
+                const bool fallbackAdSpinAvailable = false;
                 var verificationUrl = BuildWheelDataUrl(playerId);
                 Debug.LogWarning(
                     $"{LogPrefix} [{operationId}] GetData failed. Falling back to cached data. PlayerId={MaskPlayerId(playerId)}, VerificationUrl={verificationUrl}, " +
                     $"CachedAvailableSpins={fallbackSpins}, CachedUpdatedAt={fallbackUpdatedAt}, " +
-                    $"FallbackNextUpdateAt={fallbackNextUpdateAt} (server-only field), Reason={exception}");
-                return new FortuneWheelDataServerItem(fallbackSpins, fallbackUpdatedAt, fallbackNextUpdateAt);
+                    $"FallbackNextUpdateAt={fallbackNextUpdateAt} (server-only field), FallbackAdSpinAvailable={fallbackAdSpinAvailable}, Reason={exception}");
+                return new FortuneWheelDataServerItem(fallbackSpins, fallbackUpdatedAt, fallbackNextUpdateAt, fallbackAdSpinAvailable);
             }
         }
         
@@ -150,12 +154,15 @@ namespace FortuneWheel
                 var availableSpins = Mathf.Max(0, response.availableSpins);
                 var updatedAt = Math.Max(0L, response.updatedAt);
                 var nextUpdateAt = Math.Max(0L, response.nextUpdateAt);
+                var adSpinAvailable = response.adSpinAvailable;
                 var cachedBeforeSpins = Mathf.Max(0, cachedDataBefore?.AvailableSpins ?? 0);
                 var spinsDeltaVsCache = availableSpins - cachedBeforeSpins;
                 Debug.Log(
                     $"{LogPrefix} [{operationId}] Spin parsed. PlayerId={MaskPlayerId(playerId)}, RewardId={response.rewardId}, " +
                     $"RawAvailableSpins={response.availableSpins}, RawUpdatedAt={response.updatedAt}, RawNextUpdateAt={response.nextUpdateAt}, " +
-                    $"NormalizedAvailableSpins={availableSpins}, NormalizedUpdatedAt={updatedAt}, NormalizedNextUpdateAt={nextUpdateAt}, " +
+                    $"RawAdSpinAvailable={response.adSpinAvailable}, NormalizedAvailableSpins={availableSpins}, " +
+                    $"NormalizedUpdatedAt={updatedAt}, NormalizedNextUpdateAt={nextUpdateAt}, " +
+                    $"NormalizedAdSpinAvailable={adSpinAvailable}, " +
                     $"CachedBeforeSpins={cachedBeforeSpins}, SpinsDeltaVsCache={spinsDeltaVsCache}");
 
                 if (spinsDeltaVsCache >= 0)
@@ -188,7 +195,8 @@ namespace FortuneWheel
                     response.rewardId,
                     availableSpins,
                     updatedAt,
-                    nextUpdateAt);
+                    nextUpdateAt,
+                    adSpinAvailable);
             }
             catch (OperationCanceledException)
             {
@@ -337,6 +345,7 @@ namespace FortuneWheel
             public int availableSpins;
             public long updatedAt;
             public long nextUpdateAt;
+            public bool adSpinAvailable;
             public GrantRewardResponse rewardGrant;
         }
 
@@ -346,6 +355,7 @@ namespace FortuneWheel
             public int availableSpins;
             public long updatedAt;
             public long nextUpdateAt;
+            public bool adSpinAvailable;
         }
     }
 }

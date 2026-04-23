@@ -27,12 +27,14 @@ namespace FortuneWheel
         public int AvailableSpins { get; }
         public long UpdatedAt { get; }
         public long NextUpdateAt { get; }
+        public bool AdSpinAvailable { get; }
 
-        public FortuneWheelDataServerItem(int availableSpins, long updatedAt, long nextUpdateAt)
+        public FortuneWheelDataServerItem(int availableSpins, long updatedAt, long nextUpdateAt, bool adSpinAvailable)
         {
             AvailableSpins = availableSpins;
             UpdatedAt = updatedAt;
             NextUpdateAt = nextUpdateAt;
+            AdSpinAvailable = adSpinAvailable;
         }
     }
     
@@ -42,17 +44,20 @@ namespace FortuneWheel
         public int AvailableSpins { get; }
         public long UpdatedAt { get; }
         public long NextUpdateAt { get; }
+        public bool AdSpinAvailable { get; }
 
         public FortuneWheelSpinResult(
             string rewardId,
             int availableSpins,
             long updatedAt,
-            long nextUpdateAt)
+            long nextUpdateAt,
+            bool adSpinAvailable)
         {
             RewardId = rewardId;
             AvailableSpins = availableSpins;
             UpdatedAt = updatedAt;
             NextUpdateAt = nextUpdateAt;
+            AdSpinAvailable = adSpinAvailable;
         }
     }
 }

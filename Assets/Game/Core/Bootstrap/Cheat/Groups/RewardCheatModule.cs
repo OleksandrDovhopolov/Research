@@ -10,6 +10,7 @@ namespace Game.Cheat
     public class RewardCheatModule : ICheatsModule
     {
         private const string RewardsGroup = "Rewards";
+        private const string AdSpinRewardId = "fortune_wheel_ad_spin";
 
         private readonly UIManager _uiManager;
         private readonly RewardSpecsConfigSO _rewardSpecsConfigSo;
@@ -31,6 +32,8 @@ namespace Game.Cheat
             var addedRewardIds = new HashSet<string>(StringComparer.Ordinal);
             foreach (var rewardSpec in _rewardSpecsConfigSo.RewardSpecs)
             {
+                if (rewardSpec?.RewardId == AdSpinRewardId) continue;
+                
                 var rewardId = rewardSpec?.RewardId;
                 if (string.IsNullOrWhiteSpace(rewardId) || !addedRewardIds.Add(rewardId))
                 {

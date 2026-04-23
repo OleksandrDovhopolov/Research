@@ -55,12 +55,12 @@ namespace FortuneWheel
 
         [Header("Spin")]
         [SerializeField] private Button _spinButton;
+        [SerializeField] private Button _spinAdButton;
         [SerializeField] private RectTransform _wheelRoot;
         [SerializeField] private float _spinDuration = 4f;
         [SerializeField] private int _spinFullTurns = 4;
 
         [Header("Close Lock")]
-        //[SerializeField] private Button[] _closeButtonsToBlock;
         [SerializeField] private GameObject _clickLocker;
 
         [Header("Sectors")]
@@ -69,15 +69,14 @@ namespace FortuneWheel
         private Tween _spinTween;
 
         public event Action SpinClick;
+        public event Action SpinAdClick;
 
         protected override void Awake()
         {
             base.Awake();
 
-            if (_spinButton != null)
-            {
-                _spinButton.onClick.AddListener(HandleSpinClick);
-            }
+            _spinButton.onClick.AddListener(HandleSpinClick);
+            _spinAdButton.onClick.AddListener(HandleSpinAdClick);
         }
 
         public void SetData(FortuneWheelArgs args)
@@ -111,9 +110,23 @@ namespace FortuneWheel
 
         public void SetSpinInteractable(bool isInteractable)
         {
+            SetSpinButtonInteractable(isInteractable);
+            SetSpinAdButtonInteractable(isInteractable);
+        }
+
+        public void SetSpinButtonInteractable(bool isInteractable)
+        {
             if (_spinButton != null)
             {
                 _spinButton.interactable = isInteractable;
+            }
+        }
+
+        public void SetSpinAdButtonInteractable(bool isInteractable)
+        {
+            if (_spinAdButton != null)
+            {
+                _spinAdButton.interactable = isInteractable;
             }
         }
 
@@ -176,10 +189,8 @@ namespace FortuneWheel
 
         protected override void OnDestroy()
         {
-            if (_spinButton != null)
-            {
-                _spinButton.onClick.RemoveListener(HandleSpinClick);
-            }
+            _spinButton.onClick.RemoveListener(HandleSpinClick);
+            _spinAdButton.onClick.RemoveListener(HandleSpinAdClick);
 
             StopSpinAnimation();
             base.OnDestroy();
@@ -229,6 +240,11 @@ namespace FortuneWheel
         private void HandleSpinClick()
         {
             SpinClick?.Invoke();
+        }
+
+        private void HandleSpinAdClick()
+        {
+            SpinAdClick?.Invoke();
         }
 
         private void UpdateTimerLabel(TimeSpan remainingTime)

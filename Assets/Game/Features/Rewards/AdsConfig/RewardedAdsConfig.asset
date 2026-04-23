@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: RewardedAdsConfig
   m_EditorClassIdentifier: 
   Config:
-    Mode: 2
+    Mode: 0
     AndroidGameId: 6095471
     IosGameId: 6095470
     AndroidRewardedAdUnitId: Rewarded_Android

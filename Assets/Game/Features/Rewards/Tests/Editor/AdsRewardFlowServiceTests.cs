@@ -54,6 +54,61 @@ namespace Rewards.Tests.Editor
         }
 
         [Test]
+        public void TryRunFlowAsync_WithCustomRewardId_UsesCustomRewardIdInLegacyFlow()
+        {
+            var provider = new StubRewardedAdsProvider
+            {
+                IsInitializedValue = true,
+                IsReadyValue = true,
+                ShowResult = RewardedShowResult.Completed
+            };
+            var grantService = new StubRewardGrantService
+            {
+                DetailedResult = RewardGrantDetailedResult.BuildSuccess("fortune_wheel_ad_spin")
+            };
+            var intentService = new StubRewardIntentService();
+            var service = CreateService(provider, grantService, intentService, useServerConfirmedGrantFlow: false);
+
+            var result = service
+                .TryRunFlowAsync("fortune_wheel_ad_spin", false, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.That(result.Type, Is.EqualTo(RewardGrantFlowResultType.Success));
+            Assert.That(grantService.LastTryGrantRewardId, Is.EqualTo("fortune_wheel_ad_spin"));
+        }
+
+        [Test]
+        public void TryRunFlowAsync_WithCustomRewardId_UsesCustomRewardIdInServerConfirmedFlow()
+        {
+            var provider = new StubRewardedAdsProvider
+            {
+                IsInitializedValue = true,
+                IsReadyValue = true,
+                ShowResult = RewardedShowResult.Completed
+            };
+            var grantService = new StubRewardGrantService();
+            var intentService = new StubRewardIntentService
+            {
+                CreateResult = new CreateRewardIntentResult
+                {
+                    IsSuccess = true,
+                    RewardIntentId = "ri_custom"
+                }
+            };
+            intentService.EnqueueStatus(new GetRewardIntentStatusResult { Status = RewardIntentStatus.Fulfilled });
+
+            var service = CreateService(provider, grantService, intentService, useServerConfirmedGrantFlow: true);
+            var result = service
+                .TryRunFlowAsync("fortune_wheel_ad_spin", false, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.That(result.Type, Is.EqualTo(RewardGrantFlowResultType.Success));
+            Assert.That(intentService.LastCreateRewardId, Is.EqualTo("fortune_wheel_ad_spin"));
+        }
+
+        [Test]
         public void TryRunFlowAsync_ServerConfirmed_ReturnsSuccess_WhenIntentFulfilled()
         {
             var provider = new StubRewardedAdsProvider
@@ -466,6 +521,7 @@ namespace Rewards.Tests.Editor
         {
             public int DelayMs { get; set; }
             public int TryGrantDetailedCalls { get; private set; }
+            public string LastTryGrantRewardId { get; private set; }
             public RewardGrantDetailedResult DetailedResult { get; set; } =
                 RewardGrantDetailedResult.BuildSuccess("Gems");
 
@@ -485,6 +541,7 @@ namespace Rewards.Tests.Editor
             {
                 ct.ThrowIfCancellationRequested();
                 TryGrantDetailedCalls++;
+                LastTryGrantRewardId = rewardId;
                 if (DelayMs > 0)
                 {
                     await UniTask.Delay(TimeSpan.FromMilliseconds(DelayMs), cancellationToken: ct);
@@ -500,6 +557,7 @@ namespace Rewards.Tests.Editor
 
             public int CreateCalls { get; private set; }
             public int GetStatusCalls { get; private set; }
+            public string LastCreateRewardId { get; private set; }
             public bool AlwaysPending { get; set; }
             public Exception PollingException { get; set; }
             public CreateRewardIntentResult CreateResult { get; set; } = new()
@@ -512,6 +570,7 @@ namespace Rewards.Tests.Editor
             {
                 ct.ThrowIfCancellationRequested();
                 CreateCalls++;
+                LastCreateRewardId = rewardId;
                 return UniTask.FromResult(CreateResult);
             }
 

@@ -34,7 +34,7 @@ namespace Rewards
             IRewardPlayerStateSyncService rewardPlayerStateSyncService,
             RewardedAdsConfigSO configSo)
         {
-            _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
+            _uiManager = uiManager;
             _adsProvider = adsProvider ?? throw new ArgumentNullException(nameof(adsProvider));
             _rewardGrantService = rewardGrantService ?? throw new ArgumentNullException(nameof(rewardGrantService));
             _rewardIntentService = rewardIntentService ?? throw new ArgumentNullException(nameof(rewardIntentService));
@@ -91,7 +91,15 @@ namespace Rewards
             }
         }
 
-        public async UniTask<RewardGrantFlowResult> TryRunFlowAsync(CancellationToken ct = default)
+        public UniTask<RewardGrantFlowResult> TryRunFlowAsync(CancellationToken ct = default)
+        {
+            return TryRunFlowAsync(_config.RewardId, true, ct);
+        }
+
+        public async UniTask<RewardGrantFlowResult> TryRunFlowAsync(
+            string rewardId,
+            bool showRewardWindowOnSuccess,
+            CancellationToken ct = default)
         {
             if (Interlocked.CompareExchange(ref _isFlowInProgress, 1, 0) != 0)
             {
@@ -106,6 +114,16 @@ namespace Rewards
 
             try
             {
+                if (string.IsNullOrWhiteSpace(rewardId))
+                {
+                    SetState(RewardAdFlowState.Failed);
+                    finalResult = RewardGrantFlowResult.Build(
+                        RewardGrantFlowResultType.ServerFailed,
+                        errorCode: "EMPTY_REWARD_ID",
+                        errorMessage: "Reward id is empty.");
+                    return finalResult;
+                }
+
                 await EnsureInitializedAsync(ct);
 
                 var adUnitId = GetAdUnitId();
@@ -121,8 +139,8 @@ namespace Rewards
 
                 if (_config.UseServerConfirmedGrantFlow)
                 {
-                    Debug.Log($"[AdsRewardFlow] Intent create started. RewardId={_config.RewardId}");
-                    var createResult = await _rewardIntentService.CreateAsync(_config.RewardId, ct);
+                    Debug.Log($"[AdsRewardFlow] Intent create started. RewardId={rewardId}");
+                    var createResult = await _rewardIntentService.CreateAsync(rewardId, ct);
                     if (!createResult.IsSuccess || string.IsNullOrWhiteSpace(createResult.RewardIntentId))
                     {
                         SetState(RewardAdFlowState.Failed);
@@ -148,7 +166,7 @@ namespace Rewards
                     {
                         case RewardedShowResult.Completed:
                             Debug.Log("[AdsRewardFlow] Ad show completed.");
-                            finalResult = await WaitForIntentConfirmationAsync(rewardIntentId, ct);
+                            finalResult = await WaitForIntentConfirmationAsync(rewardIntentId, rewardId, showRewardWindowOnSuccess, ct);
                             return finalResult;
 
                         case RewardedShowResult.Canceled:
@@ -176,7 +194,7 @@ namespace Rewards
                 {
                     case RewardedShowResult.Completed:
                         Debug.Log("[AdsRewardFlow] Ad show completed (legacy).");
-                        finalResult = await ExecuteLegacyGrantRequestAsync(ct);
+                        finalResult = await ExecuteLegacyGrantRequestAsync(rewardId, ct);
                         return finalResult;
 
                     case RewardedShowResult.Canceled:
@@ -239,17 +257,17 @@ namespace Rewards
             await InitializeAsync(ct);
         }
 
-        private async UniTask<RewardGrantFlowResult> ExecuteLegacyGrantRequestAsync(CancellationToken ct)
+        private async UniTask<RewardGrantFlowResult> ExecuteLegacyGrantRequestAsync(string rewardId, CancellationToken ct)
         {
             SetState(RewardAdFlowState.WaitingServerGrant);
-            Debug.Log($"[AdsRewardFlow] Legacy grant request started. RewardId={_config.RewardId}");
+            Debug.Log($"[AdsRewardFlow] Legacy grant request started. RewardId={rewardId}");
 
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             timeoutCts.CancelAfter(TimeSpan.FromSeconds(_config.GetGrantTimeoutSecondsOrDefault(DefaultLegacyGrantTimeoutSeconds)));
 
             try
             {
-                var grantResult = await _rewardGrantService.TryGrantDetailedAsync(_config.RewardId, timeoutCts.Token);
+                var grantResult = await _rewardGrantService.TryGrantDetailedAsync(rewardId, timeoutCts.Token);
                 if (grantResult.Success)
                 {
                     Debug.Log("[AdsRewardFlow] Legacy grant request success.");
@@ -282,7 +300,11 @@ namespace Rewards
             }
         }
 
-        private async UniTask<RewardGrantFlowResult> WaitForIntentConfirmationAsync(string rewardIntentId, CancellationToken ct)
+        private async UniTask<RewardGrantFlowResult> WaitForIntentConfirmationAsync(
+            string rewardIntentId,
+            string rewardId,
+            bool showRewardWindowOnSuccess,
+            CancellationToken ct)
         {
             SetState(RewardAdFlowState.WaitingServerGrant);
             Debug.Log($"[AdsRewardFlow] Waiting for reward confirmation started. RewardIntentId={rewardIntentId}");
@@ -318,19 +340,16 @@ namespace Rewards
                                 try
                                 {
                                     Debug.Log($"[AdsRewardFlow] Intent fulfilled. Starting save/global sync. RewardIntentId={rewardIntentId}");
-                                    
-                                    //TODO
+
                                     await _rewardPlayerStateSyncService.SyncFromGlobalSaveAsync(timeoutCts.Token);
 
-                                    if (_uiManager != null)
+                                    if (showRewardWindowOnSuccess && _uiManager != null)
                                     {
                                         Debug.Log($"[AdsRewardFlow] Intent fulfilled. Show reward window");
-                                        //TODO "Gems" is hard code. change response from server side with data
-                                        var rewardArgs = new RewardsWindowArgs("Gems");
+                                        var rewardArgs = new RewardsWindowArgs(rewardId);
                                         _uiManager.Show<RewardsWindowController>(rewardArgs);
                                     }
-                                    
-                                    
+
                                     SetState(RewardAdFlowState.Success);
                                     return RewardGrantFlowResult.Build(RewardGrantFlowResultType.Success);
                                 }
