@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -9,16 +7,11 @@ namespace Rewards
 {
     public sealed class RewardResponseApplier : IRewardResponseApplier
     {
-        private readonly IReadOnlyList<IPlayerStateSnapshotHandler> _snapshotHandlers;
+        private readonly IPlayerStateSnapshotApplier _snapshotApplier;
 
-        public RewardResponseApplier(IEnumerable<IPlayerStateSnapshotHandler> snapshotHandlers)
+        public RewardResponseApplier(IPlayerStateSnapshotApplier snapshotApplier)
         {
-            if (snapshotHandlers == null)
-            {
-                throw new ArgumentNullException(nameof(snapshotHandlers));
-            }
-
-            _snapshotHandlers = snapshotHandlers.Where(handler => handler != null).ToList();
+            _snapshotApplier = snapshotApplier ?? throw new ArgumentNullException(nameof(snapshotApplier));
         }
 
         public async UniTask<bool> TryApplyAsync(GrantRewardResponse response, CancellationToken ct = default)
@@ -44,11 +37,7 @@ namespace Rewards
                 return false;
             }
 
-            foreach (var snapshotHandler in _snapshotHandlers)
-            {
-                ct.ThrowIfCancellationRequested();
-                await snapshotHandler.ApplyAsync(response.PlayerState, ct);
-            }
+            await _snapshotApplier.ApplyAsync(response.PlayerState, ct);
 
             return true;
         }

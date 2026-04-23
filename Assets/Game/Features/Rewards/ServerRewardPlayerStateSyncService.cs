@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
@@ -9,27 +8,20 @@ using UnityEngine;
 
 namespace Rewards
 {
-    //TODO refactor. the same GET logic in HttpSaveStorage
     public sealed class ServerRewardPlayerStateSyncService : IRewardPlayerStateSyncService
     {
-        private const string SaveGlobalPath = "save/global";
-        private readonly IPlayerIdentityProvider _playerIdentityProvider;
         private readonly IWebClient _webClient;
-        private readonly IReadOnlyList<IPlayerStateSnapshotHandler> _snapshotHandlers;
+        private readonly IPlayerStateSnapshotApplier _snapshotApplier;
+        private readonly IPlayerIdentityProvider _playerIdentityProvider;
 
         public ServerRewardPlayerStateSyncService(
             IPlayerIdentityProvider playerIdentityProvider,
             IWebClient webClient,
-            IEnumerable<IPlayerStateSnapshotHandler> snapshotHandlers)
+            IPlayerStateSnapshotApplier snapshotApplier)
         {
-            _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
             _webClient = webClient ?? throw new ArgumentNullException(nameof(webClient));
-            if (snapshotHandlers == null)
-            {
-                throw new ArgumentNullException(nameof(snapshotHandlers));
-            }
-
-            _snapshotHandlers = snapshotHandlers.Where(handler => handler != null).ToList();
+            _snapshotApplier = snapshotApplier ?? throw new ArgumentNullException(nameof(snapshotApplier));
+            _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
         }
 
         public async UniTask SyncFromGlobalSaveAsync(CancellationToken ct = default)
@@ -41,7 +33,7 @@ namespace Rewards
                 throw new InvalidOperationException("Player id is empty.");
             }
 
-            var requestUrl = $"{SaveGlobalPath}?playerId={Uri.EscapeDataString(playerId)}";
+            var requestUrl = $"{ApiConfig.SaveGlobalPath}?playerId={Uri.EscapeDataString(playerId)}";
             Debug.Log($"[AdsRewardFlow] Save/global sync started. Url={requestUrl}");
             var response = await _webClient.GetAsync<JToken>(requestUrl, ct);
             if (response == null || response.Type is JTokenType.Null or JTokenType.Undefined)
@@ -49,7 +41,7 @@ namespace Rewards
                 throw new InvalidOperationException("Save/global response is empty.");
             }
 
-            var payload = ExtractPayload(response);
+            var payload = SaveGlobalPayloadParser.ExtractPayloadStrict(response);
             if (payload is not JObject payloadObject)
             {
                 throw new InvalidOperationException("Save/global payload is not a JSON object.");
@@ -62,69 +54,9 @@ namespace Rewards
                 throw new InvalidOperationException("Save/global payload does not contain resources or inventory items.");
             }
 
-            foreach (var snapshotHandler in _snapshotHandlers)
-            {
-                ct.ThrowIfCancellationRequested();
-                await snapshotHandler.ApplyAsync(snapshot, ct);
-            }
+            await _snapshotApplier.ApplyAsync(snapshot, ct);
 
             Debug.Log($"[AdsRewardFlow] Save/global sync success. Resources={snapshot.Resources?.Count ?? 0}, InventoryItems={snapshot.InventoryItems?.Count ?? 0}");
-        }
-
-        private static JToken ExtractPayload(JToken response)
-        {
-            if (response.Type == JTokenType.String)
-            {
-                var rawRoot = response.Value<string>();
-                if (string.IsNullOrWhiteSpace(rawRoot))
-                {
-                    throw new InvalidOperationException("Save/global response root string is empty.");
-                }
-
-                try
-                {
-                    return JToken.Parse(rawRoot);
-                }
-                catch (Exception exception)
-                {
-                    throw new InvalidOperationException($"Save/global root string is not valid JSON. {exception.Message}", exception);
-                }
-            }
-
-            if (response is not JObject root)
-            {
-                return response;
-            }
-
-            if (!root.TryGetValue("data", StringComparison.OrdinalIgnoreCase, out var dataToken))
-            {
-                return response;
-            }
-
-            if (dataToken == null || dataToken.Type is JTokenType.Null or JTokenType.Undefined)
-            {
-                throw new InvalidOperationException("Save/global envelope contains empty data field.");
-            }
-
-            if (dataToken.Type == JTokenType.String)
-            {
-                var rawData = dataToken.Value<string>();
-                if (string.IsNullOrWhiteSpace(rawData))
-                {
-                    throw new InvalidOperationException("Save/global envelope contains blank data string.");
-                }
-
-                try
-                {
-                    return JToken.Parse(rawData);
-                }
-                catch (Exception exception)
-                {
-                    throw new InvalidOperationException($"Save/global data string is not valid JSON. {exception.Message}", exception);
-                }
-            }
-
-            return dataToken;
         }
 
         private static PlayerStateSnapshotDto BuildSnapshot(JObject payloadObject)

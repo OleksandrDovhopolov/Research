@@ -66,6 +66,7 @@ namespace Game.Bootstrap
             builder.Register<InventoryRewardHandler>(Lifetime.Singleton).As<IRewardHandler>();
             builder.Register<ResourcePlayerStateSnapshotHandler>(Lifetime.Singleton).As<IPlayerStateSnapshotHandler>();
             builder.Register<InventoryPlayerStateSnapshotHandler>(Lifetime.Singleton).As<IPlayerStateSnapshotHandler>();
+            builder.Register<IPlayerStateSnapshotApplier, PlayerStateSnapshotApplier>(Lifetime.Singleton);
             builder.Register<IRewardResponseApplier, RewardResponseApplier>(Lifetime.Singleton);
             builder.Register<IRewardGrantService, ServerRewardGrantService>(Lifetime.Singleton);
             builder.Register<IRewardIntentService, ServerRewardIntentService>(Lifetime.Singleton);
