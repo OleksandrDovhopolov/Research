@@ -29,6 +29,10 @@ namespace Game.Bootstrap
             {
                 throw new MissingReferenceException($"{nameof(GlobalTimerService)} is not assigned on {nameof(GameInstaller)}.");
             }
+            
+            var rewardSpecsConfig = _rewardSpecsConfigSo != null
+                ? _rewardSpecsConfigSo
+                : ScriptableObject.CreateInstance<RewardSpecsConfigSO>();
 
             // Game Ready Gate
             builder.Register<IGameplayReadyGate, GameplayReadyGate>(Lifetime.Singleton);
@@ -50,7 +54,8 @@ namespace Game.Bootstrap
             builder.RegisterComponentInHierarchy<AnimateCurrency>();
             builder.RegisterInstance<IGlobalTimerService>(_globalTimerService);
             builder.Register<IAnimationService, AnimationService>(Lifetime.Singleton);
-            builder.Register<IInventoryItemCategoryResolver>(_ => new RewardSpecInventoryItemCategoryResolver(_rewardSpecsConfigSo), Lifetime.Singleton);
+            builder.RegisterInstance(rewardSpecsConfig);
+            builder.Register<IInventoryItemCategoryResolver>(_ => new RewardSpecInventoryItemCategoryResolver(rewardSpecsConfig), Lifetime.Singleton);
             
             builder.RegisterInventoryService();
             builder.RegisterCardCollectionImpl();
@@ -70,7 +75,7 @@ namespace Game.Bootstrap
             builder.Register<IRewardGrantService, ServerRewardGrantService>(Lifetime.Singleton);
             builder.Register<IRewardIntentService, ServerRewardIntentService>(Lifetime.Singleton);
             builder.Register<IRewardPlayerStateSyncService, ServerRewardPlayerStateSyncService>(Lifetime.Singleton);
-            builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(_rewardSpecsConfigSo), Lifetime.Singleton);
+            builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(rewardSpecsConfig), Lifetime.Singleton);
 
             var rewardedAdsConfig = _rewardedAdsConfigSo != null
                 ? _rewardedAdsConfigSo
