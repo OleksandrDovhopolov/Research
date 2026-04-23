@@ -197,19 +197,13 @@ namespace CardCollectionImpl
                 return UniTask.FromResult(_grantResult);
             }
 
-            public UniTask<bool> TryApplyGrantResponseAsync(GrantRewardResponse grantResponse, CancellationToken ct = default)
-            {
-                ct.ThrowIfCancellationRequested();
-                return UniTask.FromResult(_grantResult);
-            }
-
             public UniTask<RewardGrantDetailedResult> TryGrantDetailedAsync(string rewardId, CancellationToken ct = default)
             {
                 ct.ThrowIfCancellationRequested();
                 GrantByRewardIdCallsCount++;
                 LastGrantedRewardId = rewardId;
                 var result = _grantResult
-                    ? RewardGrantDetailedResult.BuildSuccess(rewardId, null)
+                    ? RewardGrantDetailedResult.BuildSuccess(rewardId)
                     : RewardGrantDetailedResult.BuildFailure(
                         rewardId,
                         RewardGrantFailureType.Rejected,

@@ -17,21 +17,18 @@ namespace FortuneWheel
         private const string RewardsUrl = "wheel/rewards";
         private const string SpinUrl = "wheel/spin";
 
-        private readonly IRewardSpecProvider _rewardSpecProvider;
-        private readonly IRewardGrantService _rewardGrantService;
+        private readonly IRewardResponseApplier _rewardResponseApplier;
         private readonly IPlayerIdentityProvider _playerIdentityProvider;
         private readonly SaveService _saveService;
         private readonly IWebClient _webClient;
 
         public FortuneWheelServerService(
             IPlayerIdentityProvider playerIdentityProvider, 
-            IRewardGrantService rewardGrantService,
-            IRewardSpecProvider rewardSpecProvider,
+            IRewardResponseApplier rewardResponseApplier,
             SaveService saveService,
             IWebClient webClient)
         {
-            _rewardSpecProvider = rewardSpecProvider ?? throw new ArgumentNullException(nameof(rewardSpecProvider));
-            _rewardGrantService = rewardGrantService ?? throw new ArgumentNullException(nameof(rewardGrantService));
+            _rewardResponseApplier = rewardResponseApplier ?? throw new ArgumentNullException(nameof(rewardResponseApplier));
             _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
             _saveService = saveService ?? throw new ArgumentNullException(nameof(saveService));
             _webClient = webClient ?? throw new ArgumentNullException(nameof(webClient));
@@ -177,7 +174,7 @@ namespace FortuneWheel
                  * --------------------------------------------------
                  */
                 
-                var success = await _rewardGrantService.TryApplyGrantResponseAsync(response.rewardGrant, ct);
+                var success = await _rewardResponseApplier.TryApplyAsync(response.rewardGrant, ct);
                 if (!success)
                 {
                     throw new InvalidOperationException($"Failed to grant reward {response.rewardId}");

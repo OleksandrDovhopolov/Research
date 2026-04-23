@@ -223,7 +223,7 @@ namespace Rewards
 
                 if (finalResult != null)
                 {
-                    Debug.Log($"[AdsRewardFlow] Final flow result. Type={finalResult.Type}, ErrorCode={finalResult.ErrorCode}, ErrorMessage={finalResult.ErrorMessage}, Balance={finalResult.NewCrystalsBalance}");
+                    Debug.Log($"[AdsRewardFlow] Final flow result. Type={finalResult.Type}, ErrorCode={finalResult.ErrorCode}, ErrorMessage={finalResult.ErrorMessage}");
                 }
             }
         }
@@ -249,14 +249,12 @@ namespace Rewards
 
             try
             {
-                RewardGrantDetailedResult grantResult = await _rewardGrantService.TryGrantDetailedAsync(_config.RewardId, timeoutCts.Token);
+                var grantResult = await _rewardGrantService.TryGrantDetailedAsync(_config.RewardId, timeoutCts.Token);
                 if (grantResult.Success)
                 {
                     Debug.Log("[AdsRewardFlow] Legacy grant request success.");
                     SetState(RewardAdFlowState.Success);
-                    return RewardGrantFlowResult.Build(
-                        RewardGrantFlowResultType.Success,
-                        newCrystalsBalance: grantResult.NewCrystalsBalance);
+                    return RewardGrantFlowResult.Build(RewardGrantFlowResultType.Success);
                 }
 
                 Debug.LogWarning(

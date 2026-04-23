@@ -14,20 +14,17 @@ namespace Rewards
     public sealed class RewardGrantFlowResult
     {
         public RewardGrantFlowResultType Type;
-        public int? NewCrystalsBalance;
         public string ErrorCode;
         public string ErrorMessage;
 
         public static RewardGrantFlowResult Build(
             RewardGrantFlowResultType type,
-            int? newCrystalsBalance = null,
             string errorCode = null,
             string errorMessage = null)
         {
             return new RewardGrantFlowResult
             {
                 Type = type,
-                NewCrystalsBalance = newCrystalsBalance,
                 ErrorCode = errorCode,
                 ErrorMessage = errorMessage
             };

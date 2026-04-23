@@ -31,7 +31,10 @@ namespace Rewards.Tests.Editor
                     };
                 }
             };
-            var service = new ServerRewardGrantService(new StubPlayerIdentityProvider("player-1"), webClient, new[] { snapshotHandler });
+            var service = new ServerRewardGrantService(
+                new StubPlayerIdentityProvider("player-1"),
+                webClient,
+                new RewardResponseApplier(new[] { snapshotHandler }));
 
             var result = service.TryGrantAsync("reward_a", CancellationToken.None).GetAwaiter().GetResult();
 
@@ -55,7 +58,10 @@ namespace Rewards.Tests.Editor
                     };
                 }
             };
-            var service = new ServerRewardGrantService(new StubPlayerIdentityProvider("player-1"), webClient, new[] { snapshotHandler });
+            var service = new ServerRewardGrantService(
+                new StubPlayerIdentityProvider("player-1"),
+                webClient,
+                new RewardResponseApplier(new[] { snapshotHandler }));
 
             var result = service.TryGrantAsync("reward_a", CancellationToken.None).GetAwaiter().GetResult();
 
@@ -64,7 +70,7 @@ namespace Rewards.Tests.Editor
         }
 
         [Test]
-        public void ServerRewardGrantService_TryGrantDetailedAsync_ReturnsBalance_WhenResponseSuccessful()
+        public void ServerRewardGrantService_TryGrantDetailedAsync_ReturnsSuccess_WhenResponseSuccessful()
         {
             var snapshotHandler = new StubSnapshotHandler();
             var webClient = new StubWebClient
@@ -82,12 +88,14 @@ namespace Rewards.Tests.Editor
                     };
                 }
             };
-            var service = new ServerRewardGrantService(new StubPlayerIdentityProvider("player-1"), webClient, new[] { snapshotHandler });
+            var service = new ServerRewardGrantService(
+                new StubPlayerIdentityProvider("player-1"),
+                webClient,
+                new RewardResponseApplier(new[] { snapshotHandler }));
 
             var result = service.TryGrantDetailedAsync("Gems", CancellationToken.None).GetAwaiter().GetResult();
 
             Assert.That(result.Success, Is.True);
-            Assert.That(result.NewCrystalsBalance, Is.EqualTo(456));
             Assert.That(snapshotHandler.AppliedCount, Is.EqualTo(1));
         }
 
@@ -108,7 +116,10 @@ namespace Rewards.Tests.Editor
                     };
                 }
             };
-            var service = new ServerRewardGrantService(new StubPlayerIdentityProvider("player-1"), webClient, new[] { snapshotHandler });
+            var service = new ServerRewardGrantService(
+                new StubPlayerIdentityProvider("player-1"),
+                webClient,
+                new RewardResponseApplier(new[] { snapshotHandler }));
 
             var result = service.TryGrantDetailedAsync("Gems", CancellationToken.None).GetAwaiter().GetResult();
 
@@ -125,7 +136,10 @@ namespace Rewards.Tests.Editor
             {
                 PostException = new WebClientNetworkException("https://test/rewards/grant", "No internet")
             };
-            var service = new ServerRewardGrantService(new StubPlayerIdentityProvider("player-1"), webClient, new[] { snapshotHandler });
+            var service = new ServerRewardGrantService(
+                new StubPlayerIdentityProvider("player-1"),
+                webClient,
+                new RewardResponseApplier(new[] { snapshotHandler }));
 
             var result = service.TryGrantDetailedAsync("Gems", CancellationToken.None).GetAwaiter().GetResult();
 
@@ -133,13 +147,87 @@ namespace Rewards.Tests.Editor
             Assert.That(result.FailureType, Is.EqualTo(RewardGrantFailureType.Network));
             Assert.That(snapshotHandler.AppliedCount, Is.EqualTo(0));
         }
+
+        [Test]
+        public void GrantRewardResponseApplier_TryApplyAsync_ReturnsFalse_WhenResponseIsNull()
+        {
+            var applier = new RewardResponseApplier(new[] { new StubSnapshotHandler() });
+
+            var result = applier.TryApplyAsync(null, CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(result, Is.False);
+        }
+
+        [Test]
+        public void GrantRewardResponseApplier_TryApplyAsync_ReturnsFalse_WhenGrantRejected()
+        {
+            var snapshotHandler = new StubSnapshotHandler();
+            var applier = new RewardResponseApplier(new[] { snapshotHandler });
+            var response = new GrantRewardResponse
+            {
+                Success = false,
+                RewardId = "reward_a",
+                ErrorCode = "REJECTED"
+            };
+
+            var result = applier.TryApplyAsync(response, CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(result, Is.False);
+            Assert.That(snapshotHandler.AppliedCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void GrantRewardResponseApplier_TryApplyAsync_ReturnsFalse_WhenPlayerStateMissing()
+        {
+            var snapshotHandler = new StubSnapshotHandler();
+            var applier = new RewardResponseApplier(new[] { snapshotHandler });
+            var response = new GrantRewardResponse
+            {
+                Success = true,
+                RewardId = "reward_a",
+                PlayerState = null
+            };
+
+            var result = applier.TryApplyAsync(response, CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(result, Is.False);
+            Assert.That(snapshotHandler.AppliedCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void GrantRewardResponseApplier_TryApplyAsync_AppliesAllHandlersInOrder_WhenResponseValid()
+        {
+            var callOrder = new List<string>();
+            var first = new OrderedSnapshotHandler("first", callOrder);
+            var second = new OrderedSnapshotHandler("second", callOrder);
+            var applier = new RewardResponseApplier(new IPlayerStateSnapshotHandler[] { first, second });
+            var response = new GrantRewardResponse
+            {
+                Success = true,
+                RewardId = "reward_a",
+                PlayerState = new PlayerStateSnapshotDto
+                {
+                    Resources = new Dictionary<string, int> { { "gold", 10 } }
+                }
+            };
+
+            var result = applier.TryApplyAsync(response, CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(result, Is.True);
+            Assert.That(callOrder.Count, Is.EqualTo(2));
+            Assert.That(callOrder[0], Is.EqualTo("first"));
+            Assert.That(callOrder[1], Is.EqualTo("second"));
+        }
         
         [Test]
         public void ServerRewardGrantService_TryGrantAsync_SerializesConcurrentCalls_AndAppliesLatestSnapshotLast()
         {
             var snapshotHandler = new SequencedSnapshotHandler();
             var webClient = new ControlledGrantWebClient();
-            var service = new ServerRewardGrantService(new StubPlayerIdentityProvider("player-1"), webClient, new[] { snapshotHandler });
+            var service = new ServerRewardGrantService(
+                new StubPlayerIdentityProvider("player-1"),
+                webClient,
+                new RewardResponseApplier(new[] { snapshotHandler }));
 
             var firstGrantTask = service.TryGrantAsync("reward_first", CancellationToken.None);
             webClient.WaitForFirstCallAsync(CancellationToken.None).GetAwaiter().GetResult();
@@ -168,7 +256,10 @@ namespace Rewards.Tests.Editor
         {
             var snapshotHandler = new SequencedSnapshotHandler();
             var webClient = new ControlledGrantWebClient();
-            var service = new ServerRewardGrantService(new StubPlayerIdentityProvider("player-1"), webClient, new[] { snapshotHandler });
+            var service = new ServerRewardGrantService(
+                new StubPlayerIdentityProvider("player-1"),
+                webClient,
+                new RewardResponseApplier(new[] { snapshotHandler }));
 
             var firstGrantTask = service.TryGrantAsync("reward_first", CancellationToken.None);
             webClient.WaitForFirstCallAsync(CancellationToken.None).GetAwaiter().GetResult();
@@ -407,6 +498,25 @@ namespace Rewards.Tests.Editor
                     AppliedGoldHistory.Add(gold);
                 }
 
+                return UniTask.CompletedTask;
+            }
+        }
+
+        private sealed class OrderedSnapshotHandler : IPlayerStateSnapshotHandler
+        {
+            private readonly string _id;
+            private readonly List<string> _callOrder;
+
+            public OrderedSnapshotHandler(string id, List<string> callOrder)
+            {
+                _id = id;
+                _callOrder = callOrder;
+            }
+
+            public UniTask ApplyAsync(PlayerStateSnapshotDto snapshot, CancellationToken ct)
+            {
+                ct.ThrowIfCancellationRequested();
+                _callOrder.Add(_id);
                 return UniTask.CompletedTask;
             }
         }

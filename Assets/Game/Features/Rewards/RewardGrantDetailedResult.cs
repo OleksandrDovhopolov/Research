@@ -14,18 +14,16 @@ namespace Rewards
     {
         public bool Success { get; set; }
         public string RewardId { get; set; } = string.Empty;
-        public int? NewCrystalsBalance { get; set; } // TODO what is it for ? reward cant be crystals all the time ? 
         public string ErrorCode { get; set; }
         public string ErrorMessage { get; set; }
         public RewardGrantFailureType FailureType { get; set; } = RewardGrantFailureType.None;
 
-        public static RewardGrantDetailedResult BuildSuccess(string rewardId, int? newCrystalsBalance)
+        public static RewardGrantDetailedResult BuildSuccess(string rewardId)
         {
             return new RewardGrantDetailedResult
             {
                 Success = true,
                 RewardId = rewardId ?? string.Empty,
-                NewCrystalsBalance = newCrystalsBalance,
                 FailureType = RewardGrantFailureType.None
             };
         }

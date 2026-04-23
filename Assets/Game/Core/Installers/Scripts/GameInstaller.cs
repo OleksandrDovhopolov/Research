@@ -64,14 +64,9 @@ namespace Game.Bootstrap
             // Rewards
             builder.Register<ResourceRewardHandler>(Lifetime.Singleton).As<IRewardHandler>();
             builder.Register<InventoryRewardHandler>(Lifetime.Singleton).As<IRewardHandler>();
-            builder.Register<GameRewardGrantService>(resolver =>
-            {
-                var handlers = resolver.Resolve<IEnumerable<IRewardHandler>>().ToList();
-                var rewardSpecProvider = resolver.Resolve<IRewardSpecProvider>();
-                return new GameRewardGrantService(handlers, rewardSpecProvider);
-            }, Lifetime.Singleton);
             builder.Register<ResourcePlayerStateSnapshotHandler>(Lifetime.Singleton).As<IPlayerStateSnapshotHandler>();
             builder.Register<InventoryPlayerStateSnapshotHandler>(Lifetime.Singleton).As<IPlayerStateSnapshotHandler>();
+            builder.Register<IRewardResponseApplier, RewardResponseApplier>(Lifetime.Singleton);
             builder.Register<IRewardGrantService, ServerRewardGrantService>(Lifetime.Singleton);
             builder.Register<IRewardIntentService, ServerRewardIntentService>(Lifetime.Singleton);
             builder.Register<IRewardPlayerStateSyncService, ServerRewardPlayerStateSyncService>(Lifetime.Singleton);

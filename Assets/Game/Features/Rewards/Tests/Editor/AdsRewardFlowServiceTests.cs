@@ -40,7 +40,7 @@ namespace Rewards.Tests.Editor
             };
             var grantService = new StubRewardGrantService
             {
-                DetailedResult = RewardGrantDetailedResult.BuildSuccess("Gems", 777)
+                DetailedResult = RewardGrantDetailedResult.BuildSuccess("Gems")
             };
             var intentService = new StubRewardIntentService();
             var service = CreateService(provider, grantService, intentService, useServerConfirmedGrantFlow: false);
@@ -48,7 +48,6 @@ namespace Rewards.Tests.Editor
             var result = service.TryRunFlowAsync(CancellationToken.None).GetAwaiter().GetResult();
 
             Assert.That(result.Type, Is.EqualTo(RewardGrantFlowResultType.Success));
-            Assert.That(result.NewCrystalsBalance, Is.EqualTo(777));
             Assert.That(grantService.TryGrantDetailedCalls, Is.EqualTo(1));
             Assert.That(intentService.CreateCalls, Is.EqualTo(0));
             Assert.That(provider.LastShowRewardIntentId, Is.EqualTo(string.Empty));
@@ -85,7 +84,6 @@ namespace Rewards.Tests.Editor
             var result = service.TryRunFlowAsync(CancellationToken.None).GetAwaiter().GetResult();
 
             Assert.That(result.Type, Is.EqualTo(RewardGrantFlowResultType.Success));
-            Assert.That(result.NewCrystalsBalance, Is.Null);
             Assert.That(intentService.CreateCalls, Is.EqualTo(1));
             Assert.That(intentService.GetStatusCalls, Is.GreaterThanOrEqualTo(2));
             Assert.That(syncService.SyncCalls, Is.EqualTo(1));
@@ -469,7 +467,7 @@ namespace Rewards.Tests.Editor
             public int DelayMs { get; set; }
             public int TryGrantDetailedCalls { get; private set; }
             public RewardGrantDetailedResult DetailedResult { get; set; } =
-                RewardGrantDetailedResult.BuildSuccess("Gems", 50);
+                RewardGrantDetailedResult.BuildSuccess("Gems");
 
             public UniTask<bool> TryGrantAsync(string rewardId, CancellationToken ct = default)
             {
@@ -493,12 +491,6 @@ namespace Rewards.Tests.Editor
                 }
 
                 return DetailedResult;
-            }
-
-            public UniTask<bool> TryApplyGrantResponseAsync(GrantRewardResponse grantResponse, CancellationToken ct = default)
-            {
-                ct.ThrowIfCancellationRequested();
-                return UniTask.FromResult(DetailedResult.Success);
             }
         }
 
