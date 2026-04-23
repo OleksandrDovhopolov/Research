@@ -261,6 +261,17 @@ namespace CardCollectionImpl
             if (ct.IsCancellationRequested)
                 return;
 
+            var grantedGroupTypes = data.Groups?
+                .Select(group => group.GroupType)
+                .Where(groupType => !string.IsNullOrWhiteSpace(groupType))
+                .Distinct()
+                .ToArray();
+
+            if (grantedGroupTypes is { Length: > 0 })
+            {
+                Context.GroupCompletionPresentationQueue.Enqueue(grantedGroupTypes);
+            }
+
             HandleGroupCompletedAsync(data, ct).Forget();
         }
         
@@ -277,25 +288,12 @@ namespace CardCollectionImpl
                 .Select(group => _rewardHandler.TryHandleGroupCompleted(group, ct))
                 .ToArray();
 
-            var results = await UniTask.WhenAll(rewardTasks);
-            var allRewardsGranted = results.All(isGranted => isGranted);
-            if (!allRewardsGranted)
+            if (rewardTasks.Length == 0)
             {
                 return;
             }
 
-            var grantedGroupTypes = data.Groups
-                .Select(group => group.GroupType)
-                .Where(groupType => !string.IsNullOrWhiteSpace(groupType))
-                .Distinct()
-                .ToArray();
-
-            if (grantedGroupTypes.Length == 0)
-            {
-                return;
-            }
-
-            Context.GroupCompletionPresentationQueue.Enqueue(grantedGroupTypes);
+            await UniTask.WhenAll(rewardTasks);
         }
 
         private void OnCollectionCompleted(CardCollectionCompletedData data)
