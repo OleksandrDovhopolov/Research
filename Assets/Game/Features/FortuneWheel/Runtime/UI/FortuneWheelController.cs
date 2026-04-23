@@ -25,8 +25,6 @@ namespace FortuneWheel
 
     public class FortuneWheelArgs : WindowArgs
     {
-        public const int SectorCount = 8;
-
         public FortuneWheelDataServerItem InitialData { get; }
         public IReadOnlyList<FortuneWheelSectorArgs> Sectors { get; }
 
@@ -40,11 +38,9 @@ namespace FortuneWheel
     [Window("FortuneWheelWindow")]
     public class FortuneWheelController : WindowController<FortuneWheelView>
     {
-        private const string AdSpinRewardId = "fortune_wheel_ad_spin";
-
         private IFortuneWheelServerService _fortuneWheelServerService;
         private IFortuneWheelTimerService _fortuneWheelTimerService;
-        private AdsRewardFlowService _adsRewardFlowService;
+        private FortuneWheelAdSpinOrchestrator _fortuneWheelAdSpinOrchestrator;
 
         private FortuneWheelArgs Args => Arguments as FortuneWheelArgs;
         private IReadOnlyList<FortuneWheelSectorArgs> Sectors => Args?.Sectors ?? Array.Empty<FortuneWheelSectorArgs>();
@@ -65,11 +61,11 @@ namespace FortuneWheel
         private void Construct(
             IFortuneWheelServerService fortuneWheelServerService,
             IFortuneWheelTimerService fortuneWheelTimerService,
-            AdsRewardFlowService adsRewardFlowService)
+            FortuneWheelAdSpinOrchestrator fortuneWheelAdSpinOrchestrator)
         {
             _fortuneWheelServerService = fortuneWheelServerService;
             _fortuneWheelTimerService = fortuneWheelTimerService;
-            _adsRewardFlowService = adsRewardFlowService;
+            _fortuneWheelAdSpinOrchestrator = fortuneWheelAdSpinOrchestrator;
         }
 
         protected override void OnShowStart()
@@ -159,9 +155,9 @@ namespace FortuneWheel
                 return;
             }
 
-            if (_adsRewardFlowService == null)
+            if (_fortuneWheelAdSpinOrchestrator == null)
             {
-                Debug.LogError($"[{nameof(FortuneWheelController)}] {nameof(AdsRewardFlowService)} is not available.");
+                Debug.LogError($"[{nameof(FortuneWheelController)}] {nameof(FortuneWheelAdSpinOrchestrator)} is not available.");
                 return;
             }
 
@@ -170,7 +166,7 @@ namespace FortuneWheel
 
             try
             {
-                var adFlowResult = await _adsRewardFlowService.TryRunFlowAsync(AdSpinRewardId, false, ct);
+                var adFlowResult = await _fortuneWheelAdSpinOrchestrator.TryRunFlowAsync(ct);
                 if (adFlowResult == null || adFlowResult.Type != RewardGrantFlowResultType.Success)
                 {
                     return;
@@ -456,10 +452,10 @@ namespace FortuneWheel
 
         private static bool ValidateSectors(IReadOnlyList<FortuneWheelSectorArgs> sectors)
         {
-            if (sectors == null || sectors.Count != FortuneWheelArgs.SectorCount)
+            if (sectors == null || sectors.Count != FortuneWheelConfig.Gameplay.SectorCount)
             {
                 var currentCount = sectors?.Count ?? 0;
-                Debug.LogError($"[{nameof(FortuneWheelController)}] Wheel expects exactly {FortuneWheelArgs.SectorCount} sectors. Now is {currentCount}");
+                Debug.LogError($"[{nameof(FortuneWheelController)}] Wheel expects exactly {FortuneWheelConfig.Gameplay.SectorCount} sectors. Now is {currentCount}");
                 return false;
             }
 

@@ -43,11 +43,7 @@ namespace FortuneWheel
             }
         }
 
-        // In current prefab setup, sector index 0 is already aligned with 12 o'clock at Z = 0.
-        private const float PointerAngle = 0f;
-        private const float FullCircle = 360f;
-        private const float MinSpinDuration = 0.01f;
-        private const float SectorAngle = FullCircle / FortuneWheelArgs.SectorCount;
+        private const float SectorAngle = FortuneWheelConfig.Animation.FullCircle / FortuneWheelConfig.Gameplay.SectorCount;
 
         [Header("Top")]
         [SerializeField] private TMP_Text _spinsAmountText;
@@ -64,7 +60,7 @@ namespace FortuneWheel
         [SerializeField] private GameObject _clickLocker;
 
         [Header("Sectors")]
-        [SerializeField] private SectorView[] _sectors = new SectorView[FortuneWheelArgs.SectorCount];
+        [SerializeField] private SectorView[] _sectors = new SectorView[FortuneWheelConfig.Gameplay.SectorCount];
 
         private Tween _spinTween;
 
@@ -143,7 +139,7 @@ namespace FortuneWheel
                 return false;
             }
 
-            if (sectorIndex < 0 || sectorIndex >= FortuneWheelArgs.SectorCount)
+            if (sectorIndex < 0 || sectorIndex >= FortuneWheelConfig.Gameplay.SectorCount)
             {
                 Debug.LogError($"[{nameof(FortuneWheelView)}] Sector index {sectorIndex} is out of range.");
                 return false;
@@ -153,12 +149,15 @@ namespace FortuneWheel
 
             var currentZ = NormalizeAngle(_wheelRoot.localEulerAngles.z);
             var targetZ = NormalizeAngle(GetTargetWheelAngle(sectorIndex));
-            var deltaToTarget = Mathf.Repeat(targetZ - currentZ + FullCircle, FullCircle);
+            var deltaToTarget = Mathf.Repeat(targetZ - currentZ + FortuneWheelConfig.Animation.FullCircle, FortuneWheelConfig.Animation.FullCircle);
             var fullTurns = Mathf.Max(1, _spinFullTurns);
-            var endZ = currentZ + (fullTurns * FullCircle) + deltaToTarget;
+            var endZ = currentZ + (fullTurns * FortuneWheelConfig.Animation.FullCircle) + deltaToTarget;
 
             _spinTween = _wheelRoot
-                .DOLocalRotate(new Vector3(0f, 0f, endZ), Mathf.Max(MinSpinDuration, _spinDuration), RotateMode.FastBeyond360)
+                .DOLocalRotate(
+                    new Vector3(0f, 0f, endZ),
+                    Mathf.Max(FortuneWheelConfig.Animation.MinSpinDuration, _spinDuration),
+                    RotateMode.FastBeyond360)
                 .SetEase(Ease.OutQuart)
                 .OnComplete(() =>
                 {
@@ -205,9 +204,9 @@ namespace FortuneWheel
                 return;
             }
 
-            if (sectors.Count != FortuneWheelArgs.SectorCount)
+            if (sectors.Count != FortuneWheelConfig.Gameplay.SectorCount)
             {
-                Debug.LogError($"[{nameof(FortuneWheelView)}] Wheel expects exactly {FortuneWheelArgs.SectorCount} sectors.");
+                Debug.LogError($"[{nameof(FortuneWheelView)}] Wheel expects exactly {FortuneWheelConfig.Gameplay.SectorCount} sectors.");
             }
 
             var count = Mathf.Min(sectors.Count, _sectors.Length);
@@ -259,12 +258,13 @@ namespace FortuneWheel
 
         private static float GetTargetWheelAngle(int sectorIndex)
         {
-            return PointerAngle - (sectorIndex * SectorAngle);
+            // In current prefab setup, sector index 0 is already aligned with 12 o'clock at Z = 0.
+            return FortuneWheelConfig.Animation.PointerAngle - (sectorIndex * SectorAngle);
         }
 
         private static float NormalizeAngle(float angle)
         {
-            return Mathf.Repeat(angle, FullCircle);
+            return Mathf.Repeat(angle, FortuneWheelConfig.Animation.FullCircle);
         }
 
         private static string FormatTime(TimeSpan remaining)

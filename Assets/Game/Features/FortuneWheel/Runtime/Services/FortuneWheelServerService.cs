@@ -13,9 +13,6 @@ namespace FortuneWheel
     public sealed class FortuneWheelServerService : IFortuneWheelServerService
     {
         private const string LogPrefix = "[FortuneWheelServerService]";
-        private const string DataUrl = "wheel/data";
-        private const string RewardsUrl = "wheel/rewards";
-        private const string SpinUrl = "wheel/spin";
 
         private readonly IRewardResponseApplier _rewardResponseApplier;
         private readonly IPlayerIdentityProvider _playerIdentityProvider;
@@ -47,7 +44,7 @@ namespace FortuneWheel
             try
             {
                 var encodedPlayerId = Uri.EscapeDataString(playerId);
-                var requestUrl = $"{DataUrl}?playerId={encodedPlayerId}";
+                var requestUrl = $"{FortuneWheelConfig.Api.DataPath}?playerId={encodedPlayerId}";
                 Debug.Log(
                     $"{LogPrefix} [{operationId}] GetData request. Url={requestUrl}, PlayerId={MaskPlayerId(playerId)}, " +
                     $"CachedBefore={BuildCacheSummary(cachedData)}");
@@ -79,8 +76,8 @@ namespace FortuneWheel
             {
                 var fallbackSpins = Mathf.Max(0, cachedData.AvailableSpins);
                 var fallbackUpdatedAt = Math.Max(0L, cachedData.UpdatedAt);
-                const long fallbackNextUpdateAt = 0L;
-                const bool fallbackAdSpinAvailable = false;
+                const long fallbackNextUpdateAt = FortuneWheelConfig.Api.FallbackNextUpdateAt;
+                const bool fallbackAdSpinAvailable = FortuneWheelConfig.Api.FallbackAdSpinAvailable;
                 var verificationUrl = BuildWheelDataUrl(playerId);
                 Debug.LogWarning(
                     $"{LogPrefix} [{operationId}] GetData failed. Falling back to cached data. PlayerId={MaskPlayerId(playerId)}, VerificationUrl={verificationUrl}, " +
@@ -92,7 +89,7 @@ namespace FortuneWheel
         
         public async UniTask<IReadOnlyList<FortuneWheelRewardServerItem>> GetRewardsAsync(CancellationToken ct = default)
         {
-            var response = await _webClient.GetAsync<RewardsResponseWrapper>(RewardsUrl, ct);
+            var response = await _webClient.GetAsync<RewardsResponseWrapper>(FortuneWheelConfig.Api.RewardsPath, ct);
 
             var rewardItems = response?.rewards;
 
@@ -137,13 +134,13 @@ namespace FortuneWheel
             });
 
             Debug.Log(
-                $"{LogPrefix} [{operationId}] Spin request. Url={SpinUrl}, PlayerId={MaskPlayerId(playerId)}, " +
+                $"{LogPrefix} [{operationId}] Spin request. Url={FortuneWheelConfig.Api.SpinPath}, PlayerId={MaskPlayerId(playerId)}, " +
                 $"RequestBodyLength={requestBody.Length}, CachedBefore={BuildCacheSummary(cachedDataBefore)}");
 
             try
             {
                 var response = await _webClient.PostAsync<SpinRequestBody, SpinResponseBody>(
-                    SpinUrl,
+                    FortuneWheelConfig.Api.SpinPath,
                     new SpinRequestBody { playerId = playerId },
                     ct);
                 if (response == null || string.IsNullOrWhiteSpace(response.rewardId))
@@ -300,7 +297,7 @@ namespace FortuneWheel
         private static string BuildWheelDataUrl(string playerId)
         {
             var encodedPlayerId = Uri.EscapeDataString(playerId ?? string.Empty);
-            return $"{ApiConfig.BaseUrl}{DataUrl}?playerId={encodedPlayerId}";
+            return $"{ApiConfig.BaseUrl}{FortuneWheelConfig.Api.DataPath}?playerId={encodedPlayerId}";
         }
 
         private static string MaskPlayerId(string playerId)

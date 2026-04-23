@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
@@ -10,6 +11,18 @@ namespace Rewards.Tests.Editor
 {
     public sealed class AdsRewardFlowServiceTests
     {
+        [Test]
+        public void AdsRewardFlowService_DoesNotDependOnUiManager()
+        {
+            var constructorParameterTypeNames = typeof(AdsRewardFlowService)
+                .GetConstructors()
+                .SelectMany(constructor => constructor.GetParameters())
+                .Select(parameter => parameter.ParameterType.Name)
+                .ToArray();
+
+            Assert.That(constructorParameterTypeNames, Does.Not.Contain("UIManager"));
+        }
+
         [Test]
         public void TryRunFlowAsync_ReturnsAdNotReady_WhenAdIsNotReady()
         {
@@ -70,7 +83,7 @@ namespace Rewards.Tests.Editor
             var service = CreateService(provider, grantService, intentService, useServerConfirmedGrantFlow: false);
 
             var result = service
-                .TryRunFlowAsync("fortune_wheel_ad_spin", false, CancellationToken.None)
+                .TryRunFlowForRewardAsync("fortune_wheel_ad_spin", CancellationToken.None)
                 .GetAwaiter()
                 .GetResult();
 
@@ -100,7 +113,7 @@ namespace Rewards.Tests.Editor
 
             var service = CreateService(provider, grantService, intentService, useServerConfirmedGrantFlow: true);
             var result = service
-                .TryRunFlowAsync("fortune_wheel_ad_spin", false, CancellationToken.None)
+                .TryRunFlowForRewardAsync("fortune_wheel_ad_spin", CancellationToken.None)
                 .GetAwaiter()
                 .GetResult();
 
@@ -459,12 +472,13 @@ namespace Rewards.Tests.Editor
                 UseServerConfirmedGrantFlow = useServerConfirmedGrantFlow,
                 GrantConfirmationTimeoutSeconds = grantConfirmationTimeoutSeconds,
                 GrantPollingIntervalSeconds = grantPollingIntervalSeconds,
+                AndroidLevelPlayRewardedAdUnitId = "rewarded",
+                IosLevelPlayRewardedAdUnitId = "rewarded",
                 AndroidRewardedAdUnitId = "rewarded",
                 IosRewardedAdUnitId = "rewarded"
             };
 
             return new AdsRewardFlowService(
-                null,
                 provider,
                 grantService,
                 intentService,

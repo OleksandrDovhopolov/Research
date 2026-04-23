@@ -85,6 +85,8 @@ namespace Game.Bootstrap
                 return RewardedAdsProviderFactory.Create(config, playerIdentityProvider, webClient);
             }, Lifetime.Singleton);
             builder.Register<AdsRewardFlowService>(Lifetime.Singleton);
+            builder.Register<RewardedAdsRewardOrchestrator>(Lifetime.Singleton);
+            builder.Register<FortuneWheelAdSpinOrchestrator>(Lifetime.Singleton);
             
             // Orchestration
             builder.RegisterOrchestration(_cardCollectionScheduleFile, _removeCardCollectionConfigSchedule);

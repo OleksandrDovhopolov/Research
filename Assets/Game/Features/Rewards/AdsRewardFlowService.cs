@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
-using UISystem;
 using UnityEngine;
 
 namespace Rewards
@@ -14,8 +13,6 @@ namespace Rewards
         private const int DefaultGrantConfirmationTimeoutSeconds = 20;
         private const float DefaultGrantPollingIntervalSeconds = 1f;
 
-        // TODO replace this UI logic from AdsRewardFlowService
-        private readonly UIManager _uiManager;
         private readonly IRewardedAdsProvider _adsProvider;
         private readonly IRewardGrantService _rewardGrantService;
         private readonly IRewardIntentService _rewardIntentService;
@@ -27,14 +24,12 @@ namespace Rewards
         private int _isFlowInProgress;
 
         public AdsRewardFlowService(
-            UIManager uiManager,
             IRewardedAdsProvider adsProvider,
             IRewardGrantService rewardGrantService,
             IRewardIntentService rewardIntentService,
             IRewardPlayerStateSyncService rewardPlayerStateSyncService,
             RewardedAdsConfigSO configSo)
         {
-            _uiManager = uiManager;
             _adsProvider = adsProvider ?? throw new ArgumentNullException(nameof(adsProvider));
             _rewardGrantService = rewardGrantService ?? throw new ArgumentNullException(nameof(rewardGrantService));
             _rewardIntentService = rewardIntentService ?? throw new ArgumentNullException(nameof(rewardIntentService));
@@ -93,13 +88,15 @@ namespace Rewards
 
         public UniTask<RewardGrantFlowResult> TryRunFlowAsync(CancellationToken ct = default)
         {
-            return TryRunFlowAsync(_config.RewardId, true, ct);
+            return TryRunFlowCoreAsync(_config.RewardId, ct);
         }
 
-        public async UniTask<RewardGrantFlowResult> TryRunFlowAsync(
-            string rewardId,
-            bool showRewardWindowOnSuccess,
-            CancellationToken ct = default)
+        public UniTask<RewardGrantFlowResult> TryRunFlowForRewardAsync(string rewardId, CancellationToken ct = default)
+        {
+            return TryRunFlowCoreAsync(rewardId, ct);
+        }
+
+        private async UniTask<RewardGrantFlowResult> TryRunFlowCoreAsync(string rewardId, CancellationToken ct)
         {
             if (Interlocked.CompareExchange(ref _isFlowInProgress, 1, 0) != 0)
             {
@@ -166,7 +163,7 @@ namespace Rewards
                     {
                         case RewardedShowResult.Completed:
                             Debug.Log("[AdsRewardFlow] Ad show completed.");
-                            finalResult = await WaitForIntentConfirmationAsync(rewardIntentId, rewardId, showRewardWindowOnSuccess, ct);
+                            finalResult = await WaitForIntentConfirmationAsync(rewardIntentId, ct);
                             return finalResult;
 
                         case RewardedShowResult.Canceled:
@@ -302,8 +299,6 @@ namespace Rewards
 
         private async UniTask<RewardGrantFlowResult> WaitForIntentConfirmationAsync(
             string rewardIntentId,
-            string rewardId,
-            bool showRewardWindowOnSuccess,
             CancellationToken ct)
         {
             SetState(RewardAdFlowState.WaitingServerGrant);
@@ -342,13 +337,6 @@ namespace Rewards
                                     Debug.Log($"[AdsRewardFlow] Intent fulfilled. Starting save/global sync. RewardIntentId={rewardIntentId}");
 
                                     await _rewardPlayerStateSyncService.SyncFromGlobalSaveAsync(timeoutCts.Token);
-
-                                    if (showRewardWindowOnSuccess && _uiManager != null)
-                                    {
-                                        Debug.Log($"[AdsRewardFlow] Intent fulfilled. Show reward window");
-                                        var rewardArgs = new RewardsWindowArgs(rewardId);
-                                        _uiManager.Show<RewardsWindowController>(rewardArgs);
-                                    }
 
                                     SetState(RewardAdFlowState.Success);
                                     return RewardGrantFlowResult.Build(RewardGrantFlowResultType.Success);
