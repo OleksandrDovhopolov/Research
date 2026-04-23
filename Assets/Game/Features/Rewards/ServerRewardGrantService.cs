@@ -17,6 +17,7 @@ namespace Rewards
         private readonly IPlayerIdentityProvider _playerIdentityProvider;
         private readonly IReadOnlyList<IPlayerStateSnapshotHandler> _snapshotHandlers;
         private readonly IWebClient _webClient;
+        private readonly SemaphoreSlim _grantMutex = new(1, 1);
 
         public ServerRewardGrantService(
             IPlayerIdentityProvider playerIdentityProvider,
@@ -69,9 +70,13 @@ namespace Rewards
                 RewardSource = RewardSource,
                 RewardId = rewardId
             };
+            var lockTaken = false;
 
             try
             {
+                await _grantMutex.WaitAsync(ct);
+                lockTaken = true;
+
                 var body = await _webClient.PostAsync<GrantRewardCommand, GrantRewardResponse>(GrantRewardPath, command, ct);
                 if (body == null)
                 {
@@ -136,6 +141,13 @@ namespace Rewards
                     RewardGrantFailureType.Unknown,
                     "UNEXPECTED_ERROR",
                     exception.Message);
+            }
+            finally
+            {
+                if (lockTaken)
+                {
+                    _grantMutex.Release();
+                }
             }
         }
 

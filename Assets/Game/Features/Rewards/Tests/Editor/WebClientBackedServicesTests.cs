@@ -133,6 +133,58 @@ namespace Rewards.Tests.Editor
             Assert.That(result.FailureType, Is.EqualTo(RewardGrantFailureType.Network));
             Assert.That(snapshotHandler.AppliedCount, Is.EqualTo(0));
         }
+        
+        [Test]
+        public void ServerRewardGrantService_TryGrantAsync_SerializesConcurrentCalls_AndAppliesLatestSnapshotLast()
+        {
+            var snapshotHandler = new SequencedSnapshotHandler();
+            var webClient = new ControlledGrantWebClient();
+            var service = new ServerRewardGrantService(new StubPlayerIdentityProvider("player-1"), webClient, new[] { snapshotHandler });
+
+            var firstGrantTask = service.TryGrantAsync("reward_first", CancellationToken.None);
+            webClient.WaitForFirstCallAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            var secondGrantTask = service.TryGrantAsync("reward_second", CancellationToken.None);
+
+            // With grant serialization, second call must not reach web client before first is released.
+            Assert.That(webClient.HasSecondCallStarted(100), Is.False);
+
+            webClient.ReleaseFirstCall();
+
+            var firstResult = firstGrantTask.GetAwaiter().GetResult();
+            var secondResult = secondGrantTask.GetAwaiter().GetResult();
+
+            Assert.That(firstResult, Is.True);
+            Assert.That(secondResult, Is.True);
+            Assert.That(webClient.PostCallsCount, Is.EqualTo(2));
+            Assert.That(snapshotHandler.AppliedGoldHistory.Count, Is.EqualTo(2));
+            Assert.That(snapshotHandler.AppliedGoldHistory[0], Is.EqualTo(100));
+            Assert.That(snapshotHandler.AppliedGoldHistory[1], Is.EqualTo(200));
+            Assert.That(snapshotHandler.LastGold, Is.EqualTo(200));
+        }
+        
+        [Test]
+        public void ServerRewardGrantService_TryGrantAsync_WhenCanceledWhileQueued_DoesNotReachWebClient()
+        {
+            var snapshotHandler = new SequencedSnapshotHandler();
+            var webClient = new ControlledGrantWebClient();
+            var service = new ServerRewardGrantService(new StubPlayerIdentityProvider("player-1"), webClient, new[] { snapshotHandler });
+
+            var firstGrantTask = service.TryGrantAsync("reward_first", CancellationToken.None);
+            webClient.WaitForFirstCallAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            using var secondCts = new CancellationTokenSource();
+            var secondGrantTask = service.TryGrantAsync("reward_second", secondCts.Token);
+            secondCts.Cancel();
+
+            Assert.Throws<OperationCanceledException>(() => secondGrantTask.GetAwaiter().GetResult());
+
+            webClient.ReleaseFirstCall();
+            Assert.That(firstGrantTask.GetAwaiter().GetResult(), Is.True);
+            Assert.That(webClient.PostCallsCount, Is.EqualTo(1));
+            Assert.That(snapshotHandler.AppliedGoldHistory.Count, Is.EqualTo(1));
+            Assert.That(snapshotHandler.LastGold, Is.EqualTo(100));
+        }
 
         [Test]
         public void UnityWebRequestResourceAdjustApi_AdjustAsync_MapsResponse()
@@ -326,6 +378,119 @@ namespace Rewards.Tests.Editor
                 AppliedCount++;
                 LastSnapshot = snapshot;
                 return UniTask.CompletedTask;
+            }
+        }
+        
+        private sealed class SequencedSnapshotHandler : IPlayerStateSnapshotHandler
+        {
+            private readonly object _sync = new();
+
+            public List<int> AppliedGoldHistory { get; } = new();
+            public int LastGold { get; private set; }
+
+            public UniTask ApplyAsync(PlayerStateSnapshotDto snapshot, CancellationToken ct)
+            {
+                ct.ThrowIfCancellationRequested();
+                var gold = 0;
+                if (snapshot?.Resources != null)
+                {
+                    if (!snapshot.Resources.TryGetValue("Gold", out gold) &&
+                        !snapshot.Resources.TryGetValue("gold", out gold))
+                    {
+                        gold = 0;
+                    }
+                }
+
+                lock (_sync)
+                {
+                    LastGold = gold;
+                    AppliedGoldHistory.Add(gold);
+                }
+
+                return UniTask.CompletedTask;
+            }
+        }
+        
+        private sealed class ControlledGrantWebClient : IWebClient
+        {
+            private readonly UniTaskCompletionSource _firstCallStarted = new();
+            private readonly UniTaskCompletionSource _releaseFirstCall = new();
+            private readonly ManualResetEventSlim _secondCallStarted = new(false);
+            private int _postCallsCount;
+
+            public int PostCallsCount => _postCallsCount;
+
+            public UniTask WaitForFirstCallAsync(CancellationToken ct)
+            {
+                return _firstCallStarted.Task.AttachExternalCancellation(ct);
+            }
+
+            public bool HasSecondCallStarted(int timeoutMs)
+            {
+                return _secondCallStarted.Wait(timeoutMs);
+            }
+
+            public void ReleaseFirstCall()
+            {
+                _releaseFirstCall.TrySetResult();
+            }
+
+            public UniTask<TResponse> GetAsync<TResponse>(string url, CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+                return UniTask.FromResult(default(TResponse));
+            }
+
+            public async UniTask<TResponse> PostAsync<TRequest, TResponse>(string url, TRequest data, CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+                var callIndex = Interlocked.Increment(ref _postCallsCount);
+
+                GrantRewardResponse response;
+                if (callIndex == 1)
+                {
+                    _firstCallStarted.TrySetResult();
+                    await _releaseFirstCall.Task.AttachExternalCancellation(ct);
+                    response = BuildGrantResponse("reward_first", 100);
+                }
+                else
+                {
+                    _secondCallStarted.Set();
+                    response = BuildGrantResponse("reward_second", 200);
+                }
+
+                object boxed = response;
+                if (boxed is TResponse typed)
+                {
+                    return typed;
+                }
+
+                var serialized = Newtonsoft.Json.JsonConvert.SerializeObject(boxed);
+                return Newtonsoft.Json.JsonConvert.DeserializeObject<TResponse>(serialized);
+            }
+
+            public UniTask PostAsync<TRequest>(string url, TRequest data, CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+                return UniTask.CompletedTask;
+            }
+
+            private static GrantRewardResponse BuildGrantResponse(string rewardId, int gold)
+            {
+                return new GrantRewardResponse
+                {
+                    Success = true,
+                    RewardId = rewardId,
+                    PlayerState = new PlayerStateSnapshotDto
+                    {
+                        Resources = new Dictionary<string, int>
+                        {
+                            { "Gold", gold },
+                            { "Energy", 0 },
+                            { "Gems", 0 }
+                        }
+                    }
+                };
             }
         }
 
