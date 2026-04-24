@@ -16,7 +16,6 @@ namespace FortuneWheel
     public class CheatFortuneWheelButton : MonoBehaviour
     {
         private const string LogPrefix = "[CheatFortuneWheelButton]";
-        private const int SectorCount = 8;
 
         [SerializeField] private Button _cheatButton;
         [SerializeField] private Sprite _defaultSprite;
@@ -59,6 +58,7 @@ namespace FortuneWheel
 
         private async UniTask OpenCheatsPanelAsync(CancellationToken ct)
         {
+            var rewards = await _fortuneWheelServerService.GetRewardsAsync(ct);
             try
             {
                 ct.ThrowIfCancellationRequested();
@@ -84,15 +84,14 @@ namespace FortuneWheel
 
                 var data = await _fortuneWheelServerService.GetDataSync(ct);
 
-                IReadOnlyList<FortuneWheelRewardServerItem> rewards = await _fortuneWheelServerService.GetRewardsAsync(ct);
                 if (rewards == null || rewards.Count == 0)
                 {
                     Debug.LogWarning($"{LogPrefix} Rewards list is empty.");
                     return;
                 }
 
-                var sectors = new List<FortuneWheelSectorArgs>(SectorCount);
-                for (var i = 0; i < SectorCount; i++)
+                var sectors = new List<FortuneWheelSectorArgs>(FortuneWheelConfig.Gameplay.SectorCount);
+                for (var i = 0; i < FortuneWheelConfig.Gameplay.SectorCount; i++)
                 {
                     var reward = rewards[i % rewards.Count];
                     if (reward == null || string.IsNullOrWhiteSpace(reward.RewardId))
@@ -121,9 +120,9 @@ namespace FortuneWheel
                     }
                 }
 
-                if (sectors.Count != SectorCount)
+                if (sectors.Count != FortuneWheelConfig.Gameplay.SectorCount)
                 {
-                    Debug.LogWarning($"{LogPrefix} Failed to build {SectorCount} sectors. Built: {sectors.Count}.");
+                    Debug.LogWarning($"{LogPrefix} Failed to build {FortuneWheelConfig.Gameplay.SectorCount} sectors. Built: {sectors.Count}.");
                     return;
                 }
 
@@ -144,7 +143,7 @@ namespace FortuneWheel
         private static string BuildWheelDataUrl(string playerId)
         {
             var encodedPlayerId = UnityWebRequest.EscapeURL(playerId ?? string.Empty);
-            return $"{ApiConfig.BaseUrl}wheel/data?playerId={encodedPlayerId}";
+            return $"{ApiConfig.BaseUrl}{FortuneWheelConfig.Api.DataPath}?playerId={encodedPlayerId}";
         }
 
         private static string MaskPlayerId(string playerId)

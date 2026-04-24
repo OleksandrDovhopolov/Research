@@ -29,6 +29,10 @@ namespace Game.Bootstrap
             {
                 throw new MissingReferenceException($"{nameof(GlobalTimerService)} is not assigned on {nameof(GameInstaller)}.");
             }
+            
+            var rewardSpecsConfig = _rewardSpecsConfigSo != null
+                ? _rewardSpecsConfigSo
+                : ScriptableObject.CreateInstance<RewardSpecsConfigSO>();
 
             // Game Ready Gate
             builder.Register<IGameplayReadyGate, GameplayReadyGate>(Lifetime.Singleton);
@@ -50,7 +54,8 @@ namespace Game.Bootstrap
             builder.RegisterComponentInHierarchy<AnimateCurrency>();
             builder.RegisterInstance<IGlobalTimerService>(_globalTimerService);
             builder.Register<IAnimationService, AnimationService>(Lifetime.Singleton);
-            builder.Register<IInventoryItemCategoryResolver>(_ => new RewardSpecInventoryItemCategoryResolver(_rewardSpecsConfigSo), Lifetime.Singleton);
+            builder.RegisterInstance(rewardSpecsConfig);
+            builder.Register<IInventoryItemCategoryResolver>(_ => new RewardSpecInventoryItemCategoryResolver(rewardSpecsConfig), Lifetime.Singleton);
             
             builder.RegisterInventoryService();
             builder.RegisterCardCollectionImpl();
@@ -59,16 +64,14 @@ namespace Game.Bootstrap
             // Rewards
             builder.Register<ResourceRewardHandler>(Lifetime.Singleton).As<IRewardHandler>();
             builder.Register<InventoryRewardHandler>(Lifetime.Singleton).As<IRewardHandler>();
-            builder.Register<GameRewardGrantService>(resolver =>
-            {
-                var handlers = resolver.Resolve<IEnumerable<IRewardHandler>>().ToList();
-                var rewardSpecProvider = resolver.Resolve<IRewardSpecProvider>();
-                return new GameRewardGrantService(handlers, rewardSpecProvider);
-            }, Lifetime.Singleton);
             builder.Register<ResourcePlayerStateSnapshotHandler>(Lifetime.Singleton).As<IPlayerStateSnapshotHandler>();
             builder.Register<InventoryPlayerStateSnapshotHandler>(Lifetime.Singleton).As<IPlayerStateSnapshotHandler>();
+            builder.Register<IPlayerStateSnapshotApplier, PlayerStateSnapshotApplier>(Lifetime.Singleton);
+            builder.Register<IRewardResponseApplier, RewardResponseApplier>(Lifetime.Singleton);
             builder.Register<IRewardGrantService, ServerRewardGrantService>(Lifetime.Singleton);
-            builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(_rewardSpecsConfigSo), Lifetime.Singleton);
+            builder.Register<IRewardIntentService, ServerRewardIntentService>(Lifetime.Singleton);
+            builder.Register<IRewardPlayerStateSyncService, ServerRewardPlayerStateSyncService>(Lifetime.Singleton);
+            builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(rewardSpecsConfig), Lifetime.Singleton);
 
             var rewardedAdsConfig = _rewardedAdsConfigSo != null
                 ? _rewardedAdsConfigSo
@@ -77,9 +80,13 @@ namespace Game.Bootstrap
             builder.Register<IRewardedAdsProvider>(resolver =>
             {
                 var config = resolver.Resolve<RewardedAdsConfigSO>().GetOrCreate();
-                return RewardedAdsProviderFactory.Create(config);
+                var playerIdentityProvider = resolver.Resolve<IPlayerIdentityProvider>();
+                var webClient = resolver.Resolve<IWebClient>();
+                return RewardedAdsProviderFactory.Create(config, playerIdentityProvider, webClient);
             }, Lifetime.Singleton);
             builder.Register<AdsRewardFlowService>(Lifetime.Singleton);
+            builder.Register<RewardedAdsRewardOrchestrator>(Lifetime.Singleton);
+            builder.Register<FortuneWheelAdSpinOrchestrator>(Lifetime.Singleton);
             
             // Orchestration
             builder.RegisterOrchestration(_cardCollectionScheduleFile, _removeCardCollectionConfigSchedule);

@@ -55,7 +55,8 @@ namespace FortuneWheel
             _currentState = NormalizeState(new FortuneWheelDataServerItem(
                 spinResult.AvailableSpins,
                 spinResult.UpdatedAt,
-                spinResult.NextUpdateAt));
+                spinResult.NextUpdateAt,
+                spinResult.AdSpinAvailable));
 
             _lastRefreshFailureAtUnixSeconds = long.MinValue;
             OnStateUpdated?.Invoke(_currentState);
@@ -146,7 +147,7 @@ namespace FortuneWheel
             var availableSpins = Math.Max(0, state.AvailableSpins);
             var updatedAt = Math.Max(0L, NormalizeUnixTimestampToSeconds(state.UpdatedAt));
             var nextUpdateAt = Math.Max(0L, NormalizeUnixTimestampToSeconds(state.NextUpdateAt));
-            return new FortuneWheelDataServerItem(availableSpins, updatedAt, nextUpdateAt);
+            return new FortuneWheelDataServerItem(availableSpins, updatedAt, nextUpdateAt, state.AdSpinAvailable);
         }
 
         private static TimeSpan CalculateRemainingTime(long nextUpdateAt)

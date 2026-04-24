@@ -1,11 +1,15 @@
 using System;
+using Infrastructure;
 using UnityEngine;
 
 namespace Rewards
 {
     public static class RewardedAdsProviderFactory
     {
-        public static IRewardedAdsProvider Create(RewardedAdsConfig config)
+        public static IRewardedAdsProvider Create(
+            RewardedAdsConfig config,
+            IPlayerIdentityProvider playerIdentityProvider,
+            IWebClient webClient = null)
         {
             if (config == null)
             {
@@ -16,13 +20,16 @@ namespace Rewards
             switch (config.Mode)
             {
                 case RewardedAdsMode.Mock:
-                    provider = new MockRewardedAdsProvider(config);
+                    provider = new MockRewardedAdsProvider(config, webClient, playerIdentityProvider);
                     break;
                 case RewardedAdsMode.UnityAdsTestMode:
                     provider = new UnityAdsRewardedAdsProvider(config);
                     break;
+                case RewardedAdsMode.LevelPlay:
+                    provider = new LevelPlayRewardedAdsProvider(config, playerIdentityProvider);
+                    break;
                 default:
-                    provider = new MockRewardedAdsProvider(config);
+                    provider = new MockRewardedAdsProvider(config, webClient, playerIdentityProvider);
                     break;
             }
 

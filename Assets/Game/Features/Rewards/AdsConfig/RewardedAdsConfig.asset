@@ -13,14 +13,22 @@ MonoBehaviour:
   m_Name: RewardedAdsConfig
   m_EditorClassIdentifier: 
   Config:
-    Mode: 1
+    Mode: 0
     AndroidGameId: 6095471
     IosGameId: 6095470
     AndroidRewardedAdUnitId: Rewarded_Android
     IosRewardedAdUnitId: 
+    AndroidLevelPlayAppKey: 2614c40d5
+    IosLevelPlayAppKey: 
+    AndroidLevelPlayRewardedAdUnitId: 8nmyygv21mqqs0ae
+    IosLevelPlayRewardedAdUnitId: 
     RewardId: Gems
     TestMode: 1
+    UseServerConfirmedGrantFlow: 1
     GrantTimeoutSeconds: 15
+    GrantConfirmationTimeoutSeconds: 20
+    GrantPollingIntervalSeconds: 1
+    EnableIntentPollingLogs: 1
     MockOutcome: 0
     UseRandomMockDelay: 1
     MockDelayRangeSeconds: {x: 1, y: 2}

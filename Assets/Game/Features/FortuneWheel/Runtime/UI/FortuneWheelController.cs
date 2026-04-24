@@ -25,8 +25,6 @@ namespace FortuneWheel
 
     public class FortuneWheelArgs : WindowArgs
     {
-        public const int SectorCount = 8;
-
         public FortuneWheelDataServerItem InitialData { get; }
         public IReadOnlyList<FortuneWheelSectorArgs> Sectors { get; }
 
@@ -42,27 +40,33 @@ namespace FortuneWheel
     {
         private IFortuneWheelServerService _fortuneWheelServerService;
         private IFortuneWheelTimerService _fortuneWheelTimerService;
+        private FortuneWheelAdSpinOrchestrator _fortuneWheelAdSpinOrchestrator;
 
         private FortuneWheelArgs Args => Arguments as FortuneWheelArgs;
         private IReadOnlyList<FortuneWheelSectorArgs> Sectors => Args?.Sectors ?? Array.Empty<FortuneWheelSectorArgs>();
 
         private int _currentSpinsAmount;
+        private bool _isAdSpinAvailable;
         private bool _isSpinning;
         private bool _isSpinRequestInProgress;
+        private bool _isWaitingSpinAfterAdSuccess;
+        private int _adSpinFlowInProgressCount;
         private bool _isDataValid;
         private CancellationTokenSource _requestCts;
         private TimeSpan _currentRemainingTime;
         private FortuneWheelSpinResult _lastSuccessfulSpinResult;
 
-        public override bool IsCloseBlocked => _isSpinning;
+        public override bool IsCloseBlocked => _isSpinning || _isWaitingSpinAfterAdSuccess;
 
         [Inject]
         private void Construct(
             IFortuneWheelServerService fortuneWheelServerService,
-            IFortuneWheelTimerService fortuneWheelTimerService)
+            IFortuneWheelTimerService fortuneWheelTimerService,
+            FortuneWheelAdSpinOrchestrator fortuneWheelAdSpinOrchestrator)
         {
             _fortuneWheelServerService = fortuneWheelServerService;
             _fortuneWheelTimerService = fortuneWheelTimerService;
+            _fortuneWheelAdSpinOrchestrator = fortuneWheelAdSpinOrchestrator;
         }
 
         protected override void OnShowStart()
@@ -75,6 +79,7 @@ namespace FortuneWheel
                 Debug.LogError($"[{nameof(FortuneWheelController)}] {nameof(FortuneWheelArgs)} are missing.");
                 _isDataValid = false;
                 _currentSpinsAmount = 0;
+                _isAdSpinAvailable = false;
                 _currentRemainingTime = TimeSpan.Zero;
                 RefreshViewData();
                 UpdateInteractionState();
@@ -86,6 +91,7 @@ namespace FortuneWheel
                 Debug.LogError($"[{nameof(FortuneWheelController)}] Initial wheel data is missing.");
                 _isDataValid = false;
                 _currentSpinsAmount = 0;
+                _isAdSpinAvailable = false;
                 _currentRemainingTime = TimeSpan.Zero;
                 View.SetData(args);
                 RefreshViewData();
@@ -94,7 +100,9 @@ namespace FortuneWheel
             }
 
             _currentSpinsAmount = Mathf.Max(0, args.InitialData.AvailableSpins);
+            _isAdSpinAvailable = args.InitialData.AdSpinAvailable;
             _currentRemainingTime = CalculateRemainingTime(args.InitialData.NextUpdateAt);
+            _isWaitingSpinAfterAdSuccess = false;
             _isDataValid = ValidateSectors(Sectors);
 
             View.SetData(args);
@@ -108,10 +116,12 @@ namespace FortuneWheel
         {
             View.CloseClick += CloseWindow;
             View.SpinClick += OnSpinClicked;
+            View.SpinAdClick += OnSpinAdClicked;
         }
 
         protected override void OnHideStart(bool isClosed)
         {
+            View.SpinAdClick -= OnSpinAdClicked;
             View.SpinClick -= OnSpinClicked;
             View.CloseClick -= CloseWindow;
             UnsubscribeTimerService();
@@ -125,6 +135,11 @@ namespace FortuneWheel
             OnSpinClickedAsync(_requestCts?.Token ?? CancellationToken.None).Forget();
         }
 
+        private void OnSpinAdClicked()
+        {
+            OnSpinAdClickedAsync(_requestCts?.Token ?? CancellationToken.None).Forget();
+        }
+
         private async UniTaskVoid OnSpinClickedAsync(CancellationToken ct)
         {
             if (_isSpinning || _isSpinRequestInProgress || !_isDataValid || _currentSpinsAmount <= 0)
@@ -132,16 +147,80 @@ namespace FortuneWheel
                 return;
             }
 
+            await ExecuteSpinRequestAsync(ct, useOptimisticSpinDecrement: true);
+        }
+
+        private async UniTaskVoid OnSpinAdClickedAsync(CancellationToken ct)
+        {
+            if (_isSpinning || !_isDataValid)
+            {
+                return;
+            }
+
+            if (_fortuneWheelAdSpinOrchestrator == null)
+            {
+                Debug.LogError($"[{nameof(FortuneWheelController)}] {nameof(FortuneWheelAdSpinOrchestrator)} is not available.");
+                return;
+            }
+
+            _adSpinFlowInProgressCount++;
+            UpdateInteractionState();
+
+            try
+            {
+                var adFlowResult = await _fortuneWheelAdSpinOrchestrator.TryRunFlowAsync(ct);
+                if (adFlowResult == null || adFlowResult.Type != RewardGrantFlowResultType.Success)
+                {
+                    return;
+                }
+
+                if (_isSpinning || _isSpinRequestInProgress || !_isDataValid)
+                {
+                    return;
+                }
+
+                _isWaitingSpinAfterAdSuccess = true;
+                UpdateInteractionState();
+                await ExecuteSpinRequestAsync(ct, useOptimisticSpinDecrement: false);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"[{nameof(FortuneWheelController)}] Ad spin flow failed. {exception.Message}");
+            }
+            finally
+            {
+                _adSpinFlowInProgressCount = Math.Max(0, _adSpinFlowInProgressCount - 1);
+                if (!_isSpinning && !_isSpinRequestInProgress)
+                {
+                    UpdateInteractionState();
+                }
+            }
+        }
+
+        private async UniTask ExecuteSpinRequestAsync(CancellationToken ct, bool useOptimisticSpinDecrement)
+        {
             if (_fortuneWheelServerService == null)
             {
                 Debug.LogError($"[{nameof(FortuneWheelController)}] {nameof(IFortuneWheelServerService)} is not available.");
+                if (_isWaitingSpinAfterAdSuccess)
+                {
+                    _isWaitingSpinAfterAdSuccess = false;
+                    UpdateInteractionState();
+                }
                 return;
             }
 
             var previousSpinsAmount = _currentSpinsAmount;
-            _currentSpinsAmount = Mathf.Max(0, _currentSpinsAmount - 1);
+            if (useOptimisticSpinDecrement)
+            {
+                _currentSpinsAmount = Mathf.Max(0, _currentSpinsAmount - 1);
+                RefreshViewData();
+            }
+
             _isSpinRequestInProgress = true;
-            RefreshViewData();
             UpdateInteractionState();
 
             try
@@ -154,34 +233,49 @@ namespace FortuneWheel
                 var targetSectorIndex = FindSectorIndexByRewardId(Sectors, spinResult.RewardId);
                 if (targetSectorIndex < 0)
                 {
+                    _isWaitingSpinAfterAdSuccess = false;
                     Debug.LogWarning($"[{nameof(FortuneWheelController)}] Reward id '{spinResult.RewardId}' was not found in sectors.");
                     OnSpinCompleted();
                     return;
                 }
 
                 _isSpinning = true;
+                _isWaitingSpinAfterAdSuccess = false;
                 UpdateInteractionState();
 
                 var animationStarted = View.PlaySpinToSector(targetSectorIndex, OnSpinCompleted);
                 if (!animationStarted)
                 {
                     _isSpinning = false;
+                    _isWaitingSpinAfterAdSuccess = false;
                     UpdateInteractionState();
                     OnSpinCompleted();
                 }
             }
             catch (OperationCanceledException)
             {
-                RestoreOptimisticSpins(previousSpinsAmount);
+                _isWaitingSpinAfterAdSuccess = false;
+                if (useOptimisticSpinDecrement)
+                {
+                    RestoreOptimisticSpins(previousSpinsAmount);
+                }
             }
             catch (Exception exception)
             {
+                _isWaitingSpinAfterAdSuccess = false;
                 Debug.LogWarning($"[{nameof(FortuneWheelController)}] Spin request failed. {exception.Message}");
-                RestoreOptimisticSpins(previousSpinsAmount);
+                if (useOptimisticSpinDecrement)
+                {
+                    RestoreOptimisticSpins(previousSpinsAmount);
+                }
             }
             finally
             {
                 _isSpinRequestInProgress = false;
+                if (!_isSpinning)
+                {
+                    _isWaitingSpinAfterAdSuccess = false;
+                }
                 if (!_isSpinning)
                 {
                     UpdateInteractionState();
@@ -206,14 +300,18 @@ namespace FortuneWheel
 
         private void UpdateInteractionState()
         {
-            View.SetSpinInteractable(_isDataValid && !_isSpinning && !_isSpinRequestInProgress && _currentSpinsAmount > 0);
-            View.SetCloseInteractable(_isSpinning);
+            var regularSpinIsBusy = !_isDataValid || _isSpinning || _isSpinRequestInProgress || _isWaitingSpinAfterAdSuccess;
+            View.SetSpinButtonInteractable(!regularSpinIsBusy && _currentSpinsAmount > 0);
+            View.SetSpinAdButtonInteractable(_isDataValid && !_isSpinning && !_isWaitingSpinAfterAdSuccess);
+            View.SetCloseInteractable(_isSpinning || _isWaitingSpinAfterAdSuccess);
         }
 
         private void CancelSpin()
         {
             _isSpinning = false;
             _isSpinRequestInProgress = false;
+            _isWaitingSpinAfterAdSuccess = false;
+            _adSpinFlowInProgressCount = 0;
             _lastSuccessfulSpinResult = null;
             View.StopSpinAnimation();
             UpdateInteractionState();
@@ -259,7 +357,8 @@ namespace FortuneWheel
             ApplyStateUpdate(new FortuneWheelDataServerItem(
                 spinResult.AvailableSpins,
                 spinResult.UpdatedAt,
-                spinResult.NextUpdateAt));
+                spinResult.NextUpdateAt,
+                spinResult.AdSpinAvailable));
         }
 
         private void RestoreOptimisticSpins(int previousSpinsAmount)
@@ -334,6 +433,7 @@ namespace FortuneWheel
         private void ApplyStateUpdate(FortuneWheelDataServerItem state)
         {
             _currentSpinsAmount = Mathf.Max(0, state.AvailableSpins);
+            _isAdSpinAvailable = state.AdSpinAvailable;
             _currentRemainingTime = CalculateRemainingTime(state.NextUpdateAt);
             RefreshViewData();
             UpdateInteractionState();
@@ -365,19 +465,16 @@ namespace FortuneWheel
                 return;
             }
 
-            var rewardArgs = new RewardsWindowArgs(
-                spinResult.RewardSprite,
-                spinResult.RewardAmount,
-                spinResult.RewardResourceId);
+            var rewardArgs = new RewardsWindowArgs(spinResult.RewardId);
             UIManager.Show<RewardsWindowController>(rewardArgs);
         }
 
         private static bool ValidateSectors(IReadOnlyList<FortuneWheelSectorArgs> sectors)
         {
-            if (sectors == null || sectors.Count != FortuneWheelArgs.SectorCount)
+            if (sectors == null || sectors.Count != FortuneWheelConfig.Gameplay.SectorCount)
             {
                 var currentCount = sectors?.Count ?? 0;
-                Debug.LogError($"[{nameof(FortuneWheelController)}] Wheel expects exactly {FortuneWheelArgs.SectorCount} sectors. Now is {currentCount}");
+                Debug.LogError($"[{nameof(FortuneWheelController)}] Wheel expects exactly {FortuneWheelConfig.Gameplay.SectorCount} sectors. Now is {currentCount}");
                 return false;
             }
 
@@ -395,7 +492,7 @@ namespace FortuneWheel
 
         private void CloseWindow()
         {
-            if (_isSpinning)
+            if (_isSpinning || _isWaitingSpinAfterAdSuccess)
             {
                 return;
             }

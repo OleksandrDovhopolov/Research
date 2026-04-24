@@ -120,7 +120,7 @@ namespace Rewards
             }
         }
 
-        public async UniTask<RewardedShowResult> ShowAsync(string adUnitId, CancellationToken ct = default)
+        public async UniTask<RewardedShowResult> ShowAsync(string adUnitId, string rewardIntentId, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
             if (!IsInitialized)
@@ -139,7 +139,7 @@ namespace Rewards
                 throw new InvalidOperationException("Another show operation is already in progress.");
             }
 
-            Debug.Log($"[RewardAdsUnity] Show started. AdUnitId={adUnitId}");
+            Debug.Log($"[RewardAdsUnity] Show started. AdUnitId={adUnitId}, RewardIntentId={rewardIntentId}");
             _showOperation = new UniTaskCompletionSource<RewardedShowResult>();
             Advertisement.Show(adUnitId, this);
 
@@ -244,7 +244,7 @@ namespace Rewards
             throw new InvalidOperationException("UNITY_ADS scripting define is not enabled. Install/enable Unity Ads package.");
         }
 
-        public UniTask<RewardedShowResult> ShowAsync(string adUnitId, CancellationToken ct = default)
+        public UniTask<RewardedShowResult> ShowAsync(string adUnitId, string rewardIntentId, CancellationToken ct = default)
         {
             throw new InvalidOperationException("UNITY_ADS scripting define is not enabled. Install/enable Unity Ads package.");
         }

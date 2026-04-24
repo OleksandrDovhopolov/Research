@@ -1,21 +1,17 @@
-using UISystem;
+using System;
 using UIShared;
-using UnityEngine;
+using UISystem;
 using VContainer;
 
 namespace Rewards
 {
     public class RewardsWindowArgs : WindowArgs
     {
-        public Sprite RewardSprite { get; }
-        public int RewardAmount { get; }
-        public string RewardResourceId { get; }
-
-        public RewardsWindowArgs(Sprite rewardSprite, int rewardAmount, string rewardResourceId)
+        public string RewardId { get; }
+        
+        public RewardsWindowArgs(string rewardId)
         {
-            RewardSprite = rewardSprite;
-            RewardAmount = rewardAmount;
-            RewardResourceId = rewardResourceId;
+            RewardId = rewardId;
         }
     }
     
@@ -23,18 +19,27 @@ namespace Rewards
     public class RewardsWindowController : WindowController<RewardsWindowView>
     {
         private IAnimationService _animationService;
+        private IRewardSpecProvider _rewardSpecProvider;
 
         private RewardsWindowArgs Args => (RewardsWindowArgs) Arguments;
-
+        
         [Inject]
-        private void Construct(IAnimationService animationService)
+        private void Construct(IAnimationService animationService, IRewardSpecProvider rewardSpecProvider)
         {
             _animationService = animationService;
+            _rewardSpecProvider = rewardSpecProvider;
         }
 
         protected override void OnShowStart()
         {
-            View.SetReward(Args.RewardSprite, Args.RewardAmount);
+            if (_rewardSpecProvider.TryGet(Args.RewardId, out var rewardSpec))
+            {
+                View.SetReward(rewardSpec.Resources);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unknown reward id: {Args.RewardId}");
+            }
         }
         
         protected override void OnShowComplete()
@@ -49,12 +54,11 @@ namespace Rewards
 
         protected override void OnHideComplete(bool isClosed)
         {
-            if (_animationService != null && Args != null && Args.RewardAmount > 0)
+            foreach (var (key, value) in View.GetViews())
             {
-                View.TryGetAnimationStartPosition(out var animationStartPosition);
-                _animationService.Animate(animationStartPosition, Args.RewardAmount, Args.RewardResourceId, Args.RewardSprite);
+                value.TryGetAnimationStartPosition(out var animationStartPosition);
+                _animationService.Animate(animationStartPosition, key.Amount, key.ResourceId, key.Icon);
             }
-
             View.ResetView();
         }
 

@@ -16,15 +16,15 @@ namespace Rewards
         [SerializeField] private string _grantFailedText = "Failed to grant reward. Please try again";
         [SerializeField] private string _adShowFailedText = "Failed to show ad";
 
-        private AdsRewardFlowService _adsRewardFlowService;
+        private RewardedAdsRewardOrchestrator _rewardedAdsRewardOrchestrator;
         private CancellationToken _destroyCt;
         private bool _isRequestInProgress;
         private string _lastResultMessage = string.Empty;
 
         [Inject]
-        private void Construct(AdsRewardFlowService adsRewardFlowService)
+        private void Construct(RewardedAdsRewardOrchestrator rewardedAdsRewardOrchestrator)
         {
-            _adsRewardFlowService = adsRewardFlowService;
+            _rewardedAdsRewardOrchestrator = rewardedAdsRewardOrchestrator;
         }
 
         private void Awake()
@@ -41,9 +41,9 @@ namespace Rewards
             }
 
             _view.Clicked += HandleClicked;
-            if (_adsRewardFlowService != null)
+            if (_rewardedAdsRewardOrchestrator != null)
             {
-                _adsRewardFlowService.StateChanged += HandleStateChanged;
+                _rewardedAdsRewardOrchestrator.StateChanged += HandleStateChanged;
                 InitializeAsync(_destroyCt).Forget();
             }
             else
@@ -60,9 +60,9 @@ namespace Rewards
                 _view.Clicked -= HandleClicked;
             }
 
-            if (_adsRewardFlowService != null)
+            if (_rewardedAdsRewardOrchestrator != null)
             {
-                _adsRewardFlowService.StateChanged -= HandleStateChanged;
+                _rewardedAdsRewardOrchestrator.StateChanged -= HandleStateChanged;
             }
         }
 
@@ -70,7 +70,7 @@ namespace Rewards
         {
             try
             {
-                await _adsRewardFlowService.InitializeAsync(ct);
+                await _rewardedAdsRewardOrchestrator.InitializeAsync(ct);
             }
             catch (OperationCanceledException)
             {
@@ -83,7 +83,7 @@ namespace Rewards
             }
             finally
             {
-                UpdateViewFromState(_adsRewardFlowService.State);
+                UpdateViewFromState(_rewardedAdsRewardOrchestrator.State);
             }
         }
 
@@ -94,7 +94,7 @@ namespace Rewards
 
         private void HandleClicked()
         {
-            if (_isRequestInProgress || _adsRewardFlowService == null)
+            if (_isRequestInProgress || _rewardedAdsRewardOrchestrator == null)
             {
                 return;
             }
@@ -105,11 +105,11 @@ namespace Rewards
         private async UniTaskVoid RunFlowAsync(CancellationToken ct)
         {
             _isRequestInProgress = true;
-            UpdateViewFromState(_adsRewardFlowService.State);
+            UpdateViewFromState(_rewardedAdsRewardOrchestrator.State);
 
             try
             {
-                var result = await _adsRewardFlowService.TryRunFlowAsync(ct);
+                var result = await _rewardedAdsRewardOrchestrator.TryRunFlowAsync(ct);
                 _lastResultMessage = BuildMessageFromResult(result);
             }
             catch (OperationCanceledException)
@@ -119,7 +119,7 @@ namespace Rewards
             finally
             {
                 _isRequestInProgress = false;
-                UpdateViewFromState(_adsRewardFlowService.State);
+                UpdateViewFromState(_rewardedAdsRewardOrchestrator.State);
             }
         }
 
@@ -144,7 +144,7 @@ namespace Rewards
 
         private void UpdateViewFromState(RewardAdFlowState state)
         {
-            if (_view == null || _adsRewardFlowService == null)
+            if (_view == null || _rewardedAdsRewardOrchestrator == null)
             {
                 return;
             }
@@ -156,7 +156,7 @@ namespace Rewards
                 state == RewardAdFlowState.WaitingServerGrant;
 
             _view.SetLoading(isLoading);
-            _view.SetInteractable(_adsRewardFlowService.IsReady && !_isRequestInProgress);
+            _view.SetInteractable(_rewardedAdsRewardOrchestrator.IsReady && !_isRequestInProgress);
 
             var status = state switch
             {

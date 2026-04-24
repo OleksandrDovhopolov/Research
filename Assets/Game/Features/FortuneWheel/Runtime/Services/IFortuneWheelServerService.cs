@@ -27,41 +27,37 @@ namespace FortuneWheel
         public int AvailableSpins { get; }
         public long UpdatedAt { get; }
         public long NextUpdateAt { get; }
+        public bool AdSpinAvailable { get; }
 
-        public FortuneWheelDataServerItem(int availableSpins, long updatedAt, long nextUpdateAt)
+        public FortuneWheelDataServerItem(int availableSpins, long updatedAt, long nextUpdateAt, bool adSpinAvailable)
         {
             AvailableSpins = availableSpins;
             UpdatedAt = updatedAt;
             NextUpdateAt = nextUpdateAt;
+            AdSpinAvailable = adSpinAvailable;
         }
     }
     
     public sealed class FortuneWheelSpinResult
     {
         public string RewardId { get; }
-        public Sprite RewardSprite { get; }
-        public int RewardAmount { get; }
-        public string RewardResourceId { get; }
         public int AvailableSpins { get; }
         public long UpdatedAt { get; }
         public long NextUpdateAt { get; }
+        public bool AdSpinAvailable { get; }
 
         public FortuneWheelSpinResult(
             string rewardId,
-            Sprite rewardSprite,
-            int rewardAmount,
-            string rewardResourceId,
             int availableSpins,
             long updatedAt,
-            long nextUpdateAt)
+            long nextUpdateAt,
+            bool adSpinAvailable)
         {
             RewardId = rewardId;
-            RewardSprite = rewardSprite;
-            RewardAmount = rewardAmount;
-            RewardResourceId = rewardResourceId;
             AvailableSpins = availableSpins;
             UpdatedAt = updatedAt;
             NextUpdateAt = nextUpdateAt;
+            AdSpinAvailable = adSpinAvailable;
         }
     }
 }

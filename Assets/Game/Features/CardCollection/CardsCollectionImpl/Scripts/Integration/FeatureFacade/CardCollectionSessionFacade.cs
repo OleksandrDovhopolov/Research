@@ -97,6 +97,8 @@ namespace CardCollectionImpl
                 ct.ThrowIfCancellationRequested();
                 await context.CardCollectionFacade.UnlockCards(new[] { cardId }, ct);
             }
+
+            await context.OpenPackFlow.ShowPendingGroupCompletedAsync(ct);
         }
 
         public async UniTask TryUnlockAllMinusOneCard(CancellationToken ct)

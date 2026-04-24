@@ -13,25 +13,19 @@ namespace FortuneWheel
     public sealed class FortuneWheelServerService : IFortuneWheelServerService
     {
         private const string LogPrefix = "[FortuneWheelServerService]";
-        private const string DataUrl = "wheel/data";
-        private const string RewardsUrl = "wheel/rewards";
-        private const string SpinUrl = "wheel/spin";
 
-        private readonly IRewardSpecProvider _rewardSpecProvider;
-        private readonly IRewardGrantService _rewardGrantService;
+        private readonly IRewardResponseApplier _rewardResponseApplier;
         private readonly IPlayerIdentityProvider _playerIdentityProvider;
         private readonly SaveService _saveService;
         private readonly IWebClient _webClient;
 
         public FortuneWheelServerService(
             IPlayerIdentityProvider playerIdentityProvider, 
-            IRewardGrantService rewardGrantService,
-            IRewardSpecProvider rewardSpecProvider,
+            IRewardResponseApplier rewardResponseApplier,
             SaveService saveService,
             IWebClient webClient)
         {
-            _rewardSpecProvider = rewardSpecProvider ?? throw new ArgumentNullException(nameof(rewardSpecProvider));
-            _rewardGrantService = rewardGrantService ?? throw new ArgumentNullException(nameof(rewardGrantService));
+            _rewardResponseApplier = rewardResponseApplier ?? throw new ArgumentNullException(nameof(rewardResponseApplier));
             _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
             _saveService = saveService ?? throw new ArgumentNullException(nameof(saveService));
             _webClient = webClient ?? throw new ArgumentNullException(nameof(webClient));
@@ -50,7 +44,7 @@ namespace FortuneWheel
             try
             {
                 var encodedPlayerId = Uri.EscapeDataString(playerId);
-                var requestUrl = $"{DataUrl}?playerId={encodedPlayerId}";
+                var requestUrl = $"{FortuneWheelConfig.Api.DataPath}?playerId={encodedPlayerId}";
                 Debug.Log(
                     $"{LogPrefix} [{operationId}] GetData request. Url={requestUrl}, PlayerId={MaskPlayerId(playerId)}, " +
                     $"CachedBefore={BuildCacheSummary(cachedData)}");
@@ -63,13 +57,16 @@ namespace FortuneWheel
                 var availableSpins = Mathf.Max(0, response.availableSpins);
                 var updatedAt = Math.Max(0L, response.updatedAt);
                 var nextUpdateAt = Math.Max(0L, response.nextUpdateAt);
+                var adSpinAvailable = response.adSpinAvailable;
                 Debug.Log(
                     $"{LogPrefix} [{operationId}] GetData parsed. PlayerId={MaskPlayerId(playerId)}, " +
                     $"RawAvailableSpins={response.availableSpins}, RawUpdatedAt={response.updatedAt}, RawNextUpdateAt={response.nextUpdateAt}, " +
-                    $"NormalizedAvailableSpins={availableSpins}, NormalizedUpdatedAt={updatedAt}, NormalizedNextUpdateAt={nextUpdateAt}");
+                    $"RawAdSpinAvailable={response.adSpinAvailable}, NormalizedAvailableSpins={availableSpins}, " +
+                    $"NormalizedUpdatedAt={updatedAt}, NormalizedNextUpdateAt={nextUpdateAt}, " +
+                    $"NormalizedAdSpinAvailable={adSpinAvailable}");
                 //await TryPersistCachedDataAsync(availableSpins, updatedAt, "GetData", operationId, ct);
 
-                return new FortuneWheelDataServerItem(availableSpins, updatedAt, nextUpdateAt);
+                return new FortuneWheelDataServerItem(availableSpins, updatedAt, nextUpdateAt, adSpinAvailable);
             }
             catch (OperationCanceledException)
             {
@@ -79,19 +76,20 @@ namespace FortuneWheel
             {
                 var fallbackSpins = Mathf.Max(0, cachedData.AvailableSpins);
                 var fallbackUpdatedAt = Math.Max(0L, cachedData.UpdatedAt);
-                const long fallbackNextUpdateAt = 0L;
+                const long fallbackNextUpdateAt = FortuneWheelConfig.Api.FallbackNextUpdateAt;
+                const bool fallbackAdSpinAvailable = FortuneWheelConfig.Api.FallbackAdSpinAvailable;
                 var verificationUrl = BuildWheelDataUrl(playerId);
                 Debug.LogWarning(
                     $"{LogPrefix} [{operationId}] GetData failed. Falling back to cached data. PlayerId={MaskPlayerId(playerId)}, VerificationUrl={verificationUrl}, " +
                     $"CachedAvailableSpins={fallbackSpins}, CachedUpdatedAt={fallbackUpdatedAt}, " +
-                    $"FallbackNextUpdateAt={fallbackNextUpdateAt} (server-only field), Reason={exception}");
-                return new FortuneWheelDataServerItem(fallbackSpins, fallbackUpdatedAt, fallbackNextUpdateAt);
+                    $"FallbackNextUpdateAt={fallbackNextUpdateAt} (server-only field), FallbackAdSpinAvailable={fallbackAdSpinAvailable}, Reason={exception}");
+                return new FortuneWheelDataServerItem(fallbackSpins, fallbackUpdatedAt, fallbackNextUpdateAt, fallbackAdSpinAvailable);
             }
         }
         
         public async UniTask<IReadOnlyList<FortuneWheelRewardServerItem>> GetRewardsAsync(CancellationToken ct = default)
         {
-            var response = await _webClient.GetAsync<RewardsResponseWrapper>(RewardsUrl, ct);
+            var response = await _webClient.GetAsync<RewardsResponseWrapper>(FortuneWheelConfig.Api.RewardsPath, ct);
 
             var rewardItems = response?.rewards;
 
@@ -136,13 +134,13 @@ namespace FortuneWheel
             });
 
             Debug.Log(
-                $"{LogPrefix} [{operationId}] Spin request. Url={SpinUrl}, PlayerId={MaskPlayerId(playerId)}, " +
+                $"{LogPrefix} [{operationId}] Spin request. Url={FortuneWheelConfig.Api.SpinPath}, PlayerId={MaskPlayerId(playerId)}, " +
                 $"RequestBodyLength={requestBody.Length}, CachedBefore={BuildCacheSummary(cachedDataBefore)}");
 
             try
             {
                 var response = await _webClient.PostAsync<SpinRequestBody, SpinResponseBody>(
-                    SpinUrl,
+                    FortuneWheelConfig.Api.SpinPath,
                     new SpinRequestBody { playerId = playerId },
                     ct);
                 if (response == null || string.IsNullOrWhiteSpace(response.rewardId))
@@ -153,12 +151,15 @@ namespace FortuneWheel
                 var availableSpins = Mathf.Max(0, response.availableSpins);
                 var updatedAt = Math.Max(0L, response.updatedAt);
                 var nextUpdateAt = Math.Max(0L, response.nextUpdateAt);
+                var adSpinAvailable = response.adSpinAvailable;
                 var cachedBeforeSpins = Mathf.Max(0, cachedDataBefore?.AvailableSpins ?? 0);
                 var spinsDeltaVsCache = availableSpins - cachedBeforeSpins;
                 Debug.Log(
                     $"{LogPrefix} [{operationId}] Spin parsed. PlayerId={MaskPlayerId(playerId)}, RewardId={response.rewardId}, " +
                     $"RawAvailableSpins={response.availableSpins}, RawUpdatedAt={response.updatedAt}, RawNextUpdateAt={response.nextUpdateAt}, " +
-                    $"NormalizedAvailableSpins={availableSpins}, NormalizedUpdatedAt={updatedAt}, NormalizedNextUpdateAt={nextUpdateAt}, " +
+                    $"RawAdSpinAvailable={response.adSpinAvailable}, NormalizedAvailableSpins={availableSpins}, " +
+                    $"NormalizedUpdatedAt={updatedAt}, NormalizedNextUpdateAt={nextUpdateAt}, " +
+                    $"NormalizedAdSpinAvailable={adSpinAvailable}, " +
                     $"CachedBeforeSpins={cachedBeforeSpins}, SpinsDeltaVsCache={spinsDeltaVsCache}");
 
                 if (spinsDeltaVsCache >= 0)
@@ -177,13 +178,7 @@ namespace FortuneWheel
                  * --------------------------------------------------
                  */
                 
-                if (!_rewardSpecProvider.TryGet(response.rewardId, out RewardSpec rewardSpec))
-                {
-                    throw new InvalidOperationException($"Unknown reward id: {response.rewardId}");
-                }
-
-                var primaryResource = GetPrimaryRewardResource(rewardSpec, response.rewardId);
-                var success = await _rewardGrantService.TryApplyGrantResponseAsync(response.rewardGrant, ct);
+                var success = await _rewardResponseApplier.TryApplyAsync(response.rewardGrant, ct);
                 if (!success)
                 {
                     throw new InvalidOperationException($"Failed to grant reward {response.rewardId}");
@@ -195,12 +190,10 @@ namespace FortuneWheel
                 
                 return new FortuneWheelSpinResult(
                     response.rewardId,
-                    primaryResource.Icon,
-                    primaryResource.Amount,
-                    primaryResource.ResourceId,
                     availableSpins,
                     updatedAt,
-                    nextUpdateAt);
+                    nextUpdateAt,
+                    adSpinAvailable);
             }
             catch (OperationCanceledException)
             {
@@ -213,28 +206,6 @@ namespace FortuneWheel
                     $"{LogPrefix} [{operationId}] Spin failed. PlayerId={MaskPlayerId(playerId)}, VerificationUrl={BuildWheelDataUrl(playerId)}, Reason={exception}");
                 throw;
             }
-        }
-
-        private static RewardSpecResource GetPrimaryRewardResource(RewardSpec rewardSpec, string rewardId)
-        {
-            var resources = rewardSpec?.Resources;
-            if (resources == null || resources.Count == 0)
-            {
-                throw new InvalidOperationException($"Reward spec '{rewardId}' has no resources.");
-            }
-
-            for (var i = 0; i < resources.Count; i++)
-            {
-                var resource = resources[i];
-                if (resource == null || string.IsNullOrWhiteSpace(resource.ResourceId) || resource.Amount <= 0)
-                {
-                    continue;
-                }
-
-                return resource;
-            }
-
-            throw new InvalidOperationException($"Reward spec '{rewardId}' has no primary resource.");
         }
 
         private async UniTask<FortuneWheelModuleSaveData> GetCachedDataSafeAsync(CancellationToken ct)
@@ -326,7 +297,7 @@ namespace FortuneWheel
         private static string BuildWheelDataUrl(string playerId)
         {
             var encodedPlayerId = Uri.EscapeDataString(playerId ?? string.Empty);
-            return $"{ApiConfig.BaseUrl}{DataUrl}?playerId={encodedPlayerId}";
+            return $"{ApiConfig.BaseUrl}{FortuneWheelConfig.Api.DataPath}?playerId={encodedPlayerId}";
         }
 
         private static string MaskPlayerId(string playerId)
@@ -371,6 +342,7 @@ namespace FortuneWheel
             public int availableSpins;
             public long updatedAt;
             public long nextUpdateAt;
+            public bool adSpinAvailable;
             public GrantRewardResponse rewardGrant;
         }
 
@@ -380,6 +352,7 @@ namespace FortuneWheel
             public int availableSpins;
             public long updatedAt;
             public long nextUpdateAt;
+            public bool adSpinAvailable;
         }
     }
 }

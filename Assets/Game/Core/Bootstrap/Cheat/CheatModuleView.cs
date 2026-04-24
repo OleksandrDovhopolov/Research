@@ -6,7 +6,9 @@ using CoreResources;
 using Cysharp.Threading.Tasks;
 using EventOrchestration;
 using Inventory.API;
+using Rewards;
 using UIShared;
+using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
@@ -22,28 +24,34 @@ namespace Game.Cheat
         private CheatPanelItem _rootPanel;
         private List<ICheatsModule> _cheatsModules;
         
+        private UIManager _uiManager;
         private ResourceManager _resourceManager;
         private IResourceOperationsService _resourceOperationsService;
         private IInventoryService _inventoryService;
         private OrchestratorRunner _orchestratorRunner;
         private AnimateCurrency _animateCurrency;
         private ICardCollectionSessionFacade _cardCollectionSessionFacade;
+        private RewardSpecsConfigSO _rewardSpecsConfigSo;
 
         [Inject]
         private void Construct(
+            UIManager uiManager,
             AnimateCurrency animateCurrency,
             ResourceManager resourceManager,
             IResourceOperationsService resourceOperationsService,
             IInventoryService inventoryService, 
             OrchestratorRunner orchestratorRunner,
-            ICardCollectionSessionFacade cardCollectionSessionFacade)
+            ICardCollectionSessionFacade cardCollectionSessionFacade,
+            RewardSpecsConfigSO rewardSpecsConfigSo)
         {
+            _uiManager = uiManager;
             _inventoryService = inventoryService;
             _resourceManager = resourceManager;
             _resourceOperationsService = resourceOperationsService;
             _animateCurrency = animateCurrency;
             _orchestratorRunner = orchestratorRunner;
             _cardCollectionSessionFacade = cardCollectionSessionFacade;
+            _rewardSpecsConfigSo = rewardSpecsConfigSo;
         }
         
         public void Start()
@@ -101,6 +109,7 @@ namespace Game.Cheat
                 new CardCollectionCheatModule(_cardCollectionSessionFacade, _orchestratorRunner, destroyCt),
                 new AddCardsCheatModule(_cardCollectionSessionFacade, destroyCt),
                 new ResourcesCheatModule(_resourceManager, _resourceOperationsService, _animateCurrency),
+                new RewardCheatModule(_uiManager, _rewardSpecsConfigSo),
                 //new InventoryCheatModule(_inventoryService),
             };
             

@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
@@ -12,25 +10,20 @@ namespace Rewards
     {
         private const string RewardSource = "client";
         private const string GrantRewardPath = "rewards/grant";
-        private const string GemsResourceId = "Gems";
 
         private readonly IPlayerIdentityProvider _playerIdentityProvider;
-        private readonly IReadOnlyList<IPlayerStateSnapshotHandler> _snapshotHandlers;
+        private readonly IRewardResponseApplier _rewardResponseApplier;
         private readonly IWebClient _webClient;
+        private readonly SemaphoreSlim _grantMutex = new(1, 1);
 
         public ServerRewardGrantService(
             IPlayerIdentityProvider playerIdentityProvider,
             IWebClient webClient,
-            IEnumerable<IPlayerStateSnapshotHandler> snapshotHandlers)
+            IRewardResponseApplier rewardResponseApplier)
         {
             _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
             _webClient = webClient ?? throw new ArgumentNullException(nameof(webClient));
-            if (snapshotHandlers == null)
-            {
-                throw new ArgumentNullException(nameof(snapshotHandlers));
-            }
-
-            _snapshotHandlers = snapshotHandlers.Where(handler => handler != null).ToList();
+            _rewardResponseApplier = rewardResponseApplier ?? throw new ArgumentNullException(nameof(rewardResponseApplier));
         }
 
         public async UniTask<bool> TryGrantAsync(string rewardId, CancellationToken ct = default)
@@ -69,9 +62,13 @@ namespace Rewards
                 RewardSource = RewardSource,
                 RewardId = rewardId
             };
+            var lockTaken = false;
 
             try
             {
+                await _grantMutex.WaitAsync(ct);
+                lockTaken = true;
+
                 var body = await _webClient.PostAsync<GrantRewardCommand, GrantRewardResponse>(GrantRewardPath, command, ct);
                 if (body == null)
                 {
@@ -83,7 +80,7 @@ namespace Rewards
                         "Grant response is empty.");
                 }
 
-                var applied = await TryApplyGrantResponseAsync(body, ct);
+                var applied = await _rewardResponseApplier.TryApplyAsync(body, ct);
                 if (!applied)
                 {
                     var normalizedRewardId = string.IsNullOrWhiteSpace(body.RewardId) ? rewardId : body.RewardId;
@@ -95,7 +92,7 @@ namespace Rewards
                 }
 
                 var finalRewardId = string.IsNullOrWhiteSpace(body.RewardId) ? rewardId : body.RewardId;
-                return RewardGrantDetailedResult.BuildSuccess(finalRewardId, TryGetCrystalsBalance(body.PlayerState));
+                return RewardGrantDetailedResult.BuildSuccess(finalRewardId);
             }
             catch (OperationCanceledException)
             {
@@ -137,77 +134,14 @@ namespace Rewards
                     "UNEXPECTED_ERROR",
                     exception.Message);
             }
-        }
-
-        public UniTask<bool> TryGrantAsync(List<RewardGrantRequest> rewards, CancellationToken ct = default)
-        {
-            throw new NotSupportedException("Use TryGrantAsync(string rewardId, ...)");
-        }
-
-        public async UniTask<bool> TryApplyGrantResponseAsync(GrantRewardResponse grantResponse, CancellationToken ct = default)
-        {
-            ct.ThrowIfCancellationRequested();
-            if (grantResponse == null)
+            finally
             {
-                Debug.LogWarning("[Rewards] Grant response is null.");
-                return false;
-            }
-
-            var rewardId = string.IsNullOrWhiteSpace(grantResponse.RewardId) ? "<unknown>" : grantResponse.RewardId;
-            if (!grantResponse.Success)
-            {
-                Debug.LogWarning(
-                    $"[Rewards] Grant rejected. RewardId={rewardId}, Code={grantResponse.ErrorCode ?? "<none>"}, Message={grantResponse.ErrorMessage ?? "<none>"}");
-                return false;
-            }
-
-            if (grantResponse.PlayerState == null)
-            {
-                Debug.LogWarning($"[Rewards] Grant response has no playerState. RewardId={rewardId}");
-                return false;
-            }
-
-            await ApplySnapshotAsync(grantResponse.PlayerState, ct);
-            return true;
-        }
-
-        // TODO what is it for ? reward cant be crystals all the time ?  take reward not from snapshot but from ResourceManager.GetAmount(Gems)
-        private static int? TryGetCrystalsBalance(PlayerStateSnapshotDto snapshot)
-        {
-            if (snapshot?.Resources == null || snapshot.Resources.Count == 0)
-            {
-                return null;
-            }
-
-            if (snapshot.Resources.TryGetValue(GemsResourceId, out var gems))
-            {
-                return gems;
-            }
-
-            foreach (var pair in snapshot.Resources)
-            {
-                if (string.Equals(pair.Key, GemsResourceId, StringComparison.OrdinalIgnoreCase))
+                if (lockTaken)
                 {
-                    return pair.Value;
+                    _grantMutex.Release();
                 }
             }
-
-            return null;
         }
 
-        private async UniTask ApplySnapshotAsync(PlayerStateSnapshotDto snapshot, CancellationToken ct)
-        {
-            ct.ThrowIfCancellationRequested();
-            if (snapshot == null)
-            {
-                return;
-            }
-
-            foreach (var snapshotHandler in _snapshotHandlers)
-            {
-                ct.ThrowIfCancellationRequested();
-                await snapshotHandler.ApplyAsync(snapshot, ct);
-            }
-        }
     }
 }

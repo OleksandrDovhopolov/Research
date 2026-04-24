@@ -1,44 +1,42 @@
-using TMPro;
+using System.Collections.Generic;
+using UIShared;
 using UISystem;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Rewards
 {
     public class RewardsWindowView : WindowView
     {
-        [SerializeField] private Image _rewardImage;
-        [SerializeField] private TextMeshProUGUI _rewardAmountText;
-        [SerializeField] private RectTransform _animationStartPosition;
+        [SerializeField] private UIListPool<RewardItemView> _cardGroupsPool;
+
+        private readonly Dictionary<RewardSpecResource, RewardItemView> _rewardItemViews = new();
         
-        public void SetReward(Sprite sprite, int amount)
+        public void SetReward(List<RewardSpecResource> rewardSpecResources)
         {
-            _rewardImage.sprite = sprite;
-            _rewardAmountText.text = Mathf.Max(0, amount).ToString();
+            _rewardItemViews.Clear();
+            _cardGroupsPool.DisableNonActive();
+            
+            foreach (var rewardSpecResource in rewardSpecResources)
+            {
+                var rewardItemView = _cardGroupsPool.GetNext();
+                rewardItemView.SetResourceData(rewardSpecResource);
+                _rewardItemViews.Add(rewardSpecResource, rewardItemView);
+            }
         }
-
-        public bool TryGetAnimationStartPosition(out Vector3 animationStartPosition)
+        
+        public Dictionary<RewardSpecResource, RewardItemView> GetViews()
         {
-            if (_animationStartPosition != null)
-            {
-                animationStartPosition = _animationStartPosition.position;
-                return true;
-            }
-
-            if (_rewardImage != null)
-            {
-                animationStartPosition = _rewardImage.rectTransform.position;
-                return true;
-            }
-
-            animationStartPosition = transform.position;
-            return false;
+            return _rewardItemViews;
         }
 
         public void ResetView()
         {
-            _rewardImage.sprite = null;
-            _rewardAmountText.text = string.Empty;
+            foreach (var rewardItemView in _rewardItemViews.Values)
+            {
+                rewardItemView.ResetView();
+            }
+            _rewardItemViews.Clear();
+            _cardGroupsPool.DisableAll();
         }
     }
 }

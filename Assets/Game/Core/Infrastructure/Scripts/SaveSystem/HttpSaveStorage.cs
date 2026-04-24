@@ -2,7 +2,6 @@ using System;
 using System.Text;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -118,7 +117,7 @@ namespace Infrastructure
 
                 ThrowIfFailed(request, "Load");
                 var rawResponseText = request.downloadHandler?.text;
-                var normalizedData = TryExtractDataFromEnvelope(rawResponseText, out var extractionMode);
+                var normalizedData = SaveGlobalPayloadParser.ExtractDataForStorage(rawResponseText, out var extractionMode);
                 Debug.Log(
                     $"{LogPrefix} LoadAsync() completed. ExtractionMode={extractionMode}, " +
                     $"RawLength={(rawResponseText?.Length ?? 0)}, NormalizedLength={(normalizedData?.Length ?? 0)}, " +
@@ -280,42 +279,6 @@ namespace Infrastructure
             }
 
             return $"{playerId.Substring(0, 4)}...{playerId.Substring(playerId.Length - 4, 4)}";
-        }
-
-        private static string TryExtractDataFromEnvelope(string responseText, out string extractionMode)
-        {
-            if (string.IsNullOrWhiteSpace(responseText))
-            {
-                extractionMode = "empty";
-                return responseText;
-            }
-
-            try
-            {
-                var obj = JObject.Parse(responseText);
-                var dataToken = obj["data"];
-                if (dataToken?.Type == JTokenType.String)
-                {
-                    extractionMode = "data-string";
-                    return dataToken.Value<string>();
-                }
-
-                if (dataToken is { Type: JTokenType.Object or JTokenType.Array })
-                {
-                    extractionMode = "data-json";
-                    return dataToken.ToString();
-                }
-
-                extractionMode = "raw-json";
-                return responseText;
-            }
-            catch (Exception)
-            {
-                // Response can be raw JSON save blob; return as-is.
-                extractionMode = "raw-text";
-            }
-
-            return responseText;
         }
 
         private static string TruncateForLog(string value, int maxLength = 320)
