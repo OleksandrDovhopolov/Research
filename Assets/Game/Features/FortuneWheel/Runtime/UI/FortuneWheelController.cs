@@ -55,8 +55,6 @@ namespace FortuneWheel
         private TimeSpan _currentRemainingTime;
         private FortuneWheelSpinResult _lastSuccessfulSpinResult;
 
-        private bool IsAdSpinFlowInProgress => _adSpinFlowInProgressCount > 0;
-
         public override bool IsCloseBlocked => _isSpinning;
 
         [Inject]
@@ -142,7 +140,7 @@ namespace FortuneWheel
 
         private async UniTaskVoid OnSpinClickedAsync(CancellationToken ct)
         {
-            if (_isSpinning || _isSpinRequestInProgress || IsAdSpinFlowInProgress || !_isDataValid || _currentSpinsAmount <= 0)
+            if (_isSpinning || _isSpinRequestInProgress || !_isDataValid || _currentSpinsAmount <= 0)
             {
                 return;
             }
@@ -284,7 +282,7 @@ namespace FortuneWheel
 
         private void UpdateInteractionState()
         {
-            var regularSpinIsBusy = !_isDataValid || _isSpinning || _isSpinRequestInProgress || IsAdSpinFlowInProgress;
+            var regularSpinIsBusy = !_isDataValid || _isSpinning || _isSpinRequestInProgress;
             View.SetSpinButtonInteractable(!regularSpinIsBusy && _currentSpinsAmount > 0);
             View.SetSpinAdButtonInteractable(_isDataValid && !_isSpinning);
             View.SetCloseInteractable(_isSpinning);
