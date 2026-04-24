@@ -49,11 +49,13 @@ namespace FortuneWheel
         private bool _isAdSpinAvailable;
         private bool _isSpinning;
         private bool _isSpinRequestInProgress;
-        private bool _isAdSpinFlowInProgress;
+        private int _adSpinFlowInProgressCount;
         private bool _isDataValid;
         private CancellationTokenSource _requestCts;
         private TimeSpan _currentRemainingTime;
         private FortuneWheelSpinResult _lastSuccessfulSpinResult;
+
+        private bool IsAdSpinFlowInProgress => _adSpinFlowInProgressCount > 0;
 
         public override bool IsCloseBlocked => _isSpinning;
 
@@ -140,7 +142,7 @@ namespace FortuneWheel
 
         private async UniTaskVoid OnSpinClickedAsync(CancellationToken ct)
         {
-            if (_isSpinning || _isSpinRequestInProgress || _isAdSpinFlowInProgress || !_isDataValid || _currentSpinsAmount <= 0)
+            if (_isSpinning || _isSpinRequestInProgress || IsAdSpinFlowInProgress || !_isDataValid || _currentSpinsAmount <= 0)
             {
                 return;
             }
@@ -150,7 +152,7 @@ namespace FortuneWheel
 
         private async UniTaskVoid OnSpinAdClickedAsync(CancellationToken ct)
         {
-            if (_isSpinning || _isSpinRequestInProgress || _isAdSpinFlowInProgress || !_isDataValid || !_isAdSpinAvailable)
+            if (_isSpinning || !_isDataValid)
             {
                 return;
             }
@@ -161,7 +163,7 @@ namespace FortuneWheel
                 return;
             }
 
-            _isAdSpinFlowInProgress = true;
+            _adSpinFlowInProgressCount++;
             UpdateInteractionState();
 
             try
@@ -188,7 +190,7 @@ namespace FortuneWheel
             }
             finally
             {
-                _isAdSpinFlowInProgress = false;
+                _adSpinFlowInProgressCount = Math.Max(0, _adSpinFlowInProgressCount - 1);
                 if (!_isSpinning && !_isSpinRequestInProgress)
                 {
                     UpdateInteractionState();
@@ -282,9 +284,9 @@ namespace FortuneWheel
 
         private void UpdateInteractionState()
         {
-            var isBusy = !_isDataValid || _isSpinning || _isSpinRequestInProgress || _isAdSpinFlowInProgress;
-            View.SetSpinButtonInteractable(!isBusy && _currentSpinsAmount > 0);
-            View.SetSpinAdButtonInteractable(!isBusy && _isAdSpinAvailable);
+            var regularSpinIsBusy = !_isDataValid || _isSpinning || _isSpinRequestInProgress || IsAdSpinFlowInProgress;
+            View.SetSpinButtonInteractable(!regularSpinIsBusy && _currentSpinsAmount > 0);
+            View.SetSpinAdButtonInteractable(_isDataValid && !_isSpinning);
             View.SetCloseInteractable(_isSpinning);
         }
 
@@ -292,7 +294,7 @@ namespace FortuneWheel
         {
             _isSpinning = false;
             _isSpinRequestInProgress = false;
-            _isAdSpinFlowInProgress = false;
+            _adSpinFlowInProgressCount = 0;
             _lastSuccessfulSpinResult = null;
             View.StopSpinAnimation();
             UpdateInteractionState();

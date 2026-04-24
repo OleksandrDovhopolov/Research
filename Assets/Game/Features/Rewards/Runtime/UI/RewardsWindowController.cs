@@ -36,8 +36,10 @@ namespace Rewards
             {
                 View.SetReward(rewardSpec.Resources);
             }
-
-            throw new InvalidOperationException($"Unknown reward id: {Args.RewardId}");
+            else
+            {
+                throw new InvalidOperationException($"Unknown reward id: {Args.RewardId}");
+            }
         }
         
         protected override void OnShowComplete()

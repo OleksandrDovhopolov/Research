@@ -278,9 +278,6 @@ MonoBehaviour:
   _animation: {fileID: -4344370285081404344}
   _closeButtons:
   - {fileID: 5785641560898066286}
-  _rewardImage: {fileID: 1144956823052419348}
-  _rewardAmountText: {fileID: 5785641561242505567}
-  _animationStartPosition: {fileID: 5785641561348974585}
   _cardGroupsPool:
     prefab: {fileID: 7159866281013524648, guid: 9cdb9bb1b72bc1749b8238c9797bf2d8, type: 3}
     parent: {fileID: 7674609569218369206}
@@ -1058,28 +1055,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9cdb9bb1b72bc1749b8238c9797bf2d8, type: 3}
---- !u!114 &1144956823052419348 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4392691889809759812, guid: 9cdb9bb1b72bc1749b8238c9797bf2d8, type: 3}
-  m_PrefabInstance: {fileID: 3681215687766482768}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &5785641561242505567 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7159866280851410447, guid: 9cdb9bb1b72bc1749b8238c9797bf2d8, type: 3}
-  m_PrefabInstance: {fileID: 3681215687766482768}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!224 &5785641561348974585 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7159866281013524649, guid: 9cdb9bb1b72bc1749b8238c9797bf2d8, type: 3}
