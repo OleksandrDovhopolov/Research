@@ -1,0 +1,22 @@
+{
+    "name": "BattlePass",
+    "rootNamespace": "BattlePass",
+    "references": [
+        "Infrastructure",
+        "UIShared",
+        "UISystem",
+        "UniTask",
+        "VContainer",
+        "Rewards",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

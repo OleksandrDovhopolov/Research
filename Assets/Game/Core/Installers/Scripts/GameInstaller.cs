@@ -2,6 +2,7 @@ using CardCollectionImpl;
 using core;
 using CoreResources;
 using EventOrchestration;
+using BattlePass;
 using FortuneWheel;
 using Infrastructure;
 using Inventory.API;
@@ -59,6 +60,7 @@ namespace Game.Bootstrap
             
             builder.RegisterInventoryService();
             builder.RegisterCardCollectionImpl();
+            builder.RegisterBattlePass();
             builder.RegisterFortuneWheel();
             
             // Rewards
@@ -102,6 +104,15 @@ namespace Game.Bootstrap
                     if (rewardedAdPresenter != null)
                     {
                         resolver.Inject(rewardedAdPresenter);
+                    }
+                }
+
+                var battlePassOpenButtons = Object.FindObjectsOfType<BattlePassOpenButton>(true);
+                foreach (var battlePassOpenButton in battlePassOpenButtons)
+                {
+                    if (battlePassOpenButton != null)
+                    {
+                        resolver.Inject(battlePassOpenButton);
                     }
                 }
             });
