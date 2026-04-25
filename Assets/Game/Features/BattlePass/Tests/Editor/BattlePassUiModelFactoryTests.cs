@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using Rewards;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace BattlePass.Tests.Editor
 {
     public sealed class BattlePassUiModelFactoryTests
     {
         [Test]
-        public void Create_BuildsTwoSeparateTracks_AndSkipsUnknownRewards()
+        public void Create_BuildsTwoSeparateFlatRewardLists_AndSkipsUnknownRewards()
         {
             var rewardSpecProvider = new StubRewardSpecProvider(new Dictionary<string, RewardSpec>
             {
@@ -42,16 +43,65 @@ namespace BattlePass.Tests.Editor
                 },
                 DateTimeOffset.Parse("2026-04-24T10:00:00Z"));
 
+            LogAssert.Expect(
+                LogType.Error,
+                "[BattlePassUiModelFactory] Claimed reward state is unavailable. Server snapshot does not contain claimedRewards data. First unresolved rewardId='reward_default'.");
+            LogAssert.Expect(
+                LogType.Warning,
+                "[BattlePassUiModelFactory] Unknown reward id 'unknown_reward'. Reward skipped.");
+
             var uiModel = factory.Create(snapshot);
 
             Assert.That(uiModel, Is.Not.Null);
             Assert.That(uiModel.Title, Is.EqualTo("Season 1"));
-            Assert.That(uiModel.DefaultTrackLevels.Count, Is.EqualTo(1));
-            Assert.That(uiModel.PremiumTrackLevels.Count, Is.EqualTo(1));
-            Assert.That(uiModel.DefaultTrackLevels[0].Rewards.Count, Is.EqualTo(1));
-            Assert.That(uiModel.DefaultTrackLevels[0].Rewards[0].RewardId, Is.EqualTo("reward_default"));
-            Assert.That(uiModel.PremiumTrackLevels[0].Rewards.Count, Is.EqualTo(1));
-            Assert.That(uiModel.PremiumTrackLevels[0].Rewards[0].RewardId, Is.EqualTo("reward_premium"));
+            Assert.That(uiModel.DefaultRewards.Count, Is.EqualTo(1));
+            Assert.That(uiModel.PremiumRewards.Count, Is.EqualTo(1));
+            Assert.That(uiModel.DefaultRewards[0].RewardId, Is.EqualTo("reward_default"));
+            Assert.That(uiModel.DefaultRewards[0].IsPremiumTrack, Is.False);
+            Assert.That(uiModel.DefaultRewards[0].IsClaimed, Is.False);
+            Assert.That(uiModel.DefaultRewards[0].IsLocked, Is.False);
+            Assert.That(uiModel.PremiumRewards[0].RewardId, Is.EqualTo("reward_premium"));
+            Assert.That(uiModel.PremiumRewards[0].IsPremiumTrack, Is.True);
+            Assert.That(uiModel.PremiumRewards[0].IsLocked, Is.False);
+        }
+
+        [Test]
+        public void Create_WhenUserHasNoPremiumAccess_MarksPremiumRewardsAsLocked()
+        {
+            var rewardSpecProvider = new StubRewardSpecProvider(new Dictionary<string, RewardSpec>
+            {
+                ["reward_premium"] = CreateRewardSpec("reward_premium", 25)
+            });
+            var factory = new BattlePassUiModelFactory(rewardSpecProvider);
+            var snapshot = new BattlePassSnapshot(
+                new BattlePassSeason(
+                    "season_1",
+                    "Season 1",
+                    DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+                    DateTimeOffset.Parse("2026-06-01T00:00:00Z"),
+                    50,
+                    "active",
+                    "v1"),
+                new BattlePassProducts("premium_sku", "platinum_sku"),
+                new BattlePassUserState("season_1", 4, 120, BattlePassPassType.None),
+                new[]
+                {
+                    new BattlePassLevel(
+                        1,
+                        0,
+                        Array.Empty<BattlePassRewardRef>(),
+                        new[] { new BattlePassRewardRef("reward_premium") })
+                },
+                DateTimeOffset.Parse("2026-04-24T10:00:00Z"));
+
+            LogAssert.Expect(
+                LogType.Error,
+                "[BattlePassUiModelFactory] Claimed reward state is unavailable. Server snapshot does not contain claimedRewards data. First unresolved rewardId='reward_premium'.");
+
+            var uiModel = factory.Create(snapshot);
+
+            Assert.That(uiModel.PremiumRewards.Count, Is.EqualTo(1));
+            Assert.That(uiModel.PremiumRewards[0].IsLocked, Is.True);
         }
 
         private static RewardSpec CreateRewardSpec(string rewardId, int amount)

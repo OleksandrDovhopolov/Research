@@ -47,6 +47,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3b88badc8f9bac64991c0e64e2f32648
+    m_Address: BattlePassWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3f5eb3ce00c12487eac31f936321c69a
     m_Address: Assets/Game/UI/UIShared/Prefabs/Loading/Animatons/Loading_rotate.anim
     m_ReadOnly: 0

@@ -9,6 +9,7 @@ using NUnit.Framework;
 using Rewards;
 using UISystem;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace BattlePass.Tests.Editor
 {
@@ -38,6 +39,9 @@ namespace BattlePass.Tests.Editor
             var timerService = new StubBattlePassTimerService();
             var controller = CreateController(serverService, timerService, out var view);
 
+            LogAssert.Expect(
+                LogType.Error,
+                "[BattlePassUiModelFactory] Claimed reward state is unavailable. Server snapshot does not contain claimedRewards data. First unresolved rewardId='reward_default'.");
             RunCoroutine(controller.Show(null));
 
             Assert.That(view.RenderedModel, Is.Not.Null);

@@ -20,7 +20,6 @@ namespace BattlePass
         [SerializeField] private TMP_Text _timerText;
         [SerializeField] private TMP_Text _levelText;
         [SerializeField] private TMP_Text _xpText;
-        [SerializeField] private TMP_Text _passTypeText;
 
         [Header("Buy Buttons")]
         [SerializeField] private Button _buyPremiumButton;
@@ -29,8 +28,8 @@ namespace BattlePass
         [SerializeField] private TMP_Text _buyPlatinumLabel;
 
         [Header("Tracks")]
-        [SerializeField] private UIListPool<BattlePassRewardTrackItemView> _defaultRewardsPool;
-        [SerializeField] private UIListPool<BattlePassRewardTrackItemView> _premiumRewardsPool;
+        [SerializeField] private UIListPool<BattlePassRewardView> _defaultRewardsPool;
+        [SerializeField] private UIListPool<BattlePassRewardView> _premiumRewardsPool;
 
         public event Action BuyPremiumClick;
         public event Action BuyPlatinumClick;
@@ -58,10 +57,9 @@ namespace BattlePass
             SetTimer(TimeSpan.Zero);
             SetLevel(0);
             SetXp(0);
-            SetPassType(BattlePassPassType.Unknown);
             SetBuyButtons(string.Empty, string.Empty);
-            RenderTrack(_defaultRewardsPool, Array.Empty<BattlePassTrackLevelUiModel>());
-            RenderTrack(_premiumRewardsPool, Array.Empty<BattlePassTrackLevelUiModel>());
+            RenderRewards(_defaultRewardsPool, Array.Empty<BattlePassRewardUiModel>());
+            RenderRewards(_premiumRewardsPool, Array.Empty<BattlePassRewardUiModel>());
         }
 
         public virtual void Render(BattlePassWindowUiModel model)
@@ -77,18 +75,17 @@ namespace BattlePass
             SetTitle(model.Title);
             SetLevel(model.CurrentLevel);
             SetXp(model.CurrentXp);
-            SetPassType(model.PassType);
             SetBuyButtons(model.PremiumProductId, model.PlatinumProductId);
-            RenderTrack(_defaultRewardsPool, model.DefaultTrackLevels);
-            RenderTrack(_premiumRewardsPool, model.PremiumTrackLevels);
+            RenderRewards(_defaultRewardsPool, model.DefaultRewards);
+            RenderRewards(_premiumRewardsPool, model.PremiumRewards);
         }
 
         public virtual void ShowUnavailableState(string message)
         {
             SetContentVisible(false);
             SetUnavailableVisible(true, string.IsNullOrWhiteSpace(message) ? BattlePassConfig.Ui.UnavailableText : message);
-            RenderTrack(_defaultRewardsPool, Array.Empty<BattlePassTrackLevelUiModel>());
-            RenderTrack(_premiumRewardsPool, Array.Empty<BattlePassTrackLevelUiModel>());
+            RenderRewards(_defaultRewardsPool, Array.Empty<BattlePassRewardUiModel>());
+            RenderRewards(_premiumRewardsPool, Array.Empty<BattlePassRewardUiModel>());
         }
 
         public virtual void SetTimer(TimeSpan remainingTime)
@@ -123,14 +120,6 @@ namespace BattlePass
             }
         }
 
-        private void SetPassType(BattlePassPassType passType)
-        {
-            if (_passTypeText != null)
-            {
-                _passTypeText.text = FormatPassType(passType);
-            }
-        }
-
         private void SetBuyButtons(string premiumProductId, string platinumProductId)
         {
             if (_buyPremiumLabel != null)
@@ -144,26 +133,26 @@ namespace BattlePass
             }
         }
 
-        private void RenderTrack(
-            UIListPool<BattlePassRewardTrackItemView> trackPool,
-            IReadOnlyList<BattlePassTrackLevelUiModel> levels)
+        private void RenderRewards(
+            UIListPool<BattlePassRewardView> rewardsPool,
+            IReadOnlyList<BattlePassRewardUiModel> rewards)
         {
-            if (trackPool == null)
+            if (rewardsPool == null)
             {
                 return;
             }
 
-            trackPool.DisableAll();
+            rewardsPool.DisableAll();
 
-            if (levels == null)
+            if (rewards == null)
             {
                 return;
             }
 
-            foreach (var level in levels)
+            foreach (var reward in rewards)
             {
-                var trackItemView = trackPool.GetNext();
-                trackItemView.SetData(level);
+                var rewardView = rewardsPool.GetNext();
+                rewardView.SetData(reward);
             }
         }
 

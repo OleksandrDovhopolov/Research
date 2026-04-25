@@ -75,7 +75,7 @@ namespace BattlePass
             }
 
             Debug.LogWarning("[BattlePassOpenButton]Show BattlePassWindowController");
-            //_uiManager.Show<BattlePassWindowController>();
+            _uiManager.Show<BattlePassWindowController>();
         }
 
         private void Subscribe()

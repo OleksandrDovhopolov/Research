@@ -13,8 +13,8 @@ namespace BattlePass
             BattlePassPassType passType,
             string premiumProductId,
             string platinumProductId,
-            IReadOnlyList<BattlePassTrackLevelUiModel> defaultTrackLevels,
-            IReadOnlyList<BattlePassTrackLevelUiModel> premiumTrackLevels)
+            IReadOnlyList<BattlePassRewardUiModel> defaultRewards,
+            IReadOnlyList<BattlePassRewardUiModel> premiumRewards)
         {
             Title = title ?? string.Empty;
             CurrentLevel = Math.Max(0, currentLevel);
@@ -22,8 +22,8 @@ namespace BattlePass
             PassType = passType;
             PremiumProductId = premiumProductId ?? string.Empty;
             PlatinumProductId = platinumProductId ?? string.Empty;
-            DefaultTrackLevels = defaultTrackLevels ?? Array.Empty<BattlePassTrackLevelUiModel>();
-            PremiumTrackLevels = premiumTrackLevels ?? Array.Empty<BattlePassTrackLevelUiModel>();
+            DefaultRewards = defaultRewards ?? Array.Empty<BattlePassRewardUiModel>();
+            PremiumRewards = premiumRewards ?? Array.Empty<BattlePassRewardUiModel>();
         }
 
         public string Title { get; }
@@ -32,8 +32,8 @@ namespace BattlePass
         public BattlePassPassType PassType { get; }
         public string PremiumProductId { get; }
         public string PlatinumProductId { get; }
-        public IReadOnlyList<BattlePassTrackLevelUiModel> DefaultTrackLevels { get; }
-        public IReadOnlyList<BattlePassTrackLevelUiModel> PremiumTrackLevels { get; }
+        public IReadOnlyList<BattlePassRewardUiModel> DefaultRewards { get; }
+        public IReadOnlyList<BattlePassRewardUiModel> PremiumRewards { get; }
     }
 
     public sealed class BattlePassTrackLevelUiModel
@@ -50,15 +50,21 @@ namespace BattlePass
 
     public sealed class BattlePassRewardUiModel
     {
-        public BattlePassRewardUiModel(string rewardId, Sprite icon, int amount)
+        public BattlePassRewardUiModel(string rewardId, Sprite icon, int amount, bool isClaimed, bool isLocked, bool isPremiumTrack)
         {
             RewardId = rewardId ?? string.Empty;
             Icon = icon;
             Amount = Math.Max(0, amount);
+            IsClaimed = isClaimed;
+            IsLocked = isLocked;
+            IsPremiumTrack = isPremiumTrack;
         }
 
         public string RewardId { get; }
         public Sprite Icon { get; }
         public int Amount { get; }
+        public bool IsClaimed { get; }
+        public bool IsLocked { get; }
+        public bool IsPremiumTrack { get; }
     }
 }
