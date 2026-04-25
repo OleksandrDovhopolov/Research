@@ -17,16 +17,24 @@ namespace BattlePass
     {
         BattlePassLifecycleStatus CurrentStatus { get; }
         bool IsActive { get; }
+        event Action Changed;
     }
 
     public sealed class BattlePassLifecycleState : IBattlePassLifecycleState
     {
         public BattlePassLifecycleStatus CurrentStatus { get; private set; } = BattlePassLifecycleStatus.Inactive;
         public bool IsActive => CurrentStatus == BattlePassLifecycleStatus.Active;
+        public event Action Changed;
 
         public void SetStatus(BattlePassLifecycleStatus status)
         {
+            if (CurrentStatus == status)
+            {
+                return;
+            }
+
             CurrentStatus = status;
+            Changed?.Invoke();
         }
     }
 
@@ -57,12 +65,14 @@ namespace BattlePass
 
     public sealed class BattlePassLiveOpsController : BaseLiveOpsController<BattlePassEventModel>
     {
+        public const string EventTypeValue = "BattlePass";
+
         private readonly BattlePassEventModelFactory _modelFactory;
         private readonly BattlePassLifecycleState _lifecycleState;
 
         public BattlePassLiveOpsController(
             BattlePassEventModelFactory modelFactory,
-            BattlePassLifecycleState lifecycleState) : base("BattlePass")
+            BattlePassLifecycleState lifecycleState) : base(EventTypeValue)
         {
             _modelFactory = modelFactory ?? throw new ArgumentNullException(nameof(modelFactory));
             _lifecycleState = lifecycleState ?? throw new ArgumentNullException(nameof(lifecycleState));
