@@ -3,6 +3,7 @@
     "rootNamespace": "BattlePass.Tests.Editor",
     "references": [
         "BattlePass",
+        "EventOrchestration",
         "Infrastructure",
         "Rewards",
         "UIShared",

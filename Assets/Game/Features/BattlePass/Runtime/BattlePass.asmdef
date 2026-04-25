@@ -3,6 +3,7 @@
     "rootNamespace": "BattlePass",
     "references": [
         "Infrastructure",
+        "EventOrchestration",
         "UIShared",
         "UISystem",
         "UniTask",

@@ -16,7 +16,7 @@ namespace Game.Cheat
     {
         private const string CardCollectionGroup = "CardCollection";
         private const string CardCollectionPointGroup = "CardCollectionPoints";
-        private const string ScheduleFileName = "card_collection_schedule.json";
+        private const string ScheduleFileName = "liveops_schedule.json";
         
         private readonly CancellationToken _ct;
         private readonly OrchestratorRunner _orchestratorRunner;

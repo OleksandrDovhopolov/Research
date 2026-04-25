@@ -14,7 +14,7 @@ namespace EventOrchestration
         private const string GroupsPrefix = "season_groups_";
         private const string PacksPrefix = "season_packs_";
         
-        [SerializeField] private string _relativeSchedulePathFromAssets = "StreamingAssets/card_collection_schedule.json";
+        [SerializeField] private string _relativeSchedulePathFromAssets = "StreamingAssets/liveops_schedule.json";
         [SerializeField] private int _eventIndex = 1;
         [SerializeField] private int _minDelay = 1;
         [SerializeField] private int _minDuration = 3;

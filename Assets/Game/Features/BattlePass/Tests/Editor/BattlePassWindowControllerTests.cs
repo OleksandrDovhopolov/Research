@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using EventOrchestration.Models;
 using NUnit.Framework;
 using Rewards;
 using UISystem;
@@ -81,6 +82,36 @@ namespace BattlePass.Tests.Editor
 
             Assert.That(timerService.StopCalls, Is.EqualTo(1));
             Assert.That(view.TimerUpdateCount, Is.EqualTo(timerUpdateCountBeforeHide));
+        }
+
+        [Test]
+        public void BattlePassLiveOpsController_OnStartAndOnEnd_UpdateLifecycleState()
+        {
+            var lifecycleState = new BattlePassLifecycleState();
+            var controller = new BattlePassLiveOpsController(new BattlePassEventModelFactory(), lifecycleState);
+            var schedule = new ScheduleItem
+            {
+                Id = "bp_1",
+                EventType = "BattlePass",
+                StreamId = "battle_pass",
+                StartTimeUtc = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+                EndTimeUtc = DateTimeOffset.Parse("2026-06-01T00:00:00Z"),
+            };
+            var state = new EventStateData
+            {
+                ScheduleItemId = "bp_1",
+                State = EventInstanceState.Pending,
+                UpdatedAtUtc = DateTimeOffset.Parse("2026-04-24T10:00:00Z"),
+            };
+
+            controller.InitializeAsync(schedule, state, CancellationToken.None).GetAwaiter().GetResult();
+            controller.OnStart(CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(lifecycleState.CurrentStatus, Is.EqualTo(BattlePassLifecycleStatus.Active));
+
+            controller.OnEnd(CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(lifecycleState.CurrentStatus, Is.EqualTo(BattlePassLifecycleStatus.Inactive));
         }
 
         private BattlePassWindowController CreateController(

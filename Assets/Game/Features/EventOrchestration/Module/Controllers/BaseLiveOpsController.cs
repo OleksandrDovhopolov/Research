@@ -8,12 +8,9 @@ namespace EventOrchestration
 {
     public abstract class BaseLiveOpsController<T> : IEventController where T : BaseGameEventModel
     {
-        private readonly IEventModelFactory _modelFactory;
-
-        protected BaseLiveOpsController(string eventType, IEventModelFactory modelFactory)
+        protected BaseLiveOpsController(string eventType)
         {
             EventType = eventType ?? throw new ArgumentNullException(nameof(eventType));
-            _modelFactory = modelFactory ?? throw new ArgumentNullException(nameof(modelFactory));
         }
 
         public string EventType { get; }
@@ -30,17 +27,9 @@ namespace EventOrchestration
 
             CurrentSchedule = config;
             CurrentState = state;
-            var rawModel = await _modelFactory.CreateAsync(config, ct);
-            if (rawModel == null)
-                throw new InvalidOperationException($"Model factory returned null for event type '{EventType}'.");
+            var typedModel = await CreateModelAsync(config, ct);
 
-            if (rawModel is not T typedModel)
-            {
-                throw new InvalidOperationException(
-                    $"Model factory returned '{rawModel.GetType().Name}', expected '{typeof(T).Name}' for event type '{EventType}'.");
-            }
-
-            CurrentModel = typedModel;
+            CurrentModel = typedModel ?? throw new InvalidOperationException($"Model factory returned null for event type '{EventType}'.");
 
             await OnInitializeModelAsync(CurrentModel, config, state, ct);
         }
@@ -79,6 +68,7 @@ namespace EventOrchestration
             return UniTask.CompletedTask;
         }
 
+        protected abstract UniTask<T> CreateModelAsync(ScheduleItem config, CancellationToken ct);
         protected abstract UniTask OnStartAsync(T model, EventStateData state, CancellationToken ct);
         protected abstract UniTask OnUpdateAsync(T model, EventStateData state, CancellationToken ct);
         protected abstract UniTask OnEndAsync(T model, EventStateData state, CancellationToken ct);

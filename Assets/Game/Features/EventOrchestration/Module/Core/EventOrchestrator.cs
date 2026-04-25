@@ -17,6 +17,7 @@ namespace EventOrchestration
         private readonly IScheduleValidator _scheduleValidator;
 
         private readonly Dictionary<string, EventStateData> _states = new();
+        private readonly SemaphoreSlim _operationLock = new(1, 1);
         private readonly UniTaskCompletionSource _initializedTcs = new();
         private List<ScheduleItem> _schedule = new();
         private bool _isInitialized;
@@ -49,21 +50,13 @@ namespace EventOrchestration
         public async UniTask InitializeAsync(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
+            await _operationLock.WaitAsync(ct);
             try
             {
-                var loadedSchedule = await _scheduleProvider.LoadAsync(ct);
-
-                var validationErrors = await _scheduleValidator.ValidateAsync(loadedSchedule, ct);
-                if (validationErrors.Count > 0)
+                if (_isInitialized)
                 {
-                    throw new InvalidOperationException("Schedule validation failed: " + string.Join("; ", validationErrors));
+                    return;
                 }
-
-                _schedule = loadedSchedule
-                    .OrderBy(x => x.StreamId)
-                    .ThenByDescending(x => x.Priority)
-                    .ThenBy(x => x.StartTimeUtc)
-                    .ToList();
 
                 var restored = await _stateStore.LoadAsync(ct);
                 _states.Clear();
@@ -74,18 +67,10 @@ namespace EventOrchestration
 
                 _engine.BindStates(_states);
 
-                _schedule = BuildRuntimeSchedule(_schedule);
-                PruneStatesOutsideSchedule();
+                await ReloadScheduleAsync(removeAllStaleStates: true, ct);
 
-                CreateScheduleData();
-
-                await _stateStore.SaveAsync(_states, ct);
-
-                if (!_isInitialized)
-                {
-                    _isInitialized = true;
-                    _initializedTcs.TrySetResult();
-                }
+                _isInitialized = true;
+                _initializedTcs.TrySetResult();
             }
             catch (OperationCanceledException)
             {
@@ -96,18 +81,48 @@ namespace EventOrchestration
                 _initializedTcs.TrySetException(ex);
                 throw;
             }
+            finally
+            {
+                _operationLock.Release();
+            }
         }
 
         public async UniTask TickAsync(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
-
-            var now = _clock.UtcNow;
-            var groupedByStream = _schedule.GroupBy(x => x.StreamId);
-            foreach (var stream in groupedByStream)
+            await _operationLock.WaitAsync(ct);
+            try
             {
-                ct.ThrowIfCancellationRequested();
-                await ProcessStreamAsync(stream, now, ct);
+                var now = _clock.UtcNow;
+                var groupedByStream = _schedule.GroupBy(x => x.StreamId);
+                foreach (var stream in groupedByStream)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    await ProcessStreamAsync(stream, now, ct);
+                }
+            }
+            finally
+            {
+                _operationLock.Release();
+            }
+        }
+
+        public async UniTask RefreshScheduleAsync(CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            await _operationLock.WaitAsync(ct);
+            try
+            {
+                if (!_isInitialized)
+                {
+                    throw new InvalidOperationException("EventOrchestrator must be initialized before refresh.");
+                }
+
+                await ReloadScheduleAsync(removeAllStaleStates: false, ct);
+            }
+            finally
+            {
+                _operationLock.Release();
             }
         }
 
@@ -119,13 +134,19 @@ namespace EventOrchestration
             {
                 var item = _schedule[i];
                 if (item.EndTimeUtc <= now)
+                {
                     continue;
+                }
 
                 if (!_states.TryGetValue(item.Id, out var state))
+                {
                     continue;
+                }
 
                 if (state.State != EventInstanceState.Pending)
+                {
                     continue;
+                }
 
                 if (nextItem == null || item.StartTimeUtc < nextItem.StartTimeUtc)
                 {
@@ -134,6 +155,99 @@ namespace EventOrchestration
             }
 
             return nextItem;
+        }
+
+        public bool IsEventTypeActive(string eventType)
+        {
+            if (string.IsNullOrWhiteSpace(eventType))
+            {
+                return false;
+            }
+
+            for (var i = 0; i < _schedule.Count; i++)
+            {
+                var item = _schedule[i];
+                if (!string.Equals(item.EventType, eventType, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (!_states.TryGetValue(item.Id, out var state))
+                {
+                    continue;
+                }
+
+                if (IsInProgressState(state.State))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool IsEventTypeUpcoming(string eventType)
+        {
+            if (string.IsNullOrWhiteSpace(eventType))
+            {
+                return false;
+            }
+
+            var now = _clock.UtcNow;
+            for (var i = 0; i < _schedule.Count; i++)
+            {
+                var item = _schedule[i];
+                if (!string.Equals(item.EventType, eventType, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (!_states.TryGetValue(item.Id, out var state))
+                {
+                    continue;
+                }
+
+                if (state.State == EventInstanceState.Pending && item.StartTimeUtc > now && item.EndTimeUtc > now)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool TryGetCurrentEvent(string eventType, out ScheduleItem item)
+        {
+            if (string.IsNullOrWhiteSpace(eventType))
+            {
+                item = null;
+                return false;
+            }
+
+            for (var i = 0; i < _schedule.Count; i++)
+            {
+                var candidate = _schedule[i];
+                if (!string.Equals(candidate.EventType, eventType, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (!_states.TryGetValue(candidate.Id, out var state))
+                {
+                    continue;
+                }
+
+                if (!IsInProgressState(state.State))
+                {
+                    continue;
+                }
+
+                item = candidate;
+                return true;
+            }
+
+            item = null;
+            return false;
         }
 
         public IReadOnlyList<ScheduleItem> GetScheduleSnapshot()
@@ -188,7 +302,7 @@ namespace EventOrchestration
         internal void SetSchedule(List<ScheduleItem> schedule) => _schedule = schedule;
         internal List<ScheduleItem> RebuildRuntimeSchedule(IEnumerable<ScheduleItem> s) => BuildRuntimeSchedule(s);
         internal void RunCreateScheduleData() => CreateScheduleData();
-        internal void RunPruneStatesOutsideSchedule() => PruneStatesOutsideSchedule();
+        internal void RunPruneStatesOutsideSchedule() => PruneStatesOutsideSchedule(removeOnlyTerminalStates: false);
 
         #endregion
 
@@ -198,7 +312,9 @@ namespace EventOrchestration
             foreach (var item in _schedule)
             {
                 if (_states.ContainsKey(item.Id))
+                {
                     continue;
+                }
 
                 _states[item.Id] = new EventStateData
                 {
@@ -212,11 +328,71 @@ namespace EventOrchestration
             }
         }
 
+        private async UniTask ReloadScheduleAsync(bool removeAllStaleStates, CancellationToken ct)
+        {
+            var loadedSchedule = await LoadAndValidateScheduleAsync(ct);
+            _schedule = BuildMergedRuntimeSchedule(_schedule, loadedSchedule);
+            PruneStatesOutsideSchedule(removeOnlyTerminalStates: !removeAllStaleStates);
+            CreateScheduleData();
+            await _stateStore.SaveAsync(_states, ct);
+        }
+
+        private async UniTask<List<ScheduleItem>> LoadAndValidateScheduleAsync(CancellationToken ct)
+        {
+            var loadedSchedule = await _scheduleProvider.LoadAsync(ct);
+
+            var validationErrors = await _scheduleValidator.ValidateAsync(loadedSchedule, ct);
+            if (validationErrors.Count > 0)
+            {
+                throw new InvalidOperationException("Schedule validation failed: " + string.Join("; ", validationErrors));
+            }
+
+            return loadedSchedule
+                .OrderBy(x => x.StreamId)
+                .ThenByDescending(x => x.Priority)
+                .ThenBy(x => x.StartTimeUtc)
+                .ToList();
+        }
+
         private List<ScheduleItem> BuildRuntimeSchedule(IEnumerable<ScheduleItem> schedule)
         {
             var now = _clock.UtcNow;
             return schedule
                 .Where(item => ShouldKeepForRuntime(item, now))
+                .OrderBy(x => x.StreamId)
+                .ThenByDescending(x => x.Priority)
+                .ThenBy(x => x.StartTimeUtc)
+                .ToList();
+        }
+
+        private List<ScheduleItem> BuildMergedRuntimeSchedule(
+            IReadOnlyCollection<ScheduleItem> currentRuntimeSchedule,
+            IReadOnlyCollection<ScheduleItem> loadedSchedule)
+        {
+            var mergedRuntimeSchedule = BuildRuntimeSchedule(loadedSchedule);
+            if (currentRuntimeSchedule == null || currentRuntimeSchedule.Count == 0)
+            {
+                return mergedRuntimeSchedule;
+            }
+
+            var knownIds = new HashSet<string>(mergedRuntimeSchedule.Select(item => item.Id), StringComparer.Ordinal);
+            foreach (var item in currentRuntimeSchedule)
+            {
+                if (item == null || knownIds.Contains(item.Id))
+                {
+                    continue;
+                }
+
+                if (!RequiresRuntimeRetention(item.Id))
+                {
+                    continue;
+                }
+
+                mergedRuntimeSchedule.Add(item);
+                knownIds.Add(item.Id);
+            }
+
+            return mergedRuntimeSchedule
                 .OrderBy(x => x.StreamId)
                 .ThenByDescending(x => x.Priority)
                 .ThenBy(x => x.StartTimeUtc)
@@ -230,15 +406,17 @@ namespace EventOrchestration
                 return true;
             }
 
-            if (!_states.TryGetValue(item.Id, out var state) || state == null)
+            return RequiresRuntimeRetention(item.Id);
+        }
+
+        private bool RequiresRuntimeRetention(string scheduleItemId)
+        {
+            if (!_states.TryGetValue(scheduleItemId, out var state) || state == null)
             {
                 return false;
             }
 
-            if (state.State is EventInstanceState.Active
-                or EventInstanceState.Starting
-                or EventInstanceState.Ending
-                or EventInstanceState.Settling)
+            if (IsInProgressState(state.State))
             {
                 return true;
             }
@@ -261,7 +439,6 @@ namespace EventOrchestration
             var items = streamItems as IList<ScheduleItem> ?? streamItems.ToList();
             var safetyCounter = items.Count + 1;
 
-            // Loop enables "instant chain": next valid event can start in the same tick.
             while (safetyCounter-- > 0)
             {
                 ct.ThrowIfCancellationRequested();
@@ -306,11 +483,7 @@ namespace EventOrchestration
                     continue;
                 }
 
-                var state = stateData.State;
-                if (state == EventInstanceState.Active ||
-                    state == EventInstanceState.Starting ||
-                    state == EventInstanceState.Ending ||
-                    state == EventInstanceState.Settling)
+                if (IsInProgressState(stateData.State))
                 {
                     return streamItems[i];
                 }
@@ -331,13 +504,16 @@ namespace EventOrchestration
                     continue;
                 }
 
-                var state = stateData.State;
-                if (state != EventInstanceState.Pending)
+                if (stateData.State != EventInstanceState.Pending)
+                {
                     continue;
+                }
 
                 var startGate = item.StartTimeUtc - StartSkew;
                 if (startGate > now || now >= item.EndTimeUtc)
+                {
                     continue;
+                }
 
                 return item;
             }
@@ -345,7 +521,7 @@ namespace EventOrchestration
             return null;
         }
 
-        private void PruneStatesOutsideSchedule()
+        private void PruneStatesOutsideSchedule(bool removeOnlyTerminalStates)
         {
             if (_states.Count == 0)
             {
@@ -357,9 +533,31 @@ namespace EventOrchestration
             var staleIds = _states.Keys.Where(id => !runtimeScheduleIds.Contains(id)).ToList();
             for (var i = 0; i < staleIds.Count; i++)
             {
+                if (removeOnlyTerminalStates &&
+                    _states.TryGetValue(staleIds[i], out var state) &&
+                    !IsTerminalState(state.State))
+                {
+                    continue;
+                }
+
                 _states.Remove(staleIds[i]);
                 _engine.CleanupItem(staleIds[i]);
             }
+        }
+
+        private static bool IsInProgressState(EventInstanceState state)
+        {
+            return state is EventInstanceState.Active
+                or EventInstanceState.Starting
+                or EventInstanceState.Ending
+                or EventInstanceState.Settling;
+        }
+
+        private static bool IsTerminalState(EventInstanceState state)
+        {
+            return state is EventInstanceState.Completed
+                or EventInstanceState.Failed
+                or EventInstanceState.Cancelled;
         }
     }
 }

@@ -13,22 +13,29 @@ namespace CardCollectionImpl
     {
         private CardCollectionSession _cardCollectionSession;
         
+        private readonly CardCollectionEventModelFactory _modelFactory;
         private readonly IEventCardsStorage _eventCardsStorage;
         private readonly ICardCollectionSessionFacade _sessionFacade;
         private readonly ICardCollectionRuntimeBuilder _collectionRuntimeBuilder;
         private readonly ICardCollectionSettlementCleanupService _settlementCleanupService;
         
         public CardCollectionLiveOpsController(
-            IEventModelFactory modelFactory,
+            CardCollectionEventModelFactory modelFactory,
             IEventCardsStorage eventCardsStorage,
             ICardCollectionSettlementCleanupService settlementCleanupService,
             ICardCollectionSessionFacade sessionFacade,
-            ICardCollectionRuntimeBuilder collectionRuntimeBuilder) : base("CardCollection", modelFactory)
+            ICardCollectionRuntimeBuilder collectionRuntimeBuilder) : base("CardCollection")
         {
+            _modelFactory = modelFactory ?? throw new ArgumentNullException(nameof(modelFactory));
             _sessionFacade = sessionFacade;
             _eventCardsStorage = eventCardsStorage;
             _settlementCleanupService = settlementCleanupService;
             _collectionRuntimeBuilder = collectionRuntimeBuilder;
+        }
+
+        protected override UniTask<CardCollectionEventModel> CreateModelAsync(ScheduleItem config, CancellationToken ct)
+        {
+            return _modelFactory.CreateAsync(config, ct);
         }
         
         protected override async UniTask OnStartAsync(CardCollectionEventModel model, EventStateData state, CancellationToken ct)

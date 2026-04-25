@@ -474,6 +474,183 @@ namespace EventOrchestration.Tests.Editor
             Assert.That(stateStore.LastSavedStates.TryGetValue("event1", out _), Is.False);
         }
 
+        [Test]
+        public void RefreshScheduleAsync_AddsNewPendingEvent_AndExposesUpcomingQuery()
+        {
+            var now = new DateTimeOffset(2026, 4, 11, 13, 0, 0, TimeSpan.Zero);
+            var scheduleProvider = new MutableScheduleProvider(new List<ScheduleItem>
+            {
+                new()
+                {
+                    Id = "event1",
+                    EventType = "CardCollection1",
+                    StreamId = "main",
+                    Priority = 1,
+                    StartTimeUtc = now.AddHours(1),
+                    EndTimeUtc = now.AddHours(2),
+                },
+            });
+            var clock = new FakeClock(now);
+            var stateStore = new FakeStateStore(new Dictionary<string, EventStateData>());
+            var telemetry = new FakeTelemetry();
+            var eventRegistry = new FakeEventRegistry(new[] { new FakeEventController("CardCollection1", new List<string>()) });
+            var orchestrator = new EventOrchestrator(
+                scheduleProvider,
+                new FakeScheduleValidator(),
+                clock,
+                stateStore,
+                new EventLifecycleEngine(eventRegistry, clock, stateStore, telemetry));
+
+            orchestrator.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            scheduleProvider.Schedule = new List<ScheduleItem>
+            {
+                new()
+                {
+                    Id = "event1",
+                    EventType = "CardCollection1",
+                    StreamId = "main",
+                    Priority = 1,
+                    StartTimeUtc = now.AddHours(1),
+                    EndTimeUtc = now.AddHours(2),
+                },
+                new()
+                {
+                    Id = "bp_1",
+                    EventType = "BattlePass",
+                    StreamId = "battle_pass",
+                    Priority = 5,
+                    StartTimeUtc = now.AddMinutes(10),
+                    EndTimeUtc = now.AddHours(3),
+                },
+            };
+
+            orchestrator.RefreshScheduleAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(orchestrator.IsEventTypeUpcoming("BattlePass"), Is.True);
+            Assert.That(orchestrator.GetScheduleSnapshot().Select(item => item.Id), Contains.Item("bp_1"));
+        }
+
+        [Test]
+        public void RefreshScheduleAsync_KeepsActiveEventRemovedFromSource_UntilCompletion()
+        {
+            var now = new DateTimeOffset(2026, 4, 11, 13, 0, 0, TimeSpan.Zero);
+            var scheduleProvider = new MutableScheduleProvider(new List<ScheduleItem>
+            {
+                new()
+                {
+                    Id = "event1",
+                    EventType = "CardCollection1",
+                    StreamId = "main",
+                    Priority = 1,
+                    StartTimeUtc = now.AddHours(-1),
+                    EndTimeUtc = now.AddHours(1),
+                },
+            });
+
+            var restoredStates = new Dictionary<string, EventStateData>
+            {
+                ["event1"] = new()
+                {
+                    ScheduleItemId = "event1",
+                    State = EventInstanceState.Active,
+                    Version = 1,
+                    UpdatedAtUtc = now,
+                    StartInvoked = true,
+                },
+            };
+
+            var callOrder = new List<string>();
+            var clock = new FakeClock(now);
+            var stateStore = new FakeStateStore(restoredStates);
+            var telemetry = new FakeTelemetry();
+            var eventRegistry = new FakeEventRegistry(new[] { new FakeEventController("CardCollection1", callOrder) });
+            var orchestrator = new EventOrchestrator(
+                scheduleProvider,
+                new FakeScheduleValidator(),
+                clock,
+                stateStore,
+                new EventLifecycleEngine(eventRegistry, clock, stateStore, telemetry));
+
+            orchestrator.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+            scheduleProvider.Schedule = Array.Empty<ScheduleItem>();
+
+            orchestrator.RefreshScheduleAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(orchestrator.TryGetCurrentEvent("CardCollection1", out var currentEvent), Is.True);
+            Assert.That(currentEvent.Id, Is.EqualTo("event1"));
+        }
+
+        [Test]
+        public void JsonScheduleProvider_LoadAsync_ParsesMixedEventTypes()
+        {
+            var json = @"[
+  {
+    ""Id"": ""card_1"",
+    ""EventType"": ""CardCollection"",
+    ""StartTimeUtc"": ""2026-04-16T08:39:03Z"",
+    ""EndTimeUtc"": ""2026-04-27T22:25:43Z"",
+    ""Priority"": 10,
+    ""StreamId"": ""card_collection_seasons""
+  },
+  {
+    ""Id"": ""bp_1"",
+    ""EventType"": ""BattlePass"",
+    ""StartTimeUtc"": ""2026-05-01T00:00:00Z"",
+    ""EndTimeUtc"": ""2026-06-01T00:00:00Z"",
+    ""Priority"": 5,
+    ""StreamId"": ""battle_pass""
+  }
+]";
+            var provider = new JsonScheduleProvider(new FakeScheduleContentSource(json), new FakeScheduleValidator());
+
+            var schedule = provider.LoadAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(schedule.Count, Is.EqualTo(2));
+            Assert.That(schedule.Select(item => item.EventType), Is.EquivalentTo(new[] { "CardCollection", "BattlePass" }));
+        }
+
+        [Test]
+        public void JsonScheduleProvider_LoadAsync_ThrowsWhenValidatorRejectsSchedule()
+        {
+            var provider = new JsonScheduleProvider(
+                new FakeScheduleContentSource("[]"),
+                new AlwaysInvalidScheduleValidator("boom"));
+
+            var exception = Assert.Throws<InvalidOperationException>(
+                () => provider.LoadAsync(CancellationToken.None).GetAwaiter().GetResult());
+
+            Assert.That(exception.Message, Does.Contain("boom"));
+        }
+
+        [Test]
+        public void ServerSynchronizedClock_UsesServerBaselineAfterRefresh()
+        {
+            var realtime = 100d;
+            var clock = new ServerSynchronizedClock(
+                new StubServerTimeSyncSource(DateTimeOffset.Parse("2026-04-24T10:00:00Z")),
+                () => realtime,
+                () => DateTimeOffset.Parse("2026-04-24T09:00:00Z"));
+
+            clock.RefreshAsync(CancellationToken.None).GetAwaiter().GetResult();
+            realtime += 5d;
+
+            Assert.That(clock.UtcNow, Is.EqualTo(DateTimeOffset.Parse("2026-04-24T10:00:05Z")));
+        }
+
+        [Test]
+        public void ServerSynchronizedClock_UtcNowFallsBackBeforeFirstSync()
+        {
+            var fallbackNow = DateTimeOffset.Parse("2026-04-24T09:00:00Z");
+            var clock = new ServerSynchronizedClock(
+                new StubServerTimeSyncSource(DateTimeOffset.Parse("2026-04-24T10:00:00Z")),
+                () => 0d,
+                () => fallbackNow);
+
+            Assert.That(clock.UtcNow, Is.EqualTo(fallbackNow));
+            Assert.That(clock.IsSynchronized, Is.False);
+        }
+
         private static EventOrchestrator CreateOrchestrator(
             DateTimeOffset now,
             IReadOnlyList<ScheduleItem> schedule,
@@ -532,12 +709,60 @@ namespace EventOrchestration.Tests.Editor
             }
         }
 
+        private sealed class MutableScheduleProvider : IScheduleProvider
+        {
+            public MutableScheduleProvider(IReadOnlyList<ScheduleItem> schedule)
+            {
+                Schedule = schedule ?? throw new ArgumentNullException(nameof(schedule));
+            }
+
+            public IReadOnlyList<ScheduleItem> Schedule { get; set; }
+
+            public UniTask<IReadOnlyList<ScheduleItem>> LoadAsync(CancellationToken ct)
+            {
+                ct.ThrowIfCancellationRequested();
+                return UniTask.FromResult(Schedule);
+            }
+        }
+
         private sealed class FakeScheduleValidator : IScheduleValidator
         {
             public UniTask<IReadOnlyList<string>> ValidateAsync(IReadOnlyList<ScheduleItem> items, CancellationToken ct)
             {
                 ct.ThrowIfCancellationRequested();
                 return UniTask.FromResult((IReadOnlyList<string>)Array.Empty<string>());
+            }
+        }
+
+        private sealed class AlwaysInvalidScheduleValidator : IScheduleValidator
+        {
+            private readonly string _message;
+
+            public AlwaysInvalidScheduleValidator(string message)
+            {
+                _message = message;
+            }
+
+            public UniTask<IReadOnlyList<string>> ValidateAsync(IReadOnlyList<ScheduleItem> items, CancellationToken ct)
+            {
+                ct.ThrowIfCancellationRequested();
+                return UniTask.FromResult((IReadOnlyList<string>)new[] { _message });
+            }
+        }
+
+        private sealed class FakeScheduleContentSource : ILiveOpsScheduleContentSource
+        {
+            private readonly string _json;
+
+            public FakeScheduleContentSource(string json)
+            {
+                _json = json;
+            }
+
+            public UniTask<string> LoadJsonAsync(CancellationToken ct)
+            {
+                ct.ThrowIfCancellationRequested();
+                return UniTask.FromResult(_json);
             }
         }
 
@@ -572,6 +797,22 @@ namespace EventOrchestration.Tests.Editor
             }
 
             public DateTimeOffset UtcNow { get; }
+        }
+
+        private sealed class StubServerTimeSyncSource : IServerTimeSyncSource
+        {
+            private readonly DateTimeOffset _serverUtcNow;
+
+            public StubServerTimeSyncSource(DateTimeOffset serverUtcNow)
+            {
+                _serverUtcNow = serverUtcNow;
+            }
+
+            public UniTask<DateTimeOffset> GetServerUtcNowAsync(CancellationToken ct)
+            {
+                ct.ThrowIfCancellationRequested();
+                return UniTask.FromResult(_serverUtcNow);
+            }
         }
 
         private sealed class FakeStateStore : IStateStore
