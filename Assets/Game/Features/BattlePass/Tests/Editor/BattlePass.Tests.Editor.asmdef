@@ -4,6 +4,7 @@
     "references": [
         "BattlePass",
         "EventOrchestration",
+        "GameplayUI",
         "Infrastructure",
         "Rewards",
         "UIShared",

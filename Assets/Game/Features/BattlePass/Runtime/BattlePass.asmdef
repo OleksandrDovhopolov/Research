@@ -4,6 +4,7 @@
     "references": [
         "Infrastructure",
         "EventOrchestration",
+        "GameplayUI",
         "UIShared",
         "UISystem",
         "UniTask",

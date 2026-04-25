@@ -1,3 +1,5 @@
+using EventOrchestration;
+using GameplayUI;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,16 +10,25 @@ namespace BattlePass
     public sealed class BattlePassOpenButton : MonoBehaviour
     {
         [SerializeField] private Button _button;
+        [SerializeField] private EventTimerDisplay _eventTimerDisplay;
 
         private UIManager _uiManager;
         private IBattlePassLifecycleState _lifecycleState;
+        private EventOrchestrator _eventOrchestrator;
+        private IGlobalTimerService _globalTimerService;
         private bool _isStarted;
 
         [Inject]
-        private void Construct(UIManager uiManager, IBattlePassLifecycleState lifecycleState)
+        private void Construct(
+            UIManager uiManager,
+            IBattlePassLifecycleState lifecycleState,
+            EventOrchestrator eventOrchestrator,
+            IGlobalTimerService globalTimerService)
         {
             _uiManager = uiManager;
             _lifecycleState = lifecycleState;
+            _eventOrchestrator = eventOrchestrator;
+            _globalTimerService = globalTimerService;
         }
 
         private void Awake()
@@ -52,6 +63,7 @@ namespace BattlePass
         private void OnDisable()
         {
             Unsubscribe();
+            UnbindTimer();
         }
 
         private void HandleClicked()
@@ -82,11 +94,32 @@ namespace BattlePass
             var displayStatus = _lifecycleState.CurrentStatus;
 
             _button.interactable = displayStatus != BattlePassLifecycleStatus.Inactive;
+            RefreshTimer(displayStatus);
+        }
+
+        private void RefreshTimer(BattlePassLifecycleStatus displayStatus)
+        {
+            if (displayStatus != BattlePassLifecycleStatus.Active ||
+                _eventOrchestrator == null ||
+                _globalTimerService == null ||
+                !_eventOrchestrator.TryGetCurrentEvent(BattlePassLiveOpsController.EventTypeValue, out var activeBattlePassItem))
+            {
+                UnbindTimer();
+                return;
+            }
+
+            _eventTimerDisplay.Bind(activeBattlePassItem.Id, _globalTimerService);
+        }
+
+        private void UnbindTimer()
+        {
+            _eventTimerDisplay.Unbind();
         }
 
         private void OnDestroy()
         {
             Unsubscribe();
+            UnbindTimer();
 
             _button.onClick.RemoveListener(HandleClicked);
         }

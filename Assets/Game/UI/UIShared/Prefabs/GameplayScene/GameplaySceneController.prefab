@@ -1254,6 +1254,7 @@ GameObject:
   - component: {fileID: 5138827447173179234}
   - component: {fileID: 7698358294980186423}
   - component: {fileID: 138415564160305093}
+  - component: {fileID: 2541769405786755969}
   m_Layer: 5
   m_Name: Button_BattlePass
   m_TagString: Untagged
@@ -1391,6 +1392,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _button: {fileID: 5138827447173179234}
+  _eventTimerDisplay: {fileID: 2541769405786755969}
+--- !u!114 &2541769405786755969
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6581020242364072112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a5b6c7d8e9f0123c5d6e7f809123456, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _targetEventId: 
+  _timerText: {fileID: 1293651199941139125}
 --- !u!1 &7160392437985113740
 GameObject:
   m_ObjectHideFlags: 0
