@@ -12,9 +12,7 @@ namespace EventOrchestration
 
             builder.Register<IScheduleValidator, BasicScheduleValidator>(Lifetime.Singleton);
             builder.Register<ILiveOpsScheduleContentSource>(_ => new StreamingAssetsLiveOpsScheduleContentSource(scheduleJsonFile), Lifetime.Singleton);
-            builder.Register<IScheduleProvider>(resolver => new JsonScheduleProvider(
-                resolver.Resolve<ILiveOpsScheduleContentSource>(),
-                resolver.Resolve<IScheduleValidator>()), Lifetime.Singleton);
+            builder.Register<IScheduleProvider, ServerLiveOpsScheduleProvider>(Lifetime.Singleton);
             builder.Register<IClock, FirebaseClock>(Lifetime.Singleton);
             builder.Register<IStateStore, InMemoryStateStore>(Lifetime.Singleton);
             builder.Register<IOrchestratorTelemetry, UnityDebugTelemetry>(Lifetime.Singleton);
