@@ -5,6 +5,7 @@ namespace BattlePass
         public static class Api
         {
             public const string CurrentPath = "battle-pass/current";
+            public const string AddXpPath = "battle-pass/xp/add";
         }
 
         public static class Ui

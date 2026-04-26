@@ -7,6 +7,7 @@ using Cysharp.Threading.Tasks;
 using Infrastructure;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using UnityEngine;
 
 namespace BattlePass
 {
@@ -33,6 +34,23 @@ namespace BattlePass
             var response = await _webClient.GetAsync<BattlePassCurrentResponse>(requestUrl, ct);
 
             return MapResponse(response);
+        }
+
+        public async UniTask<BattlePassUserState> AddXpAsync(int amount, CancellationToken ct = default)
+        {
+            var playerId = _playerIdentityProvider.GetPlayerId();
+            if (string.IsNullOrWhiteSpace(playerId))
+            {
+                throw new InvalidOperationException("Player id is empty.");
+            }
+
+            var request = new BattlePassAddXpRequest
+            {
+                PlayerId = playerId,
+                Amount = amount
+            };
+            var response = await _webClient.PostAsync<BattlePassAddXpRequest, BattlePassStateResponse>(BattlePassConfig.Api.AddXpPath, request, ct);
+            return MapUserState(response);
         }
 
         private static BattlePassSnapshot MapResponse(BattlePassCurrentResponse response)
@@ -91,11 +109,32 @@ namespace BattlePass
                 return null;
             }
 
+            var claimedRewards = MapClaimedRewards(response.ClaimedRewards);
+            var claimableRewards = MapClaimableRewards(response.ClaimableRewards);
+
             return new BattlePassUserState(
                 response.SeasonId,
                 response.Level,
                 response.Xp,
-                MapPassType(response.PassType));
+                MapPassType(response.PassType),
+                claimedRewards,
+                claimableRewards);
+        }
+
+        private static BattlePassUserState MapUserState(BattlePassStateResponse response)
+        {
+            if (response == null)
+            {
+                return null;
+            }
+
+            return new BattlePassUserState(
+                response.SeasonId,
+                response.Level,
+                response.Xp,
+                MapPassType(response.PassType),
+                Array.Empty<BattlePassClaimedRewardCell>(),
+                Array.Empty<BattlePassClaimableRewardCell>());
         }
 
         private static BattlePassLevel MapLevel(BattlePassLevelResponse response)
@@ -108,36 +147,38 @@ namespace BattlePass
             return new BattlePassLevel(
                 response.Level,
                 response.XpRequired,
-                ParseRewardRefs(response.DefaultRewards),
-                ParseRewardRefs(response.PremiumRewards));
+                ParseRewardRef(response.DefaultRewardId, response.DefaultRewards),
+                ParseRewardRef(response.PremiumRewardId, response.PremiumRewards));
         }
 
-        private static IReadOnlyList<BattlePassRewardRef> ParseRewardRefs(JToken rewardsToken)
+        private static BattlePassRewardRef ParseRewardRef(string rewardId, JToken legacyRewardsToken)
         {
-            if (rewardsToken is not JArray rewardsArray)
+            if (!string.IsNullOrWhiteSpace(rewardId))
             {
-                return Array.Empty<BattlePassRewardRef>();
+                return new BattlePassRewardRef(rewardId);
             }
 
-            var rewards = new List<BattlePassRewardRef>(rewardsArray.Count);
+            if (legacyRewardsToken is not JArray rewardsArray)
+            {
+                return null;
+            }
+
             foreach (var rewardToken in rewardsArray)
             {
-                var rewardId = rewardToken.Type switch
+                var legacyRewardId = rewardToken.Type switch
                 {
                     JTokenType.String => rewardToken.Value<string>(),
                     JTokenType.Object => rewardToken["rewardId"]?.Value<string>() ?? rewardToken["id"]?.Value<string>(),
                     _ => null
                 };
 
-                if (string.IsNullOrWhiteSpace(rewardId))
+                if (!string.IsNullOrWhiteSpace(legacyRewardId))
                 {
-                    continue;
+                    return new BattlePassRewardRef(legacyRewardId);
                 }
-
-                rewards.Add(new BattlePassRewardRef(rewardId));
             }
 
-            return rewards;
+            return null;
         }
 
         private static BattlePassPassType MapPassType(string passType)
@@ -155,6 +196,102 @@ namespace BattlePass
                 "platinum" => BattlePassPassType.Platinum,
                 _ => BattlePassPassType.Unknown
             };
+        }
+
+        private static IReadOnlyList<BattlePassClaimedRewardCell> MapClaimedRewards(BattlePassClaimedRewardCellResponse[] responses)
+        {
+            if (responses == null || responses.Length == 0)
+            {
+                return Array.Empty<BattlePassClaimedRewardCell>();
+            }
+
+            var result = new List<BattlePassClaimedRewardCell>(responses.Length);
+            for (var i = 0; i < responses.Length; i++)
+            {
+                var response = responses[i];
+                if (response == null)
+                {
+                    continue;
+                }
+
+                if (response.Level <= 0)
+                {
+                    Debug.LogError("[BattlePassServerService] Claimed reward cell has invalid level and was skipped.");
+                    continue;
+                }
+
+                if (!TryParseRewardTrack(response.RewardTrack, out var rewardTrack))
+                {
+                    Debug.LogError($"[BattlePassServerService] Claimed reward cell has unsupported rewardTrack '{response.RewardTrack}' and was skipped.");
+                    continue;
+                }
+
+                result.Add(new BattlePassClaimedRewardCell(
+                    response.Level,
+                    rewardTrack,
+                    ParseUtcOrFallback(response.ClaimedAtUtc, DateTimeOffset.MinValue)));
+            }
+
+            return result;
+        }
+
+        private static IReadOnlyList<BattlePassClaimableRewardCell> MapClaimableRewards(BattlePassClaimableRewardCellResponse[] responses)
+        {
+            if (responses == null || responses.Length == 0)
+            {
+                return Array.Empty<BattlePassClaimableRewardCell>();
+            }
+
+            var result = new List<BattlePassClaimableRewardCell>(responses.Length);
+            for (var i = 0; i < responses.Length; i++)
+            {
+                var response = responses[i];
+                if (response == null)
+                {
+                    continue;
+                }
+
+                if (response.Level <= 0)
+                {
+                    Debug.LogError("[BattlePassServerService] Claimable reward cell has invalid level and was skipped.");
+                    continue;
+                }
+
+                if (!TryParseRewardTrack(response.RewardTrack, out var rewardTrack))
+                {
+                    Debug.LogError($"[BattlePassServerService] Claimable reward cell has unsupported rewardTrack '{response.RewardTrack}' and was skipped.");
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(response.RewardId))
+                {
+                    Debug.LogError("[BattlePassServerService] Claimable reward cell has empty rewardId and was skipped.");
+                    continue;
+                }
+
+                result.Add(new BattlePassClaimableRewardCell(
+                    response.Level,
+                    rewardTrack,
+                    response.RewardId));
+            }
+
+            return result;
+        }
+
+        private static bool TryParseRewardTrack(string rewardTrack, out BattlePassRewardTrack track)
+        {
+            switch (rewardTrack?.Trim().ToLowerInvariant())
+            {
+                case "default":
+                    track = BattlePassRewardTrack.Default;
+                    return true;
+                case "premium":
+                    track = BattlePassRewardTrack.Premium;
+                    return true;
+                default:
+                    track = default;
+                    return false;
+            }
         }
 
         private static DateTimeOffset ParseUtcOrFallback(string rawValue, DateTimeOffset fallback)
@@ -185,6 +322,16 @@ namespace BattlePass
 
             [JsonProperty("serverTimeUtc")]
             public string ServerTimeUtc { get; set; }
+        }
+
+        [Serializable]
+        private sealed class BattlePassAddXpRequest
+        {
+            [JsonProperty("playerId")]
+            public string PlayerId { get; set; }
+
+            [JsonProperty("amount")]
+            public int Amount { get; set; }
         }
 
         [Serializable]
@@ -239,6 +386,54 @@ namespace BattlePass
 
             [JsonProperty("passType")]
             public string PassType { get; set; }
+
+            [JsonProperty("claimedRewards")]
+            public BattlePassClaimedRewardCellResponse[] ClaimedRewards { get; set; }
+
+            [JsonProperty("claimableRewards")]
+            public BattlePassClaimableRewardCellResponse[] ClaimableRewards { get; set; }
+        }
+
+        [Serializable]
+        private sealed class BattlePassStateResponse
+        {
+            [JsonProperty("seasonId")]
+            public string SeasonId { get; set; }
+
+            [JsonProperty("level")]
+            public int Level { get; set; }
+
+            [JsonProperty("xp")]
+            public int Xp { get; set; }
+
+            [JsonProperty("passType")]
+            public string PassType { get; set; }
+        }
+
+        [Serializable]
+        private sealed class BattlePassClaimedRewardCellResponse
+        {
+            [JsonProperty("level")]
+            public int Level { get; set; }
+
+            [JsonProperty("rewardTrack")]
+            public string RewardTrack { get; set; }
+
+            [JsonProperty("claimedAtUtc")]
+            public string ClaimedAtUtc { get; set; }
+        }
+
+        [Serializable]
+        private sealed class BattlePassClaimableRewardCellResponse
+        {
+            [JsonProperty("level")]
+            public int Level { get; set; }
+
+            [JsonProperty("rewardTrack")]
+            public string RewardTrack { get; set; }
+
+            [JsonProperty("rewardId")]
+            public string RewardId { get; set; }
         }
 
         [Serializable]
@@ -249,6 +444,12 @@ namespace BattlePass
 
             [JsonProperty("xpRequired")]
             public int XpRequired { get; set; }
+
+            [JsonProperty("defaultRewardId")]
+            public string DefaultRewardId { get; set; }
+
+            [JsonProperty("premiumRewardId")]
+            public string PremiumRewardId { get; set; }
 
             [JsonProperty("defaultRewards")]
             public JToken DefaultRewards { get; set; }

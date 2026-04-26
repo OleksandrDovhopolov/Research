@@ -9,7 +9,6 @@ using NUnit.Framework;
 using Rewards;
 using UISystem;
 using UnityEngine;
-using UnityEngine.TestTools;
 
 namespace BattlePass.Tests.Editor
 {
@@ -39,9 +38,6 @@ namespace BattlePass.Tests.Editor
             var timerService = new StubBattlePassTimerService();
             var controller = CreateController(serverService, timerService, out var view);
 
-            LogAssert.Expect(
-                LogType.Error,
-                "[BattlePassUiModelFactory] Claimed reward state is unavailable. Server snapshot does not contain claimedRewards data. First unresolved rewardId='reward_default'.");
             RunCoroutine(controller.Show(null));
 
             Assert.That(view.RenderedModel, Is.Not.Null);
@@ -161,14 +157,20 @@ namespace BattlePass.Tests.Editor
                     "active",
                     "v1"),
                 new BattlePassProducts("premium_sku", "platinum_sku"),
-                new BattlePassUserState("season_1", 6, 180, BattlePassPassType.Premium),
+                new BattlePassUserState(
+                    "season_1",
+                    6,
+                    180,
+                    BattlePassPassType.Premium,
+                    Array.Empty<BattlePassClaimedRewardCell>(),
+                    Array.Empty<BattlePassClaimableRewardCell>()),
                 new[]
                 {
                     new BattlePassLevel(
                         1,
                         0,
-                        new[] { new BattlePassRewardRef("reward_default") },
-                        new[] { new BattlePassRewardRef("reward_premium") })
+                        new BattlePassRewardRef("reward_default"),
+                        new BattlePassRewardRef("reward_premium"))
                 },
                 DateTimeOffset.Parse("2026-04-24T10:00:00Z"));
         }
@@ -234,6 +236,12 @@ namespace BattlePass.Tests.Editor
             {
                 ct.ThrowIfCancellationRequested();
                 return UniTask.FromResult(_snapshot);
+            }
+
+            public UniTask<BattlePassUserState> AddXpAsync(int amount, CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+                return UniTask.FromResult(_snapshot?.UserState);
             }
         }
 

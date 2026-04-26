@@ -6,5 +6,6 @@ namespace BattlePass
     public interface IBattlePassServerService
     {
         UniTask<BattlePassSnapshot> GetCurrentAsync(CancellationToken ct = default);
+        UniTask<BattlePassUserState> AddXpAsync(int amount, CancellationToken ct = default);
     }
 }

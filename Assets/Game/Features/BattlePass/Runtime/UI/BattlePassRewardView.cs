@@ -37,7 +37,7 @@ namespace BattlePass
 
             if (_lockedStateRoot != null)
             {
-                _lockedStateRoot.SetActive(reward.IsPremiumTrack && reward.IsLocked);
+                _lockedStateRoot.SetActive(reward.IsPremiumTrack && reward.IsLocked && !reward.IsClaimed);
             }
         }
 

@@ -11,6 +11,12 @@ namespace BattlePass
         Platinum = 3
     }
 
+    public enum BattlePassRewardTrack
+    {
+        Default = 0,
+        Premium = 1
+    }
+
     public sealed class BattlePassSnapshot
     {
         public BattlePassSnapshot(
@@ -77,18 +83,28 @@ namespace BattlePass
 
     public sealed class BattlePassUserState
     {
-        public BattlePassUserState(string seasonId, int level, int xp, BattlePassPassType passType)
+        public BattlePassUserState(
+            string seasonId,
+            int level,
+            int xp,
+            BattlePassPassType passType,
+            IReadOnlyList<BattlePassClaimedRewardCell> claimedRewards,
+            IReadOnlyList<BattlePassClaimableRewardCell> claimableRewards)
         {
             SeasonId = seasonId ?? string.Empty;
             Level = Math.Max(0, level);
             Xp = Math.Max(0, xp);
             PassType = passType;
+            ClaimedRewards = claimedRewards ?? Array.Empty<BattlePassClaimedRewardCell>();
+            ClaimableRewards = claimableRewards ?? Array.Empty<BattlePassClaimableRewardCell>();
         }
 
         public string SeasonId { get; }
         public int Level { get; }
         public int Xp { get; }
         public BattlePassPassType PassType { get; }
+        public IReadOnlyList<BattlePassClaimedRewardCell> ClaimedRewards { get; }
+        public IReadOnlyList<BattlePassClaimableRewardCell> ClaimableRewards { get; }
     }
 
     public sealed class BattlePassLevel
@@ -96,19 +112,19 @@ namespace BattlePass
         public BattlePassLevel(
             int level,
             int xpRequired,
-            IReadOnlyList<BattlePassRewardRef> defaultRewards,
-            IReadOnlyList<BattlePassRewardRef> premiumRewards)
+            BattlePassRewardRef defaultReward,
+            BattlePassRewardRef premiumReward)
         {
             Level = Math.Max(0, level);
             XpRequired = Math.Max(0, xpRequired);
-            DefaultRewards = defaultRewards ?? Array.Empty<BattlePassRewardRef>();
-            PremiumRewards = premiumRewards ?? Array.Empty<BattlePassRewardRef>();
+            DefaultReward = defaultReward;
+            PremiumReward = premiumReward;
         }
 
         public int Level { get; }
         public int XpRequired { get; }
-        public IReadOnlyList<BattlePassRewardRef> DefaultRewards { get; }
-        public IReadOnlyList<BattlePassRewardRef> PremiumRewards { get; }
+        public BattlePassRewardRef DefaultReward { get; }
+        public BattlePassRewardRef PremiumReward { get; }
     }
 
     public sealed class BattlePassRewardRef
@@ -118,6 +134,34 @@ namespace BattlePass
             RewardId = rewardId ?? string.Empty;
         }
 
+        public string RewardId { get; }
+    }
+
+    public sealed class BattlePassClaimedRewardCell
+    {
+        public BattlePassClaimedRewardCell(int level, BattlePassRewardTrack rewardTrack, DateTimeOffset claimedAtUtc)
+        {
+            Level = Math.Max(0, level);
+            RewardTrack = rewardTrack;
+            ClaimedAtUtc = claimedAtUtc;
+        }
+
+        public int Level { get; }
+        public BattlePassRewardTrack RewardTrack { get; }
+        public DateTimeOffset ClaimedAtUtc { get; }
+    }
+
+    public sealed class BattlePassClaimableRewardCell
+    {
+        public BattlePassClaimableRewardCell(int level, BattlePassRewardTrack rewardTrack, string rewardId)
+        {
+            Level = Math.Max(0, level);
+            RewardTrack = rewardTrack;
+            RewardId = rewardId ?? string.Empty;
+        }
+
+        public int Level { get; }
+        public BattlePassRewardTrack RewardTrack { get; }
         public string RewardId { get; }
     }
 }

@@ -29,18 +29,21 @@ namespace BattlePass
 
             var userState = snapshot.UserState;
             var products = snapshot.Products;
-            var hasLoggedMissingClaimedState = false;
+            var claimedRewardKeys = BuildClaimedRewardKeys(userState);
+            var claimableRewardKeys = BuildClaimableRewardKeys(userState);
 
             var defaultRewards = BuildRewards(
                 orderedLevels,
                 isPremiumTrack: false,
                 userState,
-                ref hasLoggedMissingClaimedState);
+                claimedRewardKeys,
+                claimableRewardKeys);
             var premiumRewards = BuildRewards(
                 orderedLevels,
                 isPremiumTrack: true,
                 userState,
-                ref hasLoggedMissingClaimedState);
+                claimedRewardKeys,
+                claimableRewardKeys);
 
             return new BattlePassWindowUiModel(
                 snapshot.Season.Title,
@@ -57,7 +60,8 @@ namespace BattlePass
             IReadOnlyList<BattlePassLevel> levels,
             bool isPremiumTrack,
             BattlePassUserState userState,
-            ref bool hasLoggedMissingClaimedState)
+            HashSet<string> claimedRewardKeys,
+            HashSet<string> claimableRewardKeys)
         {
             var rewardModels = new List<BattlePassRewardUiModel>();
 
@@ -68,47 +72,83 @@ namespace BattlePass
 
             for (var i = 0; i < levels.Count; i++)
             {
-                var rewards = isPremiumTrack ? levels[i].PremiumRewards : levels[i].DefaultRewards;
-                if (rewards == null)
+                var level = levels[i];
+                var reward = isPremiumTrack ? level.PremiumReward : level.DefaultReward;
+                if (reward == null || string.IsNullOrWhiteSpace(reward.RewardId))
                 {
                     continue;
                 }
 
-                foreach (var reward in rewards)
+                if (!_rewardSpecProvider.TryGet(reward.RewardId, out var spec) || spec == null)
                 {
-                    if (reward == null || string.IsNullOrWhiteSpace(reward.RewardId))
-                    {
-                        continue;
-                    }
-
-                    if (!_rewardSpecProvider.TryGet(reward.RewardId, out var spec) || spec == null)
-                    {
-                        Debug.LogWarning($"[BattlePassUiModelFactory] Unknown reward id '{reward.RewardId}'. Reward skipped.");
-                        continue;
-                    }
-
-                    rewardModels.Add(new BattlePassRewardUiModel(
-                        reward.RewardId,
-                        spec.Icon,
-                        Mathf.Max(0, spec.TotalAmountForUi),
-                        ResolveClaimedState(reward.RewardId, ref hasLoggedMissingClaimedState),
-                        ResolveLockedState(isPremiumTrack, userState),
-                        isPremiumTrack));
+                    Debug.LogWarning($"[BattlePassUiModelFactory] Unknown reward id '{reward.RewardId}'. Reward skipped.");
+                    continue;
                 }
+
+                var rewardTrack = isPremiumTrack ? BattlePassRewardTrack.Premium : BattlePassRewardTrack.Default;
+                var rewardCellKey = BuildRewardCellKey(level.Level, rewardTrack);
+                var isClaimed = claimedRewardKeys.Contains(rewardCellKey);
+                var isClaimable = !isClaimed && claimableRewardKeys.Contains(rewardCellKey);
+                var isLocked = !isClaimed && ResolveLockedState(isPremiumTrack, userState);
+
+                rewardModels.Add(new BattlePassRewardUiModel(
+                    reward.RewardId,
+                    spec.Icon,
+                    Mathf.Max(0, spec.TotalAmountForUi),
+                    isClaimed,
+                    isClaimable,
+                    isLocked,
+                    isPremiumTrack));
             }
 
             return rewardModels;
         }
 
-        private static bool ResolveClaimedState(string rewardId, ref bool hasLoggedMissingClaimedState)
+        private static HashSet<string> BuildClaimedRewardKeys(BattlePassUserState userState)
         {
-            if (!hasLoggedMissingClaimedState)
+            var keys = new HashSet<string>(StringComparer.Ordinal);
+            if (userState?.ClaimedRewards == null)
             {
-                Debug.LogError($"[BattlePassUiModelFactory] Claimed reward state is unavailable. Server snapshot does not contain claimedRewards data. First unresolved rewardId='{rewardId}'.");
-                hasLoggedMissingClaimedState = true;
+                return keys;
             }
 
-            return false;
+            foreach (var claimedReward in userState.ClaimedRewards)
+            {
+                if (claimedReward == null || claimedReward.Level <= 0)
+                {
+                    continue;
+                }
+
+                keys.Add(BuildRewardCellKey(claimedReward.Level, claimedReward.RewardTrack));
+            }
+
+            return keys;
+        }
+
+        private static HashSet<string> BuildClaimableRewardKeys(BattlePassUserState userState)
+        {
+            var keys = new HashSet<string>(StringComparer.Ordinal);
+            if (userState?.ClaimableRewards == null)
+            {
+                return keys;
+            }
+
+            foreach (var claimableReward in userState.ClaimableRewards)
+            {
+                if (claimableReward == null || claimableReward.Level <= 0)
+                {
+                    continue;
+                }
+
+                keys.Add(BuildRewardCellKey(claimableReward.Level, claimableReward.RewardTrack));
+            }
+
+            return keys;
+        }
+
+        private static string BuildRewardCellKey(int level, BattlePassRewardTrack rewardTrack)
+        {
+            return $"{level}:{rewardTrack}";
         }
 
         private static bool ResolveLockedState(bool isPremiumTrack, BattlePassUserState userState)

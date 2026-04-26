@@ -50,12 +50,13 @@ namespace BattlePass
 
     public sealed class BattlePassRewardUiModel
     {
-        public BattlePassRewardUiModel(string rewardId, Sprite icon, int amount, bool isClaimed, bool isLocked, bool isPremiumTrack)
+        public BattlePassRewardUiModel(string rewardId, Sprite icon, int amount, bool isClaimed, bool isClaimable, bool isLocked, bool isPremiumTrack)
         {
             RewardId = rewardId ?? string.Empty;
             Icon = icon;
             Amount = Math.Max(0, amount);
             IsClaimed = isClaimed;
+            IsClaimable = isClaimable;
             IsLocked = isLocked;
             IsPremiumTrack = isPremiumTrack;
         }
@@ -64,6 +65,7 @@ namespace BattlePass
         public Sprite Icon { get; }
         public int Amount { get; }
         public bool IsClaimed { get; }
+        public bool IsClaimable { get; }
         public bool IsLocked { get; }
         public bool IsPremiumTrack { get; }
     }

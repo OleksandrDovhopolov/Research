@@ -28,7 +28,7 @@ namespace BattlePass.Tests.Editor
         public void SetData_WhenRewardIsClaimed_ShowsClaimedOverlay()
         {
             var rewardView = CreateRewardView(out _, out _, out var claimedStateRoot, out var lockedStateRoot);
-            var reward = new BattlePassRewardUiModel("reward_default", Sprite.Create(Texture2D.blackTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 10, true, false, false);
+            var reward = new BattlePassRewardUiModel("reward_default", Sprite.Create(Texture2D.blackTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 10, true, false, false, false);
 
             rewardView.SetData(reward);
 
@@ -40,7 +40,7 @@ namespace BattlePass.Tests.Editor
         public void SetData_WhenPremiumRewardIsLocked_ShowsLockedOverlay()
         {
             var rewardView = CreateRewardView(out _, out _, out var claimedStateRoot, out var lockedStateRoot);
-            var reward = new BattlePassRewardUiModel("reward_premium", Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 25, false, true, true);
+            var reward = new BattlePassRewardUiModel("reward_premium", Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 25, false, false, true, true);
 
             rewardView.SetData(reward);
 
@@ -52,7 +52,7 @@ namespace BattlePass.Tests.Editor
         public void SetData_WhenDefaultRewardIsMarkedLocked_DoesNotShowLockedOverlay()
         {
             var rewardView = CreateRewardView(out _, out _, out _, out var lockedStateRoot);
-            var reward = new BattlePassRewardUiModel("reward_default", Sprite.Create(Texture2D.blackTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 10, false, true, false);
+            var reward = new BattlePassRewardUiModel("reward_default", Sprite.Create(Texture2D.blackTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 10, false, false, true, false);
 
             rewardView.SetData(reward);
 
@@ -60,10 +60,22 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
+        public void SetData_WhenRewardIsClaimed_DoesNotShowLockedOverlayEvenIfLocked()
+        {
+            var rewardView = CreateRewardView(out _, out _, out var claimedStateRoot, out var lockedStateRoot);
+            var reward = new BattlePassRewardUiModel("reward_premium", Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 25, true, false, true, true);
+
+            rewardView.SetData(reward);
+
+            Assert.That(claimedStateRoot.activeSelf, Is.True);
+            Assert.That(lockedStateRoot.activeSelf, Is.False);
+        }
+
+        [Test]
         public void Cleanup_HidesClaimedAndLockedOverlays()
         {
             var rewardView = CreateRewardView(out _, out _, out var claimedStateRoot, out var lockedStateRoot);
-            var reward = new BattlePassRewardUiModel("reward_premium", Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 25, true, true, true);
+            var reward = new BattlePassRewardUiModel("reward_premium", Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 25, true, false, true, true);
             rewardView.SetData(reward);
 
             rewardView.Cleanup();
