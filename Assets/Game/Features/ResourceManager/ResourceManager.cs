@@ -77,6 +77,22 @@ namespace CoreResources
             return _amountByType[type];
         }
 
+        public void ApplyLocalDelta(ResourceType type, int delta)
+        {
+            ThrowIfDisposed();
+            if (delta == 0)
+            {
+                return;
+            }
+
+            if (!_amountByType.ContainsKey(type))
+            {
+                throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
+
+            _amountByType[type] = Mathf.Max(0, _amountByType[type] + delta);
+        }
+
         public async UniTask ApplySnapshotAsync(ResourceSnapshotDto snapshot, bool instantUpdate = false, CancellationToken ct = default)
         {
             ThrowIfDisposed();

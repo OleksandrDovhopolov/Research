@@ -14,7 +14,10 @@ namespace BattlePass
     {
         private IBattlePassServerService _battlePassServerService;
         private IBattlePassTimerService _battlePassTimerService;
+        private IBattlePassOptimisticRewardApplier _optimisticRewardApplier;
         private BattlePassUiModelFactory _uiModelFactory;
+        private IRewardPlayerStateRefreshCoordinator _rewardPlayerStateRefreshCoordinator;
+        private IRewardSpecProvider _rewardSpecProvider;
 
         private CancellationTokenSource _loadCts;
         private BattlePassSnapshot _currentSnapshot;
@@ -24,11 +27,17 @@ namespace BattlePass
         private void Construct(
             IBattlePassServerService battlePassServerService,
             IBattlePassTimerService battlePassTimerService,
-            BattlePassUiModelFactory uiModelFactory)
+            BattlePassUiModelFactory uiModelFactory,
+            IBattlePassOptimisticRewardApplier optimisticRewardApplier,
+            IRewardPlayerStateRefreshCoordinator rewardPlayerStateRefreshCoordinator,
+            IRewardSpecProvider rewardSpecProvider)
         {
             _battlePassServerService = battlePassServerService;
             _battlePassTimerService = battlePassTimerService;
             _uiModelFactory = uiModelFactory;
+            _optimisticRewardApplier = optimisticRewardApplier;
+            _rewardPlayerStateRefreshCoordinator = rewardPlayerStateRefreshCoordinator;
+            _rewardSpecProvider = rewardSpecProvider;
         }
 
         protected override void OnShowStart()
@@ -132,8 +141,9 @@ namespace BattlePass
                 {
                     if (TryApplyClaimUserState(claimResult.UpdatedUserState))
                     {
-                        var grantedRewardCell = claimResult.GrantedRewards.First();
-                        ShowRewardWindow(grantedRewardCell.RewardId);
+                        _optimisticRewardApplier?.Apply(claimResult.GrantedRewards);
+                        TryShowRewardWindow(claimResult.GrantedRewards);
+                        _rewardPlayerStateRefreshCoordinator?.RequestBackgroundRefresh();
                         return;
                     }
 
@@ -160,8 +170,20 @@ namespace BattlePass
             }
         }
 
-        private void ShowRewardWindow(string rewardId)
+        private void TryShowRewardWindow(System.Collections.Generic.IReadOnlyList<BattlePassGrantedRewardCell> grantedRewards)
         {
+            var rewardId = grantedRewards?.FirstOrDefault()?.RewardId;
+            if (string.IsNullOrWhiteSpace(rewardId))
+            {
+                Debug.LogWarning("[BattlePassWindowController] Claim succeeded, but grantedRewards is empty.");
+                return;
+            }
+
+            if (_rewardSpecProvider != null && !_rewardSpecProvider.TryGet(rewardId, out _))
+            {
+                return;
+            }
+
             var rewardArgs = new RewardsWindowArgs(rewardId);
             UIManager.Show<RewardsWindowController>(rewardArgs);
         }

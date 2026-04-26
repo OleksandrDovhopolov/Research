@@ -9,6 +9,8 @@ namespace BattlePass
             builder.Register<IBattlePassRealtimeClock, UnityBattlePassRealtimeClock>(Lifetime.Singleton);
             builder.Register<IBattlePassTimerService, BattlePassTimerService>(Lifetime.Singleton);
             builder.Register<BattlePassUiModelFactory>(Lifetime.Singleton);
+            builder.Register<IOptimisticResourceApplyService, ResourceManagerOptimisticResourceApplyService>(Lifetime.Singleton);
+            builder.Register<IBattlePassOptimisticRewardApplier, BattlePassOptimisticRewardApplier>(Lifetime.Singleton);
             builder.Register<IBattlePassServerService, BattlePassServerService>(Lifetime.Singleton);
             builder.Register<BattlePassLifecycleState>(Lifetime.Singleton);
             builder.Register<IBattlePassLifecycleState>(resolver => resolver.Resolve<BattlePassLifecycleState>(), Lifetime.Singleton);

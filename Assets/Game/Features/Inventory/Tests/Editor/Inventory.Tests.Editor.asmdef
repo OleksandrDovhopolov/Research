@@ -6,7 +6,8 @@
         "Inventory.Implementation",
         "UniTask",
         "Infrastructure",
-        "Rewards"
+        "Rewards",
+        "R3.Unity"
     ],
     "includePlatforms": [
         "Editor"
@@ -15,7 +16,8 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "nunit.framework.dll"
+        "nunit.framework.dll",
+        "R3.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

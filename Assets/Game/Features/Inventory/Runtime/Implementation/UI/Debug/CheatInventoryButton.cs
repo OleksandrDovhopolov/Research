@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using Infrastructure;
 using Inventory.API;
 using Inventory.Implementation.UI;
+using Rewards;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,6 +23,7 @@ namespace Inventory.Implementation
         private IInventoryItemUseService _inventoryItemUseService;
         private IItemCategoryRegistry _itemCategoryRegistry;
         private IPlayerIdentityProvider _playerIdentityProvider;
+        private IRewardPlayerStateRefreshCoordinator _rewardPlayerStateRefreshCoordinator;
         
         [Inject]
         public void Install(
@@ -30,7 +32,8 @@ namespace Inventory.Implementation
             IInventoryReadService  inventoryReadService, 
             IInventoryItemUseService inventoryItemUseService,
             IItemCategoryRegistry  itemCategoryRegistry,
-            IPlayerIdentityProvider playerIdentityProvider)
+            IPlayerIdentityProvider playerIdentityProvider,
+            IRewardPlayerStateRefreshCoordinator rewardPlayerStateRefreshCoordinator)
         {
             _uiManager = uiManager;
             _inventoryService = inventoryService;
@@ -38,6 +41,7 @@ namespace Inventory.Implementation
             _inventoryItemUseService = inventoryItemUseService;
             _itemCategoryRegistry = itemCategoryRegistry;
             _playerIdentityProvider = playerIdentityProvider;
+            _rewardPlayerStateRefreshCoordinator = rewardPlayerStateRefreshCoordinator;
         }
         
         private void Awake()
@@ -72,7 +76,12 @@ namespace Inventory.Implementation
                 return;
             }
 
-            var tabsPresenter = new InventoryTabsPresenter(ownerId, _inventoryService, _inventoryReadService, _itemCategoryRegistry);
+            var tabsPresenter = new InventoryTabsPresenter(
+                ownerId,
+                _inventoryService,
+                _inventoryReadService,
+                _itemCategoryRegistry,
+                _rewardPlayerStateRefreshCoordinator);
             await tabsPresenter.InitializeAsync(ct);
 
             var args = new InventoryArgs(_uiManager, _inventoryItemUseService, tabsPresenter, _itemCategoryRegistry.GetAllCategories());

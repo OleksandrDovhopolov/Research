@@ -2,6 +2,7 @@
     "name": "BattlePass",
     "rootNamespace": "BattlePass",
     "references": [
+        "CoreResources",
         "Infrastructure",
         "EventOrchestration",
         "GameplayUI",

@@ -73,6 +73,7 @@ namespace Game.Bootstrap
             builder.Register<IRewardGrantService, ServerRewardGrantService>(Lifetime.Singleton);
             builder.Register<IRewardIntentService, ServerRewardIntentService>(Lifetime.Singleton);
             builder.Register<IRewardPlayerStateSyncService, ServerRewardPlayerStateSyncService>(Lifetime.Singleton);
+            builder.Register<IRewardPlayerStateRefreshCoordinator, RewardPlayerStateRefreshCoordinator>(Lifetime.Singleton);
             builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(rewardSpecsConfig), Lifetime.Singleton);
 
             var rewardedAdsConfig = _rewardedAdsConfigSo != null

@@ -120,6 +120,9 @@ namespace BattlePass.Tests.Editor
         {
             var initialSnapshot = CreateActiveSnapshot();
             var updatedSnapshot = CreateActiveSnapshot(xp: 220);
+            var executionOrder = new List<string>();
+            var optimisticRewardApplier = new StubBattlePassOptimisticRewardApplier(executionOrder);
+            var refreshCoordinator = new StubRewardPlayerStateRefreshCoordinator(executionOrder);
             var serverService = new StubBattlePassServerService(initialSnapshot)
             {
                 ClaimResponseFactory = (_, _, _) => UniTask.FromResult(new BattlePassClaimResult(
@@ -132,7 +135,12 @@ namespace BattlePass.Tests.Editor
                     null,
                     null))
             };
-            var controller = CreateController(serverService, new StubBattlePassTimerService(), out var view);
+            var controller = CreateController(
+                serverService,
+                new StubBattlePassTimerService(),
+                out var view,
+                optimisticRewardApplier,
+                refreshCoordinator);
 
             RunCoroutine(controller.Show(null));
             view.EmitRewardClaim(1, BattlePassRewardTrack.Default);
@@ -143,6 +151,9 @@ namespace BattlePass.Tests.Editor
             Assert.That(serverService.LastClaimRewardTrack, Is.EqualTo(BattlePassRewardTrack.Default));
             Assert.That(view.RenderedModel, Is.Not.Null);
             Assert.That(view.RenderedModel.CurrentXp, Is.EqualTo(220));
+            Assert.That(optimisticRewardApplier.Calls, Is.EqualTo(1));
+            Assert.That(refreshCoordinator.BackgroundRequestCalls, Is.EqualTo(1));
+            Assert.That(executionOrder, Is.EqualTo(new[] { "apply", "refresh" }));
         }
 
         [Test]
@@ -150,6 +161,8 @@ namespace BattlePass.Tests.Editor
         {
             var initialSnapshot = CreateActiveSnapshot(xp: 180);
             var refreshedSnapshot = CreateActiveSnapshot(xp: 260);
+            var optimisticRewardApplier = new StubBattlePassOptimisticRewardApplier();
+            var refreshCoordinator = new StubRewardPlayerStateRefreshCoordinator();
             var serverService = new StubBattlePassServerService(initialSnapshot)
             {
                 GetCurrentSnapshot = refreshedSnapshot,
@@ -160,7 +173,12 @@ namespace BattlePass.Tests.Editor
                     "already_claimed",
                     "Reward already claimed."))
             };
-            var controller = CreateController(serverService, new StubBattlePassTimerService(), out var view);
+            var controller = CreateController(
+                serverService,
+                new StubBattlePassTimerService(),
+                out var view,
+                optimisticRewardApplier,
+                refreshCoordinator);
 
             RunCoroutine(controller.Show(null));
             LogAssert.Expect(
@@ -171,6 +189,8 @@ namespace BattlePass.Tests.Editor
             Assert.That(serverService.GetCurrentCalls, Is.EqualTo(2));
             Assert.That(view.RenderedModel, Is.Not.Null);
             Assert.That(view.RenderedModel.CurrentXp, Is.EqualTo(260));
+            Assert.That(optimisticRewardApplier.Calls, Is.EqualTo(0));
+            Assert.That(refreshCoordinator.BackgroundRequestCalls, Is.EqualTo(0));
         }
 
         [Test]
@@ -230,7 +250,10 @@ namespace BattlePass.Tests.Editor
         private BattlePassWindowController CreateController(
             IBattlePassServerService serverService,
             IBattlePassTimerService timerService,
-            out TestBattlePassView view)
+            out TestBattlePassView view,
+            StubBattlePassOptimisticRewardApplier optimisticRewardApplier = null,
+            StubRewardPlayerStateRefreshCoordinator refreshCoordinator = null,
+            StubRewardSpecProvider rewardSpecProvider = null)
         {
             var uiManagerGo = new GameObject("BattlePassUIManager");
             var viewGo = new GameObject("BattlePassView");
@@ -245,15 +268,25 @@ namespace BattlePass.Tests.Editor
             controller.Configurate(view, uiManager, new WindowAttribute("BattlePassWindow", WindowType.Popup));
             controller.SetEventHandler(new StubEventHandler());
 
-            var rewardSpecProvider = new StubRewardSpecProvider(new Dictionary<string, RewardSpec>
+            rewardSpecProvider ??= new StubRewardSpecProvider(new Dictionary<string, RewardSpec>
             {
                 ["reward_default"] = CreateRewardSpec("reward_default", 10),
                 ["reward_premium"] = CreateRewardSpec("reward_premium", 25)
             });
+            optimisticRewardApplier ??= new StubBattlePassOptimisticRewardApplier();
+            refreshCoordinator ??= new StubRewardPlayerStateRefreshCoordinator();
             var factory = new BattlePassUiModelFactory(rewardSpecProvider);
 
             var constructMethod = typeof(BattlePassWindowController).GetMethod("Construct", BindingFlags.Instance | BindingFlags.NonPublic);
-            constructMethod.Invoke(controller, new object[] { serverService, timerService, factory });
+            constructMethod.Invoke(controller, new object[]
+            {
+                serverService,
+                timerService,
+                factory,
+                optimisticRewardApplier,
+                refreshCoordinator,
+                rewardSpecProvider
+            });
 
             return controller;
         }
@@ -457,6 +490,54 @@ namespace BattlePass.Tests.Editor
             public bool TryGet(string rewardId, out RewardSpec spec)
             {
                 return _specs.TryGetValue(rewardId, out spec);
+            }
+        }
+
+        private sealed class StubBattlePassOptimisticRewardApplier : IBattlePassOptimisticRewardApplier
+        {
+            private readonly List<string> _executionOrder;
+
+            public StubBattlePassOptimisticRewardApplier(List<string> executionOrder = null)
+            {
+                _executionOrder = executionOrder;
+            }
+
+            public int Calls { get; private set; }
+            public IReadOnlyList<BattlePassGrantedRewardCell> LastGrantedRewards { get; private set; }
+
+            public void Apply(IReadOnlyList<BattlePassGrantedRewardCell> grantedRewards)
+            {
+                Calls++;
+                LastGrantedRewards = grantedRewards;
+                _executionOrder?.Add("apply");
+            }
+        }
+
+        private sealed class StubRewardPlayerStateRefreshCoordinator : IRewardPlayerStateRefreshCoordinator
+        {
+            private readonly List<string> _executionOrder;
+
+            public StubRewardPlayerStateRefreshCoordinator(List<string> executionOrder = null)
+            {
+                _executionOrder = executionOrder;
+            }
+
+            public bool HasPendingRefresh { get; set; }
+            public int BackgroundRequestCalls { get; private set; }
+            public int ForegroundRequestCalls { get; private set; }
+
+            public void RequestBackgroundRefresh()
+            {
+                BackgroundRequestCalls++;
+                _executionOrder?.Add("refresh");
+            }
+
+            public UniTask RequestForegroundRefreshAsync(CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+                ForegroundRequestCalls++;
+                HasPendingRefresh = false;
+                return UniTask.CompletedTask;
             }
         }
 
