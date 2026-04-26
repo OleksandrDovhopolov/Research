@@ -281,6 +281,96 @@ namespace BattlePass.Tests.Editor
             Assert.That(state.PassType, Is.EqualTo(BattlePassPassType.Premium));
         }
 
+        [Test]
+        public void ClaimAsync_PostsSeasonLevelAndTrack_AndMapsClaimResultWithBattlePass()
+        {
+            var webClient = new StubWebClient
+            {
+                PostResponder = (url, request, responseType) =>
+                {
+                    Assert.That(url, Is.EqualTo("battle-pass/claim"));
+                    Assert.That(Newtonsoft.Json.Linq.JObject.FromObject(request)["playerId"]?.ToObject<string>(), Is.EqualTo("player-1"));
+                    Assert.That(Newtonsoft.Json.Linq.JObject.FromObject(request)["seasonId"]?.ToObject<string>(), Is.EqualTo("season_2026_s1"));
+                    Assert.That(Newtonsoft.Json.Linq.JObject.FromObject(request)["level"]?.ToObject<int>(), Is.EqualTo(2));
+                    Assert.That(Newtonsoft.Json.Linq.JObject.FromObject(request)["rewardTrack"]?.ToObject<string>(), Is.EqualTo("premium"));
+
+                    return new
+                    {
+                        success = true,
+                        grantedRewards = new object[]
+                        {
+                            new
+                            {
+                                level = 2,
+                                rewardTrack = "premium",
+                                rewardId = "reward_premium_1"
+                            }
+                        },
+                        battlePass = new
+                        {
+                            seasonId = "season_2026_s1",
+                            level = 12,
+                            xp = 360,
+                            passType = "premium",
+                            claimedRewards = new object[]
+                            {
+                                new
+                                {
+                                    level = 2,
+                                    rewardTrack = "premium",
+                                    claimedAtUtc = "2026-04-26T10:10:00Z"
+                                }
+                            },
+                            claimableRewards = Array.Empty<object>()
+                        },
+                        errorCode = (string)null,
+                        errorMessage = (string)null
+                    };
+                }
+            };
+
+            var service = new BattlePassServerService(webClient, new StubPlayerIdentityProvider("player-1"));
+
+            var result = service.ClaimAsync("season_2026_s1", 2, BattlePassRewardTrack.Premium, CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.ErrorCode, Is.Empty);
+            Assert.That(result.ErrorMessage, Is.Empty);
+            Assert.That(result.GrantedRewards.Count, Is.EqualTo(1));
+            Assert.That(result.GrantedRewards[0].Level, Is.EqualTo(2));
+            Assert.That(result.GrantedRewards[0].RewardTrack, Is.EqualTo(BattlePassRewardTrack.Premium));
+            Assert.That(result.GrantedRewards[0].RewardId, Is.EqualTo("reward_premium_1"));
+            Assert.That(result.UpdatedUserState, Is.Not.Null);
+            Assert.That(result.UpdatedUserState.Xp, Is.EqualTo(360));
+            Assert.That(result.UpdatedUserState.ClaimedRewards.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ClaimAsync_MapsErrorCodeAndErrorMessage_WhenClaimFailed()
+        {
+            var webClient = new StubWebClient
+            {
+                PostResponder = (_, request, _) => new
+                {
+                    success = false,
+                    grantedRewards = Array.Empty<object>(),
+                    battlePass = (object)null,
+                    errorCode = "premium_locked",
+                    errorMessage = "Premium track is unavailable."
+                }
+            };
+
+            var service = new BattlePassServerService(webClient, new StubPlayerIdentityProvider("player-1"));
+
+            var result = service.ClaimAsync("season_2026_s1", 1, BattlePassRewardTrack.Premium, CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.GrantedRewards, Is.Empty);
+            Assert.That(result.UpdatedUserState, Is.Null);
+            Assert.That(result.ErrorCode, Is.EqualTo("premium_locked"));
+            Assert.That(result.ErrorMessage, Is.EqualTo("Premium track is unavailable."));
+        }
+
         private sealed class StubPlayerIdentityProvider : IPlayerIdentityProvider
         {
             private readonly string _playerId;

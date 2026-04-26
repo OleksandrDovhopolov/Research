@@ -9,6 +9,7 @@ using NUnit.Framework;
 using Rewards;
 using UISystem;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace BattlePass.Tests.Editor
 {
@@ -114,6 +115,118 @@ namespace BattlePass.Tests.Editor
             Assert.That(lifecycleState.CurrentStatus, Is.EqualTo(BattlePassLifecycleStatus.Inactive));
         }
 
+        [Test]
+        public void ClaimReward_WhenSuccessful_UpdatesUiFromMergedUserState()
+        {
+            var initialSnapshot = CreateActiveSnapshot();
+            var updatedSnapshot = CreateActiveSnapshot(xp: 220);
+            var serverService = new StubBattlePassServerService(initialSnapshot)
+            {
+                ClaimResponseFactory = (_, _, _) => UniTask.FromResult(new BattlePassClaimResult(
+                    true,
+                    new[]
+                    {
+                        new BattlePassGrantedRewardCell(1, BattlePassRewardTrack.Default, "reward_default")
+                    },
+                    updatedSnapshot.UserState,
+                    null,
+                    null))
+            };
+            var controller = CreateController(serverService, new StubBattlePassTimerService(), out var view);
+
+            RunCoroutine(controller.Show(null));
+            view.EmitRewardClaim(1, BattlePassRewardTrack.Default);
+
+            Assert.That(serverService.ClaimCalls, Is.EqualTo(1));
+            Assert.That(serverService.LastClaimSeasonId, Is.EqualTo(initialSnapshot.Season.Id));
+            Assert.That(serverService.LastClaimLevel, Is.EqualTo(1));
+            Assert.That(serverService.LastClaimRewardTrack, Is.EqualTo(BattlePassRewardTrack.Default));
+            Assert.That(view.RenderedModel, Is.Not.Null);
+            Assert.That(view.RenderedModel.CurrentXp, Is.EqualTo(220));
+        }
+
+        [Test]
+        public void ClaimReward_WhenFailed_ReloadsCurrentSnapshot()
+        {
+            var initialSnapshot = CreateActiveSnapshot(xp: 180);
+            var refreshedSnapshot = CreateActiveSnapshot(xp: 260);
+            var serverService = new StubBattlePassServerService(initialSnapshot)
+            {
+                GetCurrentSnapshot = refreshedSnapshot,
+                ClaimResponseFactory = (_, _, _) => UniTask.FromResult(new BattlePassClaimResult(
+                    false,
+                    Array.Empty<BattlePassGrantedRewardCell>(),
+                    null,
+                    "already_claimed",
+                    "Reward already claimed."))
+            };
+            var controller = CreateController(serverService, new StubBattlePassTimerService(), out var view);
+
+            RunCoroutine(controller.Show(null));
+            LogAssert.Expect(
+                LogType.Error,
+                "[BattlePassWindowController] Claim failed. Code=already_claimed, Message=Reward already claimed.");
+            view.EmitRewardClaim(1, BattlePassRewardTrack.Default);
+
+            Assert.That(serverService.GetCurrentCalls, Is.EqualTo(2));
+            Assert.That(view.RenderedModel, Is.Not.Null);
+            Assert.That(view.RenderedModel.CurrentXp, Is.EqualTo(260));
+        }
+
+        [Test]
+        public void ClaimReward_WhenInFlight_DoesNotSendSecondRequest()
+        {
+            var initialSnapshot = CreateActiveSnapshot();
+            var pendingClaim = new UniTaskCompletionSource<BattlePassClaimResult>();
+            var serverService = new StubBattlePassServerService(initialSnapshot)
+            {
+                ClaimResponseFactory = (_, _, _) => pendingClaim.Task
+            };
+            var controller = CreateController(serverService, new StubBattlePassTimerService(), out var view);
+
+            RunCoroutine(controller.Show(null));
+            view.EmitRewardClaim(1, BattlePassRewardTrack.Default);
+            view.EmitRewardClaim(1, BattlePassRewardTrack.Default);
+
+            Assert.That(serverService.ClaimCalls, Is.EqualTo(1));
+            Assert.That(view.LastClaimButtonsInteractable, Is.False);
+
+            pendingClaim.TrySetResult(new BattlePassClaimResult(
+                true,
+                Array.Empty<BattlePassGrantedRewardCell>(),
+                CreateActiveSnapshot(xp: 200).UserState,
+                null,
+                null));
+        }
+
+        [Test]
+        public void ClaimReward_WhenSuccessButUpdatedUserStateMissing_ReloadsCurrentSnapshot()
+        {
+            var initialSnapshot = CreateActiveSnapshot(xp: 180);
+            var refreshedSnapshot = CreateActiveSnapshot(xp: 300);
+            var serverService = new StubBattlePassServerService(initialSnapshot)
+            {
+                GetCurrentSnapshot = refreshedSnapshot,
+                ClaimResponseFactory = (_, _, _) => UniTask.FromResult(new BattlePassClaimResult(
+                    true,
+                    Array.Empty<BattlePassGrantedRewardCell>(),
+                    null,
+                    null,
+                    null))
+            };
+            var controller = CreateController(serverService, new StubBattlePassTimerService(), out var view);
+
+            RunCoroutine(controller.Show(null));
+            LogAssert.Expect(
+                LogType.Error,
+                "[BattlePassWindowController] Claim returned success, but updated user state is missing.");
+            view.EmitRewardClaim(1, BattlePassRewardTrack.Default);
+
+            Assert.That(serverService.GetCurrentCalls, Is.EqualTo(2));
+            Assert.That(view.RenderedModel, Is.Not.Null);
+            Assert.That(view.RenderedModel.CurrentXp, Is.EqualTo(300));
+        }
+
         private BattlePassWindowController CreateController(
             IBattlePassServerService serverService,
             IBattlePassTimerService timerService,
@@ -145,7 +258,7 @@ namespace BattlePass.Tests.Editor
             return controller;
         }
 
-        private static BattlePassSnapshot CreateActiveSnapshot()
+        private static BattlePassSnapshot CreateActiveSnapshot(int xp = 180)
         {
             return new BattlePassSnapshot(
                 new BattlePassSeason(
@@ -160,10 +273,13 @@ namespace BattlePass.Tests.Editor
                 new BattlePassUserState(
                     "season_1",
                     6,
-                    180,
+                    xp,
                     BattlePassPassType.Premium,
                     Array.Empty<BattlePassClaimedRewardCell>(),
-                    Array.Empty<BattlePassClaimableRewardCell>()),
+                    new[]
+                    {
+                        new BattlePassClaimableRewardCell(1, BattlePassRewardTrack.Default, "reward_default")
+                    }),
                 new[]
                 {
                     new BattlePassLevel(
@@ -198,6 +314,7 @@ namespace BattlePass.Tests.Editor
             public BattlePassWindowUiModel RenderedModel { get; private set; }
             public string UnavailableMessage { get; private set; }
             public int TimerUpdateCount { get; private set; }
+            public bool LastClaimButtonsInteractable { get; private set; } = true;
 
             public override void ResetView()
             {
@@ -221,27 +338,68 @@ namespace BattlePass.Tests.Editor
             {
                 TimerUpdateCount++;
             }
+
+            public override void SetClaimButtonsInteractable(bool isInteractable)
+            {
+                LastClaimButtonsInteractable = isInteractable;
+                base.SetClaimButtonsInteractable(isInteractable);
+            }
+
+            public void EmitRewardClaim(int level, BattlePassRewardTrack rewardTrack)
+            {
+                RaiseRewardClaimClick(level, rewardTrack);
+            }
         }
 
         private sealed class StubBattlePassServerService : IBattlePassServerService
         {
-            private readonly BattlePassSnapshot _snapshot;
+            private readonly BattlePassSnapshot _initialSnapshot;
 
             public StubBattlePassServerService(BattlePassSnapshot snapshot)
             {
-                _snapshot = snapshot;
+                _initialSnapshot = snapshot;
             }
+
+            public int GetCurrentCalls { get; private set; }
+            public int ClaimCalls { get; private set; }
+            public string LastClaimSeasonId { get; private set; }
+            public int LastClaimLevel { get; private set; }
+            public BattlePassRewardTrack LastClaimRewardTrack { get; private set; }
+            public BattlePassSnapshot GetCurrentSnapshot { get; set; }
+            public Func<string, int, BattlePassRewardTrack, UniTask<BattlePassClaimResult>> ClaimResponseFactory { get; set; }
 
             public UniTask<BattlePassSnapshot> GetCurrentAsync(CancellationToken ct = default)
             {
                 ct.ThrowIfCancellationRequested();
-                return UniTask.FromResult(_snapshot);
+                GetCurrentCalls++;
+                return UniTask.FromResult(GetCurrentSnapshot ?? _initialSnapshot);
             }
 
             public UniTask<BattlePassUserState> AddXpAsync(int amount, CancellationToken ct = default)
             {
                 ct.ThrowIfCancellationRequested();
-                return UniTask.FromResult(_snapshot?.UserState);
+                return UniTask.FromResult((_initialSnapshot)?.UserState);
+            }
+
+            public UniTask<BattlePassClaimResult> ClaimAsync(string seasonId, int level, BattlePassRewardTrack rewardTrack, CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+                ClaimCalls++;
+                LastClaimSeasonId = seasonId;
+                LastClaimLevel = level;
+                LastClaimRewardTrack = rewardTrack;
+
+                if (ClaimResponseFactory != null)
+                {
+                    return ClaimResponseFactory(seasonId, level, rewardTrack);
+                }
+
+                return UniTask.FromResult(new BattlePassClaimResult(
+                    true,
+                    Array.Empty<BattlePassGrantedRewardCell>(),
+                    (GetCurrentSnapshot ?? _initialSnapshot)?.UserState,
+                    null,
+                    null));
             }
         }
 

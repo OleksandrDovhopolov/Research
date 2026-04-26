@@ -164,4 +164,41 @@ namespace BattlePass
         public BattlePassRewardTrack RewardTrack { get; }
         public string RewardId { get; }
     }
+
+    public sealed class BattlePassGrantedRewardCell
+    {
+        public BattlePassGrantedRewardCell(int level, BattlePassRewardTrack rewardTrack, string rewardId)
+        {
+            Level = Math.Max(0, level);
+            RewardTrack = rewardTrack;
+            RewardId = rewardId ?? string.Empty;
+        }
+
+        public int Level { get; }
+        public BattlePassRewardTrack RewardTrack { get; }
+        public string RewardId { get; }
+    }
+
+    public sealed class BattlePassClaimResult
+    {
+        public BattlePassClaimResult(
+            bool success,
+            IReadOnlyList<BattlePassGrantedRewardCell> grantedRewards,
+            BattlePassUserState updatedUserState,
+            string errorCode,
+            string errorMessage)
+        {
+            Success = success;
+            GrantedRewards = grantedRewards ?? Array.Empty<BattlePassGrantedRewardCell>();
+            UpdatedUserState = updatedUserState;
+            ErrorCode = errorCode ?? string.Empty;
+            ErrorMessage = errorMessage ?? string.Empty;
+        }
+
+        public bool Success { get; }
+        public IReadOnlyList<BattlePassGrantedRewardCell> GrantedRewards { get; }
+        public BattlePassUserState UpdatedUserState { get; }
+        public string ErrorCode { get; }
+        public string ErrorMessage { get; }
+    }
 }

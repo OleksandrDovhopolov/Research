@@ -51,10 +51,14 @@ namespace BattlePass.Tests.Editor
             Assert.That(uiModel.DefaultRewards.Count, Is.EqualTo(1));
             Assert.That(uiModel.PremiumRewards.Count, Is.EqualTo(1));
             Assert.That(uiModel.DefaultRewards[0].RewardId, Is.EqualTo("reward_default"));
+            Assert.That(uiModel.DefaultRewards[0].Level, Is.EqualTo(1));
+            Assert.That(uiModel.DefaultRewards[0].RewardTrack, Is.EqualTo(BattlePassRewardTrack.Default));
             Assert.That(uiModel.DefaultRewards[0].IsPremiumTrack, Is.False);
             Assert.That(uiModel.DefaultRewards[0].IsClaimed, Is.False);
             Assert.That(uiModel.DefaultRewards[0].IsLocked, Is.False);
             Assert.That(uiModel.PremiumRewards[0].RewardId, Is.EqualTo("reward_premium"));
+            Assert.That(uiModel.PremiumRewards[0].Level, Is.EqualTo(1));
+            Assert.That(uiModel.PremiumRewards[0].RewardTrack, Is.EqualTo(BattlePassRewardTrack.Premium));
             Assert.That(uiModel.PremiumRewards[0].IsPremiumTrack, Is.True);
             Assert.That(uiModel.PremiumRewards[0].IsLocked, Is.False);
         }

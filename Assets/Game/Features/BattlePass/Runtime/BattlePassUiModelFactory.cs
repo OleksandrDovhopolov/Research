@@ -92,6 +92,8 @@ namespace BattlePass
                 var isLocked = !isClaimed && ResolveLockedState(isPremiumTrack, userState);
 
                 rewardModels.Add(new BattlePassRewardUiModel(
+                    level.Level,
+                    rewardTrack,
                     reward.RewardId,
                     spec.Icon,
                     Mathf.Max(0, spec.TotalAmountForUi),

@@ -10,6 +10,9 @@ namespace BattlePass
 {
     public class BattlePassView : WindowView
     {
+        private readonly List<BattlePassRewardView> _activeRewardViews = new();
+        private bool _claimButtonsInteractable = true;
+
         [Header("State")]
         [SerializeField] private GameObject _contentRoot;
         [SerializeField] private GameObject _unavailableRoot;
@@ -33,6 +36,7 @@ namespace BattlePass
 
         public event Action BuyPremiumClick;
         public event Action BuyPlatinumClick;
+        public event Action<int, BattlePassRewardTrack> RewardClaimClick;
 
         protected override void Awake()
         {
@@ -51,6 +55,8 @@ namespace BattlePass
 
         public virtual void ResetView()
         {
+            _claimButtonsInteractable = true;
+            ClearRewardBindings();
             SetContentVisible(true);
             SetUnavailableVisible(false, string.Empty);
             SetTitle(string.Empty);
@@ -70,6 +76,7 @@ namespace BattlePass
                 return;
             }
 
+            ClearRewardBindings();
             SetContentVisible(true);
             SetUnavailableVisible(false, string.Empty);
             SetTitle(model.Title);
@@ -82,10 +89,27 @@ namespace BattlePass
 
         public virtual void ShowUnavailableState(string message)
         {
+            _claimButtonsInteractable = true;
+            ClearRewardBindings();
             SetContentVisible(false);
             SetUnavailableVisible(true, string.IsNullOrWhiteSpace(message) ? BattlePassConfig.Ui.UnavailableText : message);
             RenderRewards(_defaultRewardsPool, Array.Empty<BattlePassRewardUiModel>());
             RenderRewards(_premiumRewardsPool, Array.Empty<BattlePassRewardUiModel>());
+        }
+
+        public virtual void SetClaimButtonsInteractable(bool isInteractable)
+        {
+            _claimButtonsInteractable = isInteractable;
+            for (var i = 0; i < _activeRewardViews.Count; i++)
+            {
+                var rewardView = _activeRewardViews[i];
+                if (rewardView == null)
+                {
+                    continue;
+                }
+
+                rewardView.SetClaimInteractable(isInteractable);
+            }
         }
 
         public virtual void SetTimer(TimeSpan remainingTime)
@@ -153,6 +177,10 @@ namespace BattlePass
             {
                 var rewardView = rewardsPool.GetNext();
                 rewardView.SetData(reward);
+                rewardView.SetClaimInteractable(_claimButtonsInteractable);
+                rewardView.ClaimClick -= HandleRewardClaimClick;
+                rewardView.ClaimClick += HandleRewardClaimClick;
+                _activeRewardViews.Add(rewardView);
             }
         }
 
@@ -187,6 +215,32 @@ namespace BattlePass
             BuyPlatinumClick?.Invoke();
         }
 
+        protected void RaiseRewardClaimClick(int level, BattlePassRewardTrack rewardTrack)
+        {
+            RewardClaimClick?.Invoke(level, rewardTrack);
+        }
+
+        private void HandleRewardClaimClick(int level, BattlePassRewardTrack rewardTrack)
+        {
+            RaiseRewardClaimClick(level, rewardTrack);
+        }
+
+        private void ClearRewardBindings()
+        {
+            for (var i = 0; i < _activeRewardViews.Count; i++)
+            {
+                var rewardView = _activeRewardViews[i];
+                if (rewardView == null)
+                {
+                    continue;
+                }
+
+                rewardView.ClaimClick -= HandleRewardClaimClick;
+            }
+
+            _activeRewardViews.Clear();
+        }
+
         private static string FormatPassType(BattlePassPassType passType)
         {
             return passType switch
@@ -215,6 +269,8 @@ namespace BattlePass
 
         protected override void OnDestroy()
         {
+            ClearRewardBindings();
+
             if (_buyPremiumButton != null)
             {
                 _buyPremiumButton.onClick.RemoveListener(HandleBuyPremiumClicked);
