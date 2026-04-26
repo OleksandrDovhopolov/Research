@@ -7,6 +7,7 @@ using Cysharp.Threading.Tasks;
 using Infrastructure;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Rewards;
 using UnityEngine;
 
 namespace BattlePass
@@ -15,11 +16,14 @@ namespace BattlePass
     {
         private readonly IWebClient _webClient;
         private readonly IPlayerIdentityProvider _playerIdentityProvider;
+        private readonly IRewardPlayerStateSyncService _rewardPlayerStateSyncService;
 
-        public BattlePassServerService(IWebClient webClient, IPlayerIdentityProvider playerIdentityProvider)
+        //TODO remove null and fix tests
+        public BattlePassServerService(IWebClient webClient, IPlayerIdentityProvider playerIdentityProvider, IRewardPlayerStateSyncService playerStateSyncService = null)
         {
             _webClient = webClient ?? throw new ArgumentNullException(nameof(webClient));
             _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
+            _rewardPlayerStateSyncService = playerStateSyncService ?? throw new ArgumentNullException(nameof(playerStateSyncService));
         }
 
         public async UniTask<BattlePassSnapshot> GetCurrentAsync(CancellationToken ct = default)
@@ -79,6 +83,14 @@ namespace BattlePass
                 RewardTrack = ToServerRewardTrack(rewardTrack)
             };
             var response = await _webClient.PostAsync<BattlePassClaimRequest, BattlePassClaimResponse>(BattlePassConfig.Api.ClaimPath, request, ct);
+
+            
+            //TODO remove null check and check is this correct solution ? 
+            if (_rewardPlayerStateSyncService != null)
+            {
+                await _rewardPlayerStateSyncService.SyncFromGlobalSaveAsync(ct);
+            }
+            
             return MapClaimResult(response);
         }
 

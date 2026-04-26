@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Rewards;
 using UISystem;
 using UnityEngine;
 using VContainer;
@@ -122,15 +123,17 @@ namespace BattlePass
             _isClaimInFlight = true;
             View.SetClaimButtonsInteractable(false);
 
+            var claimResult = await _battlePassServerService.ClaimAsync(seasonId, level, rewardTrack, ct);
             try
             {
-                var claimResult = await _battlePassServerService.ClaimAsync(seasonId, level, rewardTrack, ct);
                 ct.ThrowIfCancellationRequested();
 
-                if (claimResult != null && claimResult.Success)
+                if (claimResult is { Success: true })
                 {
                     if (TryApplyClaimUserState(claimResult.UpdatedUserState))
                     {
+                        var grantedRewardCell = claimResult.GrantedRewards.First();
+                        ShowRewardWindow(grantedRewardCell.RewardId);
                         return;
                     }
 
@@ -157,6 +160,12 @@ namespace BattlePass
             }
         }
 
+        private void ShowRewardWindow(string rewardId)
+        {
+            var rewardArgs = new RewardsWindowArgs(rewardId);
+            UIManager.Show<RewardsWindowController>(rewardArgs);
+        }
+        
         private async UniTask ReloadCurrentAsync(CancellationToken ct)
         {
             try
