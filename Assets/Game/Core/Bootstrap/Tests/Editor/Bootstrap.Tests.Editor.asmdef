@@ -3,6 +3,8 @@
     "rootNamespace": "Game.Bootstrap.Tests.Editor",
     "references": [
         "Bootstrap",
+        "BattlePass",
+        "CheatModule",
         "UniTask"
     ],
     "includePlatforms": [

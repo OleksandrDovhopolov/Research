@@ -48,6 +48,8 @@ namespace BattlePass.Tests.Editor
 
             Assert.That(uiModel, Is.Not.Null);
             Assert.That(uiModel.Title, Is.EqualTo("Season 1"));
+            Assert.That(uiModel.CurrentXp, Is.EqualTo(120));
+            Assert.That(uiModel.RequiredXp, Is.EqualTo(120));
             Assert.That(uiModel.DefaultRewards.Count, Is.EqualTo(1));
             Assert.That(uiModel.PremiumRewards.Count, Is.EqualTo(1));
             Assert.That(uiModel.DefaultRewards[0].RewardId, Is.EqualTo("reward_default"));
@@ -256,6 +258,44 @@ namespace BattlePass.Tests.Editor
             Assert.That(uiModel.PremiumRewards[0].IsClaimed, Is.True);
             Assert.That(uiModel.PremiumRewards[0].IsClaimable, Is.False);
             Assert.That(uiModel.PremiumRewards[0].IsLocked, Is.False);
+        }
+
+        [Test]
+        public void Create_WhenNextLevelExists_UsesNextLevelXpAsRequiredXp()
+        {
+            var rewardSpecProvider = new StubRewardSpecProvider(new Dictionary<string, RewardSpec>
+            {
+                ["reward_default"] = CreateRewardSpec("reward_default", 10)
+            });
+            var factory = new BattlePassUiModelFactory(rewardSpecProvider);
+            var snapshot = new BattlePassSnapshot(
+                new BattlePassSeason(
+                    "season_1",
+                    "Season 1",
+                    DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+                    DateTimeOffset.Parse("2026-06-01T00:00:00Z"),
+                    50,
+                    "active",
+                    "v1"),
+                new BattlePassProducts("premium_sku", "platinum_sku"),
+                new BattlePassUserState(
+                    "season_1",
+                    1,
+                    40,
+                    BattlePassPassType.None,
+                    Array.Empty<BattlePassClaimedRewardCell>(),
+                    Array.Empty<BattlePassClaimableRewardCell>()),
+                new[]
+                {
+                    new BattlePassLevel(1, 0, new BattlePassRewardRef("reward_default"), null),
+                    new BattlePassLevel(2, 100, new BattlePassRewardRef("reward_default"), null)
+                },
+                DateTimeOffset.Parse("2026-04-24T10:00:00Z"));
+
+            var uiModel = factory.Create(snapshot);
+
+            Assert.That(uiModel.CurrentXp, Is.EqualTo(40));
+            Assert.That(uiModel.RequiredXp, Is.EqualTo(100));
         }
 
         private static RewardSpec CreateRewardSpec(string rewardId, int amount)

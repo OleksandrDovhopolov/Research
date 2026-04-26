@@ -10,6 +10,7 @@ namespace BattlePass
             string title,
             int currentLevel,
             int currentXp,
+            int requiredXp,
             BattlePassPassType passType,
             string premiumProductId,
             string platinumProductId,
@@ -19,6 +20,7 @@ namespace BattlePass
             Title = title ?? string.Empty;
             CurrentLevel = Math.Max(0, currentLevel);
             CurrentXp = Math.Max(0, currentXp);
+            RequiredXp = Math.Max(0, requiredXp);
             PassType = passType;
             PremiumProductId = premiumProductId ?? string.Empty;
             PlatinumProductId = platinumProductId ?? string.Empty;
@@ -29,6 +31,7 @@ namespace BattlePass
         public string Title { get; }
         public int CurrentLevel { get; }
         public int CurrentXp { get; }
+        public int RequiredXp { get; }
         public BattlePassPassType PassType { get; }
         public string PremiumProductId { get; }
         public string PlatinumProductId { get; }

@@ -251,7 +251,7 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
-        public void AddXpAsync_PostsPlayerIdAndAmount_AndMapsUpdatedState()
+        public void AddXpAsync_PostsPlayerIdAndAmount_AndMapsWrappedSuccessResponse()
         {
             var webClient = new StubWebClient
             {
@@ -263,22 +263,132 @@ namespace BattlePass.Tests.Editor
 
                     return new
                     {
-                        seasonId = "season_2026_s1",
-                        level = 13,
-                        xp = 360,
-                        passType = "premium"
+                        success = true,
+                        addedXp = 20,
+                        battlePass = new
+                        {
+                            seasonId = "season_2026_s1",
+                            level = 13,
+                            xp = 360,
+                            passType = "premium",
+                            claimedRewards = new object[]
+                            {
+                                new
+                                {
+                                    level = 2,
+                                    rewardTrack = "default",
+                                    claimedAtUtc = "2026-04-26T10:00:00Z"
+                                }
+                            },
+                            claimableRewards = new object[]
+                            {
+                                new
+                                {
+                                    level = 3,
+                                    rewardTrack = "premium",
+                                    rewardId = "reward_premium_3"
+                                }
+                            }
+                        },
+                        errorCode = (string)null,
+                        errorMessage = (string)null
                     };
                 }
             };
 
             var service = new BattlePassServerService(webClient, new StubPlayerIdentityProvider("player-1"));
 
-            var state = service.AddXpAsync(20, CancellationToken.None).GetAwaiter().GetResult();
+            var result = service.AddXpAsync(20, CancellationToken.None).GetAwaiter().GetResult();
 
-            Assert.That(state.SeasonId, Is.EqualTo("season_2026_s1"));
-            Assert.That(state.Level, Is.EqualTo(13));
-            Assert.That(state.Xp, Is.EqualTo(360));
-            Assert.That(state.PassType, Is.EqualTo(BattlePassPassType.Premium));
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.AddedXp, Is.EqualTo(20));
+            Assert.That(result.ErrorCode, Is.Empty);
+            Assert.That(result.ErrorMessage, Is.Empty);
+            Assert.That(result.UpdatedUserState, Is.Not.Null);
+            Assert.That(result.UpdatedUserState.SeasonId, Is.EqualTo("season_2026_s1"));
+            Assert.That(result.UpdatedUserState.Level, Is.EqualTo(13));
+            Assert.That(result.UpdatedUserState.Xp, Is.EqualTo(360));
+            Assert.That(result.UpdatedUserState.PassType, Is.EqualTo(BattlePassPassType.Premium));
+            Assert.That(result.UpdatedUserState.ClaimedRewards.Count, Is.EqualTo(1));
+            Assert.That(result.UpdatedUserState.ClaimableRewards.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void AddXpAsync_MapsFailureErrorCodeAndErrorMessage_WhenSuccessFalse()
+        {
+            var webClient = new StubWebClient
+            {
+                PostResponder = (_, _, _) => new
+                {
+                    success = false,
+                    addedXp = 0,
+                    battlePass = (object)null,
+                    errorCode = "season_inactive",
+                    errorMessage = "Battle pass season is not active."
+                }
+            };
+
+            var service = new BattlePassServerService(webClient, new StubPlayerIdentityProvider("player-1"));
+
+            var result = service.AddXpAsync(20, CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.AddedXp, Is.EqualTo(0));
+            Assert.That(result.UpdatedUserState, Is.Null);
+            Assert.That(result.ErrorCode, Is.EqualTo("season_inactive"));
+            Assert.That(result.ErrorMessage, Is.EqualTo("Battle pass season is not active."));
+        }
+
+        [Test]
+        public void AddXpAsync_MapsUpdatedUserState_FromBattlePassField()
+        {
+            var webClient = new StubWebClient
+            {
+                PostResponder = (_, _, _) => new
+                {
+                    success = true,
+                    addedXp = 15,
+                    battlePass = new
+                    {
+                        seasonId = "season_2026_s1",
+                        level = 9,
+                        xp = 155,
+                        passType = "platinum",
+                        claimedRewards = new object[]
+                        {
+                            new
+                            {
+                                level = 1,
+                                rewardTrack = "default",
+                                claimedAtUtc = "2026-04-26T11:00:00Z"
+                            }
+                        },
+                        claimableRewards = new object[]
+                        {
+                            new
+                            {
+                                level = 2,
+                                rewardTrack = "premium",
+                                rewardId = "reward_premium_2"
+                            }
+                        }
+                    },
+                    errorCode = (string)null,
+                    errorMessage = (string)null
+                }
+            };
+
+            var service = new BattlePassServerService(webClient, new StubPlayerIdentityProvider("player-1"));
+
+            var result = service.AddXpAsync(15, CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.UpdatedUserState, Is.Not.Null);
+            Assert.That(result.UpdatedUserState.PassType, Is.EqualTo(BattlePassPassType.Platinum));
+            Assert.That(result.UpdatedUserState.ClaimedRewards.Count, Is.EqualTo(1));
+            Assert.That(result.UpdatedUserState.ClaimedRewards[0].Level, Is.EqualTo(1));
+            Assert.That(result.UpdatedUserState.ClaimableRewards.Count, Is.EqualTo(1));
+            Assert.That(result.UpdatedUserState.ClaimableRewards[0].RewardTrack, Is.EqualTo(BattlePassRewardTrack.Premium));
         }
 
         [Test]

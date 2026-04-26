@@ -201,4 +201,27 @@ namespace BattlePass
         public string ErrorCode { get; }
         public string ErrorMessage { get; }
     }
+
+    public sealed class BattlePassAddXpResult
+    {
+        public BattlePassAddXpResult(
+            bool success,
+            int addedXp,
+            BattlePassUserState updatedUserState,
+            string errorCode,
+            string errorMessage)
+        {
+            Success = success;
+            AddedXp = Math.Max(0, addedXp);
+            UpdatedUserState = updatedUserState;
+            ErrorCode = errorCode ?? string.Empty;
+            ErrorMessage = errorMessage ?? string.Empty;
+        }
+
+        public bool Success { get; }
+        public int AddedXp { get; }
+        public BattlePassUserState UpdatedUserState { get; }
+        public string ErrorCode { get; }
+        public string ErrorMessage { get; }
+    }
 }

@@ -62,7 +62,7 @@ namespace BattlePass
             SetTitle(string.Empty);
             SetTimer(TimeSpan.Zero);
             SetLevel(0);
-            SetXp(0);
+            SetXp(0, 0);
             SetBuyButtons(string.Empty, string.Empty);
             RenderRewards(_defaultRewardsPool, Array.Empty<BattlePassRewardUiModel>());
             RenderRewards(_premiumRewardsPool, Array.Empty<BattlePassRewardUiModel>());
@@ -81,7 +81,7 @@ namespace BattlePass
             SetUnavailableVisible(false, string.Empty);
             SetTitle(model.Title);
             SetLevel(model.CurrentLevel);
-            SetXp(model.CurrentXp);
+            SetXp(model.CurrentXp, model.RequiredXp);
             SetBuyButtons(model.PremiumProductId, model.PlatinumProductId);
             RenderRewards(_defaultRewardsPool, model.DefaultRewards);
             RenderRewards(_premiumRewardsPool, model.PremiumRewards);
@@ -136,11 +136,13 @@ namespace BattlePass
             }
         }
 
-        private void SetXp(int xp)
+        private void SetXp(int currentXp, int requiredXp)
         {
             if (_xpText != null)
             {
-                _xpText.text = Mathf.Max(0, xp).ToString();
+                var safeCurrentXp = Mathf.Max(0, currentXp);
+                var safeRequiredXp = Mathf.Max(safeCurrentXp, requiredXp);
+                _xpText.text = $"{safeCurrentXp} / {safeRequiredXp}";
             }
         }
 

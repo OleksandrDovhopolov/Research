@@ -36,7 +36,7 @@ namespace BattlePass
             return MapResponse(response);
         }
 
-        public async UniTask<BattlePassUserState> AddXpAsync(int amount, CancellationToken ct = default)
+        public async UniTask<BattlePassAddXpResult> AddXpAsync(int amount, CancellationToken ct = default)
         {
             var playerId = _playerIdentityProvider.GetPlayerId();
             if (string.IsNullOrWhiteSpace(playerId))
@@ -49,8 +49,8 @@ namespace BattlePass
                 PlayerId = playerId,
                 Amount = amount
             };
-            var response = await _webClient.PostAsync<BattlePassAddXpRequest, BattlePassStateResponse>(BattlePassConfig.Api.AddXpPath, request, ct);
-            return MapUserState(response);
+            var response = await _webClient.PostAsync<BattlePassAddXpRequest, BattlePassAddXpResponse>(BattlePassConfig.Api.AddXpPath, request, ct);
+            return MapAddXpResult(response);
         }
 
         public async UniTask<BattlePassClaimResult> ClaimAsync(string seasonId, int level, BattlePassRewardTrack rewardTrack, CancellationToken ct = default)
@@ -123,6 +123,26 @@ namespace BattlePass
                 response.ErrorMessage);
         }
 
+        private static BattlePassAddXpResult MapAddXpResult(BattlePassAddXpResponse response)
+        {
+            if (response == null)
+            {
+                return new BattlePassAddXpResult(
+                    false,
+                    0,
+                    null,
+                    "empty_response",
+                    "Battle pass add xp response is empty.");
+            }
+
+            return new BattlePassAddXpResult(
+                response.Success,
+                response.AddedXp,
+                MapUserState(response.BattlePass),
+                response.ErrorCode,
+                response.ErrorMessage);
+        }
+
         private static BattlePassSeason MapSeason(BattlePassSeasonResponse response)
         {
             if (response == null)
@@ -171,22 +191,6 @@ namespace BattlePass
                 MapPassType(response.PassType),
                 claimedRewards,
                 claimableRewards);
-        }
-
-        private static BattlePassUserState MapUserState(BattlePassStateResponse response)
-        {
-            if (response == null)
-            {
-                return null;
-            }
-
-            return new BattlePassUserState(
-                response.SeasonId,
-                response.Level,
-                response.Xp,
-                MapPassType(response.PassType),
-                Array.Empty<BattlePassClaimedRewardCell>(),
-                Array.Empty<BattlePassClaimableRewardCell>());
         }
 
         private static BattlePassLevel MapLevel(BattlePassLevelResponse response)
@@ -516,19 +520,22 @@ namespace BattlePass
         }
 
         [Serializable]
-        private sealed class BattlePassStateResponse
+        private sealed class BattlePassAddXpResponse
         {
-            [JsonProperty("seasonId")]
-            public string SeasonId { get; set; }
+            [JsonProperty("success")]
+            public bool Success { get; set; }
 
-            [JsonProperty("level")]
-            public int Level { get; set; }
+            [JsonProperty("addedXp")]
+            public int AddedXp { get; set; }
 
-            [JsonProperty("xp")]
-            public int Xp { get; set; }
+            [JsonProperty("battlePass")]
+            public BattlePassUserStateResponse BattlePass { get; set; }
 
-            [JsonProperty("passType")]
-            public string PassType { get; set; }
+            [JsonProperty("errorCode")]
+            public string ErrorCode { get; set; }
+
+            [JsonProperty("errorMessage")]
+            public string ErrorMessage { get; set; }
         }
 
         [Serializable]

@@ -31,6 +31,7 @@ namespace BattlePass
             var products = snapshot.Products;
             var claimedRewardKeys = BuildClaimedRewardKeys(userState);
             var claimableRewardKeys = BuildClaimableRewardKeys(userState);
+            var requiredXp = ResolveRequiredXp(orderedLevels, userState);
 
             var defaultRewards = BuildRewards(
                 orderedLevels,
@@ -49,6 +50,7 @@ namespace BattlePass
                 snapshot.Season.Title,
                 userState?.Level ?? 0,
                 userState?.Xp ?? 0,
+                requiredXp,
                 userState?.PassType ?? BattlePassPassType.Unknown,
                 products?.PremiumProductId ?? string.Empty,
                 products?.PlatinumProductId ?? string.Empty,
@@ -161,6 +163,29 @@ namespace BattlePass
             }
 
             return userState?.PassType is not BattlePassPassType.Premium and not BattlePassPassType.Platinum;
+        }
+
+        private static int ResolveRequiredXp(IReadOnlyList<BattlePassLevel> orderedLevels, BattlePassUserState userState)
+        {
+            var currentXp = Mathf.Max(0, userState?.Xp ?? 0);
+            var currentLevel = Mathf.Max(0, userState?.Level ?? 0);
+            if (orderedLevels == null || orderedLevels.Count == 0)
+            {
+                return currentXp;
+            }
+
+            for (var i = 0; i < orderedLevels.Count; i++)
+            {
+                var level = orderedLevels[i];
+                if (level == null || level.Level <= currentLevel)
+                {
+                    continue;
+                }
+
+                return Mathf.Max(currentXp, level.XpRequired);
+            }
+
+            return currentXp;
         }
     }
 }

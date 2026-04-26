@@ -375,10 +375,15 @@ namespace BattlePass.Tests.Editor
                 return UniTask.FromResult(GetCurrentSnapshot ?? _initialSnapshot);
             }
 
-            public UniTask<BattlePassUserState> AddXpAsync(int amount, CancellationToken ct = default)
+            public UniTask<BattlePassAddXpResult> AddXpAsync(int amount, CancellationToken ct = default)
             {
                 ct.ThrowIfCancellationRequested();
-                return UniTask.FromResult((_initialSnapshot)?.UserState);
+                return UniTask.FromResult(new BattlePassAddXpResult(
+                    true,
+                    amount,
+                    (_initialSnapshot)?.UserState,
+                    null,
+                    null));
             }
 
             public UniTask<BattlePassClaimResult> ClaimAsync(string seasonId, int level, BattlePassRewardTrack rewardTrack, CancellationToken ct = default)

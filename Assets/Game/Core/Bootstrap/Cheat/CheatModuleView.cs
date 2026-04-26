@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BattlePass;
 using CardCollectionImpl;
 using cheatModule;
 using CoreResources;
@@ -32,6 +33,7 @@ namespace Game.Cheat
         private AnimateCurrency _animateCurrency;
         private ICardCollectionSessionFacade _cardCollectionSessionFacade;
         private RewardSpecsConfigSO _rewardSpecsConfigSo;
+        private IBattlePassServerService _battlePassServerService;
 
         [Inject]
         private void Construct(
@@ -42,6 +44,7 @@ namespace Game.Cheat
             IInventoryService inventoryService, 
             OrchestratorRunner orchestratorRunner,
             ICardCollectionSessionFacade cardCollectionSessionFacade,
+            IBattlePassServerService battlePassServerService,
             RewardSpecsConfigSO rewardSpecsConfigSo)
         {
             _uiManager = uiManager;
@@ -51,6 +54,7 @@ namespace Game.Cheat
             _animateCurrency = animateCurrency;
             _orchestratorRunner = orchestratorRunner;
             _cardCollectionSessionFacade = cardCollectionSessionFacade;
+            _battlePassServerService = battlePassServerService;
             _rewardSpecsConfigSo = rewardSpecsConfigSo;
         }
         
@@ -110,6 +114,7 @@ namespace Game.Cheat
                 new AddCardsCheatModule(_cardCollectionSessionFacade, destroyCt),
                 new ResourcesCheatModule(_resourceManager, _resourceOperationsService, _animateCurrency),
                 new RewardCheatModule(_uiManager, _rewardSpecsConfigSo),
+                new BattlePassCheatModule(_battlePassServerService, destroyCt),
                 //new InventoryCheatModule(_inventoryService),
             };
             
