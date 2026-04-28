@@ -384,7 +384,7 @@ MonoBehaviour:
   _timerText: {fileID: 2672970656753391368}
   _levelText: {fileID: 2426486791014155437}
   _xpText: {fileID: 3156012018231682636}
-  _buyPremiumButton: {fileID: 9194559928154447041}
+  _buyPremiumButton: {fileID: 2672970655641818037}
   _buyPlatinumButton: {fileID: 9194559928154447041}
   _buyPremiumLabel: {fileID: 4110871997899560711}
   _buyPlatinumLabel: {fileID: 4110871997899560711}
@@ -2602,6 +2602,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &2672970655641818037 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3630655289194932261, guid: 643c322ecab626242bc6ba5d47d60f88, type: 3}
+  m_PrefabInstance: {fileID: 1691912111393454992}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &2672970655715872812 stripped

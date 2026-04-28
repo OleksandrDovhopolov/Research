@@ -87,6 +87,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7b50852200b1042728acff6a3e40c543
+    m_Address: BattlePassPremiumWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7c4cba3a1cdf3445eb6cbbd1e39f4c18
     m_Address: Assets/Game/UI/UIShared/Prefabs/Loading/Animatons/Loading_rotate_07.png
     m_ReadOnly: 0
@@ -99,6 +104,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 91d868d22903b4f3a80d0c6647c42842
     m_Address: Assets/Game/UI/UIShared/Prefabs/Loading/Animatons/Loading_rotate_06.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9546104ef5f4e654982c648af26350ca
+    m_Address: BattlePassPremiumWindow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
