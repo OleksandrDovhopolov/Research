@@ -23,6 +23,7 @@ namespace BattlePass
         private CancellationTokenSource _loadCts;
         private BattlePassSnapshot _currentSnapshot;
         private bool _isClaimInFlight;
+        private bool _shouldAnimateOnNextSuccessfulRender;
 
         [Inject]
         private void Construct(
@@ -45,6 +46,7 @@ namespace BattlePass
         {
             ResetLoadCts();
             SubscribeTimer();
+            _shouldAnimateOnNextSuccessfulRender = true;
             View.ResetView();
             View.SetClaimButtonsInteractable(true);
             LoadBattlePassAsync(_loadCts.Token).Forget();
@@ -71,6 +73,7 @@ namespace BattlePass
             View.ResetView();
             _currentSnapshot = null;
             _isClaimInFlight = false;
+            _shouldAnimateOnNextSuccessfulRender = false;
         }
 
         private async UniTaskVoid LoadBattlePassAsync(CancellationToken ct)
@@ -246,7 +249,13 @@ namespace BattlePass
             }
 
             var uiModel = _uiModelFactory.Create(snapshot);
+            if (_shouldAnimateOnNextSuccessfulRender)
+            {
+                View.PrepareForOpenXpAnimation();
+            }
+
             View.Render(uiModel);
+            _shouldAnimateOnNextSuccessfulRender = false;
             View.SetClaimButtonsInteractable(!_isClaimInFlight);
             _battlePassTimerService?.Start(snapshot.ServerTimeUtc, snapshot.Season.EndAtUtc);
         }

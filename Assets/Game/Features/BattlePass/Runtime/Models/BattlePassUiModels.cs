@@ -11,6 +11,7 @@ namespace BattlePass
             int currentLevel,
             int currentXp,
             int requiredXp,
+            IReadOnlyList<int> levelXpThresholds,
             BattlePassPassType passType,
             string premiumProductId,
             string platinumProductId,
@@ -21,6 +22,7 @@ namespace BattlePass
             CurrentLevel = Math.Max(0, currentLevel);
             CurrentXp = Math.Max(0, currentXp);
             RequiredXp = Math.Max(0, requiredXp);
+            LevelXpThresholds = levelXpThresholds ?? Array.Empty<int>();
             PassType = passType;
             PremiumProductId = premiumProductId ?? string.Empty;
             PlatinumProductId = platinumProductId ?? string.Empty;
@@ -32,6 +34,7 @@ namespace BattlePass
         public int CurrentLevel { get; }
         public int CurrentXp { get; }
         public int RequiredXp { get; }
+        public IReadOnlyList<int> LevelXpThresholds { get; }
         public BattlePassPassType PassType { get; }
         public string PremiumProductId { get; }
         public string PlatinumProductId { get; }

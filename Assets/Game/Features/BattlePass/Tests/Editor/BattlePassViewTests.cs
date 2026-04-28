@@ -1,0 +1,154 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
+using DG.Tweening;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace BattlePass.Tests.Editor
+{
+    public sealed class BattlePassViewTests
+    {
+        private readonly List<UnityEngine.Object> _objectsToCleanup = new();
+
+        [TearDown]
+        public void TearDown()
+        {
+            
+            DOTween.KillAll();
+
+            foreach (var obj in _objectsToCleanup)
+            {
+                if (obj != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(obj);
+                }
+            }
+
+            _objectsToCleanup.Clear();
+        }
+
+        [Test]
+        public void BuildXpAnimationSteps_ReturnsPartialStep_ForSingleLevelProgress()
+        {
+            var steps = InvokeBuildXpAnimationSteps(1, 15, 30, new[] { 0, 30 });
+
+            Assert.That(steps.Count, Is.EqualTo(1));
+            Assert.That(GetStepProperty<int>(steps[0], "DisplayLevel"), Is.EqualTo(1));
+            Assert.That(GetStepProperty<float>(steps[0], "TargetProgress"), Is.EqualTo(0.5f).Within(0.0001f));
+            Assert.That(GetStepProperty<bool>(steps[0], "AdvancesLevel"), Is.False);
+        }
+
+        [Test]
+        public void BuildXpAnimationSteps_ReturnsOnlyFullSteps_WhenCurrentLevelHasNoRemainder()
+        {
+            var steps = InvokeBuildXpAnimationSteps(4, 90, 120, new[] { 0, 30, 60, 90, 120 });
+
+            Assert.That(steps.Count, Is.EqualTo(3));
+            Assert.That(GetStepProperty<int>(steps[0], "DisplayLevel"), Is.EqualTo(1));
+            Assert.That(GetStepProperty<int>(steps[1], "DisplayLevel"), Is.EqualTo(2));
+            Assert.That(GetStepProperty<int>(steps[2], "DisplayLevel"), Is.EqualTo(3));
+            Assert.That(GetStepProperty<bool>(steps[2], "AdvancesLevel"), Is.True);
+            Assert.That(GetStepProperty<int>(steps[2], "NextLevel"), Is.EqualTo(4));
+        }
+
+        [Test]
+        public void BuildXpAnimationSteps_ReturnsFullAndPartialSteps_ForMultiLevelProgress()
+        {
+            var steps = InvokeBuildXpAnimationSteps(4, 100, 120, new[] { 0, 30, 60, 90, 120 });
+
+            Assert.That(steps.Count, Is.EqualTo(4));
+            Assert.That(GetStepProperty<int>(steps[3], "DisplayLevel"), Is.EqualTo(4));
+            Assert.That(GetStepProperty<float>(steps[3], "TargetProgress"), Is.EqualTo(1f / 3f).Within(0.0001f));
+            Assert.That(GetStepProperty<bool>(steps[3], "AdvancesLevel"), Is.False);
+        }
+
+        [Test]
+        public void BuildXpAnimationSteps_ReturnsEmpty_WhenThresholdsAreIncomplete()
+        {
+            var steps = InvokeBuildXpAnimationSteps(4, 100, 120, new[] { 0, 30 });
+
+            Assert.That(steps, Is.Empty);
+        }
+
+        [Test]
+        public void ResetView_KillsAnimation_ResetsSlider_AndRestoresInteraction()
+        {
+            var view = CreateRuntimeView(out var slider, out var canvasGroup);
+            var model = CreateModel(currentLevel: 4, currentXp: 100, requiredXp: 120, levelXpThresholds: new[] { 0, 30, 60, 90, 120 });
+
+            view.PrepareForOpenXpAnimation();
+            view.Render(model);
+
+            Assert.That(canvasGroup.interactable, Is.False);
+
+            view.ResetView();
+
+            Assert.That(slider.value, Is.EqualTo(0f).Within(0.0001f));
+            Assert.That(canvasGroup.interactable, Is.True);
+            Assert.That(canvasGroup.blocksRaycasts, Is.True);
+        }
+
+        [Test]
+        public void Render_ClampsSliderValue_ToZeroOneRange()
+        {
+            var view = CreateRuntimeView(out var slider, out _);
+            var model = CreateModel(currentLevel: 4, currentXp: 130, requiredXp: 120, levelXpThresholds: new[] { 0, 30, 60, 90, 120 });
+
+            view.Render(model);
+
+            Assert.That(slider.value, Is.InRange(0f, 1f));
+        }
+
+        private BattlePassView CreateRuntimeView(out Slider slider, out CanvasGroup canvasGroup)
+        {
+            var root = new GameObject("BattlePassViewRoot");
+            var sliderGo = new GameObject("Slider", typeof(RectTransform), typeof(Slider));
+
+            _objectsToCleanup.Add(root);
+
+            sliderGo.transform.SetParent(root.transform, false);
+
+            canvasGroup = root.AddComponent<CanvasGroup>();
+            slider = sliderGo.GetComponent<Slider>();
+
+            return root.AddComponent<BattlePassView>();
+        }
+
+        private static IList InvokeBuildXpAnimationSteps(int currentLevel, int currentXp, int requiredXp, IReadOnlyList<int> thresholds)
+        {
+            var method = typeof(BattlePassView).GetMethod("BuildXpAnimationSteps", BindingFlags.NonPublic | BindingFlags.Static);
+            Assert.That(method, Is.Not.Null);
+
+            return (IList)method.Invoke(null, new object[] { currentLevel, currentXp, requiredXp, thresholds });
+        }
+
+        private static T GetStepProperty<T>(object step, string propertyName)
+        {
+            var property = step.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            Assert.That(property, Is.Not.Null, $"Property '{propertyName}' was not found on step type '{step.GetType().Name}'.");
+            return (T)property.GetValue(step);
+        }
+
+        private static BattlePassWindowUiModel CreateModel(
+            int currentLevel,
+            int currentXp,
+            int requiredXp,
+            IReadOnlyList<int> levelXpThresholds)
+        {
+            return new BattlePassWindowUiModel(
+                "Season 1",
+                currentLevel,
+                currentXp,
+                requiredXp,
+                levelXpThresholds,
+                BattlePassPassType.Premium,
+                "premium_sku",
+                "platinum_sku",
+                Array.Empty<BattlePassRewardUiModel>(),
+                Array.Empty<BattlePassRewardUiModel>());
+        }
+    }
+}

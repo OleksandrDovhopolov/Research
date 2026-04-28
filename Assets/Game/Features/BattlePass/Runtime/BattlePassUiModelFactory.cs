@@ -32,6 +32,9 @@ namespace BattlePass
             var claimedRewardKeys = BuildClaimedRewardKeys(userState);
             var claimableRewardKeys = BuildClaimableRewardKeys(userState);
             var requiredXp = ResolveRequiredXp(orderedLevels, userState);
+            var levelXpThresholds = orderedLevels
+                .Select(level => Mathf.Max(0, level.XpRequired))
+                .ToArray();
 
             var defaultRewards = BuildRewards(
                 orderedLevels,
@@ -51,6 +54,7 @@ namespace BattlePass
                 userState?.Level ?? 0,
                 userState?.Xp ?? 0,
                 requiredXp,
+                levelXpThresholds,
                 userState?.PassType ?? BattlePassPassType.Unknown,
                 products?.PremiumProductId ?? string.Empty,
                 products?.PlatinumProductId ?? string.Empty,

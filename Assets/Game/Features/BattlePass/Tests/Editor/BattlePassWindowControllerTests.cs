@@ -86,6 +86,29 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
+        public void Show_PreparesOpenXpAnimation_OnlyForFirstSuccessfulRender()
+        {
+            var initialSnapshot = CreateActiveSnapshot();
+            var updatedSnapshot = CreateActiveSnapshot(xp: 220);
+            var serverService = new StubBattlePassServerService(initialSnapshot)
+            {
+                ClaimResponseFactory = (_, _, _) => UniTask.FromResult(new BattlePassClaimResult(
+                    true,
+                    Array.Empty<BattlePassGrantedRewardCell>(),
+                    updatedSnapshot.UserState,
+                    null,
+                    null))
+            };
+            var controller = CreateController(serverService, new StubBattlePassTimerService(), out var view);
+
+            RunCoroutine(controller.Show(null));
+            view.EmitRewardClaim(1, BattlePassRewardTrack.Default);
+
+            Assert.That(view.PrepareForOpenXpAnimationCalls, Is.EqualTo(1));
+            Assert.That(view.RenderCallCount, Is.EqualTo(2));
+        }
+
+        [Test]
         public void BattlePassLiveOpsController_OnStartAndOnEnd_UpdateLifecycleState()
         {
             var lifecycleState = new BattlePassLifecycleState();
@@ -436,6 +459,8 @@ namespace BattlePass.Tests.Editor
             public string UnavailableMessage { get; private set; }
             public int TimerUpdateCount { get; private set; }
             public bool LastClaimButtonsInteractable { get; private set; } = true;
+            public int PrepareForOpenXpAnimationCalls { get; private set; }
+            public int RenderCallCount { get; private set; }
 
             public override void ResetView()
             {
@@ -443,8 +468,14 @@ namespace BattlePass.Tests.Editor
                 UnavailableMessage = null;
             }
 
+            public override void PrepareForOpenXpAnimation()
+            {
+                PrepareForOpenXpAnimationCalls++;
+            }
+
             public override void Render(BattlePassWindowUiModel model)
             {
+                RenderCallCount++;
                 RenderedModel = model;
                 UnavailableMessage = null;
             }
