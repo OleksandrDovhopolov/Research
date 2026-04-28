@@ -22,6 +22,9 @@ namespace BattlePass
         private BattlePassUiModelFactory _uiModelFactory;
         private IRewardPlayerStateRefreshCoordinator _rewardPlayerStateRefreshCoordinator;
         private IRewardSpecProvider _rewardSpecProvider;
+        private Lock _claimFlowUiLock;
+
+        private static readonly object ClaimFlowLockType = new();
 
         private CancellationTokenSource _loadCts;
         private BattlePassSnapshot _currentSnapshot;
@@ -56,7 +59,6 @@ namespace BattlePass
             SubscribeTimer();
             SubscribeSnapshotStore();
             View.ShowLoadingState();
-            View.SetClaimButtonsInteractable(true);
 
             if (TryApplySnapshotFromStore())
             {
@@ -93,6 +95,7 @@ namespace BattlePass
             _battlePassTimerService?.Stop();
             View.ResetView();
             _currentSnapshot = null;
+            ReleaseClaimFlowLock();
             _isClaimInFlight = false;
         }
 
@@ -165,7 +168,7 @@ namespace BattlePass
         private async UniTaskVoid ClaimRewardAsync(string seasonId, int level, BattlePassRewardTrack rewardTrack, CancellationToken ct)
         {
             _isClaimInFlight = true;
-            View.SetClaimButtonsInteractable(false);
+            AcquireClaimFlowLock();
 
             var claimResult = await _battlePassServerService.ClaimAsync(seasonId, level, rewardTrack, ct);
             try
@@ -176,6 +179,7 @@ namespace BattlePass
                 {
                     if (TryApplyUserState(claimResult.UpdatedUserState))
                     {
+                        ReleaseClaimFlowLock();
                         _optimisticRewardApplier?.Apply(claimResult.GrantedRewards);
                         TryShowRewardWindow(claimResult.GrantedRewards);
                         _rewardPlayerStateRefreshCoordinator?.RequestBackgroundRefresh();
@@ -200,8 +204,8 @@ namespace BattlePass
             }
             finally
             {
+                ReleaseClaimFlowLock();
                 _isClaimInFlight = false;
-                View.SetClaimButtonsInteractable(true);
             }
         }
 
@@ -264,7 +268,6 @@ namespace BattlePass
             {
                 CommitPresentedState(snapshot);
             }
-            View.SetClaimButtonsInteractable(!_isClaimInFlight);
             _battlePassTimerService?.Start(snapshot.ServerTimeUtc, snapshot.Season.EndAtUtc);
         }
 
@@ -428,6 +431,28 @@ namespace BattlePass
             _loadCts.Cancel();
             _loadCts.Dispose();
             _loadCts = null;
+        }
+
+        private void AcquireClaimFlowLock()
+        {
+            if (_claimFlowUiLock != null || UIManager == null || UIManager.UiFilter == null)
+            {
+                return;
+            }
+
+            _claimFlowUiLock = UIManager.SetManualLock(ClaimFlowLockType);
+        }
+
+        private void ReleaseClaimFlowLock()
+        {
+            Debug.LogWarning($"Test _claimFlowUiLock {_claimFlowUiLock == null}");
+            if (_claimFlowUiLock == null)
+            {
+                return;
+            }
+
+            _claimFlowUiLock.Dispose();
+            _claimFlowUiLock = null;
         }
 
         private bool TryPrepareXpDeltaAnimation(BattlePassSnapshot snapshot, BattlePassWindowUiModel uiModel)

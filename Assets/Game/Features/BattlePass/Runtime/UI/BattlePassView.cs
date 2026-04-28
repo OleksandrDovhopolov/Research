@@ -156,6 +156,7 @@ namespace BattlePass
             SetTitle(model.Title);
             SetXpText(model.CurrentXp, model.RequiredXp);
             SetBuyButtons(model.PremiumProductId, model.PlatinumProductId);
+            SetClaimButtonsInteractable(true);
             RenderRewards(_defaultRewardsPool, model.DefaultRewards);
             RenderRewards(_premiumRewardsPool, model.PremiumRewards);
 

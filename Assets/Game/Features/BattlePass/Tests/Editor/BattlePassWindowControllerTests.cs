@@ -177,6 +177,7 @@ namespace BattlePass.Tests.Editor
             Assert.That(view.RenderedModel.CurrentXp, Is.EqualTo(210));
             Assert.That(serverService.GetCurrentCalls, Is.EqualTo(1));
             Assert.That(view.PrewarmCalls, Is.EqualTo(1));
+            Assert.That(view.LastClaimButtonsInteractable, Is.True);
         }
 
         [Test]
@@ -304,7 +305,6 @@ namespace BattlePass.Tests.Editor
             view.EmitRewardClaim(1, BattlePassRewardTrack.Default);
 
             Assert.That(serverService.ClaimCalls, Is.EqualTo(1));
-            Assert.That(view.LastClaimButtonsInteractable, Is.False);
 
             pendingClaim.TrySetResult(new BattlePassClaimResult(
                 true,
