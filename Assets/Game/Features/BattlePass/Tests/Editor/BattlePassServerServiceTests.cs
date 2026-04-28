@@ -456,6 +456,171 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
+        public void ClaimAsync_AcceptsLevelZero_AndPostsItToServer()
+        {
+            var webClient = new StubWebClient
+            {
+                PostResponder = (url, request, _) =>
+                {
+                    Assert.That(url, Is.EqualTo("battle-pass/claim"));
+                    Assert.That(Newtonsoft.Json.Linq.JObject.FromObject(request)["level"]?.ToObject<int>(), Is.EqualTo(0));
+                    Assert.That(Newtonsoft.Json.Linq.JObject.FromObject(request)["rewardTrack"]?.ToObject<string>(), Is.EqualTo("default"));
+
+                    return new
+                    {
+                        success = false,
+                        grantedRewards = Array.Empty<object>(),
+                        battlePass = (object)null,
+                        errorCode = "not_claimable",
+                        errorMessage = "Reward is not claimable."
+                    };
+                }
+            };
+
+            var service = new BattlePassServerService(webClient, new StubPlayerIdentityProvider("player-1"));
+
+            var result = service.ClaimAsync("season_2026_s1", 0, BattlePassRewardTrack.Default, CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorCode, Is.EqualTo("not_claimable"));
+        }
+
+        [Test]
+        public void GetCurrentAsync_KeepsLevelZeroRewards_AndHandlesNullPremiumRewardId()
+        {
+            var webClient = new StubWebClient
+            {
+                GetResponder = (_, _) => new
+                {
+                    season = new
+                    {
+                        id = "season_2026_s1",
+                        title = "Season 1",
+                        startAtUtc = "2026-05-01T00:00:00Z",
+                        endAtUtc = "2026-06-01T00:00:00Z",
+                        maxLevel = 50,
+                        status = "active",
+                        configVersion = "v1"
+                    },
+                    products = new
+                    {
+                        premiumProductId = "battle_pass_premium_2026_s1",
+                        platinumProductId = "battle_pass_platinum_2026_s1"
+                    },
+                    userState = new
+                    {
+                        seasonId = "season_2026_s1",
+                        level = 0,
+                        xp = 0,
+                        passType = "none",
+                        claimedRewards = new object[]
+                        {
+                            new
+                            {
+                                level = 0,
+                                rewardTrack = "default",
+                                claimedAtUtc = "2026-04-26T10:00:00Z"
+                            }
+                        },
+                        claimableRewards = new object[]
+                        {
+                            new
+                            {
+                                level = 0,
+                                rewardTrack = "default",
+                                rewardId = "Gems"
+                            }
+                        }
+                    },
+                    levels = new object[]
+                    {
+                        new
+                        {
+                            level = 0,
+                            xpRequired = 0,
+                            defaultRewardId = "Gems",
+                            premiumRewardId = (string)null
+                        },
+                        new
+                        {
+                            level = 1,
+                            xpRequired = 100,
+                            defaultRewardId = "reward_default_1",
+                            premiumRewardId = "reward_premium_1"
+                        }
+                    },
+                    serverTimeUtc = "2026-04-24T10:00:00Z"
+                }
+            };
+
+            var service = new BattlePassServerService(webClient, new StubPlayerIdentityProvider("player-1"));
+
+            var snapshot = service.GetCurrentAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(snapshot.UserState.Level, Is.EqualTo(0));
+            Assert.That(snapshot.UserState.ClaimedRewards.Count, Is.EqualTo(1));
+            Assert.That(snapshot.UserState.ClaimedRewards[0].Level, Is.EqualTo(0));
+            Assert.That(snapshot.UserState.ClaimableRewards.Count, Is.EqualTo(1));
+            Assert.That(snapshot.UserState.ClaimableRewards[0].Level, Is.EqualTo(0));
+            Assert.That(snapshot.Levels.Count, Is.EqualTo(2));
+            Assert.That(snapshot.Levels[0].Level, Is.EqualTo(0));
+            Assert.That(snapshot.Levels[0].DefaultReward.RewardId, Is.EqualTo("Gems"));
+            Assert.That(snapshot.Levels[0].PremiumReward, Is.Null);
+        }
+
+        [Test]
+        public void ClaimAsync_MapsGrantedRewardWithLevelZero()
+        {
+            var webClient = new StubWebClient
+            {
+                PostResponder = (_, _, _) => new
+                {
+                    success = true,
+                    grantedRewards = new object[]
+                    {
+                        new
+                        {
+                            level = 0,
+                            rewardTrack = "default",
+                            rewardId = "Gems"
+                        }
+                    },
+                    battlePass = new
+                    {
+                        seasonId = "season_2026_s1",
+                        level = 0,
+                        xp = 0,
+                        passType = "none",
+                        claimedRewards = new object[]
+                        {
+                            new
+                            {
+                                level = 0,
+                                rewardTrack = "default",
+                                claimedAtUtc = "2026-04-26T10:10:00Z"
+                            }
+                        },
+                        claimableRewards = Array.Empty<object>()
+                    },
+                    errorCode = (string)null,
+                    errorMessage = (string)null
+                }
+            };
+
+            var service = new BattlePassServerService(webClient, new StubPlayerIdentityProvider("player-1"));
+
+            var result = service.ClaimAsync("season_2026_s1", 0, BattlePassRewardTrack.Default, CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.GrantedRewards.Count, Is.EqualTo(1));
+            Assert.That(result.GrantedRewards[0].Level, Is.EqualTo(0));
+            Assert.That(result.GrantedRewards[0].RewardId, Is.EqualTo("Gems"));
+            Assert.That(result.UpdatedUserState, Is.Not.Null);
+            Assert.That(result.UpdatedUserState.ClaimedRewards.Count, Is.EqualTo(1));
+            Assert.That(result.UpdatedUserState.ClaimedRewards[0].Level, Is.EqualTo(0));
+        }
+
+        [Test]
         public void ClaimAsync_MapsErrorCodeAndErrorMessage_WhenClaimFailed()
         {
             var webClient = new StubWebClient

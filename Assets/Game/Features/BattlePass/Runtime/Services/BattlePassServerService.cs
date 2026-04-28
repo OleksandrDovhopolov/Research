@@ -66,9 +66,9 @@ namespace BattlePass
                 throw new InvalidOperationException("Season id is empty.");
             }
 
-            if (level <= 0)
+            if (level < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(level), level, "Claim level must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(level), level, "Claim level must be zero or greater.");
             }
 
             var request = new BattlePassClaimRequest
@@ -337,9 +337,9 @@ namespace BattlePass
                     continue;
                 }
 
-                if (response.Level <= 0)
+                if (response.Level < 0)
                 {
-                    Debug.LogError("[BattlePassServerService] Claimed reward cell has invalid level and was skipped.");
+                    Debug.LogError("[BattlePassServerService] Claimed reward cell has negative level and was skipped.");
                     continue;
                 }
 
@@ -374,9 +374,9 @@ namespace BattlePass
                     continue;
                 }
 
-                if (response.Level <= 0)
+                if (response.Level < 0)
                 {
-                    Debug.LogError("[BattlePassServerService] Claimable reward cell has invalid level and was skipped.");
+                    Debug.LogError("[BattlePassServerService] Claimable reward cell has negative level and was skipped.");
                     continue;
                 }
 
@@ -417,9 +417,9 @@ namespace BattlePass
                     continue;
                 }
 
-                if (response.Level <= 0)
+                if (response.Level < 0)
                 {
-                    Debug.LogError("[BattlePassServerService] Granted reward cell has invalid level and was skipped.");
+                    Debug.LogError("[BattlePassServerService] Granted reward cell has negative level and was skipped.");
                     continue;
                 }
 

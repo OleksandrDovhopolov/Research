@@ -122,7 +122,7 @@ namespace BattlePass
 
             foreach (var claimedReward in userState.ClaimedRewards)
             {
-                if (claimedReward == null || claimedReward.Level <= 0)
+                if (claimedReward == null || claimedReward.Level < 0)
                 {
                     continue;
                 }
@@ -143,7 +143,7 @@ namespace BattlePass
 
             foreach (var claimableReward in userState.ClaimableRewards)
             {
-                if (claimableReward == null || claimableReward.Level <= 0)
+                if (claimableReward == null || claimableReward.Level < 0)
                 {
                     continue;
                 }

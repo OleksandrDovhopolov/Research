@@ -261,6 +261,95 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
+        public void Create_LevelZeroDefaultReward_IsClaimableAtSeasonStart()
+        {
+            var rewardSpecProvider = new StubRewardSpecProvider(new Dictionary<string, RewardSpec>
+            {
+                ["Gems"] = CreateRewardSpec("Gems", 10),
+                ["reward_default_1"] = CreateRewardSpec("reward_default_1", 20)
+            });
+            var factory = new BattlePassUiModelFactory(rewardSpecProvider);
+            var snapshot = new BattlePassSnapshot(
+                new BattlePassSeason(
+                    "season_1",
+                    "Season 1",
+                    DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+                    DateTimeOffset.Parse("2026-06-01T00:00:00Z"),
+                    50,
+                    "active",
+                    "v1"),
+                new BattlePassProducts("premium_sku", "platinum_sku"),
+                new BattlePassUserState(
+                    "season_1",
+                    0,
+                    0,
+                    BattlePassPassType.None,
+                    Array.Empty<BattlePassClaimedRewardCell>(),
+                    new[]
+                    {
+                        new BattlePassClaimableRewardCell(0, BattlePassRewardTrack.Default, "Gems")
+                    }),
+                new[]
+                {
+                    new BattlePassLevel(0, 0, new BattlePassRewardRef("Gems"), null),
+                    new BattlePassLevel(1, 100, new BattlePassRewardRef("reward_default_1"), null)
+                },
+                DateTimeOffset.Parse("2026-04-24T10:00:00Z"));
+
+            var uiModel = factory.Create(snapshot);
+
+            Assert.That(uiModel.CurrentLevel, Is.EqualTo(0));
+            Assert.That(uiModel.CurrentXp, Is.EqualTo(0));
+            Assert.That(uiModel.RequiredXp, Is.EqualTo(100));
+            Assert.That(uiModel.DefaultRewards.Count, Is.EqualTo(2));
+            Assert.That(uiModel.DefaultRewards[0].Level, Is.EqualTo(0));
+            Assert.That(uiModel.DefaultRewards[0].RewardId, Is.EqualTo("Gems"));
+            Assert.That(uiModel.DefaultRewards[0].IsClaimable, Is.True);
+            Assert.That(uiModel.DefaultRewards[0].IsLocked, Is.False);
+        }
+
+        [Test]
+        public void Create_LevelZeroWithNullPremiumReward_DoesNotCreateMandatoryPremiumCard()
+        {
+            var rewardSpecProvider = new StubRewardSpecProvider(new Dictionary<string, RewardSpec>
+            {
+                ["Gems"] = CreateRewardSpec("Gems", 10),
+                ["reward_default_1"] = CreateRewardSpec("reward_default_1", 20),
+                ["reward_premium_1"] = CreateRewardSpec("reward_premium_1", 30)
+            });
+            var factory = new BattlePassUiModelFactory(rewardSpecProvider);
+            var snapshot = new BattlePassSnapshot(
+                new BattlePassSeason(
+                    "season_1",
+                    "Season 1",
+                    DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+                    DateTimeOffset.Parse("2026-06-01T00:00:00Z"),
+                    50,
+                    "active",
+                    "v1"),
+                new BattlePassProducts("premium_sku", "platinum_sku"),
+                new BattlePassUserState(
+                    "season_1",
+                    0,
+                    0,
+                    BattlePassPassType.Premium,
+                    Array.Empty<BattlePassClaimedRewardCell>(),
+                    Array.Empty<BattlePassClaimableRewardCell>()),
+                new[]
+                {
+                    new BattlePassLevel(0, 0, new BattlePassRewardRef("Gems"), null),
+                    new BattlePassLevel(1, 100, new BattlePassRewardRef("reward_default_1"), new BattlePassRewardRef("reward_premium_1"))
+                },
+                DateTimeOffset.Parse("2026-04-24T10:00:00Z"));
+
+            var uiModel = factory.Create(snapshot);
+
+            Assert.That(uiModel.DefaultRewards.Count, Is.EqualTo(2));
+            Assert.That(uiModel.PremiumRewards.Count, Is.EqualTo(1));
+            Assert.That(uiModel.PremiumRewards[0].Level, Is.EqualTo(1));
+        }
+
+        [Test]
         public void Create_WhenNextLevelExists_UsesNextLevelXpAsRequiredXp()
         {
             var rewardSpecProvider = new StubRewardSpecProvider(new Dictionary<string, RewardSpec>

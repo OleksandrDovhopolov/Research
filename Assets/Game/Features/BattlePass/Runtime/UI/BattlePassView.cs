@@ -236,7 +236,7 @@ namespace BattlePass
                 return false;
             }
 
-            var fromLevel = Mathf.Max(1, _animationFromLevel);
+            var fromLevel = Mathf.Max(0, _animationFromLevel);
             var fromProgress = ResolveNormalizedXpProgress(
                 _animationFromXp,
                 _animationRequiredXp,
@@ -460,8 +460,8 @@ namespace BattlePass
             IReadOnlyList<int> levelXpThresholds)
         {
             var steps = new List<XpAnimationStep>();
-            var safeFromLevel = Mathf.Max(1, fromLevel);
-            var safeToLevel = Mathf.Max(1, toLevel);
+            var safeFromLevel = Mathf.Max(0, fromLevel);
+            var safeToLevel = Mathf.Max(0, toLevel);
             var safeFromXp = Mathf.Max(0, fromXp);
             var safeToXp = Mathf.Max(0, toXp);
 
@@ -470,12 +470,12 @@ namespace BattlePass
                 return steps;
             }
 
-            if (safeFromLevel > 1 && !TryGetLevelStartXp(safeFromLevel, levelXpThresholds, out _))
+            if (!TryGetLevelStartXp(safeFromLevel, levelXpThresholds, out _))
             {
                 return steps;
             }
 
-            if (safeToLevel > 1 && !TryGetLevelStartXp(safeToLevel, levelXpThresholds, out _))
+            if (!TryGetLevelStartXp(safeToLevel, levelXpThresholds, out _))
             {
                 return steps;
             }
@@ -572,19 +572,25 @@ namespace BattlePass
 
         private static bool TryGetLevelStartXp(int level, IReadOnlyList<int> levelXpThresholds, out int levelStartXp)
         {
-            if (level <= 1)
-            {
-                levelStartXp = 0;
-                return true;
-            }
-
-            if (levelXpThresholds == null || levelXpThresholds.Count < level)
+            if (level < 0)
             {
                 levelStartXp = 0;
                 return false;
             }
 
-            levelStartXp = Mathf.Max(0, levelXpThresholds[level - 1]);
+            if (levelXpThresholds == null || levelXpThresholds.Count == 0)
+            {
+                levelStartXp = 0;
+                return level == 0;
+            }
+
+            if (level >= levelXpThresholds.Count)
+            {
+                levelStartXp = 0;
+                return false;
+            }
+
+            levelStartXp = Mathf.Max(0, levelXpThresholds[level]);
             return true;
         }
 
