@@ -146,6 +146,16 @@ namespace Game.Bootstrap.Tests.Editor
                 ct.ThrowIfCancellationRequested();
                 throw new NotImplementedException();
             }
+
+            public UniTask<BattlePassPurchaseVerificationResult> VerifyGooglePurchaseAsync(
+                string seasonId,
+                string productId,
+                string purchaseToken,
+                CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+                throw new NotImplementedException();
+            }
         }
     }
 }

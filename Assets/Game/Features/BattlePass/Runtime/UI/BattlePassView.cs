@@ -209,10 +209,20 @@ namespace BattlePass
 
         private void HandleBuyPremiumClicked()
         {
-            BuyPremiumClick?.Invoke();
+            RaiseBuyPremiumClick();
         }
 
         private void HandleBuyPlatinumClicked()
+        {
+            RaiseBuyPlatinumClick();
+        }
+
+        protected void RaiseBuyPremiumClick()
+        {
+            BuyPremiumClick?.Invoke();
+        }
+
+        protected void RaiseBuyPlatinumClick()
         {
             BuyPlatinumClick?.Invoke();
         }

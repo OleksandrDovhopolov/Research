@@ -224,4 +224,36 @@ namespace BattlePass
         public string ErrorCode { get; }
         public string ErrorMessage { get; }
     }
+
+    public sealed class BattlePassPurchaseVerificationResult
+    {
+        public BattlePassPurchaseVerificationResult(
+            bool success,
+            string purchaseStatus,
+            BattlePassUserState updatedUserState,
+            string entitlementType,
+            string entitlementKey,
+            string entitlementStatus,
+            string errorCode,
+            string errorMessage)
+        {
+            Success = success;
+            PurchaseStatus = purchaseStatus ?? string.Empty;
+            UpdatedUserState = updatedUserState;
+            EntitlementType = entitlementType ?? string.Empty;
+            EntitlementKey = entitlementKey ?? string.Empty;
+            EntitlementStatus = entitlementStatus ?? string.Empty;
+            ErrorCode = errorCode ?? string.Empty;
+            ErrorMessage = errorMessage ?? string.Empty;
+        }
+
+        public bool Success { get; }
+        public string PurchaseStatus { get; }
+        public BattlePassUserState UpdatedUserState { get; }
+        public string EntitlementType { get; }
+        public string EntitlementKey { get; }
+        public string EntitlementStatus { get; }
+        public string ErrorCode { get; }
+        public string ErrorMessage { get; }
+    }
 }

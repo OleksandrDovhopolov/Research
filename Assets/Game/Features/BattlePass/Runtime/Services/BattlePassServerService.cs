@@ -82,6 +82,47 @@ namespace BattlePass
             return MapClaimResult(response);
         }
 
+        public async UniTask<BattlePassPurchaseVerificationResult> VerifyGooglePurchaseAsync(
+            string seasonId,
+            string productId,
+            string purchaseToken,
+            CancellationToken ct = default)
+        {
+            var playerId = _playerIdentityProvider.GetPlayerId();
+            if (string.IsNullOrWhiteSpace(playerId))
+            {
+                throw new InvalidOperationException("Player id is empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(seasonId))
+            {
+                throw new InvalidOperationException("Season id is empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(productId))
+            {
+                throw new InvalidOperationException("Product id is empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(purchaseToken))
+            {
+                throw new InvalidOperationException("Purchase token is empty.");
+            }
+
+            var request = new BattlePassPurchaseVerificationRequest
+            {
+                PlayerId = playerId,
+                ProductId = productId,
+                PurchaseToken = purchaseToken,
+                SeasonId = seasonId
+            };
+            var response = await _webClient.PostAsync<BattlePassPurchaseVerificationRequest, BattlePassPurchaseVerificationResponse>(
+                BattlePassConfig.Api.VerifyPurchasePath,
+                request,
+                ct);
+            return MapPurchaseVerificationResult(response);
+        }
+
         private static BattlePassSnapshot MapResponse(BattlePassCurrentResponse response)
         {
             var season = MapSeason(response?.Season);
@@ -139,6 +180,32 @@ namespace BattlePass
                 response.Success,
                 response.AddedXp,
                 MapUserState(response.BattlePass),
+                response.ErrorCode,
+                response.ErrorMessage);
+        }
+
+        private static BattlePassPurchaseVerificationResult MapPurchaseVerificationResult(BattlePassPurchaseVerificationResponse response)
+        {
+            if (response == null)
+            {
+                return new BattlePassPurchaseVerificationResult(
+                    false,
+                    string.Empty,
+                    null,
+                    string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    "empty_response",
+                    "Battle pass purchase verification response is empty.");
+            }
+
+            return new BattlePassPurchaseVerificationResult(
+                response.Success,
+                response.PurchaseStatus,
+                MapUserState(response.BattlePass),
+                response.Entitlement?.Type,
+                response.Entitlement?.Key,
+                response.Entitlement?.Status,
                 response.ErrorCode,
                 response.ErrorMessage);
         }
@@ -460,6 +527,22 @@ namespace BattlePass
         }
 
         [Serializable]
+        private sealed class BattlePassPurchaseVerificationRequest
+        {
+            [JsonProperty("playerId")]
+            public string PlayerId { get; set; }
+
+            [JsonProperty("productId")]
+            public string ProductId { get; set; }
+
+            [JsonProperty("purchaseToken")]
+            public string PurchaseToken { get; set; }
+
+            [JsonProperty("seasonId")]
+            public string SeasonId { get; set; }
+        }
+
+        [Serializable]
         private sealed class BattlePassSeasonResponse
         {
             [JsonProperty("id")]
@@ -555,6 +638,41 @@ namespace BattlePass
 
             [JsonProperty("errorMessage")]
             public string ErrorMessage { get; set; }
+        }
+
+        [Serializable]
+        private sealed class BattlePassPurchaseVerificationResponse
+        {
+            [JsonProperty("success")]
+            public bool Success { get; set; }
+
+            [JsonProperty("purchaseStatus")]
+            public string PurchaseStatus { get; set; }
+
+            [JsonProperty("entitlement")]
+            public BattlePassEntitlementResponse Entitlement { get; set; }
+
+            [JsonProperty("battlePass")]
+            public BattlePassUserStateResponse BattlePass { get; set; }
+
+            [JsonProperty("errorCode")]
+            public string ErrorCode { get; set; }
+
+            [JsonProperty("errorMessage")]
+            public string ErrorMessage { get; set; }
+        }
+
+        [Serializable]
+        private sealed class BattlePassEntitlementResponse
+        {
+            [JsonProperty("type")]
+            public string Type { get; set; }
+
+            [JsonProperty("key")]
+            public string Key { get; set; }
+
+            [JsonProperty("status")]
+            public string Status { get; set; }
         }
 
         [Serializable]

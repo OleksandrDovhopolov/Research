@@ -247,7 +247,95 @@ namespace BattlePass.Tests.Editor
             Assert.That(view.RenderedModel.CurrentXp, Is.EqualTo(300));
         }
 
-        private BattlePassWindowController CreateController(
+        [Test]
+        public void BuyPremium_OpensPurchasePopup_WhenSeasonAndProductExist_AndPassInactive()
+        {
+            var snapshot = CreateActiveSnapshot(passType: BattlePassPassType.None);
+            var controller = CreateController(
+                new StubBattlePassServerService(snapshot),
+                new StubBattlePassTimerService(),
+                out var view);
+
+            RunCoroutine(controller.Show(null));
+            view.EmitBuyPremium();
+
+            Assert.That(controller.LastPurchaseArgs, Is.Not.Null);
+            Assert.That(controller.LastPurchaseArgs.SeasonId, Is.EqualTo("season_1"));
+            Assert.That(controller.LastPurchaseArgs.ProductId, Is.EqualTo("premium_sku"));
+            Assert.That(controller.LastInfoMessage, Is.Null);
+        }
+
+        [Test]
+        public void BuyPremium_DoesNotOpenPurchasePopup_WhenPassAlreadyPremium()
+        {
+            var snapshot = CreateActiveSnapshot(passType: BattlePassPassType.Premium);
+            var controller = CreateController(
+                new StubBattlePassServerService(snapshot),
+                new StubBattlePassTimerService(),
+                out var view);
+
+            RunCoroutine(controller.Show(null));
+            view.EmitBuyPremium();
+
+            Assert.That(controller.LastPurchaseArgs, Is.Null);
+            Assert.That(controller.LastInfoMessage, Is.EqualTo("Battle Pass premium is already active."));
+        }
+
+        [Test]
+        public void BuyPremiumPurchaseCallback_UpdatesUiFromReturnedBattlePass()
+        {
+            var snapshot = CreateActiveSnapshot(passType: BattlePassPassType.None);
+            var updatedUserState = new BattlePassUserState(
+                "season_1",
+                6,
+                180,
+                BattlePassPassType.Premium,
+                Array.Empty<BattlePassClaimedRewardCell>(),
+                new[]
+                {
+                    new BattlePassClaimableRewardCell(1, BattlePassRewardTrack.Default, "reward_default"),
+                    new BattlePassClaimableRewardCell(1, BattlePassRewardTrack.Premium, "reward_premium")
+                });
+            var controller = CreateController(
+                new StubBattlePassServerService(snapshot),
+                new StubBattlePassTimerService(),
+                out var view);
+
+            RunCoroutine(controller.Show(null));
+            view.EmitBuyPremium();
+            controller.LastPurchaseArgs.OnPurchaseVerified?.Invoke(new BattlePassPurchaseVerificationResult(
+                false,
+                "granted",
+                updatedUserState,
+                "battle_pass",
+                "premium_sku",
+                "active",
+                "PURCHASE_ACKNOWLEDGE_FAILED",
+                "Stub acknowledge failed."));
+
+            Assert.That(view.RenderedModel, Is.Not.Null);
+            Assert.That(view.RenderedModel.PassType, Is.EqualTo(BattlePassPassType.Premium));
+            Assert.That(view.RenderedModel.PremiumRewards[0].IsLocked, Is.False);
+            Assert.That(view.RenderedModel.PremiumRewards[0].IsClaimable, Is.True);
+        }
+
+        [Test]
+        public void BuyPlatinum_ShowsUnsupportedMessage()
+        {
+            var snapshot = CreateActiveSnapshot(passType: BattlePassPassType.None);
+            var controller = CreateController(
+                new StubBattlePassServerService(snapshot),
+                new StubBattlePassTimerService(),
+                out var view);
+
+            RunCoroutine(controller.Show(null));
+            view.EmitBuyPlatinum();
+
+            Assert.That(controller.LastPurchaseArgs, Is.Null);
+            Assert.That(controller.LastInfoMessage, Is.EqualTo("Battle Pass platinum purchase is not supported in the mock client."));
+        }
+
+        private TestBattlePassWindowController CreateController(
             IBattlePassServerService serverService,
             IBattlePassTimerService timerService,
             out TestBattlePassView view,
@@ -264,7 +352,7 @@ namespace BattlePass.Tests.Editor
             var uiManager = uiManagerGo.AddComponent<UIManager>();
             view = viewGo.AddComponent<TestBattlePassView>();
 
-            var controller = new BattlePassWindowController();
+            var controller = new TestBattlePassWindowController();
             controller.Configurate(view, uiManager, new WindowAttribute("BattlePassWindow", WindowType.Popup));
             controller.SetEventHandler(new StubEventHandler());
 
@@ -291,7 +379,7 @@ namespace BattlePass.Tests.Editor
             return controller;
         }
 
-        private static BattlePassSnapshot CreateActiveSnapshot(int xp = 180)
+        private static BattlePassSnapshot CreateActiveSnapshot(int xp = 180, BattlePassPassType passType = BattlePassPassType.Premium)
         {
             return new BattlePassSnapshot(
                 new BattlePassSeason(
@@ -307,7 +395,7 @@ namespace BattlePass.Tests.Editor
                     "season_1",
                     6,
                     xp,
-                    BattlePassPassType.Premium,
+                    passType,
                     Array.Empty<BattlePassClaimedRewardCell>(),
                     new[]
                     {
@@ -382,6 +470,32 @@ namespace BattlePass.Tests.Editor
             {
                 RaiseRewardClaimClick(level, rewardTrack);
             }
+
+            public void EmitBuyPremium()
+            {
+                RaiseBuyPremiumClick();
+            }
+
+            public void EmitBuyPlatinum()
+            {
+                RaiseBuyPlatinumClick();
+            }
+        }
+
+        private sealed class TestBattlePassWindowController : BattlePassWindowController
+        {
+            public string LastInfoMessage { get; private set; }
+            public BattlePassIAPWindowArgs LastPurchaseArgs { get; private set; }
+
+            protected override void ShowInfo(string message)
+            {
+                LastInfoMessage = message;
+            }
+
+            protected override void ShowPremiumPurchaseWindow(BattlePassIAPWindowArgs args)
+            {
+                LastPurchaseArgs = args;
+            }
         }
 
         private sealed class StubBattlePassServerService : IBattlePassServerService
@@ -400,6 +514,7 @@ namespace BattlePass.Tests.Editor
             public BattlePassRewardTrack LastClaimRewardTrack { get; private set; }
             public BattlePassSnapshot GetCurrentSnapshot { get; set; }
             public Func<string, int, BattlePassRewardTrack, UniTask<BattlePassClaimResult>> ClaimResponseFactory { get; set; }
+            public Func<string, string, string, UniTask<BattlePassPurchaseVerificationResult>> VerifyPurchaseResponseFactory { get; set; }
 
             public UniTask<BattlePassSnapshot> GetCurrentAsync(CancellationToken ct = default)
             {
@@ -436,6 +551,30 @@ namespace BattlePass.Tests.Editor
                     true,
                     Array.Empty<BattlePassGrantedRewardCell>(),
                     (GetCurrentSnapshot ?? _initialSnapshot)?.UserState,
+                    null,
+                    null));
+            }
+
+            public UniTask<BattlePassPurchaseVerificationResult> VerifyGooglePurchaseAsync(
+                string seasonId,
+                string productId,
+                string purchaseToken,
+                CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+
+                if (VerifyPurchaseResponseFactory != null)
+                {
+                    return VerifyPurchaseResponseFactory(seasonId, productId, purchaseToken);
+                }
+
+                return UniTask.FromResult(new BattlePassPurchaseVerificationResult(
+                    true,
+                    "acknowledged",
+                    (GetCurrentSnapshot ?? _initialSnapshot)?.UserState,
+                    "battle_pass",
+                    productId,
+                    "active",
                     null,
                     null));
             }

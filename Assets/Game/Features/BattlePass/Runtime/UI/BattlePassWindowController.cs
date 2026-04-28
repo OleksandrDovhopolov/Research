@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Rewards;
+using UIShared;
 using UISystem;
 using UnityEngine;
 using VContainer;
@@ -105,10 +106,27 @@ namespace BattlePass
 
         private void HandleBuyPremiumClicked()
         {
+            var seasonId = _currentSnapshot?.Season?.Id;
+            var productId = _currentSnapshot?.Products?.PremiumProductId;
+
+            if (string.IsNullOrWhiteSpace(seasonId) || string.IsNullOrWhiteSpace(productId))
+            {
+                ShowInfo("Battle Pass premium purchase is unavailable. Missing seasonId or productId.");
+                return;
+            }
+
+            if (HasPremiumAccess(_currentSnapshot?.UserState?.PassType ?? BattlePassPassType.Unknown))
+            {
+                ShowInfo("Battle Pass premium is already active.");
+                return;
+            }
+
+            ShowPremiumPurchaseWindow(new BattlePassIAPWindowArgs(seasonId, productId, HandleBattlePassPurchaseVerified));
         }
 
         private void HandleBuyPlatinumClicked()
         {
+            ShowInfo("Battle Pass platinum purchase is not supported in the mock client.");
         }
 
         private void HandleRewardClaimClicked(int level, BattlePassRewardTrack rewardTrack)
@@ -139,7 +157,7 @@ namespace BattlePass
 
                 if (claimResult is { Success: true })
                 {
-                    if (TryApplyClaimUserState(claimResult.UpdatedUserState))
+                    if (TryApplyUserState(claimResult.UpdatedUserState))
                     {
                         _optimisticRewardApplier?.Apply(claimResult.GrantedRewards);
                         TryShowRewardWindow(claimResult.GrantedRewards);
@@ -233,7 +251,23 @@ namespace BattlePass
             _battlePassTimerService?.Start(snapshot.ServerTimeUtc, snapshot.Season.EndAtUtc);
         }
 
-        private bool TryApplyClaimUserState(BattlePassUserState updatedUserState)
+        private void HandleBattlePassPurchaseVerified(BattlePassPurchaseVerificationResult result)
+        {
+            if (result?.UpdatedUserState == null)
+            {
+                return;
+            }
+
+            if (TryApplyUserState(result.UpdatedUserState))
+            {
+                return;
+            }
+
+            Debug.LogError("[BattlePassWindowController] Purchase verification returned Battle Pass state, but it could not be merged.");
+            ReloadCurrentAsync(_loadCts?.Token ?? CancellationToken.None).Forget();
+        }
+
+        private bool TryApplyUserState(BattlePassUserState updatedUserState)
         {
             if (updatedUserState == null || _currentSnapshot?.Season == null)
             {
@@ -249,6 +283,21 @@ namespace BattlePass
 
             ApplySnapshot(mergedSnapshot);
             return true;
+        }
+
+        protected virtual void ShowInfo(string message)
+        {
+            UIManager.Show<InfoWidgetController>(new InfoWidgetArg(message));
+        }
+
+        protected virtual void ShowPremiumPurchaseWindow(BattlePassIAPWindowArgs args)
+        {
+            UIManager.Show<BattlePassIAPWindowController>(args);
+        }
+
+        private static bool HasPremiumAccess(BattlePassPassType passType)
+        {
+            return passType is BattlePassPassType.Premium or BattlePassPassType.Platinum;
         }
 
         private bool TryGetClaimableCell(int level, BattlePassRewardTrack rewardTrack, out string seasonId)
