@@ -31,6 +31,12 @@ namespace BattlePass
         private Sequence _xpAnimationSequence;
         private bool _claimButtonsInteractable = true;
         private bool _shouldAnimateXpOnNextRender;
+        private int _animationFromLevel;
+        private int _animationFromXp;
+        private int _animationToLevel;
+        private int _animationToXp;
+        private int _animationRequiredXp;
+        private IReadOnlyList<int> _animationLevelXpThresholds = Array.Empty<int>();
 
         [Header("State")]
         [SerializeField] private GameObject _contentRoot;
@@ -83,6 +89,7 @@ namespace BattlePass
         {
             StopXpAnimation();
             _shouldAnimateXpOnNextRender = false;
+            ClearPendingXpAnimationState();
             _claimButtonsInteractable = true;
             ClearRewardBindings();
             SetWindowInteraction(true);
@@ -98,8 +105,20 @@ namespace BattlePass
             RenderRewards(_premiumRewardsPool, Array.Empty<BattlePassRewardUiModel>());
         }
 
-        public virtual void PrepareForOpenXpAnimation()
+        public virtual void PrepareForOpenXpAnimation(
+            int fromLevel,
+            int fromXp,
+            int toLevel,
+            int toXp,
+            int requiredXp,
+            IReadOnlyList<int> levelXpThresholds)
         {
+            _animationFromLevel = Mathf.Max(0, fromLevel);
+            _animationFromXp = Mathf.Max(0, fromXp);
+            _animationToLevel = Mathf.Max(0, toLevel);
+            _animationToXp = Mathf.Max(0, toXp);
+            _animationRequiredXp = Mathf.Max(0, requiredXp);
+            _animationLevelXpThresholds = levelXpThresholds ?? Array.Empty<int>();
             _shouldAnimateXpOnNextRender = true;
         }
 
@@ -140,13 +159,15 @@ namespace BattlePass
             RenderRewards(_defaultRewardsPool, model.DefaultRewards);
             RenderRewards(_premiumRewardsPool, model.PremiumRewards);
 
-            if (_shouldAnimateXpOnNextRender && TryStartOpenXpAnimation(model))
+            if (_shouldAnimateXpOnNextRender && TryStartOpenXpAnimation())
             {
                 _shouldAnimateXpOnNextRender = false;
+                ClearPendingXpAnimationState();
                 return;
             }
 
             _shouldAnimateXpOnNextRender = false;
+            ClearPendingXpAnimationState();
             SetLevel(model.CurrentLevel);
             SetXpProgress(ResolveNormalizedXpProgress(
                 model.CurrentXp,
@@ -159,6 +180,7 @@ namespace BattlePass
         {
             StopXpAnimation();
             _shouldAnimateXpOnNextRender = false;
+            ClearPendingXpAnimationState();
             _claimButtonsInteractable = true;
             ClearRewardBindings();
             SetWindowInteraction(true);
@@ -194,7 +216,7 @@ namespace BattlePass
             }
         }
 
-        private bool TryStartOpenXpAnimation(BattlePassWindowUiModel model)
+        private bool TryStartOpenXpAnimation()
         {
             if (_xpSlider == null)
             {
@@ -202,25 +224,33 @@ namespace BattlePass
             }
 
             var steps = BuildXpAnimationSteps(
-                model.CurrentLevel,
-                model.CurrentXp,
-                model.RequiredXp,
-                model.LevelXpThresholds);
+                _animationFromLevel,
+                _animationFromXp,
+                _animationToLevel,
+                _animationToXp,
+                _animationRequiredXp,
+                _animationLevelXpThresholds);
             if (steps.Count == 0)
             {
                 return false;
             }
 
+            var fromLevel = Mathf.Max(1, _animationFromLevel);
+            var fromProgress = ResolveNormalizedXpProgress(
+                _animationFromXp,
+                _animationRequiredXp,
+                fromLevel,
+                _animationLevelXpThresholds);
             SetWindowInteraction(false);
             SetLevel(steps[0].DisplayLevel);
-            SetXpProgress(0f);
+            SetXpProgress(fromProgress);
 
-            var finalLevel = Mathf.Max(0, model.CurrentLevel);
+            var finalLevel = Mathf.Max(0, _animationToLevel);
             var finalProgress = ResolveNormalizedXpProgress(
-                model.CurrentXp,
-                model.RequiredXp,
-                model.CurrentLevel,
-                model.LevelXpThresholds);
+                _animationToXp,
+                _animationRequiredXp,
+                _animationToLevel,
+                _animationLevelXpThresholds);
 
             _xpAnimationSequence = DOTween.Sequence()
                 .SetId(this)
@@ -403,6 +433,16 @@ namespace BattlePass
             _xpAnimationSequence = null;
         }
 
+        private void ClearPendingXpAnimationState()
+        {
+            _animationFromLevel = 0;
+            _animationFromXp = 0;
+            _animationToLevel = 0;
+            _animationToXp = 0;
+            _animationRequiredXp = 0;
+            _animationLevelXpThresholds = Array.Empty<int>();
+        }
+
         private float ResolveStepDuration(XpAnimationStep step)
         {
             return step.AdvancesLevel
@@ -411,31 +451,74 @@ namespace BattlePass
         }
 
         private static List<XpAnimationStep> BuildXpAnimationSteps(
-            int currentLevel,
-            int currentXp,
+            int fromLevel,
+            int fromXp,
+            int toLevel,
+            int toXp,
             int requiredXp,
             IReadOnlyList<int> levelXpThresholds)
         {
             var steps = new List<XpAnimationStep>();
-            var safeCurrentLevel = Mathf.Max(0, currentLevel);
-            var finalProgress = ResolveNormalizedXpProgress(currentXp, requiredXp, currentLevel, levelXpThresholds);
+            var safeFromLevel = Mathf.Max(1, fromLevel);
+            var safeToLevel = Mathf.Max(1, toLevel);
+            var safeFromXp = Mathf.Max(0, fromXp);
+            var safeToXp = Mathf.Max(0, toXp);
 
-            if (safeCurrentLevel > 1 && !TryGetLevelStartXp(safeCurrentLevel, levelXpThresholds, out _))
+            if (!HasProgressGrowth(safeFromLevel, safeFromXp, safeToLevel, safeToXp))
             {
                 return steps;
             }
 
-            for (var displayLevel = 1; displayLevel < safeCurrentLevel; displayLevel++)
+            if (safeFromLevel > 1 && !TryGetLevelStartXp(safeFromLevel, levelXpThresholds, out _))
+            {
+                return steps;
+            }
+
+            if (safeToLevel > 1 && !TryGetLevelStartXp(safeToLevel, levelXpThresholds, out _))
+            {
+                return steps;
+            }
+
+            var fromProgress = ResolveNormalizedXpProgress(safeFromXp, requiredXp, safeFromLevel, levelXpThresholds);
+            var toProgress = ResolveNormalizedXpProgress(safeToXp, requiredXp, safeToLevel, levelXpThresholds);
+
+            if (safeFromLevel == safeToLevel)
+            {
+                if (toProgress > fromProgress)
+                {
+                    steps.Add(new XpAnimationStep(safeFromLevel, toProgress, advancesLevel: false, nextLevel: safeFromLevel));
+                }
+
+                return steps;
+            }
+
+            if (fromProgress < 1f)
+            {
+                steps.Add(new XpAnimationStep(safeFromLevel, 1f, advancesLevel: true, nextLevel: safeFromLevel + 1));
+            }
+
+            for (var displayLevel = safeFromLevel + 1; displayLevel < safeToLevel; displayLevel++)
             {
                 steps.Add(new XpAnimationStep(displayLevel, 1f, advancesLevel: true, nextLevel: displayLevel + 1));
             }
 
-            if (finalProgress > 0f)
+            if (toProgress > 0f)
             {
-                steps.Add(new XpAnimationStep(safeCurrentLevel, finalProgress, advancesLevel: false, nextLevel: safeCurrentLevel));
+                steps.Add(new XpAnimationStep(safeToLevel, toProgress, advancesLevel: false, nextLevel: safeToLevel));
             }
 
             return steps;
+        }
+
+        private static bool HasProgressGrowth(int fromLevel, int fromXp, int toLevel, int toXp)
+        {
+            var safeFromLevel = Mathf.Max(0, fromLevel);
+            var safeFromXp = Mathf.Max(0, fromXp);
+            var safeToLevel = Mathf.Max(0, toLevel);
+            var safeToXp = Mathf.Max(0, toXp);
+
+            return safeToLevel > safeFromLevel ||
+                   (safeToLevel == safeFromLevel && safeToXp > safeFromXp);
         }
 
         private static float ResolveNormalizedXpProgress(
@@ -456,13 +539,34 @@ namespace BattlePass
                 return Mathf.Clamp01((float)safeCurrentXp / safeRequiredXp);
             }
 
-            var segmentSize = safeRequiredXp - currentLevelStartXp;
+            var currentLevelEndXp = ResolveLevelEndXp(
+                currentLevel,
+                currentLevelStartXp,
+                safeRequiredXp,
+                levelXpThresholds,
+                safeCurrentXp);
+            var segmentSize = currentLevelEndXp - currentLevelStartXp;
             if (segmentSize <= 0)
             {
                 return 0f;
             }
 
             return Mathf.Clamp01((float)(safeCurrentXp - currentLevelStartXp) / segmentSize);
+        }
+
+        private static int ResolveLevelEndXp(
+            int level,
+            int currentLevelStartXp,
+            int fallbackRequiredXp,
+            IReadOnlyList<int> levelXpThresholds,
+            int currentXp)
+        {
+            if (TryGetLevelStartXp(level + 1, levelXpThresholds, out var nextLevelStartXp))
+            {
+                return Mathf.Max(currentLevelStartXp, nextLevelStartXp);
+            }
+
+            return Mathf.Max(currentLevelStartXp, Mathf.Max(fallbackRequiredXp, currentXp));
         }
 
         private static bool TryGetLevelStartXp(int level, IReadOnlyList<int> levelXpThresholds, out int levelStartXp)

@@ -15,6 +15,7 @@ namespace BattlePass
     {
         private IBattlePassServerService _battlePassServerService;
         private IBattlePassSnapshotStore _battlePassSnapshotStore;
+        private IBattlePassXpPresentationTracker _xpPresentationTracker;
         private IBattlePassTimerService _battlePassTimerService;
         private IBattlePassRealtimeClock _realtimeClock;
         private IBattlePassOptimisticRewardApplier _optimisticRewardApplier;
@@ -25,12 +26,12 @@ namespace BattlePass
         private CancellationTokenSource _loadCts;
         private BattlePassSnapshot _currentSnapshot;
         private bool _isClaimInFlight;
-        private bool _shouldAnimateOnNextSuccessfulRender;
 
         [Inject]
         private void Construct(
             IBattlePassServerService battlePassServerService,
             IBattlePassSnapshotStore battlePassSnapshotStore,
+            IBattlePassXpPresentationTracker xpPresentationTracker,
             IBattlePassTimerService battlePassTimerService,
             IBattlePassRealtimeClock realtimeClock,
             BattlePassUiModelFactory uiModelFactory,
@@ -40,6 +41,7 @@ namespace BattlePass
         {
             _battlePassServerService = battlePassServerService;
             _battlePassSnapshotStore = battlePassSnapshotStore;
+            _xpPresentationTracker = xpPresentationTracker;
             _battlePassTimerService = battlePassTimerService;
             _realtimeClock = realtimeClock;
             _uiModelFactory = uiModelFactory;
@@ -53,7 +55,6 @@ namespace BattlePass
             ResetLoadCts();
             SubscribeTimer();
             SubscribeSnapshotStore();
-            _shouldAnimateOnNextSuccessfulRender = true;
             View.ShowLoadingState();
             View.SetClaimButtonsInteractable(true);
 
@@ -93,7 +94,6 @@ namespace BattlePass
             View.ResetView();
             _currentSnapshot = null;
             _isClaimInFlight = false;
-            _shouldAnimateOnNextSuccessfulRender = false;
         }
 
         private async UniTaskVoid LoadBattlePassAsync(CancellationToken ct)
@@ -256,14 +256,14 @@ namespace BattlePass
             }
 
             var uiModel = _uiModelFactory.Create(snapshot);
-            if (_shouldAnimateOnNextSuccessfulRender)
-            {
-                View.PrepareForOpenXpAnimation();
-            }
+            var shouldCommitPresentedState = TryPrepareXpDeltaAnimation(snapshot, uiModel);
 
             View.Prewarm(uiModel);
             View.Render(uiModel);
-            _shouldAnimateOnNextSuccessfulRender = false;
+            if (shouldCommitPresentedState)
+            {
+                CommitPresentedState(snapshot);
+            }
             View.SetClaimButtonsInteractable(!_isClaimInFlight);
             _battlePassTimerService?.Start(snapshot.ServerTimeUtc, snapshot.Season.EndAtUtc);
         }
@@ -428,6 +428,74 @@ namespace BattlePass
             _loadCts.Cancel();
             _loadCts.Dispose();
             _loadCts = null;
+        }
+
+        private bool TryPrepareXpDeltaAnimation(BattlePassSnapshot snapshot, BattlePassWindowUiModel uiModel)
+        {
+            if (_xpPresentationTracker == null || snapshot?.Season == null || uiModel == null)
+            {
+                return false;
+            }
+
+            var seasonId = snapshot.Season.Id;
+            if (string.IsNullOrWhiteSpace(seasonId))
+            {
+                return false;
+            }
+
+            var targetLevel = Mathf.Max(0, uiModel.CurrentLevel);
+            var targetXp = Mathf.Max(0, uiModel.CurrentXp);
+
+            if (!_xpPresentationTracker.TryGetBaseline(seasonId, out var fromLevel, out var fromXp))
+            {
+                _xpPresentationTracker.InitializeBaseline(seasonId, targetLevel, targetXp);
+                return false;
+            }
+
+            if (!HasProgressGrowth(fromLevel, fromXp, targetLevel, targetXp))
+            {
+                _xpPresentationTracker.CommitPresented(seasonId, targetLevel, targetXp);
+                return false;
+            }
+
+            View.PrepareForOpenXpAnimation(
+                fromLevel,
+                fromXp,
+                targetLevel,
+                targetXp,
+                uiModel.RequiredXp,
+                uiModel.LevelXpThresholds);
+
+            return true;
+        }
+
+        private void CommitPresentedState(BattlePassSnapshot snapshot)
+        {
+            if (_xpPresentationTracker == null || snapshot?.Season == null || snapshot.UserState == null)
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(snapshot.Season.Id))
+            {
+                return;
+            }
+
+            _xpPresentationTracker.CommitPresented(
+                snapshot.Season.Id,
+                snapshot.UserState.Level,
+                snapshot.UserState.Xp);
+        }
+
+        private static bool HasProgressGrowth(int fromLevel, int fromXp, int toLevel, int toXp)
+        {
+            var safeFromLevel = Mathf.Max(0, fromLevel);
+            var safeFromXp = Mathf.Max(0, fromXp);
+            var safeToLevel = Mathf.Max(0, toLevel);
+            var safeToXp = Mathf.Max(0, toXp);
+
+            return safeToLevel > safeFromLevel ||
+                   (safeToLevel == safeFromLevel && safeToXp > safeFromXp);
         }
     }
 }

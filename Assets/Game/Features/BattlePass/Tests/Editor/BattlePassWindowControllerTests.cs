@@ -112,6 +112,20 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
+        public void Show_WhenXpDidNotGrow_DoesNotPrepareXpAnimation()
+        {
+            var snapshot = CreateActiveSnapshot();
+            var serverService = new StubBattlePassServerService(snapshot);
+            var controller = CreateController(serverService, new StubBattlePassTimerService(), out var view, seededSnapshot: snapshot);
+
+            RunCoroutine(controller.Show(null));
+            RunCoroutine(controller.Hide(true, 0f));
+            RunCoroutine(controller.Show(null));
+
+            Assert.That(view.PrepareForOpenXpAnimationCalls, Is.EqualTo(0));
+        }
+
+        [Test]
         public void Show_UsesSeededSnapshotWithoutCallingGetCurrent()
         {
             var snapshot = CreateActiveSnapshot();
@@ -455,6 +469,7 @@ namespace BattlePass.Tests.Editor
             var realtimeClock = new FakeRealtimeClock(clockNow ?? DateTimeOffset.Parse("2026-04-24T10:00:00Z"));
             var playerIdentityProvider = new StubPlayerIdentityProvider();
             var snapshotStore = new BattlePassSnapshotStore(serverService, realtimeClock, playerIdentityProvider);
+            var xpPresentationTracker = new BattlePassXpPresentationTracker(playerIdentityProvider);
             if (seededSnapshot != null)
             {
                 snapshotStore.ReplaceSnapshot(seededSnapshot);
@@ -469,6 +484,7 @@ namespace BattlePass.Tests.Editor
             {
                 serverService,
                 snapshotStore,
+                xpPresentationTracker,
                 timerService,
                 realtimeClock,
                 factory,
@@ -557,7 +573,13 @@ namespace BattlePass.Tests.Editor
                 UnavailableMessage = null;
             }
 
-            public override void PrepareForOpenXpAnimation()
+            public override void PrepareForOpenXpAnimation(
+                int fromLevel,
+                int fromXp,
+                int toLevel,
+                int toXp,
+                int requiredXp,
+                IReadOnlyList<int> levelXpThresholds)
             {
                 PrepareForOpenXpAnimationCalls++;
             }

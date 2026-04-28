@@ -11,6 +11,7 @@ namespace BattlePass
             builder.Register<IBattlePassTimerService, BattlePassTimerService>(Lifetime.Singleton);
             builder.Register<BattlePassUiModelFactory>(Lifetime.Singleton);
             builder.Register<IBattlePassSnapshotStore, BattlePassSnapshotStore>(Lifetime.Singleton);
+            builder.Register<IBattlePassXpPresentationTracker, BattlePassXpPresentationTracker>(Lifetime.Singleton);
             builder.Register<BattlePassGameplayReadyInitializer>(Lifetime.Singleton).As<IGameplayReadyInitializer>();
             builder.Register<IOptimisticResourceApplyService, ResourceManagerOptimisticResourceApplyService>(Lifetime.Singleton);
             builder.Register<IBattlePassOptimisticRewardApplier, BattlePassOptimisticRewardApplier>(Lifetime.Singleton);
