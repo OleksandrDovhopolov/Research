@@ -124,6 +124,20 @@ namespace BattlePass.Tests.Editor
             Assert.That(slider.value, Is.InRange(0f, 1f));
         }
 
+        [Test]
+        public void PremiumPlaceholderCtaClick_RaisesBuyPremiumEvent()
+        {
+            var view = CreateRuntimeView(out _, out _);
+            var raised = false;
+            view.BuyPremiumClick += () => raised = true;
+
+            var method = typeof(BattlePassView).GetMethod("HandlePremiumPlaceholderCtaClick", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.That(method, Is.Not.Null);
+            method.Invoke(view, null);
+
+            Assert.That(raised, Is.True);
+        }
+
         private BattlePassView CreateRuntimeView(out Slider slider, out CanvasGroup canvasGroup)
         {
             var root = new GameObject("BattlePassViewRoot");

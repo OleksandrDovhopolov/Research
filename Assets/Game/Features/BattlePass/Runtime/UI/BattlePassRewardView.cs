@@ -13,10 +13,12 @@ namespace BattlePass
         [SerializeField] private GameObject _lockedStateRoot;
         [SerializeField] private GameObject _claimButtonRoot;
         [SerializeField] private Button _claimButton;
+        [SerializeField] private Button _premiumPlaceholderCtaButton;
 
         private BattlePassRewardUiModel _currentReward;
 
         public event System.Action<int, BattlePassRewardTrack> ClaimClick;
+        public event System.Action PremiumPlaceholderCtaClick;
 
         private void Awake()
         {
@@ -24,9 +26,14 @@ namespace BattlePass
             {
                 _claimButton.onClick.AddListener(HandleClaimClicked);
             }
+
+            if (_premiumPlaceholderCtaButton != null)
+            {
+                _premiumPlaceholderCtaButton.onClick.AddListener(HandlePremiumPlaceholderCtaClicked);
+            }
         }
 
-        public void SetData(BattlePassRewardUiModel reward)
+        public void SetData(BattlePassRewardUiModel reward, Sprite premiumPlaceholderIcon = null)
         {
             if (reward == null)
             {
@@ -35,15 +42,18 @@ namespace BattlePass
             }
 
             _currentReward = reward;
+            var isPremiumPlaceholder = reward.IsPremiumPlaceholderLevelZero;
 
             if (_iconImage != null)
             {
-                _iconImage.sprite = reward.Icon;
+                _iconImage.sprite = isPremiumPlaceholder && premiumPlaceholderIcon != null
+                    ? premiumPlaceholderIcon
+                    : reward.Icon;
             }
 
             if (_amountText != null)
             {
-                _amountText.text = reward.Amount.ToString();
+                _amountText.text = isPremiumPlaceholder ? string.Empty : reward.Amount.ToString();
             }
 
             if (_claimedStateRoot != null)
@@ -56,7 +66,8 @@ namespace BattlePass
                 _lockedStateRoot.SetActive(reward.IsPremiumTrack && reward.IsLocked && !reward.IsClaimed);
             }
 
-            var canClaim = reward.IsClaimable;
+            var canClaim = reward.IsClaimable && !isPremiumPlaceholder;
+
             if (_claimButtonRoot != null)
             {
                 _claimButtonRoot.SetActive(canClaim);
@@ -66,6 +77,12 @@ namespace BattlePass
             {
                 _claimButton.gameObject.SetActive(canClaim);
                 _claimButton.interactable = canClaim;
+            }
+
+            if (_premiumPlaceholderCtaButton != null)
+            {
+                _premiumPlaceholderCtaButton.enabled = isPremiumPlaceholder;
+                _premiumPlaceholderCtaButton.interactable = isPremiumPlaceholder;
             }
         }
 
@@ -114,11 +131,28 @@ namespace BattlePass
                 _claimButton.gameObject.SetActive(false);
                 _claimButton.interactable = false;
             }
+
+            if (_premiumPlaceholderCtaButton != null)
+            {
+                _premiumPlaceholderCtaButton.enabled = false;
+                _premiumPlaceholderCtaButton.interactable = false;
+            }
         }
 
         private void HandleClaimClicked()
         {
-            if (_currentReward == null || !_currentReward.IsClaimable)
+            if (_currentReward == null)
+            {
+                return;
+            }
+
+            if (_currentReward.IsPremiumPlaceholderLevelZero)
+            {
+                PremiumPlaceholderCtaClick?.Invoke();
+                return;
+            }
+
+            if (!_currentReward.IsClaimable)
             {
                 return;
             }
@@ -126,11 +160,26 @@ namespace BattlePass
             ClaimClick?.Invoke(_currentReward.Level, _currentReward.RewardTrack);
         }
 
+        private void HandlePremiumPlaceholderCtaClicked()
+        {
+            if (_currentReward == null || !_currentReward.IsPremiumPlaceholderLevelZero)
+            {
+                return;
+            }
+
+            PremiumPlaceholderCtaClick?.Invoke();
+        }
+
         private void OnDestroy()
         {
             if (_claimButton != null)
             {
                 _claimButton.onClick.RemoveListener(HandleClaimClicked);
+            }
+
+            if (_premiumPlaceholderCtaButton != null)
+            {
+                _premiumPlaceholderCtaButton.onClick.RemoveListener(HandlePremiumPlaceholderCtaClicked);
             }
         }
     }

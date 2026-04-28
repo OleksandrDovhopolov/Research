@@ -309,7 +309,7 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
-        public void Create_LevelZeroWithNullPremiumReward_DoesNotCreateMandatoryPremiumCard()
+        public void Create_LevelZeroWithNullPremiumReward_CreatesPremiumPlaceholderCard()
         {
             var rewardSpecProvider = new StubRewardSpecProvider(new Dictionary<string, RewardSpec>
             {
@@ -345,8 +345,14 @@ namespace BattlePass.Tests.Editor
             var uiModel = factory.Create(snapshot);
 
             Assert.That(uiModel.DefaultRewards.Count, Is.EqualTo(2));
-            Assert.That(uiModel.PremiumRewards.Count, Is.EqualTo(1));
-            Assert.That(uiModel.PremiumRewards[0].Level, Is.EqualTo(1));
+            Assert.That(uiModel.PremiumRewards.Count, Is.EqualTo(2));
+            Assert.That(uiModel.PremiumRewards[0].Level, Is.EqualTo(0));
+            Assert.That(uiModel.PremiumRewards[0].IsPremiumPlaceholderLevelZero, Is.True);
+            Assert.That(uiModel.PremiumRewards[0].RewardTrack, Is.EqualTo(BattlePassRewardTrack.Premium));
+            Assert.That(uiModel.PremiumRewards[0].RewardId, Is.Empty);
+            Assert.That(uiModel.PremiumRewards[0].IsClaimable, Is.False);
+            Assert.That(uiModel.PremiumRewards[1].Level, Is.EqualTo(1));
+            Assert.That(uiModel.PremiumRewards[1].IsPremiumPlaceholderLevelZero, Is.False);
         }
 
         [Test]

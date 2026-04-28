@@ -64,6 +64,7 @@ namespace BattlePass
         [Header("Tracks")]
         [SerializeField] private UIListPool<BattlePassRewardView> _defaultRewardsPool;
         [SerializeField] private UIListPool<BattlePassRewardView> _premiumRewardsPool;
+        [SerializeField] private Sprite _premiumLevelZeroPlaceholderIcon;
 
         public event Action BuyPremiumClick;
         public event Action BuyPlatinumClick;
@@ -358,10 +359,12 @@ namespace BattlePass
             foreach (var reward in rewards)
             {
                 var rewardView = rewardsPool.GetNext();
-                rewardView.SetData(reward);
+                rewardView.SetData(reward, reward.IsPremiumPlaceholderLevelZero ? _premiumLevelZeroPlaceholderIcon : null);
                 rewardView.SetClaimInteractable(_claimButtonsInteractable);
                 rewardView.ClaimClick -= HandleRewardClaimClick;
                 rewardView.ClaimClick += HandleRewardClaimClick;
+                rewardView.PremiumPlaceholderCtaClick -= HandlePremiumPlaceholderCtaClick;
+                rewardView.PremiumPlaceholderCtaClick += HandlePremiumPlaceholderCtaClick;
                 _activeRewardViews.Add(rewardView);
             }
         }
@@ -624,6 +627,11 @@ namespace BattlePass
             RaiseRewardClaimClick(level, rewardTrack);
         }
 
+        private void HandlePremiumPlaceholderCtaClick()
+        {
+            RaiseBuyPremiumClick();
+        }
+
         private void ClearRewardBindings()
         {
             for (var i = 0; i < _activeRewardViews.Count; i++)
@@ -635,6 +643,7 @@ namespace BattlePass
                 }
 
                 rewardView.ClaimClick -= HandleRewardClaimClick;
+                rewardView.PremiumPlaceholderCtaClick -= HandlePremiumPlaceholderCtaClick;
             }
 
             _activeRewardViews.Clear();

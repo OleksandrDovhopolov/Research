@@ -65,7 +65,8 @@ namespace BattlePass
             bool isClaimed,
             bool isClaimable,
             bool isLocked,
-            bool isPremiumTrack)
+            bool isPremiumTrack,
+            bool isPremiumPlaceholderLevelZero = false)
         {
             Level = Math.Max(0, level);
             RewardTrack = rewardTrack;
@@ -76,6 +77,7 @@ namespace BattlePass
             IsClaimable = isClaimable;
             IsLocked = isLocked;
             IsPremiumTrack = isPremiumTrack;
+            IsPremiumPlaceholderLevelZero = isPremiumPlaceholderLevelZero;
         }
 
         public int Level { get; }
@@ -87,5 +89,6 @@ namespace BattlePass
         public bool IsClaimable { get; }
         public bool IsLocked { get; }
         public bool IsPremiumTrack { get; }
+        public bool IsPremiumPlaceholderLevelZero { get; }
     }
 }

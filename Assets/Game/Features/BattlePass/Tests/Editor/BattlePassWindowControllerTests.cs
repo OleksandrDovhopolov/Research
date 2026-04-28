@@ -362,6 +362,25 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
+        public void PremiumPlaceholderCta_OpensPurchasePopup_WhenSeasonAndProductExist_AndPassInactive()
+        {
+            var snapshot = CreateLevelZeroPlaceholderSnapshot(passType: BattlePassPassType.None);
+            var controller = CreateController(
+                new StubBattlePassServerService(snapshot),
+                new StubBattlePassTimerService(),
+                out var view,
+                seededSnapshot: snapshot);
+
+            RunCoroutine(controller.Show(null));
+            view.EmitPremiumPlaceholderCta();
+
+            Assert.That(controller.LastPurchaseArgs, Is.Not.Null);
+            Assert.That(controller.LastPurchaseArgs.SeasonId, Is.EqualTo("season_1"));
+            Assert.That(controller.LastPurchaseArgs.ProductId, Is.EqualTo("premium_sku"));
+            Assert.That(controller.LastInfoMessage, Is.Null);
+        }
+
+        [Test]
         public void BuyPremium_DoesNotOpenPurchasePopup_WhenPassAlreadyPremium()
         {
             var snapshot = CreateActiveSnapshot(passType: BattlePassPassType.Premium);
@@ -529,6 +548,36 @@ namespace BattlePass.Tests.Editor
                 DateTimeOffset.Parse("2026-04-24T10:00:00Z"));
         }
 
+        private static BattlePassSnapshot CreateLevelZeroPlaceholderSnapshot(BattlePassPassType passType)
+        {
+            return new BattlePassSnapshot(
+                new BattlePassSeason(
+                    "season_1",
+                    "Season 1",
+                    DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+                    DateTimeOffset.Parse("2026-06-01T00:00:00Z"),
+                    50,
+                    "active",
+                    "v1"),
+                new BattlePassProducts("premium_sku", "platinum_sku"),
+                new BattlePassUserState(
+                    "season_1",
+                    0,
+                    0,
+                    passType,
+                    Array.Empty<BattlePassClaimedRewardCell>(),
+                    new[]
+                    {
+                        new BattlePassClaimableRewardCell(0, BattlePassRewardTrack.Default, "reward_default")
+                    }),
+                new[]
+                {
+                    new BattlePassLevel(0, 0, new BattlePassRewardRef("reward_default"), null),
+                    new BattlePassLevel(1, 100, new BattlePassRewardRef("reward_default"), new BattlePassRewardRef("reward_premium"))
+                },
+                DateTimeOffset.Parse("2026-04-24T10:00:00Z"));
+        }
+
         private static RewardSpec CreateRewardSpec(string rewardId, int amount)
         {
             return new RewardSpec
@@ -627,6 +676,13 @@ namespace BattlePass.Tests.Editor
             public void EmitBuyPremium()
             {
                 RaiseBuyPremiumClick();
+            }
+
+            public void EmitPremiumPlaceholderCta()
+            {
+                var method = typeof(BattlePassView).GetMethod("HandlePremiumPlaceholderCtaClick", BindingFlags.NonPublic | BindingFlags.Instance);
+                Assert.That(method, Is.Not.Null);
+                method.Invoke(this, null);
             }
 
             public void EmitBuyPlatinum()

@@ -80,6 +80,22 @@ namespace BattlePass
             {
                 var level = levels[i];
                 var reward = isPremiumTrack ? level.PremiumReward : level.DefaultReward;
+                if (isPremiumTrack && level.Level == 0 && reward == null)
+                {
+                    rewardModels.Add(new BattlePassRewardUiModel(
+                        level.Level,
+                        BattlePassRewardTrack.Premium,
+                        string.Empty,
+                        null,
+                        0,
+                        isClaimed: false,
+                        isClaimable: false,
+                        isLocked: ResolveLockedState(true, userState),
+                        isPremiumTrack: true,
+                        isPremiumPlaceholderLevelZero: true));
+                    continue;
+                }
+
                 if (reward == null || string.IsNullOrWhiteSpace(reward.RewardId))
                 {
                     continue;

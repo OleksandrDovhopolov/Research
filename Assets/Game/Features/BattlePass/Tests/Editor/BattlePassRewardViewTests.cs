@@ -27,7 +27,7 @@ namespace BattlePass.Tests.Editor
         [Test]
         public void SetData_WhenRewardIsClaimed_ShowsClaimedOverlay()
         {
-            var rewardView = CreateRewardView(out _, out _, out var claimedStateRoot, out var lockedStateRoot, out _, out _);
+            var rewardView = CreateRewardView(out _, out _, out var claimedStateRoot, out var lockedStateRoot, out _, out _, out _);
             var reward = new BattlePassRewardUiModel(1, BattlePassRewardTrack.Default, "reward_default", Sprite.Create(Texture2D.blackTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 10, true, false, false, false);
 
             rewardView.SetData(reward);
@@ -39,7 +39,7 @@ namespace BattlePass.Tests.Editor
         [Test]
         public void SetData_WhenPremiumRewardIsLocked_ShowsLockedOverlay()
         {
-            var rewardView = CreateRewardView(out _, out _, out var claimedStateRoot, out var lockedStateRoot, out _, out _);
+            var rewardView = CreateRewardView(out _, out _, out var claimedStateRoot, out var lockedStateRoot, out _, out _, out _);
             var reward = new BattlePassRewardUiModel(1, BattlePassRewardTrack.Premium, "reward_premium", Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 25, false, false, true, true);
 
             rewardView.SetData(reward);
@@ -51,7 +51,7 @@ namespace BattlePass.Tests.Editor
         [Test]
         public void SetData_WhenDefaultRewardIsMarkedLocked_DoesNotShowLockedOverlay()
         {
-            var rewardView = CreateRewardView(out _, out _, out _, out var lockedStateRoot, out _, out _);
+            var rewardView = CreateRewardView(out _, out _, out _, out var lockedStateRoot, out _, out _, out _);
             var reward = new BattlePassRewardUiModel(1, BattlePassRewardTrack.Default, "reward_default", Sprite.Create(Texture2D.blackTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 10, false, false, true, false);
 
             rewardView.SetData(reward);
@@ -62,7 +62,7 @@ namespace BattlePass.Tests.Editor
         [Test]
         public void SetData_WhenRewardIsClaimed_DoesNotShowLockedOverlayEvenIfLocked()
         {
-            var rewardView = CreateRewardView(out _, out _, out var claimedStateRoot, out var lockedStateRoot, out _, out _);
+            var rewardView = CreateRewardView(out _, out _, out var claimedStateRoot, out var lockedStateRoot, out _, out _, out _);
             var reward = new BattlePassRewardUiModel(1, BattlePassRewardTrack.Premium, "reward_premium", Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 25, true, false, true, true);
 
             rewardView.SetData(reward);
@@ -74,7 +74,7 @@ namespace BattlePass.Tests.Editor
         [Test]
         public void Cleanup_HidesClaimedAndLockedOverlays()
         {
-            var rewardView = CreateRewardView(out _, out _, out var claimedStateRoot, out var lockedStateRoot, out _, out _);
+            var rewardView = CreateRewardView(out _, out _, out var claimedStateRoot, out var lockedStateRoot, out _, out _, out _);
             var reward = new BattlePassRewardUiModel(1, BattlePassRewardTrack.Premium, "reward_premium", Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 25, true, false, true, true);
             rewardView.SetData(reward);
 
@@ -87,7 +87,7 @@ namespace BattlePass.Tests.Editor
         [Test]
         public void SetData_WhenRewardIsClaimable_ShowsClaimButton()
         {
-            var rewardView = CreateRewardView(out _, out _, out _, out _, out var claimButtonRoot, out var claimButton);
+            var rewardView = CreateRewardView(out _, out _, out _, out _, out var claimButtonRoot, out var claimButton, out _);
             var reward = new BattlePassRewardUiModel(2, BattlePassRewardTrack.Default, "reward_default", Sprite.Create(Texture2D.blackTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 10, false, true, false, false);
 
             rewardView.SetData(reward);
@@ -100,7 +100,7 @@ namespace BattlePass.Tests.Editor
         [Test]
         public void SetData_WhenRewardIsNotClaimable_HidesClaimButton()
         {
-            var rewardView = CreateRewardView(out _, out _, out _, out _, out var claimButtonRoot, out var claimButton);
+            var rewardView = CreateRewardView(out _, out _, out _, out _, out var claimButtonRoot, out var claimButton, out _);
             var reward = new BattlePassRewardUiModel(2, BattlePassRewardTrack.Default, "reward_default", Sprite.Create(Texture2D.blackTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 10, false, false, false, false);
 
             rewardView.SetData(reward);
@@ -110,9 +110,21 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
+        public void SetData_WhenRewardIsRegular_HidesPremiumPlaceholderCta()
+        {
+            var rewardView = CreateRewardView(out _, out _, out _, out _, out _, out _, out var placeholderCtaButton);
+            var reward = new BattlePassRewardUiModel(2, BattlePassRewardTrack.Default, "reward_default", Sprite.Create(Texture2D.blackTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 10, false, false, false, false);
+
+            rewardView.SetData(reward);
+
+            Assert.That(placeholderCtaButton.enabled, Is.False);
+            Assert.That(placeholderCtaButton.interactable, Is.False);
+        }
+
+        [Test]
         public void ClaimButtonClick_RaisesClaimEventWithLevelAndTrack()
         {
-            var rewardView = CreateRewardView(out _, out _, out _, out _, out _, out var claimButton);
+            var rewardView = CreateRewardView(out _, out _, out _, out _, out _, out var claimButton, out _);
             var reward = new BattlePassRewardUiModel(3, BattlePassRewardTrack.Premium, "reward_premium", Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 25, false, true, false, true);
             rewardView.SetData(reward);
 
@@ -133,13 +145,64 @@ namespace BattlePass.Tests.Editor
             Assert.That(raisedTrack, Is.EqualTo(BattlePassRewardTrack.Premium));
         }
 
+        [Test]
+        public void SetData_WhenPremiumLevelZeroPlaceholder_ShowsCtaAndClearsAmountText()
+        {
+            var rewardView = CreateRewardView(out _, out var amountText, out _, out _, out var claimButtonRoot, out var claimButton, out var placeholderCtaButton);
+            var reward = new BattlePassRewardUiModel(
+                0,
+                BattlePassRewardTrack.Premium,
+                string.Empty,
+                null,
+                0,
+                false,
+                false,
+                true,
+                true,
+                isPremiumPlaceholderLevelZero: true);
+
+            rewardView.SetData(reward);
+
+            Assert.That(amountText.text, Is.Empty);
+            Assert.That(claimButtonRoot.activeSelf, Is.False);
+            Assert.That(claimButton.gameObject.activeSelf, Is.False);
+            Assert.That(placeholderCtaButton.enabled, Is.True);
+            Assert.That(placeholderCtaButton.interactable, Is.True);
+        }
+
+        [Test]
+        public void PremiumPlaceholderCtaClick_RaisesEvent()
+        {
+            var rewardView = CreateRewardView(out _, out _, out _, out _, out _, out _, out var placeholderCtaButton);
+            var reward = new BattlePassRewardUiModel(
+                0,
+                BattlePassRewardTrack.Premium,
+                string.Empty,
+                null,
+                0,
+                false,
+                false,
+                true,
+                true,
+                isPremiumPlaceholderLevelZero: true);
+            rewardView.SetData(reward);
+
+            var raised = false;
+            rewardView.PremiumPlaceholderCtaClick += () => raised = true;
+
+            placeholderCtaButton.onClick.Invoke();
+
+            Assert.That(raised, Is.True);
+        }
+
         private BattlePassRewardView CreateRewardView(
             out Image iconImage,
             out TMPro.TMP_Text amountText,
             out GameObject claimedStateRoot,
             out GameObject lockedStateRoot,
             out GameObject claimButtonRoot,
-            out Button claimButton)
+            out Button claimButton,
+            out Button premiumPlaceholderCtaButton)
         {
             var root = new GameObject("BattlePassRewardView");
             var iconGo = new GameObject("Icon");
@@ -147,12 +210,14 @@ namespace BattlePass.Tests.Editor
             var lockedGo = new GameObject("Locked");
             var claimButtonRootGo = new GameObject("ClaimButtonRoot");
             var claimButtonGo = new GameObject("ClaimButton");
+            var premiumPlaceholderCtaButtonGo = new GameObject("PremiumPlaceholderCtaButton");
 
             iconGo.transform.SetParent(root.transform);
             claimedGo.transform.SetParent(root.transform);
             lockedGo.transform.SetParent(root.transform);
             claimButtonRootGo.transform.SetParent(root.transform);
             claimButtonGo.transform.SetParent(claimButtonRootGo.transform);
+            premiumPlaceholderCtaButtonGo.transform.SetParent(root.transform);
 
             _objectsToCleanup.Add(root);
 
@@ -162,6 +227,7 @@ namespace BattlePass.Tests.Editor
             lockedStateRoot = lockedGo;
             claimButtonRoot = claimButtonRootGo;
             claimButton = claimButtonGo.AddComponent<Button>();
+            premiumPlaceholderCtaButton = premiumPlaceholderCtaButtonGo.AddComponent<Button>();
 
             var rewardView = root.AddComponent<BattlePassRewardView>();
             SetField(rewardView, "_iconImage", iconImage);
@@ -170,11 +236,14 @@ namespace BattlePass.Tests.Editor
             SetField(rewardView, "_lockedStateRoot", lockedStateRoot);
             SetField(rewardView, "_claimButtonRoot", claimButtonRoot);
             SetField(rewardView, "_claimButton", claimButton);
+            SetField(rewardView, "_premiumPlaceholderCtaButton", premiumPlaceholderCtaButton);
 
             claimedStateRoot.SetActive(false);
             lockedStateRoot.SetActive(false);
             claimButtonRoot.SetActive(false);
             claimButton.gameObject.SetActive(false);
+            premiumPlaceholderCtaButton.enabled = false;
+            premiumPlaceholderCtaButton.interactable = false;
 
             InvokeMethod(rewardView, "Awake");
 
