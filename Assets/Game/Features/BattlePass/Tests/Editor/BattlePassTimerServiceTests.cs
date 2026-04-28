@@ -43,6 +43,7 @@ namespace BattlePass.Tests.Editor
 
         private sealed class FakeRealtimeClock : IBattlePassRealtimeClock
         {
+            public DateTimeOffset UtcNow { get; }
             public double RealtimeSinceStartup { get; private set; }
 
             public void Advance(double seconds)

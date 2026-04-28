@@ -1,3 +1,5 @@
+using System;
+
 namespace BattlePass
 {
     public static class BattlePassConfig
@@ -13,6 +15,11 @@ namespace BattlePass
         public static class Ui
         {
             public const string UnavailableText = "Battle Pass currently unavailable";
+        }
+
+        public static class Cache
+        {
+            public static readonly TimeSpan SnapshotTtl = TimeSpan.FromMinutes(3);
         }
     }
 }

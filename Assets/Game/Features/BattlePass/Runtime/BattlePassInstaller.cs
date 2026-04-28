@@ -1,4 +1,5 @@
 using VContainer;
+using UIShared;
 
 namespace BattlePass
 {
@@ -9,6 +10,8 @@ namespace BattlePass
             builder.Register<IBattlePassRealtimeClock, UnityBattlePassRealtimeClock>(Lifetime.Singleton);
             builder.Register<IBattlePassTimerService, BattlePassTimerService>(Lifetime.Singleton);
             builder.Register<BattlePassUiModelFactory>(Lifetime.Singleton);
+            builder.Register<IBattlePassSnapshotStore, BattlePassSnapshotStore>(Lifetime.Singleton);
+            builder.Register<BattlePassGameplayReadyInitializer>(Lifetime.Singleton).As<IGameplayReadyInitializer>();
             builder.Register<IOptimisticResourceApplyService, ResourceManagerOptimisticResourceApplyService>(Lifetime.Singleton);
             builder.Register<IBattlePassOptimisticRewardApplier, BattlePassOptimisticRewardApplier>(Lifetime.Singleton);
             builder.Register<IBattlePassServerService, BattlePassServerService>(Lifetime.Singleton);

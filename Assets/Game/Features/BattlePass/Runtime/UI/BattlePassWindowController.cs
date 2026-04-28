@@ -14,7 +14,9 @@ namespace BattlePass
     public class BattlePassWindowController : WindowController<BattlePassView>
     {
         private IBattlePassServerService _battlePassServerService;
+        private IBattlePassSnapshotStore _battlePassSnapshotStore;
         private IBattlePassTimerService _battlePassTimerService;
+        private IBattlePassRealtimeClock _realtimeClock;
         private IBattlePassOptimisticRewardApplier _optimisticRewardApplier;
         private BattlePassUiModelFactory _uiModelFactory;
         private IRewardPlayerStateRefreshCoordinator _rewardPlayerStateRefreshCoordinator;
@@ -28,14 +30,18 @@ namespace BattlePass
         [Inject]
         private void Construct(
             IBattlePassServerService battlePassServerService,
+            IBattlePassSnapshotStore battlePassSnapshotStore,
             IBattlePassTimerService battlePassTimerService,
+            IBattlePassRealtimeClock realtimeClock,
             BattlePassUiModelFactory uiModelFactory,
             IBattlePassOptimisticRewardApplier optimisticRewardApplier,
             IRewardPlayerStateRefreshCoordinator rewardPlayerStateRefreshCoordinator,
             IRewardSpecProvider rewardSpecProvider)
         {
             _battlePassServerService = battlePassServerService;
+            _battlePassSnapshotStore = battlePassSnapshotStore;
             _battlePassTimerService = battlePassTimerService;
+            _realtimeClock = realtimeClock;
             _uiModelFactory = uiModelFactory;
             _optimisticRewardApplier = optimisticRewardApplier;
             _rewardPlayerStateRefreshCoordinator = rewardPlayerStateRefreshCoordinator;
@@ -46,9 +52,22 @@ namespace BattlePass
         {
             ResetLoadCts();
             SubscribeTimer();
+            SubscribeSnapshotStore();
             _shouldAnimateOnNextSuccessfulRender = true;
-            View.ResetView();
+            View.ShowLoadingState();
             View.SetClaimButtonsInteractable(true);
+
+            if (TryApplySnapshotFromStore())
+            {
+                if (_battlePassSnapshotStore != null && _realtimeClock != null &&
+                    _battlePassSnapshotStore.IsStale(_realtimeClock.UtcNow))
+                {
+                    RefreshSnapshotInBackground(_loadCts.Token);
+                }
+
+                return;
+            }
+
             LoadBattlePassAsync(_loadCts.Token).Forget();
         }
 
@@ -68,6 +87,7 @@ namespace BattlePass
             View.CloseClick -= CloseWindow;
 
             CancelLoad();
+            UnsubscribeSnapshotStore();
             UnsubscribeTimer();
             _battlePassTimerService?.Stop();
             View.ResetView();
@@ -80,17 +100,8 @@ namespace BattlePass
         {
             try
             {
-                var snapshot = await _battlePassServerService.GetCurrentAsync(ct);
+                await _battlePassSnapshotStore.RefreshAsync(ct, force: true);
                 ct.ThrowIfCancellationRequested();
-
-                if (snapshot?.Season == null)
-                {
-                    _currentSnapshot = snapshot;
-                    View.ShowUnavailableState(BattlePassConfig.Ui.UnavailableText);
-                    return;
-                }
-
-                ApplySnapshot(snapshot);
             }
             catch (OperationCanceledException)
             {
@@ -98,7 +109,10 @@ namespace BattlePass
             catch (Exception exception)
             {
                 Debug.LogError($"[BattlePassWindowController] Failed to load Battle Pass data. {exception}");
-                View.ShowUnavailableState(BattlePassConfig.Ui.UnavailableText);
+                if (!TryApplySnapshotFromStore())
+                {
+                    View.ShowUnavailableState(BattlePassConfig.Ui.UnavailableText);
+                }
             }
         }
 
@@ -213,18 +227,8 @@ namespace BattlePass
         {
             try
             {
-                var refreshedSnapshot = await _battlePassServerService.GetCurrentAsync(ct);
+                await _battlePassSnapshotStore.RefreshAsync(ct, force: true);
                 ct.ThrowIfCancellationRequested();
-
-                if (refreshedSnapshot?.Season == null)
-                {
-                    _currentSnapshot = refreshedSnapshot;
-                    View.ShowUnavailableState(BattlePassConfig.Ui.UnavailableText);
-                    _battlePassTimerService?.Stop();
-                    return;
-                }
-
-                ApplySnapshot(refreshedSnapshot);
             }
             catch (OperationCanceledException)
             {
@@ -232,8 +236,11 @@ namespace BattlePass
             catch (Exception exception)
             {
                 Debug.LogError($"[BattlePassWindowController] Failed to reload Battle Pass state after claim. {exception}");
-                View.ShowUnavailableState(BattlePassConfig.Ui.UnavailableText);
-                _battlePassTimerService?.Stop();
+                if (!TryApplySnapshotFromStore())
+                {
+                    View.ShowUnavailableState(BattlePassConfig.Ui.UnavailableText);
+                    _battlePassTimerService?.Stop();
+                }
             }
         }
 
@@ -254,6 +261,7 @@ namespace BattlePass
                 View.PrepareForOpenXpAnimation();
             }
 
+            View.Prewarm(uiModel);
             View.Render(uiModel);
             _shouldAnimateOnNextSuccessfulRender = false;
             View.SetClaimButtonsInteractable(!_isClaimInFlight);
@@ -278,20 +286,12 @@ namespace BattlePass
 
         private bool TryApplyUserState(BattlePassUserState updatedUserState)
         {
-            if (updatedUserState == null || _currentSnapshot?.Season == null)
+            if (_battlePassSnapshotStore == null)
             {
                 return false;
             }
 
-            var mergedSnapshot = new BattlePassSnapshot(
-                _currentSnapshot.Season,
-                _currentSnapshot.Products,
-                updatedUserState,
-                _currentSnapshot.Levels,
-                _currentSnapshot.ServerTimeUtc);
-
-            ApplySnapshot(mergedSnapshot);
-            return true;
+            return _battlePassSnapshotStore.TryApplyUserState(updatedUserState);
         }
 
         protected virtual void ShowInfo(string message)
@@ -347,6 +347,69 @@ namespace BattlePass
             }
 
             _battlePassTimerService.OnTimerUpdated -= HandleTimerUpdated;
+        }
+
+        private void SubscribeSnapshotStore()
+        {
+            if (_battlePassSnapshotStore == null)
+            {
+                return;
+            }
+
+            _battlePassSnapshotStore.SnapshotChanged -= HandleSnapshotChanged;
+            _battlePassSnapshotStore.SnapshotChanged += HandleSnapshotChanged;
+        }
+
+        private void UnsubscribeSnapshotStore()
+        {
+            if (_battlePassSnapshotStore == null)
+            {
+                return;
+            }
+
+            _battlePassSnapshotStore.SnapshotChanged -= HandleSnapshotChanged;
+        }
+
+        private void HandleSnapshotChanged(BattlePassSnapshot snapshot)
+        {
+            if (snapshot == null)
+            {
+                return;
+            }
+
+            ApplySnapshot(snapshot);
+        }
+
+        private bool TryApplySnapshotFromStore()
+        {
+            var snapshot = _battlePassSnapshotStore?.CurrentSnapshot;
+            if (snapshot == null)
+            {
+                return false;
+            }
+
+            ApplySnapshot(snapshot);
+            return true;
+        }
+
+        private void RefreshSnapshotInBackground(CancellationToken ct)
+        {
+            RefreshSnapshotInBackgroundAsync(ct).Forget();
+        }
+
+        private async UniTaskVoid RefreshSnapshotInBackgroundAsync(CancellationToken ct)
+        {
+            try
+            {
+                await _battlePassSnapshotStore.RefreshAsync(ct, force: false);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"[BattlePassWindowController] Background Battle Pass refresh failed. {exception.Message}");
+            }
         }
 
         private void ResetLoadCts()

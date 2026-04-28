@@ -16,7 +16,7 @@ namespace Game.Bootstrap.Tests.Editor
         [Test]
         public void BattlePassCheatModule_RegistersInputItem_InBattlePassGroup()
         {
-            var module = new Game.Cheat.BattlePassCheatModule(new StubBattlePassServerService(), CancellationToken.None);
+            var module = new Game.Cheat.BattlePassCheatModule(new StubBattlePassServerService(), new StubBattlePassSnapshotStore(), CancellationToken.None);
             var container = new RecordingCheatsContainer();
 
             module.Initialize(container);
@@ -37,19 +37,21 @@ namespace Game.Bootstrap.Tests.Editor
                     null,
                     null)
             };
-            var module = new Game.Cheat.BattlePassCheatModule(service, CancellationToken.None);
+            var snapshotStore = new StubBattlePassSnapshotStore();
+            var module = new Game.Cheat.BattlePassCheatModule(service, snapshotStore, CancellationToken.None);
 
             InvokeHandleAmountInput(module, 10);
 
             Assert.That(service.AddXpCalls, Is.EqualTo(1));
             Assert.That(service.LastAddXpAmount, Is.EqualTo(10));
+            Assert.That(snapshotStore.TryApplyCalls, Is.EqualTo(1));
         }
 
         [Test]
         public void BattlePassCheatModule_DoesNotCallApi_WhenAmountIsZeroOrNegative()
         {
             var service = new StubBattlePassServerService();
-            var module = new Game.Cheat.BattlePassCheatModule(service, CancellationToken.None);
+            var module = new Game.Cheat.BattlePassCheatModule(service, new StubBattlePassSnapshotStore(), CancellationToken.None);
 
             LogAssert.Expect(LogType.Warning, "[BattlePassCheatModule] XP amount must be greater than zero. Received=0.");
             InvokeHandleAmountInput(module, 0);
@@ -71,7 +73,7 @@ namespace Game.Bootstrap.Tests.Editor
                     "season_inactive",
                     "Season is inactive.")
             };
-            var module = new Game.Cheat.BattlePassCheatModule(service, CancellationToken.None);
+            var module = new Game.Cheat.BattlePassCheatModule(service, new StubBattlePassSnapshotStore(), CancellationToken.None);
 
             LogAssert.Expect(LogType.Error, "[BattlePassCheatModule] Add XP failed. Code=season_inactive, Message=Season is inactive.");
             InvokeAddXpAsyncCore(module, 10).GetAwaiter().GetResult();
@@ -155,6 +157,40 @@ namespace Game.Bootstrap.Tests.Editor
             {
                 ct.ThrowIfCancellationRequested();
                 throw new NotImplementedException();
+            }
+        }
+
+        private sealed class StubBattlePassSnapshotStore : IBattlePassSnapshotStore
+        {
+            public event Action<BattlePassSnapshot> SnapshotChanged;
+
+            public bool IsInitialized => false;
+            public bool HasSnapshot => false;
+            public bool LastSyncFailed => false;
+            public BattlePassSnapshot CurrentSnapshot => null;
+            public DateTimeOffset LastSyncUtc => default;
+            public DateTimeOffset LastOpenRefreshUtc => default;
+            public int TryApplyCalls { get; private set; }
+
+            public bool IsStale(DateTimeOffset nowUtc)
+            {
+                return true;
+            }
+
+            public UniTask RefreshAsync(CancellationToken ct, bool force = false)
+            {
+                return UniTask.CompletedTask;
+            }
+
+            public void ReplaceSnapshot(BattlePassSnapshot snapshot)
+            {
+                SnapshotChanged?.Invoke(snapshot);
+            }
+
+            public bool TryApplyUserState(BattlePassUserState updatedUserState)
+            {
+                TryApplyCalls++;
+                return updatedUserState != null;
             }
         }
     }

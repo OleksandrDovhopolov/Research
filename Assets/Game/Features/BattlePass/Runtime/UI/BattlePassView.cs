@@ -103,6 +103,23 @@ namespace BattlePass
             _shouldAnimateXpOnNextRender = true;
         }
 
+        public virtual void ShowLoadingState()
+        {
+            ResetView();
+            SetClaimButtonsInteractable(false);
+        }
+
+        public virtual void Prewarm(BattlePassWindowUiModel model)
+        {
+            if (model == null)
+            {
+                return;
+            }
+
+            PrewarmRewards(_defaultRewardsPool, model.DefaultRewards);
+            PrewarmRewards(_premiumRewardsPool, model.PremiumRewards);
+        }
+
         public virtual void Render(BattlePassWindowUiModel model)
         {
             if (model == null)
@@ -316,6 +333,18 @@ namespace BattlePass
                 rewardView.ClaimClick += HandleRewardClaimClick;
                 _activeRewardViews.Add(rewardView);
             }
+        }
+
+        private static void PrewarmRewards(
+            UIListPool<BattlePassRewardView> rewardsPool,
+            IReadOnlyList<BattlePassRewardUiModel> rewards)
+        {
+            if (rewardsPool == null || rewards == null)
+            {
+                return;
+            }
+
+            rewardsPool.CheckSize(rewards.Count);
         }
 
         private void SetContentVisible(bool isVisible)

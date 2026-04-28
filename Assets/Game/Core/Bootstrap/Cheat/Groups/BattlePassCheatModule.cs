@@ -12,11 +12,16 @@ namespace Game.Cheat
         private const string BattlePassGroup = "BattlePass";
 
         private readonly IBattlePassServerService _battlePassServerService;
+        private readonly IBattlePassSnapshotStore _battlePassSnapshotStore;
         private readonly CancellationToken _ct;
 
-        public BattlePassCheatModule(IBattlePassServerService battlePassServerService, CancellationToken ct)
+        public BattlePassCheatModule(
+            IBattlePassServerService battlePassServerService,
+            IBattlePassSnapshotStore battlePassSnapshotStore,
+            CancellationToken ct)
         {
             _battlePassServerService = battlePassServerService;
+            _battlePassSnapshotStore = battlePassSnapshotStore;
             _ct = ct;
         }
 
@@ -57,6 +62,7 @@ namespace Game.Cheat
                 }
 
                 var updatedState = result.UpdatedUserState;
+                _battlePassSnapshotStore?.TryApplyUserState(updatedState);
                 Debug.Log(
                     $"[BattlePassCheatModule] XP added. AddedXp={result.AddedXp}, Level={updatedState?.Level ?? 0}, Xp={updatedState?.Xp ?? 0}");
             }

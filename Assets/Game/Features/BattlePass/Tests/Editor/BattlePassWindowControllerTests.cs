@@ -37,7 +37,7 @@ namespace BattlePass.Tests.Editor
             var snapshot = CreateActiveSnapshot();
             var serverService = new StubBattlePassServerService(snapshot);
             var timerService = new StubBattlePassTimerService();
-            var controller = CreateController(serverService, timerService, out var view);
+            var controller = CreateController(serverService, timerService, out var view, seededSnapshot: snapshot);
 
             RunCoroutine(controller.Show(null));
 
@@ -46,6 +46,8 @@ namespace BattlePass.Tests.Editor
             Assert.That(timerService.StartCalls, Is.EqualTo(1));
             Assert.That(timerService.LastServerTimeUtc, Is.EqualTo(snapshot.ServerTimeUtc));
             Assert.That(timerService.LastEndAtUtc, Is.EqualTo(snapshot.Season.EndAtUtc));
+            Assert.That(serverService.GetCurrentCalls, Is.EqualTo(0));
+            Assert.That(view.PrewarmCalls, Is.EqualTo(1));
         }
 
         [Test]
@@ -60,7 +62,8 @@ namespace BattlePass.Tests.Editor
             var controller = CreateController(
                 new StubBattlePassServerService(snapshot),
                 new StubBattlePassTimerService(),
-                out var view);
+                out var view,
+                seededSnapshot: snapshot);
 
             RunCoroutine(controller.Show(null));
 
@@ -73,7 +76,7 @@ namespace BattlePass.Tests.Editor
         {
             var snapshot = CreateActiveSnapshot();
             var timerService = new StubBattlePassTimerService();
-            var controller = CreateController(new StubBattlePassServerService(snapshot), timerService, out var view);
+            var controller = CreateController(new StubBattlePassServerService(snapshot), timerService, out var view, seededSnapshot: snapshot);
 
             RunCoroutine(controller.Show(null));
             var timerUpdateCountBeforeHide = view.TimerUpdateCount;
@@ -99,13 +102,67 @@ namespace BattlePass.Tests.Editor
                     null,
                     null))
             };
-            var controller = CreateController(serverService, new StubBattlePassTimerService(), out var view);
+            var controller = CreateController(serverService, new StubBattlePassTimerService(), out var view, seededSnapshot: initialSnapshot);
 
             RunCoroutine(controller.Show(null));
             view.EmitRewardClaim(1, BattlePassRewardTrack.Default);
 
             Assert.That(view.PrepareForOpenXpAnimationCalls, Is.EqualTo(1));
             Assert.That(view.RenderCallCount, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Show_UsesSeededSnapshotWithoutCallingGetCurrent()
+        {
+            var snapshot = CreateActiveSnapshot();
+            var serverService = new StubBattlePassServerService(snapshot);
+            var controller = CreateController(serverService, new StubBattlePassTimerService(), out var view, seededSnapshot: snapshot);
+
+            RunCoroutine(controller.Show(null));
+
+            Assert.That(view.RenderedModel, Is.Not.Null);
+            Assert.That(serverService.GetCurrentCalls, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Show_WhenSnapshotIsStale_RendersCachedModelAndStartsBackgroundRefresh()
+        {
+            var cachedSnapshot = CreateActiveSnapshot(xp: 180);
+            var refreshedSnapshot = CreateActiveSnapshot(xp: 260);
+            var serverService = new StubBattlePassServerService(cachedSnapshot)
+            {
+                GetCurrentSnapshot = refreshedSnapshot
+            };
+            var staleNow = DateTimeOffset.Parse("2026-04-24T10:10:00Z");
+            var controller = CreateController(
+                serverService,
+                new StubBattlePassTimerService(),
+                out var view,
+                seededSnapshot: cachedSnapshot,
+                seededSnapshotSyncUtc: staleNow - BattlePassConfig.Cache.SnapshotTtl - TimeSpan.FromSeconds(1),
+                clockNow: staleNow);
+
+            RunCoroutine(controller.Show(null));
+
+            Assert.That(view.RenderedModel, Is.Not.Null);
+            Assert.That(view.RenderedModel.CurrentXp, Is.EqualTo(260));
+            Assert.That(serverService.GetCurrentCalls, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Show_WhenSnapshotMissing_ShowsLoadingShell_ThenRendersAfterRefresh()
+        {
+            var snapshot = CreateActiveSnapshot(xp: 210);
+            var serverService = new StubBattlePassServerService(snapshot);
+            var controller = CreateController(serverService, new StubBattlePassTimerService(), out var view);
+
+            RunCoroutine(controller.Show(null));
+
+            Assert.That(view.LoadingStateCalls, Is.GreaterThanOrEqualTo(1));
+            Assert.That(view.RenderedModel, Is.Not.Null);
+            Assert.That(view.RenderedModel.CurrentXp, Is.EqualTo(210));
+            Assert.That(serverService.GetCurrentCalls, Is.EqualTo(1));
+            Assert.That(view.PrewarmCalls, Is.EqualTo(1));
         }
 
         [Test]
@@ -163,7 +220,8 @@ namespace BattlePass.Tests.Editor
                 new StubBattlePassTimerService(),
                 out var view,
                 optimisticRewardApplier,
-                refreshCoordinator);
+                refreshCoordinator,
+                seededSnapshot: initialSnapshot);
 
             RunCoroutine(controller.Show(null));
             view.EmitRewardClaim(1, BattlePassRewardTrack.Default);
@@ -209,7 +267,7 @@ namespace BattlePass.Tests.Editor
                 "[BattlePassWindowController] Claim failed. Code=already_claimed, Message=Reward already claimed.");
             view.EmitRewardClaim(1, BattlePassRewardTrack.Default);
 
-            Assert.That(serverService.GetCurrentCalls, Is.EqualTo(2));
+            Assert.That(serverService.GetCurrentCalls, Is.EqualTo(1));
             Assert.That(view.RenderedModel, Is.Not.Null);
             Assert.That(view.RenderedModel.CurrentXp, Is.EqualTo(260));
             Assert.That(optimisticRewardApplier.Calls, Is.EqualTo(0));
@@ -225,7 +283,7 @@ namespace BattlePass.Tests.Editor
             {
                 ClaimResponseFactory = (_, _, _) => pendingClaim.Task
             };
-            var controller = CreateController(serverService, new StubBattlePassTimerService(), out var view);
+            var controller = CreateController(serverService, new StubBattlePassTimerService(), out var view, seededSnapshot: initialSnapshot);
 
             RunCoroutine(controller.Show(null));
             view.EmitRewardClaim(1, BattlePassRewardTrack.Default);
@@ -257,7 +315,7 @@ namespace BattlePass.Tests.Editor
                     null,
                     null))
             };
-            var controller = CreateController(serverService, new StubBattlePassTimerService(), out var view);
+            var controller = CreateController(serverService, new StubBattlePassTimerService(), out var view, seededSnapshot: initialSnapshot);
 
             RunCoroutine(controller.Show(null));
             LogAssert.Expect(
@@ -265,7 +323,7 @@ namespace BattlePass.Tests.Editor
                 "[BattlePassWindowController] Claim returned success, but updated user state is missing.");
             view.EmitRewardClaim(1, BattlePassRewardTrack.Default);
 
-            Assert.That(serverService.GetCurrentCalls, Is.EqualTo(2));
+            Assert.That(serverService.GetCurrentCalls, Is.EqualTo(1));
             Assert.That(view.RenderedModel, Is.Not.Null);
             Assert.That(view.RenderedModel.CurrentXp, Is.EqualTo(300));
         }
@@ -277,7 +335,8 @@ namespace BattlePass.Tests.Editor
             var controller = CreateController(
                 new StubBattlePassServerService(snapshot),
                 new StubBattlePassTimerService(),
-                out var view);
+                out var view,
+                seededSnapshot: snapshot);
 
             RunCoroutine(controller.Show(null));
             view.EmitBuyPremium();
@@ -295,7 +354,8 @@ namespace BattlePass.Tests.Editor
             var controller = CreateController(
                 new StubBattlePassServerService(snapshot),
                 new StubBattlePassTimerService(),
-                out var view);
+                out var view,
+                seededSnapshot: snapshot);
 
             RunCoroutine(controller.Show(null));
             view.EmitBuyPremium();
@@ -322,7 +382,8 @@ namespace BattlePass.Tests.Editor
             var controller = CreateController(
                 new StubBattlePassServerService(snapshot),
                 new StubBattlePassTimerService(),
-                out var view);
+                out var view,
+                seededSnapshot: snapshot);
 
             RunCoroutine(controller.Show(null));
             view.EmitBuyPremium();
@@ -349,7 +410,8 @@ namespace BattlePass.Tests.Editor
             var controller = CreateController(
                 new StubBattlePassServerService(snapshot),
                 new StubBattlePassTimerService(),
-                out var view);
+                out var view,
+                seededSnapshot: snapshot);
 
             RunCoroutine(controller.Show(null));
             view.EmitBuyPlatinum();
@@ -364,7 +426,10 @@ namespace BattlePass.Tests.Editor
             out TestBattlePassView view,
             StubBattlePassOptimisticRewardApplier optimisticRewardApplier = null,
             StubRewardPlayerStateRefreshCoordinator refreshCoordinator = null,
-            StubRewardSpecProvider rewardSpecProvider = null)
+            StubRewardSpecProvider rewardSpecProvider = null,
+            BattlePassSnapshot seededSnapshot = null,
+            DateTimeOffset? seededSnapshotSyncUtc = null,
+            DateTimeOffset? clockNow = null)
         {
             var uiManagerGo = new GameObject("BattlePassUIManager");
             var viewGo = new GameObject("BattlePassView");
@@ -387,12 +452,25 @@ namespace BattlePass.Tests.Editor
             optimisticRewardApplier ??= new StubBattlePassOptimisticRewardApplier();
             refreshCoordinator ??= new StubRewardPlayerStateRefreshCoordinator();
             var factory = new BattlePassUiModelFactory(rewardSpecProvider);
+            var realtimeClock = new FakeRealtimeClock(clockNow ?? DateTimeOffset.Parse("2026-04-24T10:00:00Z"));
+            var playerIdentityProvider = new StubPlayerIdentityProvider();
+            var snapshotStore = new BattlePassSnapshotStore(serverService, realtimeClock, playerIdentityProvider);
+            if (seededSnapshot != null)
+            {
+                snapshotStore.ReplaceSnapshot(seededSnapshot);
+                if (seededSnapshotSyncUtc.HasValue)
+                {
+                    OverrideSnapshotStoreSyncUtc(snapshotStore, seededSnapshotSyncUtc.Value);
+                }
+            }
 
             var constructMethod = typeof(BattlePassWindowController).GetMethod("Construct", BindingFlags.Instance | BindingFlags.NonPublic);
             constructMethod.Invoke(controller, new object[]
             {
                 serverService,
+                snapshotStore,
                 timerService,
+                realtimeClock,
                 factory,
                 optimisticRewardApplier,
                 refreshCoordinator,
@@ -453,6 +531,15 @@ namespace BattlePass.Tests.Editor
             }
         }
 
+        private static void OverrideSnapshotStoreSyncUtc(BattlePassSnapshotStore snapshotStore, DateTimeOffset value)
+        {
+            var field = typeof(BattlePassSnapshotStore).GetField(
+                "<LastSyncUtc>k__BackingField",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(field, Is.Not.Null);
+            field.SetValue(snapshotStore, value);
+        }
+
         private sealed class TestBattlePassView : BattlePassView
         {
             public BattlePassWindowUiModel RenderedModel { get; private set; }
@@ -460,6 +547,8 @@ namespace BattlePass.Tests.Editor
             public int TimerUpdateCount { get; private set; }
             public bool LastClaimButtonsInteractable { get; private set; } = true;
             public int PrepareForOpenXpAnimationCalls { get; private set; }
+            public int PrewarmCalls { get; private set; }
+            public int LoadingStateCalls { get; private set; }
             public int RenderCallCount { get; private set; }
 
             public override void ResetView()
@@ -471,6 +560,17 @@ namespace BattlePass.Tests.Editor
             public override void PrepareForOpenXpAnimation()
             {
                 PrepareForOpenXpAnimationCalls++;
+            }
+
+            public override void ShowLoadingState()
+            {
+                LoadingStateCalls++;
+                base.ShowLoadingState();
+            }
+
+            public override void Prewarm(BattlePassWindowUiModel model)
+            {
+                PrewarmCalls++;
             }
 
             public override void Render(BattlePassWindowUiModel model)
@@ -608,6 +708,27 @@ namespace BattlePass.Tests.Editor
                     "active",
                     null,
                     null));
+            }
+        }
+
+        private sealed class FakeRealtimeClock : IBattlePassRealtimeClock
+        {
+            public FakeRealtimeClock(DateTimeOffset utcNow)
+            {
+                UtcNow = utcNow;
+            }
+
+            public DateTimeOffset UtcNow { get; set; }
+            public double RealtimeSinceStartup => 0d;
+        }
+
+        private sealed class StubPlayerIdentityProvider : Infrastructure.IPlayerIdentityProvider
+        {
+            public string PlayerId { get; set; } = "player_1";
+
+            public string GetPlayerId()
+            {
+                return PlayerId;
             }
         }
 
