@@ -1608,6 +1608,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3951484230224365009, guid: 643c322ecab626242bc6ba5d47d60f88, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3951484230228407550, guid: 643c322ecab626242bc6ba5d47d60f88, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
@@ -1651,6 +1655,10 @@ PrefabInstance:
     - target: {fileID: 3951484230925125974, guid: 643c322ecab626242bc6ba5d47d60f88, type: 3}
       propertyPath: m_Name
       value: IconLevel
+      objectReference: {fileID: 0}
+    - target: {fileID: 3951484230925125975, guid: 643c322ecab626242bc6ba5d47d60f88, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -91.5
       objectReference: {fileID: 0}
     - target: {fileID: 3951484230928920418, guid: 643c322ecab626242bc6ba5d47d60f88, type: 3}
       propertyPath: m_AnchorMax.y

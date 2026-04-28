@@ -93,7 +93,6 @@ namespace BattlePass
             UnsubscribeSnapshotStore();
             UnsubscribeTimer();
             _battlePassTimerService?.Stop();
-            View.ResetView();
             _currentSnapshot = null;
             ReleaseClaimFlowLock();
             _isClaimInFlight = false;
@@ -445,7 +444,6 @@ namespace BattlePass
 
         private void ReleaseClaimFlowLock()
         {
-            Debug.LogWarning($"Test _claimFlowUiLock {_claimFlowUiLock == null}");
             if (_claimFlowUiLock == null)
             {
                 return;
