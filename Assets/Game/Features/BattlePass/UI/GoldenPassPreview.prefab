@@ -10262,8 +10262,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 166, y: 0}
-  m_SizeDelta: {x: 436.54456, y: 93.00035}
+  m_AnchoredPosition: {x: 189, y: 0}
+  m_SizeDelta: {x: 476, y: 93.00035}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &5719926737356444011
 MonoBehaviour:
@@ -15367,7 +15367,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _button: {fileID: 2741711572360416064}
+  _premiumButton: {fileID: 6792931782442140468}
   _eventTimerDisplay: {fileID: 7825562524583277130}
+  _seasonTitleText: {fileID: 6214822790367495112}
+  _xpSlider: {fileID: 5719926737356444011}
 --- !u!114 &7825562524583277130
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15438,7 +15441,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d388b06b7ab034e96a2f897880fe69b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _duration: 0.18
+  _duration: 0.25
   _animationRoot: {fileID: 6214822789793147300}
 --- !u!1 &6214822790151389405
 GameObject:
@@ -15474,7 +15477,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 195.6001, y: -58.4}
+  m_AnchoredPosition: {x: 195.59375, y: -58.4}
   m_SizeDelta: {x: 207.01746, y: 40.97754}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6214822790151389400
@@ -15673,7 +15676,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
+  m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -15878,7 +15881,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 173.25427, y: 52.5}
+  m_AnchoredPosition: {x: 173.25, y: 52.5}
   m_SizeDelta: {x: 346.50854, y: 56.12915}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2463341471776716172
@@ -15943,7 +15946,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
+  m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0

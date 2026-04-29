@@ -125,22 +125,19 @@ namespace BattlePass
 
         private void HandleBuyPremiumClicked()
         {
-            var seasonId = _currentSnapshot?.Season?.Id;
-            var productId = _currentSnapshot?.Products?.PremiumProductId;
-
-            if (string.IsNullOrWhiteSpace(seasonId) || string.IsNullOrWhiteSpace(productId))
+            var decision = BattlePassPremiumEntryFlow.Resolve(_currentSnapshot, BattlePassPremiumOwnedBehavior.ShowAlreadyActiveInfo);
+            switch (decision.Action)
             {
-                ShowInfo("Battle Pass premium purchase is unavailable. Missing seasonId or productId.");
-                return;
+                case BattlePassPremiumEntryAction.ShowInfo:
+                    ShowInfo(decision.InfoMessage);
+                    return;
+                case BattlePassPremiumEntryAction.OpenPurchaseWindow:
+                    ShowPremiumPurchaseWindow(new BattlePassIAPWindowArgs(
+                        decision.SeasonId,
+                        decision.ProductId,
+                        HandleBattlePassPurchaseVerified));
+                    return;
             }
-
-            if (HasPremiumAccess(_currentSnapshot?.UserState?.PassType ?? BattlePassPassType.Unknown))
-            {
-                ShowInfo("Battle Pass premium is already active.");
-                return;
-            }
-
-            ShowPremiumPurchaseWindow(new BattlePassIAPWindowArgs(seasonId, productId, HandleBattlePassPurchaseVerified));
         }
 
         private void HandleBuyPlatinumClicked()
@@ -304,11 +301,6 @@ namespace BattlePass
         protected virtual void ShowPremiumPurchaseWindow(BattlePassIAPWindowArgs args)
         {
             UIManager.Show<BattlePassIAPWindowController>(args);
-        }
-
-        private static bool HasPremiumAccess(BattlePassPassType passType)
-        {
-            return passType is BattlePassPassType.Premium or BattlePassPassType.Platinum;
         }
 
         private bool TryGetClaimableCell(int level, BattlePassRewardTrack rewardTrack, out string seasonId)
