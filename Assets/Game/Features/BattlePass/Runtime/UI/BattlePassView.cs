@@ -64,6 +64,7 @@ namespace BattlePass
         [Header("Tracks")]
         [SerializeField] private UIListPool<BattlePassRewardView> _defaultRewardsPool;
         [SerializeField] private UIListPool<BattlePassRewardView> _premiumRewardsPool;
+        [SerializeField] private BattlePassSliderBarView _sliderBarView;
         [SerializeField] private Sprite _premiumLevelZeroPlaceholderIcon;
 
         public event Action BuyPremiumClick;
@@ -104,6 +105,7 @@ namespace BattlePass
             SetBuyButtons(string.Empty, string.Empty);
             RenderRewards(_defaultRewardsPool, Array.Empty<BattlePassRewardUiModel>());
             RenderRewards(_premiumRewardsPool, Array.Empty<BattlePassRewardUiModel>());
+            _sliderBarView?.ResetView();
         }
 
         public virtual void PrepareForOpenXpAnimation(
@@ -138,6 +140,7 @@ namespace BattlePass
 
             PrewarmRewards(_defaultRewardsPool, model.DefaultRewards);
             PrewarmRewards(_premiumRewardsPool, model.PremiumRewards);
+            _sliderBarView?.Prewarm(model);
         }
 
         public virtual void Render(BattlePassWindowUiModel model)
@@ -160,6 +163,8 @@ namespace BattlePass
             SetClaimButtonsInteractable(true);
             RenderRewards(_defaultRewardsPool, model.DefaultRewards);
             RenderRewards(_premiumRewardsPool, model.PremiumRewards);
+            _sliderBarView?.ForceRebuildLayout();
+            _sliderBarView?.Render(model);
 
             if (_shouldAnimateXpOnNextRender && TryStartOpenXpAnimation())
             {
@@ -193,6 +198,7 @@ namespace BattlePass
             SetXpProgress(0f);
             RenderRewards(_defaultRewardsPool, Array.Empty<BattlePassRewardUiModel>());
             RenderRewards(_premiumRewardsPool, Array.Empty<BattlePassRewardUiModel>());
+            _sliderBarView?.ResetView();
         }
 
         public virtual void SetClaimButtonsInteractable(bool isInteractable)

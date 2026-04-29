@@ -173,7 +173,38 @@ namespace BattlePass.Tests.Editor
             Assert.That(xpText.text, Is.EqualTo("350 / 375"));
         }
 
-        private BattlePassView CreateRuntimeView(out Slider slider, out CanvasGroup canvasGroup, out TMP_Text xpText)
+        [Test]
+        public void Prewarm_ForwardsModelToSliderBarView()
+        {
+            var sliderBarView = CreateSliderBarSpy();
+            var view = CreateRuntimeView(out _, out _, out _, sliderBarView);
+            var model = CreateModel(currentLevel: 2, currentXp: 60, requiredXp: 90, levelXpThresholds: new[] { 0, 30, 60, 90 });
+
+            view.Prewarm(model);
+
+            Assert.That(sliderBarView.PrewarmCallCount, Is.EqualTo(1));
+            Assert.That(sliderBarView.LastPrewarmModel, Is.SameAs(model));
+        }
+
+        [Test]
+        public void Render_RebuildsAndRendersSliderBarView()
+        {
+            var sliderBarView = CreateSliderBarSpy();
+            var view = CreateRuntimeView(out _, out _, out _, sliderBarView);
+            var model = CreateModel(currentLevel: 2, currentXp: 60, requiredXp: 90, levelXpThresholds: new[] { 0, 30, 60, 90 });
+
+            view.Render(model);
+
+            Assert.That(sliderBarView.ForceRebuildCallCount, Is.EqualTo(1));
+            Assert.That(sliderBarView.RenderCallCount, Is.EqualTo(1));
+            Assert.That(sliderBarView.LastRenderModel, Is.SameAs(model));
+        }
+
+        private BattlePassView CreateRuntimeView(
+            out Slider slider,
+            out CanvasGroup canvasGroup,
+            out TMP_Text xpText,
+            BattlePassSliderBarView sliderBarView = null)
         {
             var root = new GameObject("BattlePassViewRoot");
             var sliderGo = new GameObject("Slider", typeof(RectTransform), typeof(Slider));
@@ -190,7 +221,15 @@ namespace BattlePass.Tests.Editor
 
             var view = root.AddComponent<BattlePassView>();
             SetField(view, "_xpText", xpText);
+            SetField(view, "_sliderBarView", sliderBarView);
             return view;
+        }
+
+        private SpyBattlePassSliderBarView CreateSliderBarSpy()
+        {
+            var sliderBarGo = new GameObject("SliderBarSpy");
+            _objectsToCleanup.Add(sliderBarGo);
+            return sliderBarGo.AddComponent<SpyBattlePassSliderBarView>();
         }
 
         private static IList InvokeBuildXpAnimationSteps(
@@ -238,6 +277,32 @@ namespace BattlePass.Tests.Editor
                 "platinum_sku",
                 Array.Empty<BattlePassRewardUiModel>(),
                 Array.Empty<BattlePassRewardUiModel>());
+        }
+
+        private sealed class SpyBattlePassSliderBarView : BattlePassSliderBarView
+        {
+            public int PrewarmCallCount { get; private set; }
+            public int ForceRebuildCallCount { get; private set; }
+            public int RenderCallCount { get; private set; }
+            public BattlePassWindowUiModel LastPrewarmModel { get; private set; }
+            public BattlePassWindowUiModel LastRenderModel { get; private set; }
+
+            public override void Prewarm(BattlePassWindowUiModel model)
+            {
+                PrewarmCallCount++;
+                LastPrewarmModel = model;
+            }
+
+            public override void ForceRebuildLayout()
+            {
+                ForceRebuildCallCount++;
+            }
+
+            public override void Render(BattlePassWindowUiModel model)
+            {
+                RenderCallCount++;
+                LastRenderModel = model;
+            }
         }
     }
 }
