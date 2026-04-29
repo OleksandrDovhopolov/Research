@@ -25,6 +25,7 @@ namespace BattlePass
         private IBattlePassSnapshotStore _snapshotStore;
         private EventOrchestrator _eventOrchestrator;
         private IGlobalTimerService _globalTimerService;
+        private string _boundTimerEventId;
         private bool _isStarted;
 
         [Inject]
@@ -160,20 +161,50 @@ namespace BattlePass
         private void RefreshTimer(BattlePassLifecycleStatus displayStatus)
         {
             if (displayStatus != BattlePassLifecycleStatus.Active ||
-                _eventOrchestrator == null ||
                 _globalTimerService == null ||
-                !_eventOrchestrator.TryGetCurrentEvent(BattlePassLiveOpsController.EventTypeValue, out var activeBattlePassItem))
+                _snapshotStore?.CurrentSnapshot?.Season == null)
             {
                 UnbindTimer();
                 return;
             }
 
-            _eventTimerDisplay.Bind(activeBattlePassItem.Id, _globalTimerService);
+            var snapshot = _snapshotStore.CurrentSnapshot;
+            var seasonId = snapshot.Season.Id;
+            if (string.IsNullOrWhiteSpace(seasonId))
+            {
+                UnbindTimer();
+                return;
+            }
+
+            var remainingFromServer = snapshot.Season.EndAtUtc - snapshot.ServerTimeUtc;
+            if (remainingFromServer < TimeSpan.Zero)
+            {
+                remainingFromServer = TimeSpan.Zero;
+            }
+
+            var localEndUtc = DateTimeOffset.UtcNow + remainingFromServer;
+
+            if (!string.Equals(_boundTimerEventId, seasonId, StringComparison.Ordinal) &&
+                !string.IsNullOrWhiteSpace(_boundTimerEventId))
+            {
+                _globalTimerService.Unregister(_boundTimerEventId);
+                _boundTimerEventId = null;
+            }
+
+            _globalTimerService.Register(seasonId, localEndUtc);
+            _boundTimerEventId = seasonId;
+            _eventTimerDisplay?.Bind(seasonId, _globalTimerService);
         }
 
         private void UnbindTimer()
         {
             _eventTimerDisplay?.Unbind();
+            if (_globalTimerService != null && !string.IsNullOrWhiteSpace(_boundTimerEventId))
+            {
+                _globalTimerService.Unregister(_boundTimerEventId);
+            }
+
+            _boundTimerEventId = null;
         }
 
         private void HandleSnapshotChanged(BattlePassSnapshot snapshot)
