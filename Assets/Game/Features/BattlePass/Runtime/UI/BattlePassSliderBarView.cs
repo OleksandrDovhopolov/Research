@@ -10,6 +10,7 @@ namespace BattlePass
     {
         [SerializeField] private RectTransform _sliderBarContainer;
         [SerializeField] private RectTransform _sliderBar;
+        [SerializeField] private Slider _progressSlider;
         [SerializeField] private RectTransform _measureFreeRewardsRoot;
         [SerializeField] private RectTransform _measurePremiumRewardsRoot;
         [SerializeField] private UIListPool<BattlePassSliderLevelView> _levelPool;
@@ -21,6 +22,7 @@ namespace BattlePass
             SetWidth(_sliderBarContainer, 0f);
             SetWidth(_sliderBar, 0f);
             SetAnchoredX(_sliderBar, 0f);
+            SetProgress(0f);
         }
 
         public virtual void Prewarm(BattlePassWindowUiModel model)
@@ -61,6 +63,7 @@ namespace BattlePass
             SetWidth(_sliderBarContainer, rewardsWidth);
             SetWidth(_sliderBar, sliderWidth);
             SetAnchoredX(_sliderBar, leftInset);
+            SetProgress(ResolveCumulativeProgress(model));
 
             if (_levelPool == null || levelCount <= 0)
             {
@@ -93,6 +96,50 @@ namespace BattlePass
             return Mathf.Max(
                 ResolveFirstRewardCellWidth(_measureFreeRewardsRoot),
                 ResolveFirstRewardCellWidth(_measurePremiumRewardsRoot));
+        }
+
+        private void SetProgress(float normalizedProgress)
+        {
+            if (_progressSlider == null)
+            {
+                return;
+            }
+
+            _progressSlider.minValue = 0f;
+            _progressSlider.maxValue = 1f;
+            _progressSlider.wholeNumbers = false;
+            _progressSlider.value = Mathf.Clamp01(normalizedProgress);
+        }
+
+        private static float ResolveCumulativeProgress(BattlePassWindowUiModel model)
+        {
+            if (model == null)
+            {
+                return 0f;
+            }
+
+            var safeCurrentXp = Mathf.Max(0, model.CurrentXp);
+            var totalRequiredXp = ResolveTotalRequiredXp(model, safeCurrentXp);
+            if (totalRequiredXp <= 0)
+            {
+                return 0f;
+            }
+
+            return Mathf.Clamp01((float)safeCurrentXp / totalRequiredXp);
+        }
+
+        private static int ResolveTotalRequiredXp(BattlePassWindowUiModel model, int safeCurrentXp)
+        {
+            if (model?.LevelXpThresholds != null && model.LevelXpThresholds.Count > 0)
+            {
+                var lastThreshold = Mathf.Max(0, model.LevelXpThresholds[model.LevelXpThresholds.Count - 1]);
+                if (lastThreshold > 0)
+                {
+                    return Mathf.Max(lastThreshold, safeCurrentXp);
+                }
+            }
+
+            return Mathf.Max(0, Mathf.Max(model?.RequiredXp ?? 0, safeCurrentXp));
         }
 
         private static float ResolveMarkerX(int level, int levelCount, float sliderWidth)

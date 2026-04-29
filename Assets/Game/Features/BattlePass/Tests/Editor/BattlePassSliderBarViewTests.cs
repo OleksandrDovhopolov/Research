@@ -68,6 +68,26 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
+        public void Render_SetsProgressSlider_FromCumulativeSeasonXp()
+        {
+            var context = CreateContext(rewardsWidth: 800f, rewardCellWidth: 200f);
+
+            context.View.Render(CreateModel(new[] { 0, 25, 50, 100 }, currentXp: 25, requiredXp: 50));
+
+            Assert.That(context.ProgressSlider.value, Is.EqualTo(0.25f).Within(0.001f));
+        }
+
+        [Test]
+        public void Render_FallsBackToRequiredXp_WhenTotalThresholdIsUnavailable()
+        {
+            var context = CreateContext(rewardsWidth: 800f, rewardCellWidth: 200f);
+
+            context.View.Render(CreateModel(new[] { 0 }, currentXp: 10, requiredXp: 40));
+
+            Assert.That(context.ProgressSlider.value, Is.EqualTo(0.25f).Within(0.001f));
+        }
+
+        [Test]
         public void Render_DistributesMarkersEvenlyAcrossSlider()
         {
             var context = CreateContext(rewardsWidth: 800f, rewardCellWidth: 200f);
@@ -124,6 +144,7 @@ namespace BattlePass.Tests.Editor
 
             var sliderBarContainer = CreateRectTransform("SliderBarContainer", root.transform, width: 0f);
             var sliderBar = CreateRectTransform("SliderBar", sliderBarContainer, width: 0f);
+            var progressSlider = CreateSlider("ProgressSlider", sliderBar);
             var levelParent = CreateRectTransform("LevelParent", sliderBar, width: 0f);
             var freeRewardsRoot = CreateRewardRow("FreeRewards", root.transform, rewardsWidth, rewardCellWidth);
             var premiumRewardsRoot = CreateRewardRow(
@@ -140,12 +161,13 @@ namespace BattlePass.Tests.Editor
 
             SetField(view, "_sliderBarContainer", sliderBarContainer);
             SetField(view, "_sliderBar", sliderBar);
+            SetField(view, "_progressSlider", progressSlider);
             SetField(view, "_measureFreeRewardsRoot", freeRewardsRoot);
             SetField(view, "_measurePremiumRewardsRoot", premiumRewardsRoot);
             SetField(view, "_levelPool", levelPool);
             SetField(view, "_levelZeroSprite", levelZeroSprite);
 
-            return new TestContext(view, levelPool, sliderBarContainer, sliderBar, levelZeroSprite);
+            return new TestContext(view, levelPool, sliderBarContainer, sliderBar, progressSlider, levelZeroSprite);
         }
 
         private GameObject CreateLevelPrefab()
@@ -186,13 +208,26 @@ namespace BattlePass.Tests.Editor
             return rectTransform;
         }
 
-        private static BattlePassWindowUiModel CreateModel(IReadOnlyList<int> levelXpThresholds)
+        private Slider CreateSlider(string name, Transform parent)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Slider));
+            go.transform.SetParent(parent, false);
+            var slider = go.GetComponent<Slider>();
+            slider.minValue = 0f;
+            slider.maxValue = 1f;
+            return slider;
+        }
+
+        private static BattlePassWindowUiModel CreateModel(
+            IReadOnlyList<int> levelXpThresholds,
+            int currentXp = 0,
+            int requiredXp = 0)
         {
             return new BattlePassWindowUiModel(
                 "Season 1",
                 currentLevel: 0,
-                currentXp: 0,
-                requiredXp: 0,
+                currentXp: currentXp,
+                requiredXp: requiredXp,
                 levelXpThresholds,
                 BattlePassPassType.None,
                 string.Empty,
@@ -222,12 +257,14 @@ namespace BattlePass.Tests.Editor
                 UIListPool<BattlePassSliderLevelView> levelPool,
                 RectTransform sliderBarContainer,
                 RectTransform sliderBar,
+                Slider progressSlider,
                 Sprite levelZeroSprite)
             {
                 View = view;
                 LevelPool = levelPool;
                 SliderBarContainer = sliderBarContainer;
                 SliderBar = sliderBar;
+                ProgressSlider = progressSlider;
                 LevelZeroSprite = levelZeroSprite;
             }
 
@@ -235,6 +272,7 @@ namespace BattlePass.Tests.Editor
             public UIListPool<BattlePassSliderLevelView> LevelPool { get; }
             public RectTransform SliderBarContainer { get; }
             public RectTransform SliderBar { get; }
+            public Slider ProgressSlider { get; }
             public Sprite LevelZeroSprite { get; }
         }
     }
