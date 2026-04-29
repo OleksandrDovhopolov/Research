@@ -155,7 +155,7 @@ namespace BattlePass
             SetContentVisible(true);
             SetUnavailableVisible(false, string.Empty);
             SetTitle(model.Title);
-            SetXpText(model.CurrentXp, model.RequiredXp);
+            SetXpText(model.CurrentXp, model.RequiredXp, model.CurrentLevel, model.LevelXpThresholds);
             SetBuyButtons(model.PremiumProductId, model.PlatinumProductId);
             SetClaimButtonsInteractable(true);
             RenderRewards(_defaultRewardsPool, model.DefaultRewards);
@@ -312,6 +312,29 @@ namespace BattlePass
                 var safeRequiredXp = Mathf.Max(safeCurrentXp, requiredXp);
                 _xpText.text = $"{safeCurrentXp} / {safeRequiredXp}";
             }
+        }
+
+        private void SetXpText(
+            int currentXp,
+            int requiredXp,
+            int currentLevel,
+            IReadOnlyList<int> levelXpThresholds)
+        {
+            if (_xpText == null)
+            {
+                return;
+            }
+
+            var safeCurrentXp = Mathf.Max(0, currentXp);
+            var safeRequiredXp = Mathf.Max(safeCurrentXp, requiredXp);
+
+            if (TryResolveLevelSegmentXpText(safeCurrentXp, currentLevel, levelXpThresholds, out var xpInLevel, out var levelSegmentXp))
+            {
+                _xpText.text = $"{xpInLevel} / {levelSegmentXp}";
+                return;
+            }
+
+            _xpText.text = $"{safeCurrentXp} / {safeRequiredXp}";
         }
 
         private void SetXpProgress(float normalizedProgress)
@@ -571,6 +594,59 @@ namespace BattlePass
             }
 
             return Mathf.Max(currentLevelStartXp, Mathf.Max(fallbackRequiredXp, currentXp));
+        }
+
+        private static bool TryResolveLevelSegmentXpText(
+            int currentXp,
+            int currentLevel,
+            IReadOnlyList<int> levelXpThresholds,
+            out int xpInLevel,
+            out int levelSegmentXp)
+        {
+            xpInLevel = 0;
+            levelSegmentXp = 0;
+
+            if (!TryGetLevelStartXp(currentLevel, levelXpThresholds, out var currentLevelStartXp))
+            {
+                return false;
+            }
+
+            if (TryGetLevelStartXp(currentLevel + 1, levelXpThresholds, out var nextLevelStartXp))
+            {
+                var regularSegmentXp = nextLevelStartXp - currentLevelStartXp;
+                if (regularSegmentXp <= 0)
+                {
+                    return false;
+                }
+
+                levelSegmentXp = regularSegmentXp;
+                xpInLevel = Mathf.Clamp(currentXp - currentLevelStartXp, 0, regularSegmentXp);
+                return true;
+            }
+
+            if (!TryResolveLastKnownLevelSegment(levelXpThresholds, out var lastKnownSegmentXp))
+            {
+                return false;
+            }
+
+            levelSegmentXp = lastKnownSegmentXp;
+            xpInLevel = lastKnownSegmentXp;
+            return true;
+        }
+
+        private static bool TryResolveLastKnownLevelSegment(IReadOnlyList<int> levelXpThresholds, out int segmentXp)
+        {
+            segmentXp = 0;
+            if (levelXpThresholds == null || levelXpThresholds.Count < 2)
+            {
+                return false;
+            }
+
+            var lastIndex = levelXpThresholds.Count - 1;
+            var previousThreshold = Mathf.Max(0, levelXpThresholds[lastIndex - 1]);
+            var lastThreshold = Mathf.Max(0, levelXpThresholds[lastIndex]);
+            segmentXp = lastThreshold - previousThreshold;
+            return segmentXp > 0;
         }
 
         private static bool TryGetLevelStartXp(int level, IReadOnlyList<int> levelXpThresholds, out int levelStartXp)

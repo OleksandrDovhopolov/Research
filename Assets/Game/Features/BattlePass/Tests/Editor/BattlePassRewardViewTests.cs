@@ -195,6 +195,28 @@ namespace BattlePass.Tests.Editor
             Assert.That(raised, Is.True);
         }
 
+        [Test]
+        public void SetData_WhenPremiumLevelZeroPlaceholder_AlwaysHidesClaimedAndLockedStates()
+        {
+            var rewardView = CreateRewardView(out _, out _, out var claimedStateRoot, out var lockedStateRoot, out _, out _, out _);
+            var reward = new BattlePassRewardUiModel(
+                0,
+                BattlePassRewardTrack.Premium,
+                string.Empty,
+                null,
+                0,
+                isClaimed: true,
+                isClaimable: false,
+                isLocked: true,
+                isPremiumTrack: true,
+                isPremiumPlaceholderLevelZero: true);
+
+            rewardView.SetData(reward);
+
+            Assert.That(claimedStateRoot.activeSelf, Is.False);
+            Assert.That(lockedStateRoot.activeSelf, Is.False);
+        }
+
         private BattlePassRewardView CreateRewardView(
             out Image iconImage,
             out TMPro.TMP_Text amountText,

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using DG.Tweening;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -98,7 +99,7 @@ namespace BattlePass.Tests.Editor
         [Test]
         public void ResetView_KillsAnimation_ResetsSlider_AndRestoresInteraction()
         {
-            var view = CreateRuntimeView(out var slider, out var canvasGroup);
+            var view = CreateRuntimeView(out var slider, out var canvasGroup, out _);
             var model = CreateModel(currentLevel: 3, currentXp: 100, requiredXp: 120, levelXpThresholds: new[] { 0, 30, 60, 90, 120 });
 
             view.PrepareForOpenXpAnimation(1, 45, 3, 100, 120, new[] { 0, 30, 60, 90, 120 });
@@ -116,7 +117,7 @@ namespace BattlePass.Tests.Editor
         [Test]
         public void Render_ClampsSliderValue_ToZeroOneRange()
         {
-            var view = CreateRuntimeView(out var slider, out _);
+            var view = CreateRuntimeView(out var slider, out _, out _);
             var model = CreateModel(currentLevel: 3, currentXp: 130, requiredXp: 120, levelXpThresholds: new[] { 0, 30, 60, 90, 120 });
 
             view.Render(model);
@@ -127,7 +128,7 @@ namespace BattlePass.Tests.Editor
         [Test]
         public void PremiumPlaceholderCtaClick_RaisesBuyPremiumEvent()
         {
-            var view = CreateRuntimeView(out _, out _);
+            var view = CreateRuntimeView(out _, out _, out _);
             var raised = false;
             view.BuyPremiumClick += () => raised = true;
 
@@ -138,19 +139,58 @@ namespace BattlePass.Tests.Editor
             Assert.That(raised, Is.True);
         }
 
-        private BattlePassView CreateRuntimeView(out Slider slider, out CanvasGroup canvasGroup)
+        [Test]
+        public void Render_DisplaysCurrentLevelXpSegment_InsteadOfCumulativeXp()
+        {
+            var view = CreateRuntimeView(out _, out _, out var xpText);
+            var thresholds = new[] { 0, 25, 50, 75, 100, 125, 150, 175, 200, 225, 350, 375 };
+
+            view.Render(CreateModel(currentLevel: 10, currentXp: 350, requiredXp: 375, levelXpThresholds: thresholds));
+            Assert.That(xpText.text, Is.EqualTo("0 / 25"));
+
+            view.Render(CreateModel(currentLevel: 10, currentXp: 360, requiredXp: 375, levelXpThresholds: thresholds));
+            Assert.That(xpText.text, Is.EqualTo("10 / 25"));
+        }
+
+        [Test]
+        public void Render_WhenCurrentLevelIsMaxLevel_DisplaysFilledLastKnownSegment()
+        {
+            var view = CreateRuntimeView(out _, out _, out var xpText);
+            var thresholds = new[] { 0, 25, 50, 75, 100, 125, 150, 175, 200, 225, 350, 375 };
+
+            view.Render(CreateModel(currentLevel: 11, currentXp: 380, requiredXp: 380, levelXpThresholds: thresholds));
+
+            Assert.That(xpText.text, Is.EqualTo("25 / 25"));
+        }
+
+        [Test]
+        public void Render_WhenThresholdsAreInvalid_FallsBackToCumulativeXpText()
+        {
+            var view = CreateRuntimeView(out _, out _, out var xpText);
+
+            view.Render(CreateModel(currentLevel: 3, currentXp: 350, requiredXp: 375, levelXpThresholds: new[] { 0, 25 }));
+
+            Assert.That(xpText.text, Is.EqualTo("350 / 375"));
+        }
+
+        private BattlePassView CreateRuntimeView(out Slider slider, out CanvasGroup canvasGroup, out TMP_Text xpText)
         {
             var root = new GameObject("BattlePassViewRoot");
             var sliderGo = new GameObject("Slider", typeof(RectTransform), typeof(Slider));
+            var xpTextGo = new GameObject("XpText", typeof(RectTransform));
 
             _objectsToCleanup.Add(root);
 
             sliderGo.transform.SetParent(root.transform, false);
+            xpTextGo.transform.SetParent(root.transform, false);
 
             canvasGroup = root.AddComponent<CanvasGroup>();
             slider = sliderGo.GetComponent<Slider>();
+            xpText = xpTextGo.AddComponent<TextMeshProUGUI>();
 
-            return root.AddComponent<BattlePassView>();
+            var view = root.AddComponent<BattlePassView>();
+            SetField(view, "_xpText", xpText);
+            return view;
         }
 
         private static IList InvokeBuildXpAnimationSteps(
@@ -172,6 +212,13 @@ namespace BattlePass.Tests.Editor
             var property = step.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             Assert.That(property, Is.Not.Null, $"Property '{propertyName}' was not found on step type '{step.GetType().Name}'.");
             return (T)property.GetValue(step);
+        }
+
+        private static void SetField(object target, string fieldName, object value)
+        {
+            var field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(field, Is.Not.Null, $"Field '{fieldName}' was not found.");
+            field.SetValue(target, value);
         }
 
         private static BattlePassWindowUiModel CreateModel(

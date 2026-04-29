@@ -58,12 +58,12 @@ namespace BattlePass
 
             if (_claimedStateRoot != null)
             {
-                _claimedStateRoot.SetActive(reward.IsClaimed);
+                _claimedStateRoot.SetActive(!isPremiumPlaceholder && reward.IsClaimed);
             }
 
             if (_lockedStateRoot != null)
             {
-                _lockedStateRoot.SetActive(reward.IsPremiumTrack && reward.IsLocked && !reward.IsClaimed);
+                _lockedStateRoot.SetActive(!isPremiumPlaceholder && reward.IsPremiumTrack && reward.IsLocked && !reward.IsClaimed);
             }
 
             var canClaim = reward.IsClaimable && !isPremiumPlaceholder;
