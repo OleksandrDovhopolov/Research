@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 using UnityEngine.UI;
 
 namespace BattlePass.Tests.Editor
@@ -110,15 +111,15 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
-        public void SetData_WhenRewardIsRegular_HidesPremiumPlaceholderCta()
+        public void SetData_WhenRewardIsRegular_EnablesRewardButton()
         {
-            var rewardView = CreateRewardView(out _, out _, out _, out _, out _, out _, out var placeholderCtaButton);
+            var rewardView = CreateRewardView(out _, out _, out _, out _, out _, out _, out var rewardButton);
             var reward = new BattlePassRewardUiModel(2, BattlePassRewardTrack.Default, "reward_default", Sprite.Create(Texture2D.blackTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 10, false, false, false, false);
 
             rewardView.SetData(reward);
 
-            Assert.That(placeholderCtaButton.enabled, Is.False);
-            Assert.That(placeholderCtaButton.interactable, Is.False);
+            Assert.That(rewardButton.enabled, Is.True);
+            Assert.That(rewardButton.interactable, Is.True);
         }
 
         [Test]
@@ -173,7 +174,7 @@ namespace BattlePass.Tests.Editor
         [Test]
         public void PremiumPlaceholderCtaClick_RaisesEvent()
         {
-            var rewardView = CreateRewardView(out _, out _, out _, out _, out _, out _, out var placeholderCtaButton);
+            var rewardView = CreateRewardView(out _, out _, out _, out _, out _, out _, out var rewardButton);
             var reward = new BattlePassRewardUiModel(
                 0,
                 BattlePassRewardTrack.Premium,
@@ -190,9 +191,47 @@ namespace BattlePass.Tests.Editor
             var raised = false;
             rewardView.PremiumPlaceholderCtaClick += () => raised = true;
 
-            placeholderCtaButton.onClick.Invoke();
+            rewardButton.onClick.Invoke();
 
             Assert.That(raised, Is.True);
+        }
+
+        [Test]
+        public void RewardButtonClick_WhenRewardIsRegular_LogsRewardId_AndDoesNotRaisePremiumPlaceholderEvent()
+        {
+            var rewardView = CreateRewardView(out _, out _, out _, out _, out _, out _, out var rewardButton);
+            var reward = new BattlePassRewardUiModel(
+                2,
+                BattlePassRewardTrack.Default,
+                "reward_default",
+                Sprite.Create(Texture2D.blackTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero),
+                10,
+                false,
+                false,
+                false,
+                false);
+            rewardView.SetData(reward);
+
+            var raised = false;
+            rewardView.PremiumPlaceholderCtaClick += () => raised = true;
+            LogAssert.Expect(LogType.Log, "[BattlePassRewardView] Reward button clicked. RewardId='reward_default'");
+
+            rewardButton.onClick.Invoke();
+
+            Assert.That(raised, Is.False);
+        }
+
+        [Test]
+        public void Cleanup_DisablesRewardButton()
+        {
+            var rewardView = CreateRewardView(out _, out _, out _, out _, out _, out _, out var rewardButton);
+            var reward = new BattlePassRewardUiModel(2, BattlePassRewardTrack.Default, "reward_default", Sprite.Create(Texture2D.blackTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero), 10, false, false, false, false);
+            rewardView.SetData(reward);
+
+            rewardView.Cleanup();
+
+            Assert.That(rewardButton.enabled, Is.False);
+            Assert.That(rewardButton.interactable, Is.False);
         }
 
         [Test]
@@ -224,7 +263,7 @@ namespace BattlePass.Tests.Editor
             out GameObject lockedStateRoot,
             out GameObject claimButtonRoot,
             out Button claimButton,
-            out Button premiumPlaceholderCtaButton)
+            out Button rewardButton)
         {
             var root = new GameObject("BattlePassRewardView");
             var iconGo = new GameObject("Icon");
@@ -232,14 +271,14 @@ namespace BattlePass.Tests.Editor
             var lockedGo = new GameObject("Locked");
             var claimButtonRootGo = new GameObject("ClaimButtonRoot");
             var claimButtonGo = new GameObject("ClaimButton");
-            var premiumPlaceholderCtaButtonGo = new GameObject("PremiumPlaceholderCtaButton");
+            var rewardButtonGo = new GameObject("RewardButton");
 
             iconGo.transform.SetParent(root.transform);
             claimedGo.transform.SetParent(root.transform);
             lockedGo.transform.SetParent(root.transform);
             claimButtonRootGo.transform.SetParent(root.transform);
             claimButtonGo.transform.SetParent(claimButtonRootGo.transform);
-            premiumPlaceholderCtaButtonGo.transform.SetParent(root.transform);
+            rewardButtonGo.transform.SetParent(root.transform);
 
             _objectsToCleanup.Add(root);
 
@@ -249,7 +288,7 @@ namespace BattlePass.Tests.Editor
             lockedStateRoot = lockedGo;
             claimButtonRoot = claimButtonRootGo;
             claimButton = claimButtonGo.AddComponent<Button>();
-            premiumPlaceholderCtaButton = premiumPlaceholderCtaButtonGo.AddComponent<Button>();
+            rewardButton = rewardButtonGo.AddComponent<Button>();
 
             var rewardView = root.AddComponent<BattlePassRewardView>();
             SetField(rewardView, "_iconImage", iconImage);
@@ -258,14 +297,14 @@ namespace BattlePass.Tests.Editor
             SetField(rewardView, "_lockedStateRoot", lockedStateRoot);
             SetField(rewardView, "_claimButtonRoot", claimButtonRoot);
             SetField(rewardView, "_claimButton", claimButton);
-            SetField(rewardView, "_premiumPlaceholderCtaButton", premiumPlaceholderCtaButton);
+            SetField(rewardView, "bpRewardButton", rewardButton);
 
             claimedStateRoot.SetActive(false);
             lockedStateRoot.SetActive(false);
             claimButtonRoot.SetActive(false);
             claimButton.gameObject.SetActive(false);
-            premiumPlaceholderCtaButton.enabled = false;
-            premiumPlaceholderCtaButton.interactable = false;
+            rewardButton.enabled = false;
+            rewardButton.interactable = false;
 
             InvokeMethod(rewardView, "Awake");
 

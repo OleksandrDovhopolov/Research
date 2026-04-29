@@ -1,6 +1,7 @@
 using TMPro;
 using UIShared;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace BattlePass
@@ -13,7 +14,8 @@ namespace BattlePass
         [SerializeField] private GameObject _lockedStateRoot;
         [SerializeField] private GameObject _claimButtonRoot;
         [SerializeField] private Button _claimButton;
-        [SerializeField] private Button _premiumPlaceholderCtaButton;
+        [FormerlySerializedAs("_premiumPlaceholderCtaButton")]
+        [SerializeField] private Button bpRewardButton;
 
         private BattlePassRewardUiModel _currentReward;
 
@@ -27,9 +29,9 @@ namespace BattlePass
                 _claimButton.onClick.AddListener(HandleClaimClicked);
             }
 
-            if (_premiumPlaceholderCtaButton != null)
+            if (bpRewardButton != null)
             {
-                _premiumPlaceholderCtaButton.onClick.AddListener(HandlePremiumPlaceholderCtaClicked);
+                bpRewardButton.onClick.AddListener(HandleRewardButtonClicked);
             }
         }
 
@@ -79,10 +81,10 @@ namespace BattlePass
                 _claimButton.interactable = canClaim;
             }
 
-            if (_premiumPlaceholderCtaButton != null)
+            if (bpRewardButton != null)
             {
-                _premiumPlaceholderCtaButton.enabled = isPremiumPlaceholder;
-                _premiumPlaceholderCtaButton.interactable = isPremiumPlaceholder;
+                bpRewardButton.enabled = true;
+                bpRewardButton.interactable = true;
             }
         }
 
@@ -132,10 +134,10 @@ namespace BattlePass
                 _claimButton.interactable = false;
             }
 
-            if (_premiumPlaceholderCtaButton != null)
+            if (bpRewardButton != null)
             {
-                _premiumPlaceholderCtaButton.enabled = false;
-                _premiumPlaceholderCtaButton.interactable = false;
+                bpRewardButton.enabled = false;
+                bpRewardButton.interactable = false;
             }
         }
 
@@ -160,14 +162,30 @@ namespace BattlePass
             ClaimClick?.Invoke(_currentReward.Level, _currentReward.RewardTrack);
         }
 
-        private void HandlePremiumPlaceholderCtaClicked()
+        private void HandleRewardButtonClicked()
         {
-            if (_currentReward == null || !_currentReward.IsPremiumPlaceholderLevelZero)
+            if (_currentReward == null)
             {
                 return;
             }
 
-            PremiumPlaceholderCtaClick?.Invoke();
+            if (_currentReward.IsPremiumPlaceholderLevelZero)
+            {
+                PremiumPlaceholderCtaClick?.Invoke();
+                return;
+            }
+
+            HandleRewardButtonStub(_currentReward);
+        }
+
+        private static void HandleRewardButtonStub(BattlePassRewardUiModel reward)
+        {
+            if (reward == null)
+            {
+                return;
+            }
+
+            Debug.Log($"[BattlePassRewardView] Reward button clicked. RewardId='{reward.RewardId}'");
         }
 
         private void OnDestroy()
@@ -177,9 +195,9 @@ namespace BattlePass
                 _claimButton.onClick.RemoveListener(HandleClaimClicked);
             }
 
-            if (_premiumPlaceholderCtaButton != null)
+            if (bpRewardButton != null)
             {
-                _premiumPlaceholderCtaButton.onClick.RemoveListener(HandlePremiumPlaceholderCtaClicked);
+                bpRewardButton.onClick.RemoveListener(HandleRewardButtonClicked);
             }
         }
     }
