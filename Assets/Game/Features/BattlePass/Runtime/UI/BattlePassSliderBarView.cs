@@ -74,7 +74,7 @@ namespace BattlePass
             {
                 var levelView = _levelPool.GetNext();
                 levelView.SetLevel(level, _levelZeroSprite);
-                levelView.SetAnchoredX(ResolveMarkerX(level, levelCount, sliderWidth));
+                levelView.SetAnchoredX(ResolveMarkerX(level, levelCount));
             }
         }
 
@@ -142,14 +142,29 @@ namespace BattlePass
             return Mathf.Max(0, Mathf.Max(model?.RequiredXp ?? 0, safeCurrentXp));
         }
 
-        private static float ResolveMarkerX(int level, int levelCount, float sliderWidth)
+        private float ResolveMarkerX(int level, int levelCount)
         {
-            if (levelCount <= 1)
+            if (_sliderBar == null || _levelPool?.Parent is not RectTransform levelMarkersRoot)
             {
                 return 0f;
             }
 
-            return sliderWidth * level / (levelCount - 1f);
+            if (levelCount <= 1)
+            {
+                return ResolveSliderLocalX(levelMarkersRoot, 0f);
+            }
+
+            var normalized = Mathf.Clamp01(level / (levelCount - 1f));
+            return ResolveSliderLocalX(levelMarkersRoot, normalized);
+        }
+
+        private float ResolveSliderLocalX(RectTransform levelMarkersRoot, float normalized)
+        {
+            var clampedNormalized = Mathf.Clamp01(normalized);
+            var sliderLocalX = Mathf.Lerp(_sliderBar.rect.xMin, _sliderBar.rect.xMax, clampedNormalized);
+            var sliderWorldPoint = _sliderBar.TransformPoint(new Vector3(sliderLocalX, 0f, 0f));
+            var localPoint = levelMarkersRoot.InverseTransformPoint(sliderWorldPoint);
+            return localPoint.x;
         }
 
         private static float ResolveFirstRewardCellWidth(RectTransform root)

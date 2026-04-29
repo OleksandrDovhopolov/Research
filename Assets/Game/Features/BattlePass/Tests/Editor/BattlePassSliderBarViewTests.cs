@@ -72,7 +72,10 @@ namespace BattlePass.Tests.Editor
         {
             var context = CreateContext(rewardsWidth: 800f, rewardCellWidth: 200f);
 
-            context.View.Render(CreateModel(new[] { 0, 25, 50, 100 }, currentXp: 25, requiredXp: 50));
+            context.View.Render(CreateModel(
+                new[] { 0, 25, 50, 100 },
+                currentXp: 25,
+                requiredXp: 50));
 
             Assert.That(context.ProgressSlider.value, Is.EqualTo(0.25f).Within(0.001f));
         }
@@ -82,15 +85,18 @@ namespace BattlePass.Tests.Editor
         {
             var context = CreateContext(rewardsWidth: 800f, rewardCellWidth: 200f);
 
-            context.View.Render(CreateModel(new[] { 0 }, currentXp: 10, requiredXp: 40));
+            context.View.Render(CreateModel(
+                new[] { 0 },
+                currentXp: 10,
+                requiredXp: 40));
 
             Assert.That(context.ProgressSlider.value, Is.EqualTo(0.25f).Within(0.001f));
         }
 
         [Test]
-        public void Render_DistributesMarkersEvenlyAcrossSlider()
+        public void Render_DistributesMarkersProportionallyAcrossSlider()
         {
-            var context = CreateContext(rewardsWidth: 800f, rewardCellWidth: 200f);
+            var context = CreateContext(rewardsWidth: 920f, rewardCellWidth: 120f);
 
             context.View.Render(CreateModel(new[] { 0, 25, 50, 75 }));
 
@@ -100,9 +106,51 @@ namespace BattlePass.Tests.Editor
 
             Assert.That(markerPositions, Has.Length.EqualTo(4));
             Assert.That(markerPositions[0], Is.EqualTo(0f).Within(0.001f));
-            Assert.That(markerPositions[1], Is.EqualTo(200f).Within(0.001f));
-            Assert.That(markerPositions[2], Is.EqualTo(400f).Within(0.001f));
-            Assert.That(markerPositions[3], Is.EqualTo(600f).Within(0.001f));
+            Assert.That(markerPositions[1], Is.EqualTo(226.66667f).Within(0.001f));
+            Assert.That(markerPositions[2], Is.EqualTo(453.33334f).Within(0.001f));
+            Assert.That(markerPositions[3], Is.EqualTo(680f).Within(0.001f));
+        }
+
+        [Test]
+        public void Render_DistributesMarkersProportionally_WithIrregularRewardLayout()
+        {
+            var context = CreateContext(
+                rewardsWidth: 920f,
+                rewardCellWidth: 120f,
+                freeRewardLeftEdges: new[] { 0f, 800f },
+                premiumRewardLeftEdges: new[] { 0f, 333f, 800f });
+
+            context.View.Render(CreateModel(new[] { 0, 25, 50 }));
+
+            var markerPositions = context.LevelPool.ActiveElements()
+                .Select(view => view.RectTransform.anchoredPosition.x)
+                .ToArray();
+
+            Assert.That(markerPositions, Has.Length.EqualTo(3));
+            Assert.That(markerPositions[0], Is.EqualTo(0f).Within(0.001f));
+            Assert.That(markerPositions[1], Is.EqualTo(340f).Within(0.001f));
+            Assert.That(markerPositions[2], Is.EqualTo(680f).Within(0.001f));
+        }
+
+        [Test]
+        public void Render_WhenCountsRootIsOffset_UsesCountsLocalSpaceForMarkerPosition()
+        {
+            var context = CreateContext(
+                rewardsWidth: 920f,
+                rewardCellWidth: 120f,
+                levelParentAnchoredX: -100f);
+
+            context.View.Render(CreateModel(new[] { 0, 25, 50, 75 }));
+
+            var markerPositions = context.LevelPool.ActiveElements()
+                .Select(view => view.RectTransform.anchoredPosition.x)
+                .ToArray();
+
+            Assert.That(markerPositions, Has.Length.EqualTo(4));
+            Assert.That(markerPositions[0], Is.EqualTo(100f).Within(0.001f));
+            Assert.That(markerPositions[1], Is.EqualTo(326.66667f).Within(0.001f));
+            Assert.That(markerPositions[2], Is.EqualTo(553.33334f).Within(0.001f));
+            Assert.That(markerPositions[3], Is.EqualTo(780f).Within(0.001f));
         }
 
         [Test]
@@ -137,7 +185,10 @@ namespace BattlePass.Tests.Editor
             float rewardsWidth,
             float rewardCellWidth,
             float? premiumRewardsWidth = null,
-            float? premiumRewardCellWidth = null)
+            float? premiumRewardCellWidth = null,
+            IReadOnlyList<float> freeRewardLeftEdges = null,
+            IReadOnlyList<float> premiumRewardLeftEdges = null,
+            float levelParentAnchoredX = 0f)
         {
             var root = new GameObject("SliderBarViewRoot", typeof(RectTransform));
             _objectsToCleanup.Add(root);
@@ -145,13 +196,19 @@ namespace BattlePass.Tests.Editor
             var sliderBarContainer = CreateRectTransform("SliderBarContainer", root.transform, width: 0f);
             var sliderBar = CreateRectTransform("SliderBar", sliderBarContainer, width: 0f);
             var progressSlider = CreateSlider("ProgressSlider", sliderBar);
-            var levelParent = CreateRectTransform("LevelParent", sliderBar, width: 0f);
-            var freeRewardsRoot = CreateRewardRow("FreeRewards", root.transform, rewardsWidth, rewardCellWidth);
+            var levelParent = CreateRectTransform("LevelParent", sliderBar, width: 0f, anchoredX: levelParentAnchoredX);
+            var freeRewardsRoot = CreateRewardRow(
+                "FreeRewards",
+                root.transform,
+                rewardsWidth,
+                rewardCellWidth,
+                freeRewardLeftEdges);
             var premiumRewardsRoot = CreateRewardRow(
                 "PremiumRewards",
                 root.transform,
                 premiumRewardsWidth ?? rewardsWidth,
-                premiumRewardCellWidth ?? rewardCellWidth);
+                premiumRewardCellWidth ?? rewardCellWidth,
+                premiumRewardLeftEdges);
             var levelZeroSprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), new Vector2(0.5f, 0.5f));
             _objectsToCleanup.Add(levelZeroSprite);
 
@@ -189,14 +246,24 @@ namespace BattlePass.Tests.Editor
             return prefab;
         }
 
-        private RectTransform CreateRewardRow(string name, Transform parent, float width, float rewardCellWidth)
+        private RectTransform CreateRewardRow(
+            string name,
+            Transform parent,
+            float width,
+            float rewardCellWidth,
+            IReadOnlyList<float> rewardLeftEdges = null)
         {
             var row = CreateRectTransform(name, parent, width);
-            CreateRectTransform($"{name}_Reward", row, rewardCellWidth);
+            var leftEdges = rewardLeftEdges ?? new[] { 0f };
+            for (var index = 0; index < leftEdges.Count; index++)
+            {
+                CreateRectTransform($"{name}_Reward_{index}", row, rewardCellWidth, leftEdges[index]);
+            }
+
             return row;
         }
 
-        private RectTransform CreateRectTransform(string name, Transform parent, float width)
+        private RectTransform CreateRectTransform(string name, Transform parent, float width, float anchoredX = 0f)
         {
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
@@ -205,6 +272,7 @@ namespace BattlePass.Tests.Editor
             rectTransform.anchorMax = new Vector2(0f, 0.5f);
             rectTransform.pivot = new Vector2(0f, 0.5f);
             rectTransform.sizeDelta = new Vector2(width, 100f);
+            rectTransform.anchoredPosition = new Vector2(anchoredX, 0f);
             return rectTransform;
         }
 
