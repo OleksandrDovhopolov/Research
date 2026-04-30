@@ -2,9 +2,7 @@ apply plugin: 'com.android.library'
 **APPLY_PLUGINS**
 
 dependencies {
-    def billing_version = '8.3.0'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "com.android.billingclient:billing:$billing_version"
 // Android Resolver Dependencies Start
     implementation 'com.google.android.gms:play-services-ads-identifier:18.1.0' // Assets/LevelPlay/Editor/IronSourceSDKDependencies.xml:12
     implementation 'com.google.android.gms:play-services-base:18.10.0' // Assets/Firebase/Editor/DatabaseDependencies.xml:20
