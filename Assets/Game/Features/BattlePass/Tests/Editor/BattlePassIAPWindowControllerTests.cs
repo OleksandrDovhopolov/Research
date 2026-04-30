@@ -29,20 +29,17 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
-        public void GeneratePurchaseToken_UsesMockPremiumPrefix_AndIsUnique()
+        public void MockPurchaseService_UsesMockPremiumPrefix()
         {
-            var controller = new TokenGenerationBattlePassIAPWindowController();
+            var service = new MockBattlePassPurchaseService();
+            var result = service.PurchaseAsync("premium_sku").GetAwaiter().GetResult();
 
-            var token1 = controller.CreateToken();
-            var token2 = controller.CreateToken();
-
-            Assert.That(token1, Does.StartWith("mock_premium_"));
-            Assert.That(token2, Does.StartWith("mock_premium_"));
-            Assert.That(token1, Is.Not.EqualTo(token2));
+            Assert.That(result.Status, Is.EqualTo(BattlePassStorePurchaseStatus.Succeeded));
+            Assert.That(result.PurchaseToken, Does.StartWith("mock_premium_"));
         }
 
         [Test]
-        public void Purchase_WhenSuccessful_VerifiesToken_ClosesPopup_AndReportsResult()
+        public void Purchase_WhenSuccessful_VerifiesToken_ConsumesPurchase_ClosesPopup_AndReportsResult()
         {
             var expectedResult = new BattlePassPurchaseVerificationResult(
                 true,
@@ -53,12 +50,25 @@ namespace BattlePass.Tests.Editor
                 "active",
                 null,
                 null);
+            var purchaseService = new StubBattlePassPurchaseService
+            {
+                PurchaseResponseFactory = _ => UniTask.FromResult(new BattlePassStorePurchaseResult(
+                    BattlePassStorePurchaseStatus.Succeeded,
+                    "google_token_123",
+                    "txn_1",
+                    "premium_sku",
+                    string.Empty)),
+                ConsumeResponseFactory = (_, _) => UniTask.FromResult(new BattlePassConsumeResult(
+                    BattlePassConsumeStatus.Succeeded,
+                    string.Empty))
+            };
             var serverService = new StubBattlePassServerService
             {
                 VerifyPurchaseResponseFactory = (_, _, _) => UniTask.FromResult(expectedResult)
             };
             BattlePassPurchaseVerificationResult callbackResult = null;
             var controller = CreateController(
+                purchaseService,
                 serverService,
                 new BattlePassIAPWindowArgs("season_1", "premium_sku", result => callbackResult = result),
                 out var view);
@@ -66,10 +76,11 @@ namespace BattlePass.Tests.Editor
             RunCoroutine(controller.Show(controller.TestArgs));
             view.EmitPurchaseClick();
 
+            Assert.That(purchaseService.PurchaseCalls, Is.EqualTo(1));
             Assert.That(serverService.VerifyPurchaseCalls, Is.EqualTo(1));
-            Assert.That(serverService.LastSeasonId, Is.EqualTo("season_1"));
-            Assert.That(serverService.LastProductId, Is.EqualTo("premium_sku"));
-            Assert.That(serverService.LastPurchaseToken, Is.EqualTo("mock_premium_testtoken"));
+            Assert.That(serverService.LastPurchaseToken, Is.EqualTo("google_token_123"));
+            Assert.That(purchaseService.ConsumeCalls, Is.EqualTo(1));
+            Assert.That(purchaseService.LastConsumedToken, Is.EqualTo("google_token_123"));
             Assert.That(callbackResult, Is.SameAs(expectedResult));
             Assert.That(controller.CloseCalls, Is.EqualTo(1));
             Assert.That(controller.InfoMessages, Has.Member("Battle Pass premium purchase completed successfully."));
@@ -77,66 +88,29 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
-        public void Purchase_WhenGrantedWithSuccessFalse_ClosesPopup_AndReportsResult()
+        public void Purchase_WhenStoreReturnsPending_DoesNotVerifyOrConsume_AndShowsProcessingStatus()
         {
-            var expectedResult = new BattlePassPurchaseVerificationResult(
-                false,
-                "granted",
-                CreatePremiumUserState(),
-                "battle_pass",
-                "premium_sku",
-                "active",
-                "PURCHASE_ACKNOWLEDGE_FAILED",
-                "Stub acknowledge failed.");
-            var serverService = new StubBattlePassServerService
+            var purchaseService = new StubBattlePassPurchaseService
             {
-                VerifyPurchaseResponseFactory = (_, _, _) => UniTask.FromResult(expectedResult)
+                PurchaseResponseFactory = _ => UniTask.FromResult(new BattlePassStorePurchaseResult(
+                    BattlePassStorePurchaseStatus.Pending,
+                    string.Empty,
+                    string.Empty,
+                    "premium_sku",
+                    string.Empty))
             };
-            BattlePassPurchaseVerificationResult callbackResult = null;
+            var serverService = new StubBattlePassServerService();
             var controller = CreateController(
-                serverService,
-                new BattlePassIAPWindowArgs("season_1", "premium_sku", result => callbackResult = result),
-                out var view);
-
-            RunCoroutine(controller.Show(controller.TestArgs));
-            view.EmitPurchaseClick();
-
-            Assert.That(callbackResult, Is.SameAs(expectedResult));
-            Assert.That(controller.CloseCalls, Is.EqualTo(1));
-            Assert.That(controller.InfoMessages, Has.Member("Stub acknowledge failed."));
-            Assert.That(view.LastStatus, Is.EqualTo("Stub acknowledge failed."));
-        }
-
-        [Test]
-        public void Purchase_WhenPending_DoesNotClosePopup_AndShowsProcessingStatus()
-        {
-            var pendingVerification = new UniTaskCompletionSource<BattlePassPurchaseVerificationResult>();
-            var serverService = new StubBattlePassServerService
-            {
-                VerifyPurchaseResponseFactory = (_, _, _) => pendingVerification.Task
-            };
-            var controller = CreateController(
+                purchaseService,
                 serverService,
                 new BattlePassIAPWindowArgs("season_1", "premium_sku", _ => { }),
                 out var view);
 
             RunCoroutine(controller.Show(controller.TestArgs));
             view.EmitPurchaseClick();
-            view.EmitPurchaseClick();
 
-            Assert.That(serverService.VerifyPurchaseCalls, Is.EqualTo(1));
-            Assert.That(view.LastPurchaseButtonInteractable, Is.False);
-
-            pendingVerification.TrySetResult(new BattlePassPurchaseVerificationResult(
-                false,
-                "pending",
-                null,
-                null,
-                null,
-                null,
-                "PURCHASE_NOT_PURCHASED",
-                "Provider purchase state is 'pending'."));
-
+            Assert.That(serverService.VerifyPurchaseCalls, Is.EqualTo(0));
+            Assert.That(purchaseService.ConsumeCalls, Is.EqualTo(0));
             Assert.That(controller.CloseCalls, Is.EqualTo(0));
             Assert.That(controller.InfoMessages, Has.Member("Purchase is processing."));
             Assert.That(view.LastStatus, Is.EqualTo("Purchase is processing."));
@@ -144,8 +118,75 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
-        public void Purchase_WhenVerificationFails_KeepsPopupOpen_AndShowsError()
+        public void Purchase_WhenStoreIsCancelled_DoesNotVerifyOrConsume_AndKeepsPopupOpen()
         {
+            var purchaseService = new StubBattlePassPurchaseService
+            {
+                PurchaseResponseFactory = _ => UniTask.FromResult(new BattlePassStorePurchaseResult(
+                    BattlePassStorePurchaseStatus.Cancelled,
+                    string.Empty,
+                    string.Empty,
+                    "premium_sku",
+                    "Purchase was cancelled."))
+            };
+            var serverService = new StubBattlePassServerService();
+            var controller = CreateController(
+                purchaseService,
+                serverService,
+                new BattlePassIAPWindowArgs("season_1", "premium_sku", _ => { }),
+                out var view);
+
+            RunCoroutine(controller.Show(controller.TestArgs));
+            view.EmitPurchaseClick();
+
+            Assert.That(serverService.VerifyPurchaseCalls, Is.EqualTo(0));
+            Assert.That(purchaseService.ConsumeCalls, Is.EqualTo(0));
+            Assert.That(controller.CloseCalls, Is.EqualTo(0));
+            Assert.That(view.LastStatus, Is.EqualTo("Purchase was cancelled."));
+            Assert.That(view.LastPurchaseButtonInteractable, Is.True);
+        }
+
+        [Test]
+        public void Purchase_WhenStoreFails_DoesNotVerifyOrConsume_AndShowsError()
+        {
+            var purchaseService = new StubBattlePassPurchaseService
+            {
+                PurchaseResponseFactory = _ => UniTask.FromResult(new BattlePassStorePurchaseResult(
+                    BattlePassStorePurchaseStatus.Failed,
+                    string.Empty,
+                    string.Empty,
+                    "premium_sku",
+                    "Store purchase failed."))
+            };
+            var serverService = new StubBattlePassServerService();
+            var controller = CreateController(
+                purchaseService,
+                serverService,
+                new BattlePassIAPWindowArgs("season_1", "premium_sku", _ => { }),
+                out var view);
+
+            RunCoroutine(controller.Show(controller.TestArgs));
+            view.EmitPurchaseClick();
+
+            Assert.That(serverService.VerifyPurchaseCalls, Is.EqualTo(0));
+            Assert.That(purchaseService.ConsumeCalls, Is.EqualTo(0));
+            Assert.That(controller.CloseCalls, Is.EqualTo(0));
+            Assert.That(controller.InfoMessages, Has.Member("Store purchase failed."));
+            Assert.That(view.LastStatus, Is.EqualTo("Store purchase failed."));
+        }
+
+        [Test]
+        public void Purchase_WhenVerificationFails_DoesNotConsume_AndShowsError()
+        {
+            var purchaseService = new StubBattlePassPurchaseService
+            {
+                PurchaseResponseFactory = _ => UniTask.FromResult(new BattlePassStorePurchaseResult(
+                    BattlePassStorePurchaseStatus.Succeeded,
+                    "google_token_123",
+                    "txn_1",
+                    "premium_sku",
+                    string.Empty))
+            };
             var serverService = new StubBattlePassServerService
             {
                 VerifyPurchaseResponseFactory = (_, _, _) => UniTask.FromResult(new BattlePassPurchaseVerificationResult(
@@ -159,6 +200,7 @@ namespace BattlePass.Tests.Editor
                     "Stub verifier failed the purchase token."))
             };
             var controller = CreateController(
+                purchaseService,
                 serverService,
                 new BattlePassIAPWindowArgs("season_1", "premium_sku", _ => { }),
                 out var view);
@@ -166,13 +208,60 @@ namespace BattlePass.Tests.Editor
             RunCoroutine(controller.Show(controller.TestArgs));
             view.EmitPurchaseClick();
 
+            Assert.That(purchaseService.ConsumeCalls, Is.EqualTo(0));
             Assert.That(controller.CloseCalls, Is.EqualTo(0));
             Assert.That(controller.InfoMessages, Has.Member("Stub verifier failed the purchase token."));
             Assert.That(view.LastStatus, Is.EqualTo("Stub verifier failed the purchase token."));
-            Assert.That(view.LastPurchaseButtonInteractable, Is.True);
+        }
+
+        [Test]
+        public void Purchase_WhenConsumeFails_ShowsRecoverableError_AndKeepsPopupOpen()
+        {
+            var purchaseService = new StubBattlePassPurchaseService
+            {
+                PurchaseResponseFactory = _ => UniTask.FromResult(new BattlePassStorePurchaseResult(
+                    BattlePassStorePurchaseStatus.Succeeded,
+                    "google_token_123",
+                    "txn_1",
+                    "premium_sku",
+                    string.Empty)),
+                ConsumeResponseFactory = (_, _) => UniTask.FromResult(new BattlePassConsumeResult(
+                    BattlePassConsumeStatus.Failed,
+                    "Store confirmation failed."))
+            };
+            var serverService = new StubBattlePassServerService
+            {
+                VerifyPurchaseResponseFactory = (_, _, _) => UniTask.FromResult(new BattlePassPurchaseVerificationResult(
+                    true,
+                    "acknowledged",
+                    CreatePremiumUserState(),
+                    "battle_pass",
+                    "premium_sku",
+                    "active",
+                    null,
+                    null))
+            };
+            BattlePassPurchaseVerificationResult callbackResult = null;
+            var controller = CreateController(
+                purchaseService,
+                serverService,
+                new BattlePassIAPWindowArgs("season_1", "premium_sku", result => callbackResult = result),
+                out var view);
+
+            RunCoroutine(controller.Show(controller.TestArgs));
+            view.EmitPurchaseClick();
+
+            Assert.That(purchaseService.ConsumeCalls, Is.EqualTo(1));
+            Assert.That(callbackResult, Is.Null);
+            Assert.That(controller.CloseCalls, Is.EqualTo(0));
+            Assert.That(controller.InfoMessages.Count, Is.EqualTo(1));
+            Assert.That(controller.InfoMessages[0], Does.Contain("granted"));
+            Assert.That(controller.InfoMessages[0], Does.Contain("Store confirmation failed."));
+            Assert.That(view.LastStatus, Does.Contain("Store confirmation failed."));
         }
 
         private TestBattlePassIAPWindowController CreateController(
+            StubBattlePassPurchaseService purchaseService,
             StubBattlePassServerService serverService,
             BattlePassIAPWindowArgs args,
             out TestBattlePassIAPWindowView view)
@@ -191,7 +280,7 @@ namespace BattlePass.Tests.Editor
             controller.SetEventHandler(new StubEventHandler());
 
             var constructMethod = typeof(BattlePassIAPWindowController).GetMethod("Construct", BindingFlags.Instance | BindingFlags.NonPublic);
-            constructMethod.Invoke(controller, new object[] { serverService });
+            constructMethod.Invoke(controller, new object[] { purchaseService, serverService });
 
             return controller;
         }
@@ -252,11 +341,6 @@ namespace BattlePass.Tests.Editor
             public int CloseCalls { get; private set; }
             public List<string> InfoMessages { get; } = new();
 
-            protected override string GeneratePurchaseToken()
-            {
-                return "mock_premium_testtoken";
-            }
-
             protected override void ShowInfo(string message)
             {
                 InfoMessages.Add(message);
@@ -268,11 +352,48 @@ namespace BattlePass.Tests.Editor
             }
         }
 
-        private sealed class TokenGenerationBattlePassIAPWindowController : BattlePassIAPWindowController
+        private sealed class StubBattlePassPurchaseService : IBattlePassPurchaseService
         {
-            public string CreateToken()
+            public int PurchaseCalls { get; private set; }
+            public int ConsumeCalls { get; private set; }
+            public string LastPurchasedProductId { get; private set; }
+            public string LastConsumedProductId { get; private set; }
+            public string LastConsumedToken { get; private set; }
+            public Func<string, UniTask<BattlePassStorePurchaseResult>> PurchaseResponseFactory { get; set; }
+            public Func<string, string, UniTask<BattlePassConsumeResult>> ConsumeResponseFactory { get; set; }
+
+            public UniTask<BattlePassStorePurchaseResult> PurchaseAsync(string productId, CancellationToken ct = default)
             {
-                return base.GeneratePurchaseToken();
+                ct.ThrowIfCancellationRequested();
+                PurchaseCalls++;
+                LastPurchasedProductId = productId;
+
+                if (PurchaseResponseFactory != null)
+                {
+                    return PurchaseResponseFactory(productId);
+                }
+
+                return UniTask.FromResult(new BattlePassStorePurchaseResult(
+                    BattlePassStorePurchaseStatus.Succeeded,
+                    "google_token_default",
+                    "txn_default",
+                    productId,
+                    string.Empty));
+            }
+
+            public UniTask<BattlePassConsumeResult> ConsumeAsync(string productId, string purchaseToken, CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+                ConsumeCalls++;
+                LastConsumedProductId = productId;
+                LastConsumedToken = purchaseToken;
+
+                if (ConsumeResponseFactory != null)
+                {
+                    return ConsumeResponseFactory(productId, purchaseToken);
+                }
+
+                return UniTask.FromResult(new BattlePassConsumeResult(BattlePassConsumeStatus.Succeeded, string.Empty));
             }
         }
 
@@ -331,7 +452,6 @@ namespace BattlePass.Tests.Editor
             }
         }
 
-        //TODO fix this class 
         private sealed class StubEventHandler : UIManagerEventHandlerBase
         {
             public override void WindowShowEventInvoke(IWindowController window)

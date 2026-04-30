@@ -11,7 +11,9 @@
         "UniTask",
         "VContainer",
         "Rewards",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "UnityEngine.Purchasing",
+        "UnityEngine.Purchasing.Stores"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

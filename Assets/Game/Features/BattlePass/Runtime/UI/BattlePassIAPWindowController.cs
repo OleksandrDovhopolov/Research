@@ -29,8 +29,15 @@ namespace BattlePass
     public class BattlePassIAPWindowController : WindowController<BattlePassIAPWindowView>
     {
         private const string DefaultTitle = "Unlock Premium Battle Pass";
-        private const string DefaultButtonLabel = "Verify Purchase";
+        private const string DefaultButtonLabel = "Buy Premium";
+        private const string PendingMessage = "Purchase is processing.";
+        private const string CancelledMessage = "Purchase was cancelled.";
+        private const string CompletedMessage = "Purchase completed successfully.";
+        private const string CompletedInfoMessage = "Battle Pass premium purchase completed successfully.";
+        private const string GrantedConsumeFailureMessage =
+            "Battle Pass premium was granted, but the store purchase could not be finalized. Repurchase may be unavailable until this is retried.";
 
+        private IBattlePassPurchaseService _battlePassPurchaseService;
         private IBattlePassServerService _battlePassServerService;
         private CancellationTokenSource _purchaseCts;
         private bool _isVerificationInFlight;
@@ -38,8 +45,11 @@ namespace BattlePass
         private BattlePassIAPWindowArgs Args => (BattlePassIAPWindowArgs)Arguments;
 
         [Inject]
-        private void Construct(IBattlePassServerService battlePassServerService)
+        private void Construct(
+            IBattlePassPurchaseService battlePassPurchaseService,
+            IBattlePassServerService battlePassServerService)
         {
+            _battlePassPurchaseService = battlePassPurchaseService;
             _battlePassServerService = battlePassServerService;
         }
 
@@ -77,10 +87,10 @@ namespace BattlePass
                 return;
             }
 
-            VerifyPurchaseAsync(_purchaseCts?.Token ?? CancellationToken.None).Forget();
+            PurchaseAndVerifyAsync(_purchaseCts?.Token ?? CancellationToken.None).Forget();
         }
 
-        private async UniTaskVoid VerifyPurchaseAsync(CancellationToken ct)
+        private async UniTaskVoid PurchaseAndVerifyAsync(CancellationToken ct)
         {
             if (Args == null)
             {
@@ -90,40 +100,90 @@ namespace BattlePass
 
             _isVerificationInFlight = true;
             View.SetPurchaseButtonInteractable(false);
-            View.SetStatus("Verifying purchase...");
+            View.SetStatus("Starting purchase...");
 
             try
             {
-                var token = GeneratePurchaseToken();
-                var result = await _battlePassServerService.VerifyGooglePurchaseAsync(Args.SeasonId, Args.ProductId, token, ct);
+                var purchaseResult = await _battlePassPurchaseService.PurchaseAsync(Args.ProductId, ct);
                 ct.ThrowIfCancellationRequested();
+
+                switch (purchaseResult.Status)
+                {
+                    case BattlePassStorePurchaseStatus.Pending:
+                        View.SetStatus(PendingMessage);
+                        ShowInfo(PendingMessage);
+                        return;
+                    case BattlePassStorePurchaseStatus.Cancelled:
+                        View.SetStatus(CancelledMessage);
+                        return;
+                    case BattlePassStorePurchaseStatus.Failed:
+                        var purchaseFailureMessage = string.IsNullOrWhiteSpace(purchaseResult.ErrorMessage)
+                            ? "Purchase failed before verification."
+                            : purchaseResult.ErrorMessage;
+                        View.SetStatus(purchaseFailureMessage);
+                        ShowInfo(purchaseFailureMessage);
+                        return;
+                }
+
+                if (string.IsNullOrWhiteSpace(purchaseResult.PurchaseToken))
+                {
+                    const string missingTokenMessage = "Google Play purchase token was not returned.";
+                    View.SetStatus(missingTokenMessage);
+                    ShowInfo(missingTokenMessage);
+                    return;
+                }
+
+                View.SetStatus("Verifying purchase...");
+                var result = await _battlePassServerService.VerifyGooglePurchaseAsync(
+                    Args.SeasonId,
+                    Args.ProductId,
+                    purchaseResult.PurchaseToken,
+                    ct);
+                ct.ThrowIfCancellationRequested();
+
+                var shouldConsume = ShouldConsumeAfterVerify(result);
+                if (shouldConsume)
+                {
+                    var consumeResult = await _battlePassPurchaseService.ConsumeAsync(
+                        Args.ProductId,
+                        purchaseResult.PurchaseToken,
+                        ct);
+                    ct.ThrowIfCancellationRequested();
+
+                    if (!consumeResult.Success)
+                    {
+                        var consumeFailureMessage = string.IsNullOrWhiteSpace(consumeResult.ErrorMessage)
+                            ? GrantedConsumeFailureMessage
+                            : $"{GrantedConsumeFailureMessage} {consumeResult.ErrorMessage}";
+                        Debug.LogError($"[BattlePassIAPWindowController] {consumeFailureMessage}");
+                        View.SetStatus(consumeFailureMessage);
+                        ShowInfo(consumeFailureMessage);
+                        return;
+                    }
+                }
 
                 if (result.Success)
                 {
                     Args.OnPurchaseVerified?.Invoke(result);
-                    View.SetStatus("Purchase completed successfully.");
-                    ShowInfo("Battle Pass premium purchase completed successfully.");
+                    View.SetStatus(CompletedMessage);
+                    ShowInfo(CompletedInfoMessage);
                     CloseWindow();
                     return;
                 }
 
-                if (string.Equals(result.PurchaseStatus, "granted", StringComparison.OrdinalIgnoreCase))
+                if (IsGranted(result))
                 {
                     Args.OnPurchaseVerified?.Invoke(result);
-                    var grantedMessage = string.IsNullOrWhiteSpace(result.ErrorMessage)
-                        ? "Battle Pass premium was granted, but acknowledge failed."
-                        : result.ErrorMessage;
-                    View.SetStatus(grantedMessage);
-                    ShowInfo(grantedMessage);
+                    View.SetStatus(CompletedMessage);
+                    ShowInfo(CompletedInfoMessage);
                     CloseWindow();
                     return;
                 }
 
-                if (string.Equals(result.PurchaseStatus, "pending", StringComparison.OrdinalIgnoreCase))
+                if (IsPending(result))
                 {
-                    const string pendingMessage = "Purchase is processing.";
-                    View.SetStatus(pendingMessage);
-                    ShowInfo(pendingMessage);
+                    View.SetStatus(PendingMessage);
+                    ShowInfo(PendingMessage);
                     return;
                 }
 
@@ -138,7 +198,7 @@ namespace BattlePass
             }
             catch (Exception exception)
             {
-                var message = $"Battle Pass purchase verification request failed. {exception.Message}";
+                var message = $"Battle Pass purchase flow failed. {exception.Message}";
                 Debug.LogError($"[BattlePassIAPWindowController] {message}");
                 View.SetStatus(message);
                 ShowInfo(message);
@@ -150,9 +210,21 @@ namespace BattlePass
             }
         }
 
-        protected virtual string GeneratePurchaseToken()
+        private static bool IsPending(BattlePassPurchaseVerificationResult result)
         {
-            return $"mock_premium_{Guid.NewGuid():N}";
+            return result != null &&
+                   string.Equals(result.PurchaseStatus, "pending", System.StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsGranted(BattlePassPurchaseVerificationResult result)
+        {
+            return result != null &&
+                   string.Equals(result.PurchaseStatus, "granted", System.StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool ShouldConsumeAfterVerify(BattlePassPurchaseVerificationResult result)
+        {
+            return result != null && (result.Success || IsGranted(result));
         }
 
         protected virtual void ShowInfo(string message)
