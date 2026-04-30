@@ -39,6 +39,61 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
+        public void View_WhenOpenedWithMockService_ShowsEditorPrice()
+        {
+            var purchaseService = new StubBattlePassPurchaseService
+            {
+                DisplayPriceResponseFactory = _ => UniTask.FromResult("Editor")
+            };
+            var controller = CreateController(
+                purchaseService,
+                new StubBattlePassServerService(),
+                new BattlePassIAPWindowArgs("season_1", "premium_sku", _ => { }),
+                out var view);
+
+            RunCoroutine(controller.Show(controller.TestArgs));
+
+            Assert.That(view.LastPrice, Is.EqualTo("Editor"));
+        }
+
+        [Test]
+        public void View_WhenDisplayPriceResolves_ShowsLocalizedPrice()
+        {
+            var purchaseService = new StubBattlePassPurchaseService
+            {
+                DisplayPriceResponseFactory = _ => UniTask.FromResult("$4.99")
+            };
+            var controller = CreateController(
+                purchaseService,
+                new StubBattlePassServerService(),
+                new BattlePassIAPWindowArgs("season_1", "premium_sku", _ => { }),
+                out var view);
+
+            RunCoroutine(controller.Show(controller.TestArgs));
+
+            Assert.That(view.PriceHistory[0], Is.EqualTo("Loading..."));
+            Assert.That(view.LastPrice, Is.EqualTo("$4.99"));
+        }
+
+        [Test]
+        public void View_WhenDisplayPriceUnavailable_KeepsLoadingPlaceholder()
+        {
+            var purchaseService = new StubBattlePassPurchaseService
+            {
+                DisplayPriceResponseFactory = _ => UniTask.FromResult(string.Empty)
+            };
+            var controller = CreateController(
+                purchaseService,
+                new StubBattlePassServerService(),
+                new BattlePassIAPWindowArgs("season_1", "premium_sku", _ => { }),
+                out var view);
+
+            RunCoroutine(controller.Show(controller.TestArgs));
+
+            Assert.That(view.LastPrice, Is.EqualTo("Loading..."));
+        }
+
+        [Test]
         public void Purchase_WhenSuccessful_VerifiesToken_ConsumesPurchase_ClosesPopup_AndReportsResult()
         {
             var expectedResult = new BattlePassPurchaseVerificationResult(
@@ -305,13 +360,23 @@ namespace BattlePass.Tests.Editor
 
         private sealed class TestBattlePassIAPWindowView : BattlePassIAPWindowView
         {
+            public List<string> PriceHistory { get; } = new();
+            public string LastPrice { get; private set; }
             public string LastStatus { get; private set; }
             public bool LastPurchaseButtonInteractable { get; private set; } = true;
 
             public override void ResetView()
             {
+                PriceHistory.Clear();
+                LastPrice = "Loading...";
                 LastStatus = null;
                 LastPurchaseButtonInteractable = true;
+            }
+
+            public override void SetPrice(string priceText)
+            {
+                LastPrice = priceText;
+                PriceHistory.Add(priceText);
             }
 
             public override void SetStatus(string status)
@@ -354,13 +419,30 @@ namespace BattlePass.Tests.Editor
 
         private sealed class StubBattlePassPurchaseService : IBattlePassPurchaseService
         {
+            public int DisplayPriceCalls { get; private set; }
             public int PurchaseCalls { get; private set; }
             public int ConsumeCalls { get; private set; }
+            public string LastDisplayPriceProductId { get; private set; }
             public string LastPurchasedProductId { get; private set; }
             public string LastConsumedProductId { get; private set; }
             public string LastConsumedToken { get; private set; }
+            public Func<string, UniTask<string>> DisplayPriceResponseFactory { get; set; }
             public Func<string, UniTask<BattlePassStorePurchaseResult>> PurchaseResponseFactory { get; set; }
             public Func<string, string, UniTask<BattlePassConsumeResult>> ConsumeResponseFactory { get; set; }
+
+            public UniTask<string> GetDisplayPriceAsync(string productId, CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+                DisplayPriceCalls++;
+                LastDisplayPriceProductId = productId;
+
+                if (DisplayPriceResponseFactory != null)
+                {
+                    return DisplayPriceResponseFactory(productId);
+                }
+
+                return UniTask.FromResult("Editor");
+            }
 
             public UniTask<BattlePassStorePurchaseResult> PurchaseAsync(string productId, CancellationToken ct = default)
             {

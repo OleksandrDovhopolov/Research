@@ -30,6 +30,7 @@ namespace BattlePass
     {
         private const string DefaultTitle = "Unlock Premium Battle Pass";
         private const string DefaultButtonLabel = "Buy Premium";
+        private const string DefaultPricePlaceholder = "Loading...";
         private const string PendingMessage = "Purchase is processing.";
         private const string CancelledMessage = "Purchase was cancelled.";
         private const string CompletedMessage = "Purchase completed successfully.";
@@ -60,8 +61,9 @@ namespace BattlePass
             View.ResetView();
             View.SetTitle(DefaultTitle);
             View.SetSeason(Args?.SeasonId);
-            View.SetProduct(Args?.ProductId);
+            View.SetPrice(DefaultPricePlaceholder);
             View.SetPurchaseButtonLabel(DefaultButtonLabel);
+            RefreshPriceAsync(_purchaseCts.Token).Forget();
         }
 
         protected override void OnShowComplete()
@@ -88,6 +90,32 @@ namespace BattlePass
             }
 
             PurchaseAndVerifyAsync(_purchaseCts?.Token ?? CancellationToken.None).Forget();
+        }
+
+        private async UniTaskVoid RefreshPriceAsync(CancellationToken ct)
+        {
+            if (Args == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var price = await _battlePassPurchaseService.GetDisplayPriceAsync(Args.ProductId, ct);
+                ct.ThrowIfCancellationRequested();
+
+                if (!string.IsNullOrWhiteSpace(price))
+                {
+                    View.SetPrice(price);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"[BattlePassIAPWindowController] Failed to resolve display price. {exception.Message}");
+            }
         }
 
         private async UniTaskVoid PurchaseAndVerifyAsync(CancellationToken ct)

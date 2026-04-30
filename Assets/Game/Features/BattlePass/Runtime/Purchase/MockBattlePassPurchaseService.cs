@@ -6,6 +6,12 @@ namespace BattlePass
 {
     public sealed class MockBattlePassPurchaseService : IBattlePassPurchaseService
     {
+        public UniTask<string> GetDisplayPriceAsync(string productId, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            return UniTask.FromResult("Editor");
+        }
+
         public UniTask<BattlePassStorePurchaseResult> PurchaseAsync(string productId, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();

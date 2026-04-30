@@ -5,6 +5,7 @@ namespace BattlePass
 {
     public interface IBattlePassPurchaseService
     {
+        UniTask<string> GetDisplayPriceAsync(string productId, CancellationToken ct = default);
         UniTask<BattlePassStorePurchaseResult> PurchaseAsync(string productId, CancellationToken ct = default);
         UniTask<BattlePassConsumeResult> ConsumeAsync(string productId, string purchaseToken, CancellationToken ct = default);
     }

@@ -8,6 +8,8 @@ namespace BattlePass
 {
     public class BattlePassIAPWindowView : WindowView
     {
+        private const string DefaultPricePlaceholder = "Loading...";
+
         [SerializeField] private Button _purchaseButton;
         [SerializeField] private TMP_Text _titleText;
         [SerializeField] private TMP_Text _productText;
@@ -30,7 +32,7 @@ namespace BattlePass
         public virtual void ResetView()
         {
             SetTitle(string.Empty);
-            SetProduct(string.Empty);
+            SetPrice(DefaultPricePlaceholder);
             SetSeason(string.Empty);
             SetStatus(string.Empty);
             SetPurchaseButtonLabel("Verify Purchase");
@@ -45,11 +47,11 @@ namespace BattlePass
             }
         }
 
-        public virtual void SetProduct(string productId)
+        public virtual void SetPrice(string priceText)
         {
             if (_productText != null)
             {
-                _productText.text = string.IsNullOrWhiteSpace(productId) ? string.Empty : $"Product: {productId}";
+                _productText.text = priceText ?? string.Empty;
             }
         }
 

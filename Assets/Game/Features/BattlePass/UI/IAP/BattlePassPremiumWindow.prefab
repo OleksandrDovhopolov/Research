@@ -259,7 +259,7 @@ MonoBehaviour:
   - {fileID: 3119645147263735493}
   _purchaseButton: {fileID: 88803170996484458}
   _titleText: {fileID: 8432797218764031034}
-  _productText: {fileID: 8432797218764031034}
+  _productText: {fileID: 88803170473249295}
   _seasonText: {fileID: 88803170347316339}
   _statusText: {fileID: 8432797218764031034}
   _purchaseButtonLabel: {fileID: 8432797218764031034}
@@ -688,6 +688,17 @@ RectTransform:
 --- !u!114 &88803170347316339 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1384854078321564057, guid: 9546104ef5f4e654982c648af26350ca, type: 3}
+  m_PrefabInstance: {fileID: 1300558914351361514}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &88803170473249295 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1384854078481098725, guid: 9546104ef5f4e654982c648af26350ca, type: 3}
   m_PrefabInstance: {fileID: 1300558914351361514}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}

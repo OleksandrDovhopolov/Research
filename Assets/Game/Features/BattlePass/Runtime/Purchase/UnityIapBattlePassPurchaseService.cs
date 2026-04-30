@@ -27,6 +27,21 @@ namespace BattlePass
         private string _activePurchaseProductId;
         private bool _isInitializing;
 
+        public async UniTask<string> GetDisplayPriceAsync(string productId, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(productId))
+            {
+                return string.Empty;
+            }
+
+            ct.ThrowIfCancellationRequested();
+            await EnsureStoreReadyAsync(productId, ct);
+            ct.ThrowIfCancellationRequested();
+
+            var product = _storeController?.products?.WithID(productId);
+            return product?.metadata?.localizedPriceString ?? string.Empty;
+        }
+
         public async UniTask<BattlePassStorePurchaseResult> PurchaseAsync(string productId, CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(productId))
