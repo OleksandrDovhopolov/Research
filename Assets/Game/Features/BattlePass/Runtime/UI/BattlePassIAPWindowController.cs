@@ -126,6 +126,9 @@ namespace BattlePass
                 return;
             }
 
+            Debug.LogWarning(
+                $"[BattlePassIAPWindowController] Purchase flow started. " +
+                $"SeasonId='{Args.SeasonId}', ProductId='{Args.ProductId}'.");
             _isVerificationInFlight = true;
             View.SetPurchaseButtonInteractable(false);
             View.SetStatus("Starting purchase...");
@@ -134,6 +137,11 @@ namespace BattlePass
             {
                 var purchaseResult = await _battlePassPurchaseService.PurchaseAsync(Args.ProductId, ct);
                 ct.ThrowIfCancellationRequested();
+                Debug.LogWarning(
+                    $"[BattlePassIAPWindowController] PurchaseAsync completed. " +
+                    $"Status={purchaseResult.Status}, ProductId='{purchaseResult.ProductId}', " +
+                    $"HasToken={!string.IsNullOrWhiteSpace(purchaseResult.PurchaseToken)}, " +
+                    $"TransactionId='{purchaseResult.StoreTransactionId}'.");
 
                 switch (purchaseResult.Status)
                 {
@@ -162,21 +170,39 @@ namespace BattlePass
                 }
 
                 View.SetStatus("Verifying purchase...");
+                Debug.LogWarning(
+                    $"[BattlePassIAPWindowController] Starting backend verify. " +
+                    $"SeasonId='{Args.SeasonId}', ProductId='{Args.ProductId}', " +
+                    $"TokenPrefix='{GetTokenPrefix(purchaseResult.PurchaseToken)}'.");
                 var result = await _battlePassServerService.VerifyGooglePurchaseAsync(
                     Args.SeasonId,
                     Args.ProductId,
                     purchaseResult.PurchaseToken,
                     ct);
                 ct.ThrowIfCancellationRequested();
+                Debug.LogWarning(
+                    $"[BattlePassIAPWindowController] Verify completed. " +
+                    $"Success={result.Success}, PurchaseStatus='{result.PurchaseStatus}', " +
+                    $"ErrorCode='{result.ErrorCode}', ErrorMessage='{result.ErrorMessage}'.");
 
                 var shouldConsume = ShouldConsumeAfterVerify(result);
+                Debug.LogWarning(
+                    $"[BattlePassIAPWindowController] Consume decision evaluated. " +
+                    $"ShouldConsume={shouldConsume}, ProductId='{Args.ProductId}'.");
                 if (shouldConsume)
                 {
+                    Debug.LogWarning(
+                        $"[BattlePassIAPWindowController] Calling ConsumeAsync. " +
+                        $"ProductId='{Args.ProductId}', TokenPrefix='{GetTokenPrefix(purchaseResult.PurchaseToken)}'.");
                     var consumeResult = await _battlePassPurchaseService.ConsumeAsync(
                         Args.ProductId,
                         purchaseResult.PurchaseToken,
                         ct);
                     ct.ThrowIfCancellationRequested();
+                    Debug.LogWarning(
+                        $"[BattlePassIAPWindowController] ConsumeAsync completed. " +
+                        $"Success={consumeResult.Success}, Status={consumeResult.Status}, " +
+                        $"ErrorMessage='{consumeResult.ErrorMessage}'.");
 
                     if (!consumeResult.Success)
                     {
@@ -233,6 +259,9 @@ namespace BattlePass
             }
             finally
             {
+                Debug.LogWarning(
+                    $"[BattlePassIAPWindowController] Purchase flow finished. " +
+                    $"ProductId='{Args.ProductId}', VerificationInFlight->false.");
                 _isVerificationInFlight = false;
                 View.SetPurchaseButtonInteractable(true);
             }
@@ -253,6 +282,16 @@ namespace BattlePass
         private static bool ShouldConsumeAfterVerify(BattlePassPurchaseVerificationResult result)
         {
             return result != null && (result.Success || IsGranted(result));
+        }
+
+        private static string GetTokenPrefix(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return "<empty>";
+            }
+
+            return token.Length <= 8 ? token : token.Substring(0, 8);
         }
 
         protected virtual void ShowInfo(string message)

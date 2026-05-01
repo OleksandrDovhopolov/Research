@@ -97,29 +97,41 @@ namespace BattlePass
         public UniTask<BattlePassConsumeResult> ConsumeAsync(string productId, string purchaseToken, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
+            Debug.LogWarning(
+                $"{Tag} ConsumeAsync called. ProductId='{productId}', " +
+                $"TokenPrefix='{GetTokenPrefix(purchaseToken)}'.");
 
             if (string.IsNullOrWhiteSpace(productId))
             {
+                Debug.LogWarning($"{Tag} ConsumeAsync aborted because product id is empty.");
                 return UniTask.FromResult(new BattlePassConsumeResult(BattlePassConsumeStatus.Failed, "Product id is empty."));
             }
 
             if (string.IsNullOrWhiteSpace(purchaseToken))
             {
+                Debug.LogWarning($"{Tag} ConsumeAsync aborted because purchase token is empty.");
                 return UniTask.FromResult(new BattlePassConsumeResult(BattlePassConsumeStatus.Failed, "Purchase token is empty."));
             }
 
             if (_storeController == null)
             {
+                Debug.LogWarning($"{Tag} ConsumeAsync aborted because Unity IAP is not initialized.");
                 return UniTask.FromResult(new BattlePassConsumeResult(BattlePassConsumeStatus.Failed, "Unity IAP is not initialized."));
             }
 
             if (!_pendingProductsByToken.TryGetValue(purchaseToken, out var product))
             {
+                Debug.LogWarning(
+                    $"{Tag} Pending product was not found by token. " +
+                    $"Trying product id lookup for '{productId}'.");
                 _pendingProductsById.TryGetValue(productId, out product);
             }
 
             if (product == null)
             {
+                Debug.LogWarning(
+                    $"{Tag} ConsumeAsync could not find pending purchase. " +
+                    $"ProductId='{productId}', TokenPrefix='{GetTokenPrefix(purchaseToken)}'.");
                 return UniTask.FromResult(new BattlePassConsumeResult(
                     BattlePassConsumeStatus.Failed,
                     $"Pending purchase for product '{productId}' was not found."));
@@ -127,8 +139,17 @@ namespace BattlePass
 
             try
             {
+                Debug.LogWarning(
+                    $"{Tag} ConfirmPendingPurchase starting. " +
+                    $"ProductId='{product.definition.id}', TransactionId='{product.transactionID}'.");
                 _storeController.ConfirmPendingPurchase(product);
+                Debug.LogWarning(
+                    $"{Tag} ConfirmPendingPurchase completed. " +
+                    $"ProductId='{product.definition.id}', TokenPrefix='{GetTokenPrefix(purchaseToken)}'.");
                 RemovePendingPurchase(product.definition.id, purchaseToken);
+                Debug.LogWarning(
+                    $"{Tag} Pending purchase removed from local cache. " +
+                    $"ProductId='{product.definition.id}'.");
                 return UniTask.FromResult(new BattlePassConsumeResult(BattlePassConsumeStatus.Succeeded, string.Empty));
             }
             catch (Exception exception)
@@ -163,6 +184,9 @@ namespace BattlePass
             var product = e?.purchasedProduct;
             var productId = product?.definition?.id ?? string.Empty;
             var purchaseToken = TryExtractGooglePlayPurchaseToken(product?.receipt);
+            Debug.LogWarning(
+                $"{Tag} ProcessPurchase received. ProductId='{productId}', " +
+                $"TransactionId='{product?.transactionID}', TokenPrefix='{GetTokenPrefix(purchaseToken)}'.");
 
             if (string.IsNullOrWhiteSpace(productId))
             {
@@ -192,6 +216,9 @@ namespace BattlePass
                 _purchaseTcs.TrySetResult(result);
             }
 
+            Debug.LogWarning(
+                $"{Tag} ProcessPurchase stored pending purchase and returned Pending. " +
+                $"ProductId='{productId}'.");
             return PurchaseProcessingResult.Pending;
         }
 
@@ -372,6 +399,16 @@ namespace BattlePass
                 Debug.LogError($"{Tag} Failed to parse Google Play purchase token from receipt. {exception}");
                 return string.Empty;
             }
+        }
+
+        private static string GetTokenPrefix(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return "<empty>";
+            }
+
+            return token.Length <= 8 ? token : token.Substring(0, 8);
         }
     }
 }
