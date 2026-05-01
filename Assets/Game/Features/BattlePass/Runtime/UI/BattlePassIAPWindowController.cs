@@ -35,8 +35,15 @@ namespace BattlePass
         private const string CancelledMessage = "Purchase was cancelled.";
         private const string CompletedMessage = "Purchase completed successfully.";
         private const string CompletedInfoMessage = "Battle Pass premium purchase completed successfully.";
+        private const string PendingFinalizationMessage =
+            "Purchase granted, but final processing is still pending. Please wait before trying to repurchase this item.";
         private const string GrantedConsumeFailureMessage =
             "Battle Pass premium was granted, but the store purchase could not be finalized. Repurchase may be unavailable until this is retried.";
+        private const string PurchaseStatusVerifiedAndConsumed = "verified_and_consumed";
+        private const string PurchaseStatusVerifiedAndAcknowledged = "verified_and_acknowledged";
+        private const string PurchaseStatusDuplicateAlreadyProcessed = "duplicate_already_processed";
+        private const string PurchaseStatusGrantedButFinalizationPending = "granted_but_finalization_pending";
+        private const string PurchaseStatusVerifyFailed = "verify_failed";
 
         private IBattlePassPurchaseService _battlePassPurchaseService;
         private IBattlePassServerService _battlePassServerService;
@@ -180,15 +187,18 @@ namespace BattlePass
                     purchaseResult.PurchaseToken,
                     ct);
                 ct.ThrowIfCancellationRequested();
+                var purchaseStatus = NormalizeStatus(result?.PurchaseStatus);
                 Debug.LogWarning(
                     $"[BattlePassIAPWindowController] Verify completed. " +
-                    $"Success={result.Success}, PurchaseStatus='{result.PurchaseStatus}', " +
-                    $"ErrorCode='{result.ErrorCode}', ErrorMessage='{result.ErrorMessage}'.");
+                    $"ProductId='{Args.ProductId}', TokenPrefix='{GetTokenPrefix(purchaseResult.PurchaseToken)}', " +
+                    $"Success={result?.Success}, PurchaseStatus='{purchaseStatus}', " +
+                    $"GoogleFinalizeStatus='{result?.GoogleFinalizeStatus}', " +
+                    $"ErrorCode='{result?.ErrorCode}', ErrorMessage='{result?.ErrorMessage}'.");
 
-                var shouldConsume = ShouldConsumeAfterVerify(result);
+                var shouldConsume = IsFinalSuccessPurchaseStatus(purchaseStatus);
                 Debug.LogWarning(
                     $"[BattlePassIAPWindowController] Consume decision evaluated. " +
-                    $"ShouldConsume={shouldConsume}, ProductId='{Args.ProductId}'.");
+                    $"ShouldConsume={shouldConsume}, ProductId='{Args.ProductId}', PurchaseStatus='{purchaseStatus}'.");
                 if (shouldConsume)
                 {
                     Debug.LogWarning(
@@ -214,10 +224,6 @@ namespace BattlePass
                         ShowInfo(consumeFailureMessage);
                         return;
                     }
-                }
-
-                if (result.Success)
-                {
                     Args.OnPurchaseVerified?.Invoke(result);
                     View.SetStatus(CompletedMessage);
                     ShowInfo(CompletedInfoMessage);
@@ -225,25 +231,17 @@ namespace BattlePass
                     return;
                 }
 
-                if (IsGranted(result))
+                if (string.Equals(
+                        purchaseStatus,
+                        PurchaseStatusGrantedButFinalizationPending,
+                        StringComparison.OrdinalIgnoreCase))
                 {
-                    Args.OnPurchaseVerified?.Invoke(result);
-                    View.SetStatus(CompletedMessage);
-                    ShowInfo(CompletedInfoMessage);
-                    CloseWindow();
+                    View.SetStatus(PendingFinalizationMessage);
+                    ShowInfo(PendingFinalizationMessage);
                     return;
                 }
 
-                if (IsPending(result))
-                {
-                    View.SetStatus(PendingMessage);
-                    ShowInfo(PendingMessage);
-                    return;
-                }
-
-                var failureMessage = string.IsNullOrWhiteSpace(result.ErrorMessage)
-                    ? $"Purchase verification failed: {result.ErrorCode}"
-                    : result.ErrorMessage;
+                var failureMessage = BuildVerifyFailureMessage(result, purchaseStatus);
                 View.SetStatus(failureMessage);
                 ShowInfo(failureMessage);
             }
@@ -267,21 +265,42 @@ namespace BattlePass
             }
         }
 
-        private static bool IsPending(BattlePassPurchaseVerificationResult result)
+        private static bool IsFinalSuccessPurchaseStatus(string purchaseStatus)
         {
-            return result != null &&
-                   string.Equals(result.PurchaseStatus, "pending", System.StringComparison.OrdinalIgnoreCase);
+            return string.Equals(purchaseStatus, PurchaseStatusVerifiedAndConsumed, StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(purchaseStatus, PurchaseStatusVerifiedAndAcknowledged, StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(purchaseStatus, PurchaseStatusDuplicateAlreadyProcessed, StringComparison.OrdinalIgnoreCase);
         }
 
-        private static bool IsGranted(BattlePassPurchaseVerificationResult result)
+        private static string NormalizeStatus(string purchaseStatus)
         {
-            return result != null &&
-                   string.Equals(result.PurchaseStatus, "granted", System.StringComparison.OrdinalIgnoreCase);
+            return purchaseStatus?.Trim() ?? string.Empty;
         }
 
-        private static bool ShouldConsumeAfterVerify(BattlePassPurchaseVerificationResult result)
+        private static string BuildVerifyFailureMessage(BattlePassPurchaseVerificationResult result, string purchaseStatus)
         {
-            return result != null && (result.Success || IsGranted(result));
+            if (!string.IsNullOrWhiteSpace(result?.ErrorMessage))
+            {
+                return result.ErrorMessage;
+            }
+
+            if (string.Equals(purchaseStatus, PurchaseStatusVerifyFailed, StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(result?.ErrorCode))
+            {
+                return $"Purchase verification failed: {result.ErrorCode}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(result?.ErrorCode))
+            {
+                return $"Purchase verification failed: {result.ErrorCode}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(purchaseStatus))
+            {
+                return $"Purchase verification failed: {purchaseStatus}";
+            }
+
+            return "Purchase verification failed.";
         }
 
         private static string GetTokenPrefix(string token)

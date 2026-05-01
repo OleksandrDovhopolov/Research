@@ -12,6 +12,9 @@ namespace BattlePass.Tests.Editor
 {
     public sealed class BattlePassIAPWindowControllerTests
     {
+        private const string PendingFinalizationMessage =
+            "Purchase granted, but final processing is still pending. Please wait before trying to repurchase this item.";
+
         private readonly List<UnityEngine.Object> _objectsToCleanup = new();
 
         [TearDown]
@@ -94,15 +97,17 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
-        public void Purchase_WhenSuccessful_VerifiesToken_ConsumesPurchase_ClosesPopup_AndReportsResult()
+        public void Purchase_WhenStatusVerifiedAndAcknowledged_VerifiesToken_ConsumesPurchase_ClosesPopup_AndReportsResult()
         {
             var expectedResult = new BattlePassPurchaseVerificationResult(
                 true,
-                "acknowledged",
+                "verified_and_acknowledged",
                 CreatePremiumUserState(),
+                "ent_123",
                 "battle_pass",
                 "premium_sku",
                 "active",
+                "acknowledged",
                 null,
                 null);
             var purchaseService = new StubBattlePassPurchaseService
@@ -140,6 +145,18 @@ namespace BattlePass.Tests.Editor
             Assert.That(controller.CloseCalls, Is.EqualTo(1));
             Assert.That(controller.InfoMessages, Has.Member("Battle Pass premium purchase completed successfully."));
             Assert.That(view.LastStatus, Is.EqualTo("Purchase completed successfully."));
+        }
+
+        [Test]
+        public void Purchase_WhenStatusVerifiedAndConsumed_ConsumesAndClosesPopup()
+        {
+            RunFinalSuccessStatusScenario("verified_and_consumed", "consumed");
+        }
+
+        [Test]
+        public void Purchase_WhenStatusDuplicateAlreadyProcessed_ConsumesAndClosesPopup()
+        {
+            RunFinalSuccessStatusScenario("duplicate_already_processed", "not_applicable");
         }
 
         [Test]
@@ -246,7 +263,9 @@ namespace BattlePass.Tests.Editor
             {
                 VerifyPurchaseResponseFactory = (_, _, _) => UniTask.FromResult(new BattlePassPurchaseVerificationResult(
                     false,
-                    "failed",
+                    "verify_failed",
+                    null,
+                    null,
                     null,
                     null,
                     null,
@@ -270,6 +289,90 @@ namespace BattlePass.Tests.Editor
         }
 
         [Test]
+        public void Purchase_WhenFinalizationPending_DoesNotConsume_DoesNotClose_AndShowsPendingFinalizationMessage()
+        {
+            var purchaseService = new StubBattlePassPurchaseService
+            {
+                PurchaseResponseFactory = _ => UniTask.FromResult(new BattlePassStorePurchaseResult(
+                    BattlePassStorePurchaseStatus.Succeeded,
+                    "google_token_123",
+                    "txn_1",
+                    "premium_sku",
+                    string.Empty))
+            };
+            var serverService = new StubBattlePassServerService
+            {
+                VerifyPurchaseResponseFactory = (_, _, _) => UniTask.FromResult(new BattlePassPurchaseVerificationResult(
+                    true,
+                    "granted_but_finalization_pending",
+                    CreatePremiumUserState(),
+                    "ent_123",
+                    "battle_pass",
+                    "premium_sku",
+                    "active",
+                    "finalization_pending_manual",
+                    null,
+                    null))
+            };
+            BattlePassPurchaseVerificationResult callbackResult = null;
+            var controller = CreateController(
+                purchaseService,
+                serverService,
+                new BattlePassIAPWindowArgs("season_1", "premium_sku", result => callbackResult = result),
+                out var view);
+
+            RunCoroutine(controller.Show(controller.TestArgs));
+            view.EmitPurchaseClick();
+
+            Assert.That(purchaseService.ConsumeCalls, Is.EqualTo(0));
+            Assert.That(callbackResult, Is.Null);
+            Assert.That(controller.CloseCalls, Is.EqualTo(0));
+            Assert.That(controller.InfoMessages, Has.Member(PendingFinalizationMessage));
+            Assert.That(view.LastStatus, Is.EqualTo(PendingFinalizationMessage));
+        }
+
+        [Test]
+        public void Purchase_WhenUnknownStatusWithSuccessTrue_TreatsAsFailure_AndDoesNotConsume()
+        {
+            var purchaseService = new StubBattlePassPurchaseService
+            {
+                PurchaseResponseFactory = _ => UniTask.FromResult(new BattlePassStorePurchaseResult(
+                    BattlePassStorePurchaseStatus.Succeeded,
+                    "google_token_123",
+                    "txn_1",
+                    "premium_sku",
+                    string.Empty))
+            };
+            var serverService = new StubBattlePassServerService
+            {
+                VerifyPurchaseResponseFactory = (_, _, _) => UniTask.FromResult(new BattlePassPurchaseVerificationResult(
+                    true,
+                    "legacy_granted",
+                    CreatePremiumUserState(),
+                    "ent_123",
+                    "battle_pass",
+                    "premium_sku",
+                    "active",
+                    "not_applicable",
+                    null,
+                    null))
+            };
+            var controller = CreateController(
+                purchaseService,
+                serverService,
+                new BattlePassIAPWindowArgs("season_1", "premium_sku", _ => { }),
+                out var view);
+
+            RunCoroutine(controller.Show(controller.TestArgs));
+            view.EmitPurchaseClick();
+
+            Assert.That(purchaseService.ConsumeCalls, Is.EqualTo(0));
+            Assert.That(controller.CloseCalls, Is.EqualTo(0));
+            Assert.That(controller.InfoMessages, Has.Member("Purchase verification failed: legacy_granted"));
+            Assert.That(view.LastStatus, Is.EqualTo("Purchase verification failed: legacy_granted"));
+        }
+
+        [Test]
         public void Purchase_WhenConsumeFails_ShowsRecoverableError_AndKeepsPopupOpen()
         {
             var purchaseService = new StubBattlePassPurchaseService
@@ -288,11 +391,13 @@ namespace BattlePass.Tests.Editor
             {
                 VerifyPurchaseResponseFactory = (_, _, _) => UniTask.FromResult(new BattlePassPurchaseVerificationResult(
                     true,
-                    "acknowledged",
+                    "verified_and_acknowledged",
                     CreatePremiumUserState(),
+                    "ent_123",
                     "battle_pass",
                     "premium_sku",
                     "active",
+                    "acknowledged",
                     null,
                     null))
             };
@@ -356,6 +461,56 @@ namespace BattlePass.Tests.Editor
             while (enumerator.MoveNext())
             {
             }
+        }
+
+        private void RunFinalSuccessStatusScenario(string purchaseStatus, string googleFinalizeStatus)
+        {
+            var expectedResult = new BattlePassPurchaseVerificationResult(
+                true,
+                purchaseStatus,
+                CreatePremiumUserState(),
+                "ent_123",
+                "battle_pass",
+                "premium_sku",
+                "active",
+                googleFinalizeStatus,
+                null,
+                null);
+            var purchaseService = new StubBattlePassPurchaseService
+            {
+                PurchaseResponseFactory = _ => UniTask.FromResult(new BattlePassStorePurchaseResult(
+                    BattlePassStorePurchaseStatus.Succeeded,
+                    "google_token_123",
+                    "txn_1",
+                    "premium_sku",
+                    string.Empty)),
+                ConsumeResponseFactory = (_, _) => UniTask.FromResult(new BattlePassConsumeResult(
+                    BattlePassConsumeStatus.Succeeded,
+                    string.Empty))
+            };
+            var serverService = new StubBattlePassServerService
+            {
+                VerifyPurchaseResponseFactory = (_, _, _) => UniTask.FromResult(expectedResult)
+            };
+            BattlePassPurchaseVerificationResult callbackResult = null;
+            var controller = CreateController(
+                purchaseService,
+                serverService,
+                new BattlePassIAPWindowArgs("season_1", "premium_sku", result => callbackResult = result),
+                out var view);
+
+            RunCoroutine(controller.Show(controller.TestArgs));
+            view.EmitPurchaseClick();
+
+            Assert.That(purchaseService.PurchaseCalls, Is.EqualTo(1));
+            Assert.That(serverService.VerifyPurchaseCalls, Is.EqualTo(1));
+            Assert.That(serverService.LastPurchaseToken, Is.EqualTo("google_token_123"));
+            Assert.That(purchaseService.ConsumeCalls, Is.EqualTo(1));
+            Assert.That(purchaseService.LastConsumedToken, Is.EqualTo("google_token_123"));
+            Assert.That(callbackResult, Is.SameAs(expectedResult));
+            Assert.That(controller.CloseCalls, Is.EqualTo(1));
+            Assert.That(controller.InfoMessages, Has.Member("Battle Pass premium purchase completed successfully."));
+            Assert.That(view.LastStatus, Is.EqualTo("Purchase completed successfully."));
         }
 
         private sealed class TestBattlePassIAPWindowView : BattlePassIAPWindowView
@@ -524,11 +679,13 @@ namespace BattlePass.Tests.Editor
 
                 return UniTask.FromResult(new BattlePassPurchaseVerificationResult(
                     true,
-                    "acknowledged",
+                    "verified_and_acknowledged",
                     CreatePremiumUserState(),
+                    "ent_default",
                     "battle_pass",
                     productId,
                     "active",
+                    "acknowledged",
                     null,
                     null));
             }

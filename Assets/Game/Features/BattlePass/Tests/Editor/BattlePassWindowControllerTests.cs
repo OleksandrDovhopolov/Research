@@ -424,9 +424,11 @@ namespace BattlePass.Tests.Editor
                 false,
                 "granted",
                 updatedUserState,
+                "ent_123",
                 "battle_pass",
                 "premium_sku",
                 "active",
+                "acknowledged",
                 "PURCHASE_ACKNOWLEDGE_FAILED",
                 "Stub acknowledge failed."));
 
@@ -779,11 +781,13 @@ namespace BattlePass.Tests.Editor
 
                 return UniTask.FromResult(new BattlePassPurchaseVerificationResult(
                     true,
-                    "acknowledged",
+                    "verified_and_acknowledged",
                     (GetCurrentSnapshot ?? _initialSnapshot)?.UserState,
+                    "ent_default",
                     "battle_pass",
                     productId,
                     "active",
+                    "acknowledged",
                     null,
                     null));
             }

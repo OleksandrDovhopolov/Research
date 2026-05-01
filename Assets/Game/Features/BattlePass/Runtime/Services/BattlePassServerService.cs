@@ -195,19 +195,43 @@ namespace BattlePass
                     string.Empty,
                     string.Empty,
                     string.Empty,
+                    string.Empty,
+                    string.Empty,
                     "empty_response",
                     "Battle pass purchase verification response is empty.");
             }
+
+            var entitlementId = GetFirstNonEmpty(
+                response.Entitlement?.EntitlementId,
+                response.Entitlement?.Key);
+            var entitlementType = GetFirstNonEmpty(
+                response.Entitlement?.EntitlementType,
+                response.Entitlement?.Type);
+            var entitlementKey = GetFirstNonEmpty(
+                response.Entitlement?.Key,
+                response.Entitlement?.EntitlementId);
 
             return new BattlePassPurchaseVerificationResult(
                 response.Success,
                 response.PurchaseStatus,
                 MapUserState(response.BattlePass),
-                response.Entitlement?.Type,
-                response.Entitlement?.Key,
+                entitlementId,
+                entitlementType,
+                entitlementKey,
                 response.Entitlement?.Status,
+                response.GoogleFinalizeStatus,
                 response.ErrorCode,
                 response.ErrorMessage);
+        }
+
+        private static string GetFirstNonEmpty(string primary, string fallback)
+        {
+            if (!string.IsNullOrWhiteSpace(primary))
+            {
+                return primary;
+            }
+
+            return fallback ?? string.Empty;
         }
 
         private static BattlePassSeason MapSeason(BattlePassSeasonResponse response)
@@ -655,6 +679,9 @@ namespace BattlePass
             [JsonProperty("battlePass")]
             public BattlePassUserStateResponse BattlePass { get; set; }
 
+            [JsonProperty("googleFinalizeStatus")]
+            public string GoogleFinalizeStatus { get; set; }
+
             [JsonProperty("errorCode")]
             public string ErrorCode { get; set; }
 
@@ -665,6 +692,12 @@ namespace BattlePass
         [Serializable]
         private sealed class BattlePassEntitlementResponse
         {
+            [JsonProperty("entitlementId")]
+            public string EntitlementId { get; set; }
+
+            [JsonProperty("entitlementType")]
+            public string EntitlementType { get; set; }
+
             [JsonProperty("type")]
             public string Type { get; set; }
 
