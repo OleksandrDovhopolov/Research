@@ -14,6 +14,8 @@ namespace Rewards
     public sealed class LevelPlayRewardedAdsProvider : IRewardedAdsProvider
     {
         private const string RewardedServerParamsMetaDataKey = "LevelPlay_Rewarded_Server_Params";
+        private const string TestSuiteMetaDataKey = "is_test_suite";
+        private const string TestSuiteMetaDataEnabledValue = "enable";
 
         private sealed class RewardedAdContext
         {
@@ -80,6 +82,7 @@ namespace Rewards
 
             Debug.Log("[RewardAdsLevelPlay] Initialize started.");
             _initializeOperation = new UniTaskCompletionSource<bool>();
+            LevelPlay.SetMetaData(TestSuiteMetaDataKey, TestSuiteMetaDataEnabledValue);
             LevelPlay.Init(appKey, _identityProvider.GetPlayerId());
 
             try
