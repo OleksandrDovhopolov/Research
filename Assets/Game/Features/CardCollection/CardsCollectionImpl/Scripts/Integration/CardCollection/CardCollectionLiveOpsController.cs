@@ -40,7 +40,7 @@ namespace CardCollectionImpl
         
         protected override async UniTask OnStartAsync(CardCollectionEventModel model, EventStateData state, CancellationToken ct)
         {
-            Debug.LogWarning($"[CardCollectionRuntime] OnStartAsync: {model.EventId}");
+//            Debug.LogWarning($"[CardCollectionRuntime] OnStartAsync: {model.EventId}");
     
             await CloseSessionInternalAsync(ct : ct);
 

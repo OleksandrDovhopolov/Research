@@ -16,7 +16,7 @@ namespace CardCollectionImpl
         void ICardCollectionSessionFacade.SetActiveSession(CardCollectionSessionContext sessionContext)
         {
             _featureContext = sessionContext ?? throw new ArgumentNullException(nameof(sessionContext));
-            Debug.LogWarning($"[CardCollectionRuntime] SetActiveSession");
+            //Debug.LogWarning($"[CardCollectionRuntime] SetActiveSession");
             IsActive = true;
         }
 

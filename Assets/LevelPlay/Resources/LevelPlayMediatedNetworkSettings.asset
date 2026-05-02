@@ -9,12 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4b8bcc18c722afc44be7d6b87da13b70, type: 3}
-  m_Name: LevelPlayMediationSettings
+  m_Script: {fileID: 11500000, guid: 221c390957eb94a53a823b1654c3c34b, type: 3}
+  m_Name: LevelPlayMediatedNetworkSettings
   m_EditorClassIdentifier: 
-  EnableIronsourceSDKInitAPI: 0
-  AndroidAppKey: 2637c0f2d
-  IOSAppKey: 
-  DeclareAD_IDPermission: 0
-  EnableAdapterDebug: 0
-  EnableIntegrationHelper: 0
+  EnableAdmob: 0
+  AdmobAndroidAppId: 
+  AdmobIOSAppId: 
