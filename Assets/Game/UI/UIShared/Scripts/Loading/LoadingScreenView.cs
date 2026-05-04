@@ -73,7 +73,7 @@ namespace UIShared.Loading
             //var tcs = new UniTaskCompletionSource<LoginSelectionMethod?>();
 
             await UniTask.CompletedTask;
-            Debug.LogWarning($"[Debug] LoginSelectionMethod.Guest returned");
+//            Debug.LogWarning($"[Debug] LoginSelectionMethod.Guest returned");
             return LoginSelectionMethod.Guest;
             //await using var registration = ct.Register(() => tcs.TrySetCanceled(ct));
             //return await tcs.Task;

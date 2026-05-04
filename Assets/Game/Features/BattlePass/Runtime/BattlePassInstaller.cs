@@ -1,0 +1,40 @@
+using VContainer;
+using UIShared;
+
+namespace BattlePass
+{
+    public static class BattlePassInstaller
+    {
+        public static void RegisterBattlePass(this IContainerBuilder builder)
+        {
+            builder.Register<IBattlePassRealtimeClock, UnityBattlePassRealtimeClock>(Lifetime.Singleton);
+            builder.Register<IBattlePassTimerService, BattlePassTimerService>(Lifetime.Singleton);
+            builder.Register<BattlePassUiModelFactory>(Lifetime.Singleton);
+            builder.Register<IBattlePassSnapshotStore, BattlePassSnapshotStore>(Lifetime.Singleton);
+            builder.Register<IBattlePassXpPresentationTracker, BattlePassXpPresentationTracker>(Lifetime.Singleton);
+            builder.Register<BattlePassGameplayReadyInitializer>(Lifetime.Singleton).As<IGameplayReadyInitializer>();
+            builder.Register<IOptimisticResourceApplyService, ResourceManagerOptimisticResourceApplyService>(Lifetime.Singleton);
+            builder.Register<IBattlePassOptimisticRewardApplier, BattlePassOptimisticRewardApplier>(Lifetime.Singleton);
+            builder.Register<IBattlePassServerService, BattlePassServerService>(Lifetime.Singleton);
+            builder.Register<IBattlePassPurchaseService>(_ =>
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                return new UnityIapBattlePassPurchaseService();
+#else
+                return new MockBattlePassPurchaseService();
+#endif
+            }, Lifetime.Singleton);
+            builder.Register<BattlePassLifecycleState>(Lifetime.Singleton);
+            builder.Register<IBattlePassLifecycleState>(resolver => resolver.Resolve<BattlePassLifecycleState>(), Lifetime.Singleton);
+            builder.Register<BattlePassEventModelFactory>(Lifetime.Singleton);
+            builder.Register<BattlePassLiveOpsController>(Lifetime.Singleton);
+
+            builder.RegisterBuildCallback(container =>
+            {
+                var eventRegistry = container.Resolve<EventOrchestration.Abstractions.IEventRegistry>();
+                var controller = container.Resolve<BattlePassLiveOpsController>();
+                eventRegistry.Register(controller);
+            });
+        }
+    }
+}

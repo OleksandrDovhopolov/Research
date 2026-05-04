@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
@@ -7,6 +8,7 @@ namespace UIShared
     public sealed class GameplayReadyGate : IGameplayReadyGate
     {
         private readonly TransitionAnimationService _transitionAnimationService;
+        private readonly IReadOnlyList<IGameplayReadyInitializer> _initializers;
         private readonly UniTaskCompletionSource _readyTcs = new();
 
         private bool _isReady;
@@ -14,10 +16,15 @@ namespace UIShared
 
         public bool IsReady => _isReady;
 
-        public GameplayReadyGate(TransitionAnimationService transitionAnimationService)
+        public GameplayReadyGate(
+            TransitionAnimationService transitionAnimationService,
+            IEnumerable<IGameplayReadyInitializer> initializers)
         {
             _transitionAnimationService = transitionAnimationService
                                           ?? throw new ArgumentNullException(nameof(transitionAnimationService));
+            _initializers = initializers != null
+                ? new List<IGameplayReadyInitializer>(initializers)
+                : Array.Empty<IGameplayReadyInitializer>();
         }
 
         public UniTask WaitUntilReadyAsync(CancellationToken ct)
@@ -44,6 +51,7 @@ namespace UIShared
             try
             {
                 ct.ThrowIfCancellationRequested();
+                await RunInitializersAsync(ct);
                 await _transitionAnimationService.PlayRevealAsync(ct);
 
                 _isReady = true;
@@ -52,6 +60,15 @@ namespace UIShared
             finally
             {
                 _isMarkingReady = false;
+            }
+        }
+
+        private async UniTask RunInitializersAsync(CancellationToken ct)
+        {
+            for (var i = 0; i < _initializers.Count; i++)
+            {
+                ct.ThrowIfCancellationRequested();
+                await _initializers[i].InitializeAsync(ct);
             }
         }
     }

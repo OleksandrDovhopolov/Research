@@ -1,0 +1,27 @@
+{
+    "name": "BattlePass",
+    "rootNamespace": "BattlePass",
+    "references": [
+        "CoreResources",
+        "Infrastructure",
+        "EventOrchestration",
+        "GameplayUI",
+        "UIShared",
+        "UISystem",
+        "UniTask",
+        "VContainer",
+        "Rewards",
+        "Unity.TextMeshPro",
+        "UnityEngine.Purchasing",
+        "UnityEngine.Purchasing.Stores"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

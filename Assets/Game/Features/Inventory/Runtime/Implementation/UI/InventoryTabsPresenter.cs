@@ -4,6 +4,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Inventory.API;
 using R3;
+using Rewards;
 
 namespace Inventory.Implementation.UI
 {
@@ -13,6 +14,7 @@ namespace Inventory.Implementation.UI
         private readonly IInventoryService _inventoryService;
         private readonly IInventoryReadService _inventoryReadService;
         private readonly IItemCategoryRegistry _itemCategoryRegistry;
+        private readonly IRewardPlayerStateRefreshCoordinator _rewardPlayerStateRefreshCoordinator;
         private IDisposable _inventoryChangedSubscription;
         private readonly List<InventoryCategoryTabViewModel> _tabs = new();
         
@@ -23,12 +25,14 @@ namespace Inventory.Implementation.UI
             string ownerId,
             IInventoryService inventoryService,
             IInventoryReadService inventoryReadService,
-            IItemCategoryRegistry itemCategoryRegistry)
+            IItemCategoryRegistry itemCategoryRegistry,
+            IRewardPlayerStateRefreshCoordinator rewardPlayerStateRefreshCoordinator)
         {
             _ownerId = ownerId;
             _inventoryService = inventoryService;
             _inventoryReadService = inventoryReadService;
             _itemCategoryRegistry = itemCategoryRegistry;
+            _rewardPlayerStateRefreshCoordinator = rewardPlayerStateRefreshCoordinator;
 
             foreach (var category in _itemCategoryRegistry.GetAllCategories())
             {
@@ -45,6 +49,10 @@ namespace Inventory.Implementation.UI
         public async UniTask InitializeAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            if (_rewardPlayerStateRefreshCoordinator?.HasPendingRefresh == true)
+            {
+                await _rewardPlayerStateRefreshCoordinator.RequestForegroundRefreshAsync(cancellationToken);
+            }
 
             foreach (var tab in _tabs)
             {

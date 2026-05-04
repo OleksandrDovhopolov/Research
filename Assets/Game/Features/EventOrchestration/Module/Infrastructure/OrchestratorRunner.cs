@@ -11,13 +11,15 @@ namespace EventOrchestration
     public sealed class OrchestratorRunner : MonoBehaviour
     {
         [SerializeField] private float _tickIntervalSeconds = 1f;
+        [SerializeField] private float _refreshIntervalSeconds = 60f;
 
         private CancellationToken _destroyToken;
         private EventOrchestrator _orchestrator;
         private EventOrchestratorDebugFacade _debugFacade;
         private IGameplayReadyGate _gameplayReadyGate;
 
-        private TimeSpan _timeSpan;
+        private TimeSpan _tickInterval;
+        private TimeSpan _refreshInterval;
 
         [Inject]
         private void Construct(EventOrchestrator orchestrator, EventOrchestratorDebugFacade debugFacade, IGameplayReadyGate gameplayReadyGate)
@@ -30,7 +32,8 @@ namespace EventOrchestration
         private void Awake()
         {
             _destroyToken = this.GetCancellationTokenOnDestroy();
-            _timeSpan = TimeSpan.FromSeconds(_tickIntervalSeconds);
+            _tickInterval = TimeSpan.FromSeconds(Mathf.Max(0.1f, _tickIntervalSeconds));
+            _refreshInterval = TimeSpan.FromSeconds(Mathf.Max(1f, _refreshIntervalSeconds));
         }
 
         private void Start()
@@ -43,13 +46,39 @@ namespace EventOrchestration
             ct.ThrowIfCancellationRequested();
 
             await _gameplayReadyGate.WaitUntilReadyAsync(ct);
-
             await _orchestrator.InitializeAsync(ct);
+            await UniTask.WhenAll(
+                RunTickLoopAsync(ct),
+                RunRefreshLoopAsync(ct));
+        }
 
+        private async UniTask RunTickLoopAsync(CancellationToken ct)
+        {
             while (!ct.IsCancellationRequested)
             {
                 await _orchestrator.TickAsync(ct);
-                await UniTask.Delay(_timeSpan, cancellationToken: ct);
+                await UniTask.Delay(_tickInterval, cancellationToken: ct);
+            }
+        }
+
+        private async UniTask RunRefreshLoopAsync(CancellationToken ct)
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                await UniTask.Delay(_refreshInterval, cancellationToken: ct);
+
+                try
+                {
+                    await _orchestrator.RefreshScheduleAsync(ct);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError($"[OrchestratorRunner] Failed to refresh live ops schedule. {exception}");
+                }
             }
         }
 

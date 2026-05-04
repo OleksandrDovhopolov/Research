@@ -2,6 +2,7 @@ using CardCollectionImpl;
 using core;
 using CoreResources;
 using EventOrchestration;
+using BattlePass;
 using FortuneWheel;
 using Infrastructure;
 using Inventory.API;
@@ -20,8 +21,8 @@ namespace Game.Bootstrap
         [SerializeField] private GlobalTimerService _globalTimerService;
         [SerializeField] private RewardSpecsConfigSO _rewardSpecsConfigSo;
         [SerializeField] private RewardedAdsConfigSO _rewardedAdsConfigSo;
-        [SerializeField] private string _cardCollectionScheduleFile = "card_collection_schedule.json";
-        [SerializeField] private string _removeCardCollectionConfigSchedule = "cards_event_schedule";
+        [SerializeField] private string _liveOpsScheduleFile = "liveops_schedule.json";
+        [SerializeField] private string _liveOpsScheduleConfigName = "cards_event_schedule";
         
         public override void InstallBindings(IContainerBuilder builder)
         {
@@ -59,6 +60,7 @@ namespace Game.Bootstrap
             
             builder.RegisterInventoryService();
             builder.RegisterCardCollectionImpl();
+            builder.RegisterBattlePass();
             builder.RegisterFortuneWheel();
             
             // Rewards
@@ -71,6 +73,7 @@ namespace Game.Bootstrap
             builder.Register<IRewardGrantService, ServerRewardGrantService>(Lifetime.Singleton);
             builder.Register<IRewardIntentService, ServerRewardIntentService>(Lifetime.Singleton);
             builder.Register<IRewardPlayerStateSyncService, ServerRewardPlayerStateSyncService>(Lifetime.Singleton);
+            builder.Register<IRewardPlayerStateRefreshCoordinator, RewardPlayerStateRefreshCoordinator>(Lifetime.Singleton);
             builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(rewardSpecsConfig), Lifetime.Singleton);
 
             var rewardedAdsConfig = _rewardedAdsConfigSo != null
@@ -89,7 +92,11 @@ namespace Game.Bootstrap
             builder.Register<FortuneWheelAdSpinOrchestrator>(Lifetime.Singleton);
             
             // Orchestration
-            builder.RegisterOrchestration(_cardCollectionScheduleFile, _removeCardCollectionConfigSchedule);
+            var liveOpsScheduleFile = string.IsNullOrWhiteSpace(_liveOpsScheduleFile) ||
+                                      string.Equals(_liveOpsScheduleFile, "card_collection_schedule.json")
+                ? "liveops_schedule.json"
+                : _liveOpsScheduleFile;
+            builder.RegisterOrchestration(liveOpsScheduleFile, _liveOpsScheduleConfigName);
             builder.RegisterComponentInHierarchy<OrchestratorRunner>();
             
             builder.RegisterBuildCallback(resolver =>
@@ -102,6 +109,15 @@ namespace Game.Bootstrap
                     if (rewardedAdPresenter != null)
                     {
                         resolver.Inject(rewardedAdPresenter);
+                    }
+                }
+
+                var battlePassOpenButtons = Object.FindObjectsOfType<BattlePassOpenButton>(true);
+                foreach (var battlePassOpenButton in battlePassOpenButtons)
+                {
+                    if (battlePassOpenButton != null)
+                    {
+                        resolver.Inject(battlePassOpenButton);
                     }
                 }
             });

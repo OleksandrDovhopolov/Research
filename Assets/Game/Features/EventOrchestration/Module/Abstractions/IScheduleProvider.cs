@@ -5,6 +5,11 @@ using EventOrchestration.Models;
 
 namespace EventOrchestration.Abstractions
 {
+    public interface ILiveOpsScheduleContentSource
+    {
+        UniTask<string> LoadJsonAsync(CancellationToken ct);
+    }
+
     public interface IScheduleProvider
     {
         UniTask<IReadOnlyList<ScheduleItem>> LoadAsync(CancellationToken ct);

@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: RewardedAdsConfig
   m_EditorClassIdentifier: 
   Config:
-    Mode: 0
-    AndroidGameId: 6095471
-    IosGameId: 6095470
+    Mode: 2
+    AndroidGameId: 6104720
+    IosGameId: 6104721
     AndroidRewardedAdUnitId: Rewarded_Android
     IosRewardedAdUnitId: 
-    AndroidLevelPlayAppKey: 2614c40d5
+    AndroidLevelPlayAppKey: 2637c0f2d
     IosLevelPlayAppKey: 
-    AndroidLevelPlayRewardedAdUnitId: 8nmyygv21mqqs0ae
+    AndroidLevelPlayRewardedAdUnitId: 1mx7gx5s1hwilc4z
     IosLevelPlayRewardedAdUnitId: 
     RewardId: Gems
     TestMode: 1

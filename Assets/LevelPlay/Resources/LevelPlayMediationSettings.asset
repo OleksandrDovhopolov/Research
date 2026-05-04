@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: LevelPlayMediationSettings
   m_EditorClassIdentifier: 
   EnableIronsourceSDKInitAPI: 0
-  AndroidAppKey: 
+  AndroidAppKey: 2637c0f2d
   IOSAppKey: 
   DeclareAD_IDPermission: 0
   EnableAdapterDebug: 0

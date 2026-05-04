@@ -33,7 +33,7 @@ namespace CardCollectionImpl
             builder.Register<ICardCollectionSessionFacade, CardCollectionSessionFacade>(Lifetime.Singleton);
             
             // Event model factory
-            builder.Register<IEventModelFactory, CardCollectionEventModelFactory>(Lifetime.Singleton);
+            builder.Register<CardCollectionEventModelFactory>(Lifetime.Singleton);
             
             // Feature lifeOps controller
             builder.Register<CardCollectionLiveOpsController>(Lifetime.Singleton);
