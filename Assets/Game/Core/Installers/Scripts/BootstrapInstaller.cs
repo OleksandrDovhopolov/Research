@@ -1,4 +1,5 @@
 using Game.Bootstrap.Loading;
+using Analytics;
 using Infrastructure;
 using UIShared;
 using UISystem;
@@ -11,6 +12,10 @@ namespace Game.Bootstrap
     public class BootstrapInstaller : ScriptableObjectInstaller
     {
         [SerializeField] private UIManager _uiManagerPrefab;
+        [Header("Analytics")]
+        [SerializeField] private AnalyticsConfigSO _analyticsConfig;
+        [SerializeField] private AnalyticsRoutingConfigSO _analyticsRoutingConfig;
+        [SerializeField] private AnalyticsMappingConfigSO _analyticsMappingConfig;
         [Header("Save Storage")]
         [SerializeField] private string _httpSaveAuthToken;
         
@@ -32,6 +37,9 @@ namespace Game.Bootstrap
             }, Lifetime.Singleton);
             builder.Register<SaveMigrationService>(Lifetime.Singleton);
             builder.Register<SaveService>(Lifetime.Singleton);
+            
+            //Analytics
+            builder.RegisterAnalytics(_analyticsConfig, _analyticsRoutingConfig, _analyticsMappingConfig);
             
             //RemoveConfig
             builder.Register<RemoteConfigLoader>(Lifetime.Singleton);

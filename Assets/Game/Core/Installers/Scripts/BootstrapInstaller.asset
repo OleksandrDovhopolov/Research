@@ -13,4 +13,7 @@ MonoBehaviour:
   m_Name: BootstrapInstaller
   m_EditorClassIdentifier: 
   _uiManagerPrefab: {fileID: 1466821343620153979, guid: b217eb8861cfdc346a019946f8c837ec, type: 3}
-  _transitionAnimationService: {fileID: 1575333554874395037, guid: b217eb8861cfdc346a019946f8c837ec, type: 3}
+  _analyticsConfig: {fileID: 11400000, guid: 1d4c0598c206f6d4995757a093cd6b9a, type: 2}
+  _analyticsRoutingConfig: {fileID: 11400000, guid: 39a18022bcc22ae48ab0073183661dca, type: 2}
+  _analyticsMappingConfig: {fileID: 11400000, guid: 12e417ec2c74ad6428c6ecadb5a9276c, type: 2}
+  _httpSaveAuthToken: 
