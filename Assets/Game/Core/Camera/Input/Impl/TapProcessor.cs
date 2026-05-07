@@ -1,7 +1,4 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.Search;
+using Game.Features.Locations;
 using UnityEngine;
 using VContainer;
 
@@ -9,31 +6,30 @@ namespace InputSystem
 {
     public class TapProcessor : BaseProcessor, ITapProcessor
     {
-        /*private ITapInputHandler _handler;
+        private ITapInputHandler _handler;
 
         private readonly Filter<ITapInputHandler> _filter = new();
 
-        private Raycaster _raycaster;
+        private LocationRaycaster _raycaster;
         private ScreenPointConverter _screenPointConverter;
 
         [Inject]
-        public void Install(Raycaster raycaster, ScreenPointConverter screenPointConverter)
+        public void Install(LocationRaycaster raycaster, ScreenPointConverter screenPointConverter)
         {
             _raycaster = raycaster;
             _screenPointConverter = screenPointConverter;
 
             _filter.Init();
-        }*/
+        }
 
         public IFilterBuilder AddCommand<TCommand>(TCommand command) where TCommand : ITapInputHandler, IFilterNode
         {
-            throw new NotImplementedException("Not implemented");
-            //return _filter.AddCommand(command);
+            return _filter.AddCommand(command);
         }
 
         public void OnPointerDown(Vector2 position)
         {
-            /*var (canvasHit, worldHit) = IsUIPressed(out _);
+            var (canvasHit, worldHit) = IsUIPressed(out _);
             if (canvasHit) return;
             
             _handler = _filter.FindHandler(_raycaster.Raycast(position));
@@ -45,26 +41,30 @@ namespace InputSystem
                 return; 
             }
             
-            _handler?.OnPointerDown();*/
+            _handler?.OnPointerDown();
         }
 
         public void OnHold(Vector2 position, Vector2 delta) { }
 
         public void OnPointerUp(Vector2 position)
         {
-            /*_handler?.InPointerUp();
+            if (_handler == null)
+                return;
+
+            _handler.InPointerUp();
             var worldPos = _screenPointConverter.ScreenToWorld(position);
-            _handler?.OnTap(worldPos);*/
+            _handler.OnTap(worldPos);
         }
 
         public void Cancel() 
         { 
-            //_handler?.InPointerUp();
+            _handler?.OnCancel();
+            _handler?.InPointerUp();
         }
 
         public void Dispose()
         {
-            //_handler = null;
+            _handler = null;
         }
     }
 }
