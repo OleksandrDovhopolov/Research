@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CameraSettings
   m_EditorClassIdentifier: 
   ZoomMin: 3.8
-  ZoomMax: 12
+  ZoomMax: 18
   ZoomMultiplier: 1
   ZoomSpeed: 12
   OneFingerZoomSpeed: 0.1

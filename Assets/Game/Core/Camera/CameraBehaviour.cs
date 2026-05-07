@@ -26,8 +26,8 @@ namespace CameraModule
         //public Corners FocusCorners => new(_focusBounds, _screenRect);
         public Camera Camera => camera;
         // Camera scale limits
-        public float MaxScale => _settings.ZoomMin / ((float)Screen.width / Screen.height) * _settings.ZoomMultiplier;
-        public float MinScale => _settings.ZoomMax / ((float)Screen.width / Screen.height) * _settings.ZoomMultiplier;
+        public float MaxScale => _settings.ZoomMin * _settings.ZoomMultiplier;
+        public float MinScale => _settings.ZoomMax * _settings.ZoomMultiplier;
         public bool IsMoving => _stateMachine.CurrentState is CameraDragState;
         public LeanFingerFilter FingerFilter => _fingerFilter;
         public LeanScreenDepth ScreenDepth => _screenDepth; 
