@@ -15,8 +15,18 @@ namespace Module.TileEditor
 
         public Task<LocationObject> Create(LocationObjectModel objectModel, Transform root, CancellationTokenSource cancellationTokenSource = null)
         {
-            var prefabKey = $"{objectModel.objectId}.tile";
-            var prefab = ProdAddressablesWrapper.LoadSync<GameObject>(prefabKey);
+            //var prefabKey = $"{objectModel.objectId}.tile";
+            var prefabKey = $"{objectModel.objectId}";
+            GameObject prefab;
+            try
+            {
+                prefab = ProdAddressablesWrapper.LoadSync<GameObject>(prefabKey);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"[Tile Editor] Failed to load location object prefab. objectId: '{objectModel.objectId}', key: '{prefabKey}'. {exception.Message}");
+                return Task.FromResult<LocationObject>(null);
+            }
 
             _prefabRefs.Add(prefab);
             var locationObject = Object.Instantiate(prefab, root);

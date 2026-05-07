@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using Fabros.TileEditor;
 using UnityEngine;
 using VContainer;
@@ -11,7 +9,7 @@ namespace Module.TileEditor
         private LocationSerializer _locationSerializer;
 
         [SerializeField] private Fabros.TileEditor.TileEditor _tileEditor;
-        [SerializeField] private StubObjectGetter _locationObjectsGetter;
+        [SerializeField] private CampLocationObjectGetter _locationObjectsGetter;
         [SerializeField] private TileEditorSettings _tileEditorSettings;
 
         [Inject]
@@ -22,10 +20,16 @@ namespace Module.TileEditor
 
         private void Start()
         {
+            if (_locationObjectsGetter is not ILocationObjectsGetter locationObjectsGetter)
+            {
+                Debug.LogError("TileEditorInitiator: ILocationObjectsGetter reference is required.");
+                return;
+            }
+
             _tileEditor.SetupEditor(
                 _locationSerializer,
                 new TileEditorObjectsFactory(),
-                _locationObjectsGetter,
+                locationObjectsGetter,
                 _tileEditorSettings);
         }
     }

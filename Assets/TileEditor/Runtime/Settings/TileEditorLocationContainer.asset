@@ -12,4 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 94b5132a88a75d94799f0839902d5ce8, type: 3}
   m_Name: TileEditorLocationContainer
   m_EditorClassIdentifier: 
-  _editorLocationInfos: []
+  _editorLocationInfos:
+  - <Location>k__BackingField: {fileID: 4900000, guid: a6c2dfe4cce95434082177310309d62f, type: 3}
+    <GroupName>k__BackingField: test
+    <PrefabFolders>k__BackingField:
+    - test
+  - <Location>k__BackingField: {fileID: 4900000, guid: 4c115e60ac82fbc4aae4f82898d0ddb6, type: 3}
+    <GroupName>k__BackingField: test_01
+    <PrefabFolders>k__BackingField:
+    - test_01
+  - <Location>k__BackingField: {fileID: 4900000, guid: 900bd254bde267943b50aa2f3e188118, type: 3}
+    <GroupName>k__BackingField: main_location
+    <PrefabFolders>k__BackingField:
+    - main_location

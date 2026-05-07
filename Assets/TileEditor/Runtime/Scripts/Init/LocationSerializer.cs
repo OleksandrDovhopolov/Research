@@ -33,7 +33,19 @@ namespace Module.TileEditor
             {
                 _editorLocationContainer.CreateNewEditorInfo(locationName);
             }
-            File.WriteAllText(_editorLocationContainer.GenerateFullPathToLocation(locationName), locationData);
+
+            if (!_editorLocationContainer.IsExist(locationName))
+            {
+                return;
+            }
+
+            var fullPath = _editorLocationContainer.GenerateFullPathToLocation(locationName);
+            if (string.IsNullOrWhiteSpace(fullPath))
+            {
+                return;
+            }
+
+            File.WriteAllText(fullPath, locationData);
 #if UNITY_EDITOR
             AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(_editorLocationContainer.GetLocationInfo(locationName).Location));
 #endif
