@@ -11,9 +11,9 @@ namespace Module.TileEditor
     public class EditorLocationContainer : ScriptableObject
     {
         [SerializeField] private List<EditorLocationInfo> _editorLocationInfos;
+        private const string DefaultLocationAssetPath = "Assets/Game/Content/Locations";
         private string _objectsDirectoryPath => Path.Combine(Application.dataPath, "Location");
-
-        private readonly string _defaultLocationPath = Path.Combine("Assets", "Libraries", "LevelsLibrary", "LevelInfos");
+        private string _defaultLocationDirectoryPath => Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Game", "Content", "Locations");
         
         public string GenerateFullPathToPrefab(string folderName)
         {
@@ -43,13 +43,20 @@ namespace Module.TileEditor
         public void CreateNewEditorInfo(string locationName)
         {
 #if UNITY_EDITOR
+            Directory.CreateDirectory(_defaultLocationDirectoryPath);
+
             var newLocationInfo = new EditorLocationInfo(locationName);
             var textAsset = new TextAsset();
-            var path = EditorUtility.SaveFilePanel("Create zone",_defaultLocationPath,locationName, "json");
-            var relativePath = path.Substring(path.IndexOf("Assets/", StringComparison.Ordinal));
-            relativePath = relativePath.Replace("/", "\\");
+            var path = EditorUtility.SaveFilePanel("Create zone", _defaultLocationDirectoryPath, locationName, "json");
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return;
+            }
+
+            var relativePath = Path.Combine(DefaultLocationAssetPath, Path.GetFileName(path)).Replace("\\", "/");
             AssetDatabase.CreateAsset(textAsset, relativePath);
             newLocationInfo.SetNewLocationAsset(AssetDatabase.LoadAssetAtPath<TextAsset>(relativePath));
+            _editorLocationInfos ??= new List<EditorLocationInfo>();
             _editorLocationInfos.Add(newLocationInfo);
 #endif
         }
