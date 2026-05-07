@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Fabros.TileEditor
@@ -37,6 +38,36 @@ namespace Fabros.TileEditor
             location._locationGroups = locationModel.groups ?? new List<string>(); 
             location._isEditor = isEditor;
             await Task.WhenAll(locationModel.objects.Select(model=>location.AddObject(model)));
+            return location;
+        }
+
+        public static async UniTask<Location> CreateAsync(
+            Transform container,
+            LocationModel locationModel,
+            ILocationObjectsFactory objectsFactory,
+            TileEditorSettings settings,
+            bool isEditor,
+            CancellationToken cancellationToken,
+            Action<LocationObject> onLocationObjectCreated = null)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var locationRoot = new GameObject($"Location {locationModel.name}");
+            locationRoot.transform.SetParent(container, false);
+            var location = locationRoot.AddComponent<Location>();
+            location.Name = locationModel.name;
+            location._objectsFactory = objectsFactory;
+            location._settings = settings;
+            location._locationGroups = locationModel.groups ?? new List<string>();
+            location._isEditor = isEditor;
+
+            var objectModels = locationModel.objects ?? new List<LocationObjectModel>();
+            using var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var createTasks = objectModels
+                .Select(model => location.AddObject(model, cancellationTokenSource, onLocationObjectCreated).AsUniTask())
+                .ToArray();
+
+            await UniTask.WhenAll(createTasks).AttachExternalCancellation(cancellationToken);
             return location;
         }
         

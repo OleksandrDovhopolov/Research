@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Fabros.TileEditor
 {
@@ -16,7 +16,8 @@ namespace Fabros.TileEditor
 
         public Color warningColor;
         public Color errorColor;
-        public Text messageText;
+        //public Text messageText;
+        public TextMeshProUGUI messageText;
 
         // ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
