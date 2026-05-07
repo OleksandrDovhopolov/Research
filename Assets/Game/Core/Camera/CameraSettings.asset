@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 470562af1c99e2c4fbcc3251882f8984, type: 3}
+  m_Name: CameraSettings
+  m_EditorClassIdentifier: 
+  ZoomMin: 3.8
+  ZoomMax: 12
+  ZoomMultiplier: 1
+  ZoomSpeed: 12
+  OneFingerZoomSpeed: 0.1
+  ZoomSmoothing: 0.8
+  DragInertia: 0.15
+  StopInertia: 0.85
+  Smoothing: 0.4
+  CameraBordersOffsetX: 0.14
+  CameraBordersOffsetY: 0.14
+  CameraBordersSpeedFactorX: 1
+  CameraBordersSpeedFactorY: 3
+  BorderCameraSpeedMin: 0.1
+  BorderCameraSpeedMax: 8
+  CameraFocusDuration: 0.5

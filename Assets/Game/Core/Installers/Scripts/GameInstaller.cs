@@ -9,6 +9,8 @@ using Inventory.API;
 using Rewards;
 using System.Collections.Generic;
 using System.Linq;
+using CameraModule;
+using InputSystem;
 using UIShared;
 using UnityEngine;
 using VContainer;
@@ -24,6 +26,9 @@ namespace Game.Bootstrap
         [SerializeField] private string _liveOpsScheduleFile = "liveops_schedule.json";
         [SerializeField] private string _liveOpsScheduleConfigName = "cards_event_schedule";
         
+        [SerializeField] private CameraSettings _cameraSettings;
+        [SerializeField] private CameraBehaviour _cameraBehaviour;
+        
         public override void InstallBindings(IContainerBuilder builder)
         {
             if (_globalTimerService == null)
@@ -35,6 +40,11 @@ namespace Game.Bootstrap
                 ? _rewardSpecsConfigSo
                 : ScriptableObject.CreateInstance<RewardSpecsConfigSO>();
 
+            //Camera
+            builder.Register<ScreenPointConverter>(Lifetime.Singleton);
+            builder.RegisterInstance(_cameraSettings);
+            builder.RegisterComponent(_cameraBehaviour);
+            
             // Game Ready Gate
             builder.Register<IGameplayReadyGate, GameplayReadyGate>(Lifetime.Singleton);
             

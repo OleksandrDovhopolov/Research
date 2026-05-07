@@ -9,22 +9,35 @@ namespace Game.Features.Locations
         private const float ZoomMax = 25f;
         private const float ZoomStep = 1f;
 
-        private Camera _camera;
-        private TileEditorSettings _settings;
+        [SerializeField] private Camera _camera;
+        [SerializeField] private TileEditorSettings _settings;
+        [SerializeField] private int _dragMouseButton = 1;
+        [SerializeField] private bool _enableMouseWheelZoom = true;
+
         private bool _isDragging;
         private Vector3 _lastMouseWorldPosition;
 
         public Vector3 CameraPosition => _camera != null ? _camera.transform.position : Vector3.zero;
 
+        private void Awake()
+        {
+            ResolveCamera();
+            ConfigureCamera();
+        }
+
         public void Init(Camera targetCamera, TileEditorSettings settings)
         {
-            _camera = targetCamera;
-            _settings = settings;
-
-            if (_camera != null)
+            if (targetCamera != null)
             {
-                _camera.orthographic = true;
+                _camera = targetCamera;
             }
+
+            if (settings != null)
+            {
+                _settings = settings;
+            }
+
+            ConfigureCamera();
         }
 
         private void Update()
@@ -71,19 +84,19 @@ namespace Game.Features.Locations
 
         private void UpdateDrag()
         {
-            if (Input.GetMouseButtonDown(1))
+            if (Input.GetMouseButtonDown(_dragMouseButton))
             {
                 _isDragging = TryGetMouseWorldPosition(out _lastMouseWorldPosition);
                 return;
             }
 
-            if (Input.GetMouseButtonUp(1))
+            if (Input.GetMouseButtonUp(_dragMouseButton))
             {
                 _isDragging = false;
                 return;
             }
 
-            if (!_isDragging || !Input.GetMouseButton(1))
+            if (!_isDragging || !Input.GetMouseButton(_dragMouseButton))
             {
                 return;
             }
@@ -94,12 +107,21 @@ namespace Game.Features.Locations
             }
 
             var delta = _lastMouseWorldPosition - mouseWorldPosition;
-            _camera.transform.position += delta;
+            var position = _camera.transform.position;
+            position.x += delta.x;
+            position.z += delta.z;
+            _camera.transform.position = position;
+
             _lastMouseWorldPosition = mouseWorldPosition;
         }
 
         private void UpdateZoom()
         {
+            if (!_enableMouseWheelZoom)
+            {
+                return;
+            }
+
             var scroll = Input.mouseScrollDelta.y;
             if (Mathf.Approximately(scroll, 0f))
             {
@@ -128,6 +150,28 @@ namespace Game.Features.Locations
 
             worldPosition = default;
             return false;
+        }
+
+        private void ResolveCamera()
+        {
+            if (_camera != null)
+            {
+                return;
+            }
+
+            _camera = GetComponent<Camera>();
+            if (_camera == null)
+            {
+                _camera = Camera.main;
+            }
+        }
+
+        private void ConfigureCamera()
+        {
+            if (_camera != null)
+            {
+                _camera.orthographic = true;
+            }
         }
     }
 }

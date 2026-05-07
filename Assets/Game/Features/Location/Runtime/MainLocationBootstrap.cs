@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using EventOrchestration.Abstractions;
 using Fabros.TileEditor;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -13,17 +12,13 @@ namespace Game.Features.Locations
     {
         [SerializeField] private TextAsset _mainLocationJson;
         [SerializeField] private TileEditorSettings _tileEditorSettings;
-        [SerializeField] private Camera _camera;
         [SerializeField] private Transform _locationRoot;
 
         private RuntimeLocationObjectsFactory _locationObjectsFactory;
         private Location _location;
-        private RuntimeOrthographicLocationCameraController _cameraController;
 
         public Location CurrentLocation => _location;
-        public RuntimeOrthographicLocationCameraController CameraController => _cameraController;
 
-        
         private IObjectResolver _diContainer;
         [Inject]
         private void Construct(IObjectResolver diContainer)
@@ -65,17 +60,6 @@ namespace Game.Features.Locations
                 return;
             }
 
-            if (_camera == null)
-            {
-                _camera = Camera.main;
-            }
-
-            if (_camera == null)
-            {
-                Debug.LogError("[Location] Camera is not assigned and Camera.main was not found.");
-                return;
-            }
-
             var locationModel = JsonConvert.DeserializeObject<LocationModel>(_mainLocationJson.text);
             if (locationModel == null)
             {
@@ -84,7 +68,6 @@ namespace Game.Features.Locations
             }
 
             EnsureLocationRoot();
-            InitCameraController();
 
             _locationObjectsFactory = new RuntimeLocationObjectsFactory(_diContainer);
             _location = await Location.CreateAsync(
@@ -104,17 +87,6 @@ namespace Game.Features.Locations
             }
 
             _locationRoot = new GameObject("LocationRoot").transform;
-        }
-
-        private void InitCameraController()
-        {
-            _cameraController = _camera.GetComponent<RuntimeOrthographicLocationCameraController>();
-            if (_cameraController == null)
-            {
-                _cameraController = _camera.gameObject.AddComponent<RuntimeOrthographicLocationCameraController>();
-            }
-
-            _cameraController.Init(_camera, _tileEditorSettings);
         }
 
         private void OnDestroy()

@@ -7,7 +7,6 @@ using Infrastructure;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
-using Object = UnityEngine.Object;
 
 namespace Game.Features.Locations
 {
@@ -48,7 +47,7 @@ namespace Game.Features.Locations
             }
 
             _prefabRefs.Add(prefab);
-            //var locationObject = Object.Instantiate(prefab, root);
+
             var locationObject = _resolver.Instantiate(prefab, root);
             
             return locationObject != null ? locationObject.GetComponent<LocationObject>() : null;
