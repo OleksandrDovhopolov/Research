@@ -48,6 +48,26 @@ namespace Infrastructure
         private static readonly Dictionary<int, CacheKey> InstanceIdToKey = new();
         private static readonly object Lock = new();
 
+        public static T LoadSync<T>(string address) where T : Object
+        {
+            if (string.IsNullOrEmpty(address))
+                throw new ArgumentException("Address is null or empty.", nameof(address));
+
+            var (key, handle) = AcquireHandle<T>(address);
+
+            try
+            {
+                handle.WaitForCompletion();
+            }
+            catch
+            {
+                Release(key);
+                throw;
+            }
+
+            return CompleteLoad<T>(address, key, handle);
+        }
+
         public static async Task<T> LoadAsync<T>(string address, CancellationToken ct) where T : Object
         {
             if (string.IsNullOrEmpty(address))
@@ -55,8 +75,24 @@ namespace Infrastructure
 
             ct.ThrowIfCancellationRequested();
 
+            var (key, handle) = AcquireHandle<T>(address);
+
+            try
+            {
+                await AwaitWithCancellation(handle.Task, ct);
+            }
+            catch
+            {
+                Release(key);
+                throw;
+            }
+
+            return CompleteLoad<T>(address, key, handle);
+        }
+
+        private static (CacheKey key, AsyncOperationHandle handle) AcquireHandle<T>(string address) where T : Object
+        {
             var key = new CacheKey(address, typeof(T));
-            AsyncOperationHandle handle;
             lock (Lock)
             {
                 if (HandleByKey.TryGetValue(key, out var cachedHandle))
@@ -74,28 +110,19 @@ namespace Infrastructure
                         }
 
                         RefCountByKey[key]++;
-                        handle = cachedHandle;
-                        goto HandleResolved;
+                        return (key, cachedHandle);
                     }
                 }
 
-                handle = Addressables.LoadAssetAsync<T>(address);
+                var handle = Addressables.LoadAssetAsync<T>(address);
                 HandleByKey[key] = handle;
                 RefCountByKey[key] = 1;
+                return (key, handle);
             }
-            
-            HandleResolved:
+        }
 
-            try
-            {
-                await AwaitWithCancellation(handle.Task, ct);
-            }
-            catch
-            {
-                Release(key);
-                throw;
-            }
-
+        private static T CompleteLoad<T>(string address, CacheKey key, AsyncOperationHandle handle) where T : Object
+        {
             if (!handle.IsValid())
             {
                 Release(key);
