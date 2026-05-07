@@ -7,7 +7,7 @@ namespace Fabros.TileEditor
     [RequireComponent(typeof(LocationInteractableView))]
     public sealed class FishingZonePropertyGenerator : LocationInteractionPropertyGenerator
     {
-        [SerializeField] private string _defaultInteractionId = "fishing_zone";
+        //[SerializeField] private string _defaultInteractionId = "fishing_zone";
         [SerializeField] private string _defaultFishingConfigId;
 
         protected override string DefaultInteractionId => _defaultInteractionId;

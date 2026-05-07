@@ -9,7 +9,7 @@ namespace Fabros.TileEditor
     [RequireComponent(typeof(LocationInteractableView))]
     public class LocationInteractionPropertyGenerator : MonoBehaviour
     {
-        [SerializeField] private string _defaultInteractionId;
+        [SerializeField] protected string _defaultInteractionId;
         [SerializeField] private LocationInteractionType _defaultInteractionType = LocationInteractionType.Custom;
         [SerializeField] private bool _defaultInteractionEnabled = true;
         [SerializeField] private int _defaultPriority;

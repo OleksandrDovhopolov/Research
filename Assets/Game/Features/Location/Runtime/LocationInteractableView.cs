@@ -23,6 +23,7 @@ namespace Game.Features.Locations
         [SerializeField] private string _fishingConfigId;
 
         private LocationObject _locationObject;
+        private bool _isEditorMode = true;
 
         public string InteractionId => _interactionId;
         public LocationInteractionType InteractionType => _interactionType;
@@ -47,6 +48,7 @@ namespace Game.Features.Locations
 
         public void InitializeFromLocationObject(bool isEditor)
         {
+            _isEditorMode = isEditor;
             ResolveLocationObject();
 
             if (_locationObject != null)
@@ -221,7 +223,7 @@ namespace Game.Features.Locations
             _collider.center = _colliderOffset;
             _collider.size = _colliderSize;
             _collider.isTrigger = _colliderIsTrigger;
-            _collider.enabled = _isInteractionEnabled;
+            _collider.enabled = _isInteractionEnabled && !_isEditorMode;
         }
 
         private void ApplyHudAnchor()

@@ -417,6 +417,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: afca4689c139157469dd68368e4a86ee
+    m_Address: Fishing_zone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b2ed2aa8a63b341bda17d2da81503624
     m_Address: Border_Grass_Ver_R
     m_ReadOnly: 0
