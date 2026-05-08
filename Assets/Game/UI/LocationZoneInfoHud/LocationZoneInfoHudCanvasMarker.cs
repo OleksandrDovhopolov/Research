@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace UIShared
+namespace Fishing
 {
     public sealed class LocationZoneInfoHudCanvasMarker : MonoBehaviour
     {

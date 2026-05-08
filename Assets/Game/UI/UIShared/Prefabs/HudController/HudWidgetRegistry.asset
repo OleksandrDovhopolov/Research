@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: HudWidgetRegistry
   m_EditorClassIdentifier:
   _definitions:
-  - _widgetTypeName: UIShared.LocationZoneInfoHudWidget
+  - _widgetTypeName: Fishing.LocationZoneInfoHudWidget
     _addressableKey: LocationZoneInfoHudWidget
     _layer: 1
     _createOnInitialize: 0

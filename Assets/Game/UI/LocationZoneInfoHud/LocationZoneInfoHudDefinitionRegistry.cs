@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Game.Features.Locations;
 
-namespace UIShared
+namespace Fishing
 {
     public sealed class LocationZoneInfoHudDefinitionRegistry
     {

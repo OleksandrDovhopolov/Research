@@ -1,4 +1,4 @@
-namespace UIShared
+namespace Fishing
 {
     public static class LocationZoneInfoHudAddressables
     {

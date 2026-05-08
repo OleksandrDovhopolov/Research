@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Game.Features.Locations;
+using UIShared;
 using UnityEngine;
 using VContainer;
 
-namespace UIShared
+namespace Fishing
 {
     public sealed class LocationZoneInfoHudBootstrap : MonoBehaviour
     {

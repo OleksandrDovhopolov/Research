@@ -1,5 +1,5 @@
+using Fishing;
 using Game.Features.Locations;
-using UIShared;
 using UnityEngine;
 using VContainer;
 

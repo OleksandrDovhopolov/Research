@@ -1,6 +1,7 @@
 using UnityEngine;
+using UIShared;
 
-namespace UIShared
+namespace Fishing
 {
     public sealed class LocationZoneInfoHudWidget : MonoBehaviour, IHudWidget
     {

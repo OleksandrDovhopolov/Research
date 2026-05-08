@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UIShared
+namespace Fishing
 {
     public sealed class LocationZoneInfoHudItemView : MonoBehaviour
     {
