@@ -4,6 +4,11 @@ using Cysharp.Threading.Tasks;
 
 namespace Game.Crafting
 {
+    public static class CraftingStationIds
+    {
+        public const string LureCrafting = "lure_crafting_station";
+    }
+
     public enum CraftingError
     {
         None = 0,
@@ -108,6 +113,7 @@ namespace Game.Crafting
     {
         UniTask<CraftStartResult> StartCraftAsync(string recipeId, CancellationToken ct = default);
         UniTask<CraftCollectResult> CollectAsync(CraftTaskId taskId, CancellationToken ct = default);
+        UniTask<CraftCollectResult> CompleteAndCollectAsync(CraftTaskId taskId, CancellationToken ct = default);
     }
 
     public interface ICraftingInventoryGateway

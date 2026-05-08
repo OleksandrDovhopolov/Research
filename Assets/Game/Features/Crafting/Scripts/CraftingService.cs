@@ -8,7 +8,6 @@ namespace Game.Crafting
 {
     public sealed class CraftingService : ICraftingService
     {
-        private const string DefaultStationId = "lure_crafting_station";
         private const int DefaultStationSlotLimit = 1;
 
         private readonly ICraftingConfigProvider _configProvider;
@@ -55,11 +54,24 @@ namespace Game.Crafting
 
         public async UniTask<CraftCollectResult> CollectAsync(CraftTaskId taskId, CancellationToken ct = default)
         {
+            return await CollectInternalAsync(taskId, requireComplete: true, ct);
+        }
+
+        public async UniTask<CraftCollectResult> CompleteAndCollectAsync(CraftTaskId taskId, CancellationToken ct = default)
+        {
+            return await CollectInternalAsync(taskId, requireComplete: false, ct);
+        }
+
+        private async UniTask<CraftCollectResult> CollectInternalAsync(
+            CraftTaskId taskId,
+            bool requireComplete,
+            CancellationToken ct)
+        {
             ct.ThrowIfCancellationRequested();
             if (taskId.IsEmpty || !_tasksById.TryGetValue(taskId.Value, out var task))
                 return CraftCollectResult.Fail(CraftingError.TaskNotFound);
 
-            if (!task.IsComplete(_clock.UtcNow))
+            if (requireComplete && !task.IsComplete(_clock.UtcNow))
                 return CraftCollectResult.Fail(CraftingError.TaskNotReady);
 
             await _inventoryGateway.AddItemAsync(task.Recipe.OutputItemId, task.Recipe.OutputCount, ct);
@@ -77,7 +89,7 @@ namespace Game.Crafting
 
         private static int GetStationSlotLimit(string stationId)
         {
-            return string.Equals(stationId, DefaultStationId, StringComparison.Ordinal)
+            return string.Equals(stationId, CraftingStationIds.LureCrafting, StringComparison.Ordinal)
                 ? DefaultStationSlotLimit
                 : DefaultStationSlotLimit;
         }

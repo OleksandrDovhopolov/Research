@@ -1,0 +1,11 @@
+fileFormatVersion: 2
+<<<<<<<< HEAD:MD/Assets/Prefabs/UI/Huds/Actor/DropHud.prefab.meta
+guid: 7b3cda130ff12c24892ed6e3759522d0
+========
+guid: e9c5ae24eab7a4b019181ff6005869f5
+>>>>>>>> master:MD/Assets/TileUnlockHud.prefab.meta
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

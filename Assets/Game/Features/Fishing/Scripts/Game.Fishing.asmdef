@@ -10,7 +10,9 @@
         "Infrastructure",
         "Core.Models",
         "Location.Contracts",
-        "UISystem"
+        "UISystem",
+        "Game.Crafting",
+        "CoreResources"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -61,6 +61,23 @@ namespace Game.Tests.Editor.FishingCrafting
             Assert.That(fixture.Inventory.GetAmount("item_green_lure"), Is.EqualTo(1));
         }
 
+        [Test]
+        public void CompleteAndCollectAsync_BeforeComplete_GrantsOutput()
+        {
+            var fixture = CreateFixture();
+            var start = fixture.Service.StartCraftAsync("craft_green_lure", CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            var collect = fixture.Service.CompleteAndCollectAsync(start.TaskId, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.That(collect.Success, Is.True);
+            Assert.That(collect.OutputItemId, Is.EqualTo("item_green_lure"));
+            Assert.That(fixture.Inventory.GetAmount("item_green_lure"), Is.EqualTo(1));
+        }
+
         private static Fixture CreateFixture()
         {
             var data = new CraftingStaticData(new List<CraftingRecipeConfig>
@@ -69,7 +86,7 @@ namespace Game.Tests.Editor.FishingCrafting
                 {
                     Id = "craft_green_lure",
                     DisplayName = "Craft Green Lure",
-                    StationId = "lure_crafting_station",
+                    StationId = CraftingStationIds.LureCrafting,
                     OutputItemId = "item_green_lure",
                     OutputCount = 1,
                     CraftTimeSeconds = 5,
