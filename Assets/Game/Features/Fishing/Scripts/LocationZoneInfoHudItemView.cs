@@ -1,12 +1,11 @@
 using Cysharp.Threading.Tasks;
-using Game.Fishing;
 using Game.Features.Locations;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
 
-namespace Fishing
+namespace Game.Fishing
 {
     public sealed class LocationZoneInfoHudItemView : MonoBehaviour
     {

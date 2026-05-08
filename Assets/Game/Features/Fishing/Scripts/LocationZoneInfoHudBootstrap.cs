@@ -7,7 +7,7 @@ using UIShared;
 using UnityEngine;
 using VContainer;
 
-namespace Fishing
+namespace Game.Fishing
 {
     public sealed class LocationZoneInfoHudBootstrap : MonoBehaviour
     {

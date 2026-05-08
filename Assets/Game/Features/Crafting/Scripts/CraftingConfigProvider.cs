@@ -24,9 +24,9 @@ namespace Game.Crafting
     {
         private readonly string _rootFolder;
 
-        public StreamingAssetsCraftingConfigContentSource(string rootFolder = CraftingConfigPaths.RootFolder)
+        public StreamingAssetsCraftingConfigContentSource()
         {
-            _rootFolder = string.IsNullOrWhiteSpace(rootFolder) ? CraftingConfigPaths.RootFolder : rootFolder;
+            _rootFolder = CraftingConfigPaths.RootFolder;
         }
 
         public async UniTask<string> LoadJsonAsync(string relativePath, CancellationToken ct)

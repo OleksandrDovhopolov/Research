@@ -2,7 +2,7 @@ using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
-namespace Fishing
+namespace Game.Fishing
 {
     public static class LocationZoneInfoHudVContainerBindings
     {

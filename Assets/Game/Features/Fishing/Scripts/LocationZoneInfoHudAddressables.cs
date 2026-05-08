@@ -1,4 +1,4 @@
-namespace Fishing
+namespace Game.Fishing
 {
     public static class LocationZoneInfoHudAddressables
     {

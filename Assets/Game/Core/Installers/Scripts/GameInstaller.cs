@@ -6,7 +6,6 @@ using core;
 using CoreResources;
 using Cysharp.Threading.Tasks;
 using EventOrchestration;
-using Fishing;
 using FortuneWheel;
 using Game.Crafting;
 using Game.Fishing;

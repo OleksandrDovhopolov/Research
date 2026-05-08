@@ -1,4 +1,4 @@
-using Fishing;
+using Game.Fishing;
 using Game.Features.Locations;
 using UnityEngine;
 using VContainer;

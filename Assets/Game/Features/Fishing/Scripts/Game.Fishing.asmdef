@@ -4,6 +4,9 @@
     "references": [
         "UniTask",
         "VContainer",
+        "UIShared",
+        "Unity.TextMeshPro",
+        "Unity.ugui",
         "Inventory.API",
         "Infrastructure",
         "Core.Models",

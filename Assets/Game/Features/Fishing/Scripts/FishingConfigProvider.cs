@@ -25,9 +25,9 @@ namespace Game.Fishing
     {
         private readonly string _rootFolder;
 
-        public StreamingAssetsFishingConfigContentSource(string rootFolder = FishingConfigPaths.RootFolder)
+        public StreamingAssetsFishingConfigContentSource()
         {
-            _rootFolder = string.IsNullOrWhiteSpace(rootFolder) ? FishingConfigPaths.RootFolder : rootFolder;
+            _rootFolder = FishingConfigPaths.RootFolder;
         }
 
         public async UniTask<string> LoadJsonAsync(string relativePath, CancellationToken ct)

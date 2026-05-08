@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Game.Features.Locations;
 
-namespace Fishing
+namespace Game.Fishing
 {
     public sealed class LocationZoneInfoHudDefinitionRegistry
     {

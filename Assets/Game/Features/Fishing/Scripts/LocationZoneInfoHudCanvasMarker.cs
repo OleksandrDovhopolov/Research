@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Fishing
+namespace Game.Fishing
 {
     public sealed class LocationZoneInfoHudCanvasMarker : MonoBehaviour
     {
