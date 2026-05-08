@@ -57,6 +57,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7b3cda130ff12c24892ed6e3759522d0
+    m_Address: FishingHudWidget
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 83f87e598f6f01b4d8495c650aa5ad68
     m_Address: grass_carp
     m_ReadOnly: 0
@@ -142,6 +147,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: be3dd2bdac9135245bfd0d759460741b
+    m_Address: green_lure
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c22784e1fe9d2614482ff161b44c141f
+    m_Address: purple_lure
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c3bcc4b8e287b5b4b94a2182015dacbe
     m_Address: rainbowfish
     m_ReadOnly: 0
@@ -162,8 +177,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c8e063cd4eee14741b8b95299a374122
+    m_Address: blue_lure
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cccdf223a27342f4da1fc2a06df37a5d
     m_Address: golden_trout
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d047a66d26e4e0f419c6bc0ad660685c
+    m_Address: red_lure
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -194,6 +219,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f4153eb5507ad4545833acca24917a78
     m_Address: goldfish
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f50a0c1218de7d34f94710cbc9bc4422
+    m_Address: gold_lure
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

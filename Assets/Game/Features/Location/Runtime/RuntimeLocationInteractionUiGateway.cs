@@ -1,6 +1,8 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Game.Fishing;
+using UIShared;
 using UISystem;
 using UnityEngine;
 
@@ -9,12 +11,20 @@ namespace Game.Features.Locations
     public sealed class RuntimeLocationInteractionUiGateway : ILocationInteractionUiGateway
     {
         private readonly UIManager _uiManager;
+        private readonly IHudController _hudController;
         private readonly IFishCollectionDataBuilder _fishCollectionDataBuilder;
+        private readonly IFishingHudLureDataBuilder _fishingHudLureDataBuilder;
 
-        public RuntimeLocationInteractionUiGateway(UIManager uiManager, IFishCollectionDataBuilder fishCollectionDataBuilder)
+        public RuntimeLocationInteractionUiGateway(
+            UIManager uiManager,
+            IHudController hudController,
+            IFishCollectionDataBuilder fishCollectionDataBuilder,
+            IFishingHudLureDataBuilder fishingHudLureDataBuilder)
         {
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
+            _hudController = hudController ?? throw new ArgumentNullException(nameof(hudController));
             _fishCollectionDataBuilder = fishCollectionDataBuilder ?? throw new ArgumentNullException(nameof(fishCollectionDataBuilder));
+            _fishingHudLureDataBuilder = fishingHudLureDataBuilder ?? throw new ArgumentNullException(nameof(fishingHudLureDataBuilder));
         }
 
         public void OpenFishingTackleSelection(LocationInteractionContext context)
@@ -24,7 +34,7 @@ namespace Game.Features.Locations
 
         public void OpenFisherHouseProduction(LocationInteractionContext context)
         {
-            Log(context, "Open fisher house production");
+            OpenFisherHouseProductionAsync(context).Forget();
         }
 
         public void OpenChestItems(LocationInteractionContext context)
@@ -53,6 +63,33 @@ namespace Game.Features.Locations
             {
                 Debug.LogError($"[LocationInteraction] Failed to open fish collection: key='{GetInteractionKey(context)}', id='{GetInteractionId(context)}'. {exception}");
             }
+        }
+
+        private async UniTaskVoid OpenFisherHouseProductionAsync(LocationInteractionContext context)
+        {
+            try
+            {
+                var cancellationToken = CancellationToken.None;
+                var widget = await _hudController.GetHudWidgetAsync<FishingHudWidget>(cancellationToken);
+                ApplyHudAnchorPosition(widget, context);
+                var lures = await _fishingHudLureDataBuilder.BuildAsync(cancellationToken);
+                await widget.RenderAsync(lures, cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"[LocationInteraction] Failed to open fisher house production: key='{GetInteractionKey(context)}', id='{GetInteractionId(context)}'. {exception}");
+            }
+        }
+
+        private static void ApplyHudAnchorPosition(Component widget, LocationInteractionContext context)
+        {
+            if (widget == null)
+                return;
+
+            var hudAnchor = context.Interactable?.HudAnchor;
+            widget.transform.position = hudAnchor != null
+                ? hudAnchor.position
+                : context.WorldPosition;
         }
 
         private static void Log(LocationInteractionContext context, string action)

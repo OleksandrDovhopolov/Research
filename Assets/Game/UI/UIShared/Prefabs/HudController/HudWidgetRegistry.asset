@@ -17,3 +17,7 @@ MonoBehaviour:
     _addressableKey: LocationZoneInfoHudWidget
     _layer: 1
     _createOnInitialize: 0
+  - _widgetTypeName: Game.Fishing.FishingHudWidget
+    _addressableKey: FishingHudWidget
+    _layer: 1
+    _createOnInitialize: 0

@@ -87,14 +87,15 @@ namespace Game.Fishing
         public void OnBeginDrag(PointerEventData eventData)
         {
             if (_isDragLocked) return;
-            _draggableTarget.GetChild(0).gameObject.SetActive(true);
+            SetDragPreviewActive(true);
             _onBeginDragAction?.Invoke(eventData);
         }
 
         public void OnDrag(PointerEventData eventData)
         {
             if (_isDragLocked) return;
-            _draggableTarget.transform.position = eventData.position;
+            if (_draggableTarget != null)
+                _draggableTarget.transform.position = eventData.position;
             _onDragAction?.Invoke(eventData);
         }
 
@@ -108,8 +109,19 @@ namespace Game.Fishing
 
         private void ResetTarget()
         {
+            if (_draggableTarget == null)
+                return;
+
             _draggableTarget.transform.localPosition = Vector3.zero;
-            _draggableTarget.GetChild(0).gameObject.SetActive(false);
+            SetDragPreviewActive(false);
+        }
+
+        private void SetDragPreviewActive(bool isActive)
+        {
+            if (_draggableTarget == null || _draggableTarget.childCount == 0)
+                return;
+
+            _draggableTarget.GetChild(0).gameObject.SetActive(isActive);
         }
     }
 }
