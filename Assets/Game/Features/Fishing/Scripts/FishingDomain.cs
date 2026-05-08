@@ -190,7 +190,7 @@ namespace Game.Fishing
 
     public interface IFishingZoneInfoLogger
     {
-        UniTask LogZoneInfoAsync(ILocationInteractable interactable, CancellationToken ct = default);
+        UniTask LogZoneInfoAsync(string zoneId, CancellationToken ct = default);
     }
 
     public interface IFishingRandom

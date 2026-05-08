@@ -16,11 +16,13 @@ namespace Game.Fishing
         private ILocationInteractable _interactable;
         private Transform _target;
         private IFishingZoneInfoLogger _zoneInfoLogger;
+        private ILocationFishingZoneIdResolver _zoneIdResolver;
 
         [Inject]
-        public void Construct(IFishingZoneInfoLogger zoneInfoLogger)
+        public void Construct(IFishingZoneInfoLogger zoneInfoLogger, ILocationFishingZoneIdResolver zoneIdResolver)
         {
             _zoneInfoLogger = zoneInfoLogger;
+            _zoneIdResolver = zoneIdResolver;
         }
 
         public void Initialize(ILocationInteractable interactable, string label)
@@ -96,7 +98,7 @@ namespace Game.Fishing
         {
             if (_zoneInfoLogger != null)
             {
-                _zoneInfoLogger.LogZoneInfoAsync(_interactable).Forget();
+                _zoneInfoLogger.LogZoneInfoAsync(_zoneIdResolver.ResolveZoneId(_interactable)).Forget();
                 return;
             }
 

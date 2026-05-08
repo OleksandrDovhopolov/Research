@@ -9,6 +9,5 @@ namespace Game.Features.Locations
         Transform HudAnchor { get; }
         int Priority { get; }
         bool IsInteractionEnabled { get; }
-        string FishingConfigId { get; }
     }
 }

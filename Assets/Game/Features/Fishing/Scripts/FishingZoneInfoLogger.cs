@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Game.Features.Locations;
 using UnityEngine;
 
 namespace Game.Fishing
@@ -24,13 +23,12 @@ namespace Game.Fishing
             _eventsProvider = eventsProvider ?? throw new ArgumentNullException(nameof(eventsProvider));
         }
 
-        public async UniTask LogZoneInfoAsync(ILocationInteractable interactable, CancellationToken ct = default)
+        public async UniTask LogZoneInfoAsync(string zoneId, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
-            var zoneId = ResolveZoneId(interactable);
             if (string.IsNullOrWhiteSpace(zoneId))
             {
-                Debug.LogWarning("[FishingZone] Missing zone id on interactable.");
+                Debug.LogWarning("[FishingZone] Missing zone id.");
                 return;
             }
 
@@ -77,16 +75,6 @@ namespace Game.Fishing
             {
                 Debug.LogError($"[FishingZone] Failed to log zone '{zoneId}': {exception.Message}");
             }
-        }
-
-        public static string ResolveZoneId(ILocationInteractable interactable)
-        {
-            if (interactable == null)
-                return string.Empty;
-
-            return !string.IsNullOrWhiteSpace(interactable.FishingConfigId)
-                ? interactable.FishingConfigId
-                : interactable.InteractionId;
         }
     }
 }

@@ -16,7 +16,6 @@ namespace Game.Features.Locations
         [SerializeField] private bool _colliderIsTrigger = true;
         [SerializeField] private GameObject _runtimeVisualRoot;
         [SerializeField] private bool _hideVisualInRuntime;
-        [SerializeField] private string _fishingConfigId;
 
         private LocationObject _locationObject;
         private bool _isEditorMode = true;
@@ -26,7 +25,6 @@ namespace Game.Features.Locations
         public Transform HudAnchor => EnsureHudAnchor();
         public int Priority => _priority;
         public bool IsInteractionEnabled => _isInteractionEnabled;
-        public string FishingConfigId => _fishingConfigId;
 
         private void Awake()
         {
@@ -77,11 +75,6 @@ namespace Game.Features.Locations
             ApplyCollider();
         }
 
-        public void SetFishingConfigId(string fishingConfigId)
-        {
-            _fishingConfigId = fishingConfigId;
-        }
-
         private void ReadMetadata(LocationObject locationObject)
         {
             if (locationObject.TryParseProperty<string>(LocationInteractionPropertyNames.InteractionId, out var interactionId))
@@ -95,9 +88,6 @@ namespace Game.Features.Locations
 
             if (locationObject.TryParseProperty<int>(LocationInteractionPropertyNames.Priority, out var priority))
                 _priority = priority;
-
-            if (locationObject.TryParseProperty<string>(LocationInteractionPropertyNames.FishingConfigId, out var fishingConfigId))
-                _fishingConfigId = fishingConfigId;
         }
 
         private void ResolveLocationObject()

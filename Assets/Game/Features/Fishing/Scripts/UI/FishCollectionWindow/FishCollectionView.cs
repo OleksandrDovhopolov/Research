@@ -97,6 +97,12 @@ namespace Game.Fishing
                 }
 
                 var sprite = await loadTask.AsUniTask().AttachExternalCancellation(ct);
+                if (sprite == null)
+                {
+                    Debug.LogWarning($"[FishCollectionView] Sprite not found for id '{spriteAddress}'.");
+                    return;
+                }
+
                 _spriteCache[spriteAddress] = sprite;
 
                 if (itemView != null && itemView.ItemId == spriteAddress)

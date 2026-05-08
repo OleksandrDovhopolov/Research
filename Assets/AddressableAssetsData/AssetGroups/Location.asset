@@ -97,6 +97,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2746a029ee89dfd4ebe19f8b3f5ee3bd
+    m_Address: Fishing_collection
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 33357ff1050da4ffb8bf4a7a70023836
     m_Address: Hieght_Hor_01
     m_ReadOnly: 0
