@@ -16,6 +16,7 @@ namespace Game.Fishing
             builder.Register<IActiveFishingEventsProvider, EmptyActiveFishingEventsProvider>(Lifetime.Singleton);
             builder.Register<IFishingInventoryGateway, SaveBackedFishingInventoryGateway>(Lifetime.Singleton);
             builder.Register<IFishBookService, SaveBackedFishBookService>(Lifetime.Singleton);
+            builder.Register<IFishCollectionDataBuilder, FishCollectionDataBuilder>(Lifetime.Singleton);
             builder.Register<IFishingService, FishingService>(Lifetime.Singleton);
             builder.Register<IFishingZoneInfoLogger, FishingZoneInfoLogger>(Lifetime.Singleton);
         }

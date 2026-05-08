@@ -16,7 +16,7 @@ namespace InputSystem
 
             builder.Register<LocationRaycaster>(Lifetime.Singleton);
             builder.Register<LocationInteractionRouter>(Lifetime.Singleton);
-            builder.Register<DefaultLocationInteractionUiGateway>(Lifetime.Singleton).As<ILocationInteractionUiGateway>();
+            builder.Register<RuntimeLocationInteractionUiGateway>(Lifetime.Singleton).As<ILocationInteractionUiGateway>();
             builder.Register<FishingZoneInteractionHandler>(Lifetime.Singleton);
             builder.Register<FisherHouseInteractionHandler>(Lifetime.Singleton);
             builder.Register<ChestInteractionHandler>(Lifetime.Singleton);

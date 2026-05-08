@@ -6,11 +6,11 @@
         "VContainer",
         "UIShared",
         "Unity.TextMeshPro",
-        "Unity.ugui",
         "Inventory.API",
         "Infrastructure",
         "Core.Models",
-        "Location.Contracts"
+        "Location.Contracts",
+        "UISystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
