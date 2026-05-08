@@ -1,89 +1,101 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using Game.Features.Locations;
-using TMPro;
+using Infrastructure;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace UIShared
 {
     public sealed class LocationZoneInfoHudService : IDisposable
     {
-        private const string RootName = "LocationZoneInfoHudRoot";
-        private const float WorldScale = 0.01f;
-
         private readonly LocationZoneInfoHudDefinitionRegistry _registry;
+        private readonly List<GameObject> _spawnedInstances = new();
 
         private MainLocationBootstrap _locationBootstrap;
-        private GameObject _rootObject;
-        private Canvas _canvas;
-        private Sprite _buttonSprite;
-        private TMP_FontAsset _fontAsset;
+        private Transform _parentTransform;
+        private GameObject _prefab;
         private bool _isInitialized;
+        private bool _isInitializing;
 
         public LocationZoneInfoHudService(LocationZoneInfoHudDefinitionRegistry registry)
         {
             _registry = registry;
         }
 
-        public void Initialize(MonoBehaviour locationBootstrap)
+        public async UniTask InitializeAsync(
+            MainLocationBootstrap locationBootstrap,
+            Transform parentTransform,
+            CancellationToken cancellationToken)
         {
-            _locationBootstrap = locationBootstrap as MainLocationBootstrap;
+            if (_isInitialized || _isInitializing)
+                return;
 
-            if (_locationBootstrap == null && locationBootstrap != null)
+            _isInitializing = true;
+            _locationBootstrap = locationBootstrap;
+            _parentTransform = parentTransform;
+
+            try
             {
-                Debug.LogWarning($"[ZoneInfoHud] Unsupported location bootstrap type '{locationBootstrap.GetType().Name}'.");
+                if (_locationBootstrap == null)
+                {
+                    Debug.LogWarning("[ZoneInfoHud] MainLocationBootstrap is not assigned.");
+                    return;
+                }
+
+                if (_parentTransform == null)
+                {
+                    Debug.LogWarning("[ZoneInfoHud] Parent transform is not assigned.");
+                    return;
+                }
+
+                await WaitForLocationAsync(cancellationToken);
+                _prefab = await ProdAddressablesWrapper.LoadAsync<GameObject>(LocationZoneInfoHudAddressables.LocationZoneInfoHudPrefab, cancellationToken);
+
+                SpawnItems();
+                _isInitialized = true;
             }
-        }
-
-        public bool TryInitialize()
-        {
-            if (_isInitialized)
-                return true;
-
-            if (_locationBootstrap == null || _locationBootstrap.CurrentLocation == null)
-                return false;
-
-            BuildRoot();
-            SpawnItems();
-
-            _isInitialized = true;
-            return true;
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+            }
+            finally
+            {
+                _isInitializing = false;
+            }
         }
 
         public void Dispose()
         {
-            if (_rootObject != null)
-                UnityEngine.Object.Destroy(_rootObject);
+            foreach (var instance in _spawnedInstances)
+            {
+                if (instance != null)
+                    UnityEngine.Object.Destroy(instance);
+            }
 
-            _rootObject = null;
-            _canvas = null;
+            _spawnedInstances.Clear();
+
+            if (_prefab != null)
+            {
+                ProdAddressablesWrapper.Release(_prefab);
+                _prefab = null;
+            }
+
             _locationBootstrap = null;
+            _parentTransform = null;
             _isInitialized = false;
-        }
-
-        private void BuildRoot()
-        {
-            if (_rootObject != null)
-                return;
-
-            _buttonSprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
-            _fontAsset = TMP_Settings.defaultFontAsset;
-
-            _rootObject = new GameObject(RootName, typeof(RectTransform));
-            _rootObject.transform.position = Vector3.zero;
-            _rootObject.transform.rotation = Quaternion.identity;
-            //_rootObject.transform.localScale = Vector3.one * WorldScale;
-
-            //_canvas = _rootObject.AddComponent<Canvas>();
-            //_canvas.renderMode = RenderMode.WorldSpace;
-            //_canvas.worldCamera = Camera.main;
-
-            //_rootObject.AddComponent<GraphicRaycaster>();
-            _rootObject.AddComponent<LocationZoneInfoHudCanvasMarker>();
+            _isInitializing = false;
         }
 
         private void SpawnItems()
         {
+            if (_prefab == null)
+                return;
+
             foreach (var locationObject in _locationBootstrap.CurrentLocation.IterateObjects())
             {
                 var interactable = locationObject != null ? locationObject.GetComponent<LocationInteractableView>() : null;
@@ -102,11 +114,28 @@ namespace UIShared
 
         private void CreateItem(ILocationInteractable interactable, LocationZoneInfoHudDefinition definition)
         {
-            var itemObject = new GameObject($"ZoneInfo_{interactable.InteractionId}");
-            itemObject.transform.SetParent(_rootObject.transform, false);
+            var itemObject = UnityEngine.Object.Instantiate(_prefab, _parentTransform, false);
+            itemObject.name = $"ZoneInfo_{interactable.InteractionId}";
 
-            var itemView = itemObject.AddComponent<LocationZoneInfoHudItemView>();
-            itemView.Initialize(interactable, definition.Label, _canvas, _buttonSprite, _fontAsset);
+            var itemView = itemObject.GetComponent<LocationZoneInfoHudItemView>();
+            if (itemView == null)
+            {
+                Debug.LogWarning($"[ZoneInfoHud] Prefab '{LocationZoneInfoHudAddressables.LocationZoneInfoHudPrefab}' does not contain {nameof(LocationZoneInfoHudItemView)}.");
+                UnityEngine.Object.Destroy(itemObject);
+                return;
+            }
+
+            _spawnedInstances.Add(itemObject);
+            itemView.Initialize(interactable, definition.Label);
+        }
+
+        private async UniTask WaitForLocationAsync(CancellationToken cancellationToken)
+        {
+            while (_locationBootstrap != null && _locationBootstrap.CurrentLocation == null)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
+            }
         }
     }
 }

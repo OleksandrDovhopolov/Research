@@ -155,13 +155,7 @@ namespace Game.Bootstrap
                 return;
             }
 
-            if (_locationZoneInfoHudBootstrap is not ILocationZoneInfoHudBootstrap bootstrap)
-            {
-                Debug.LogWarning($"[GameInstaller] '{_locationZoneInfoHudBootstrap.name}' does not implement {nameof(ILocationZoneInfoHudBootstrap)}.");
-                return;
-            }
-
-            bootstrap.Initialize(_mainLocationBootstrap);
+            _locationZoneInfoHudBootstrap.Initialize(_mainLocationBootstrap);
         }
     }
 }
