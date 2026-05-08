@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Fabros.TileEditor;
@@ -16,8 +17,10 @@ namespace Game.Features.Locations
 
         private RuntimeLocationObjectsFactory _locationObjectsFactory;
         private Location _location;
+        private readonly List<ILocationInteractable> _interactionObjects = new();
 
         public Location CurrentLocation => _location;
+        public IReadOnlyList<ILocationInteractable> InteractionObjects => _interactionObjects;
 
         private IObjectResolver _diContainer;
         [Inject]
@@ -68,6 +71,7 @@ namespace Game.Features.Locations
             }
 
             EnsureLocationRoot();
+            _interactionObjects.Clear();
 
             _locationObjectsFactory = new RuntimeLocationObjectsFactory(_diContainer);
             _location = await Location.CreateAsync(
@@ -76,7 +80,8 @@ namespace Game.Features.Locations
                 _locationObjectsFactory,
                 _tileEditorSettings,
                 false,
-                cancellationToken);
+                cancellationToken,
+                OnLocationObjectCreated);
         }
 
         private void EnsureLocationRoot()
@@ -91,8 +96,19 @@ namespace Game.Features.Locations
 
         private void OnDestroy()
         {
+            _interactionObjects.Clear();
             _locationObjectsFactory?.Dispose();
             _locationObjectsFactory = null;
+        }
+
+        private void OnLocationObjectCreated(LocationObject locationObject)
+        {
+            if (locationObject == null)
+                return;
+
+            var interactable = locationObject.GetComponent<LocationInteractableView>();
+            if (interactable != null)
+                _interactionObjects.Add(interactable);
         }
     }
 }

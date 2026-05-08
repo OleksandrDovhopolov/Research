@@ -96,9 +96,8 @@ namespace UIShared
             if (_prefab == null)
                 return;
 
-            foreach (var locationObject in _locationBootstrap.CurrentLocation.IterateObjects())
+            foreach (var interactable in _locationBootstrap.InteractionObjects)
             {
-                var interactable = locationObject != null ? locationObject.GetComponent<LocationInteractableView>() : null;
                 if (interactable == null || !interactable.IsInteractionEnabled)
                     continue;
 
