@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Fishing
+  m_EditorClassIdentifier: 
+  m_GroupName: Fishing
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 22b13d02cafac0247be0e3f8025d0db0
+  m_SerializeEntries:
+  - m_GUID: 1bd8bf266177abb49b3a1581a44aba3e
+    m_Address: FishCollectionWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: c7236b2e70f2a9f4eb9a1c78df452a70, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 42f64af2a0d58424dada23dd9adb53bb, type: 2}
+    - {fileID: 11400000, guid: 2aca286173da7b0439bccdaceb523277, type: 2}
