@@ -1,23 +1,21 @@
-using System;
+using System.Collections.Generic;
+using BattlePass;
+using CameraModule;
 using CardCollectionImpl;
 using core;
 using CoreResources;
-using EventOrchestration;
-using BattlePass;
-using FortuneWheel;
-using Infrastructure;
-using Inventory.API;
-using Rewards;
-using System.Collections.Generic;
-using CameraModule;
 using Cysharp.Threading.Tasks;
+using EventOrchestration;
+using FortuneWheel;
 using Game.Features.Locations;
+using Infrastructure;
 using InputSystem;
+using Rewards;
 using UIShared;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
-using Object = UnityEngine.Object;
+using ApiConfig = Infrastructure.ApiConfig;
 
 namespace Game.Bootstrap
 {
@@ -68,7 +66,7 @@ namespace Game.Bootstrap
             // ResourceManager
             builder.RegisterInstance(new WebClientOptions
             {
-                BaseUrl = Infrastructure.ApiConfig.BaseUrl,
+                BaseUrl = ApiConfig.BaseUrl,
                 TimeoutSeconds = 30,
                 DefaultHeaders = new Dictionary<string, string>()
             });
@@ -103,10 +101,7 @@ namespace Game.Bootstrap
             builder.Register<IRewardPlayerStateRefreshCoordinator, RewardPlayerStateRefreshCoordinator>(Lifetime.Singleton);
             builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(rewardSpecsConfig), Lifetime.Singleton);
 
-            var rewardedAdsConfig = _rewardedAdsConfigSo != null
-                ? _rewardedAdsConfigSo
-                : ScriptableObject.CreateInstance<RewardedAdsConfigSO>();
-            builder.RegisterInstance(rewardedAdsConfig);
+            builder.RegisterInstance(_rewardedAdsConfigSo);
             builder.Register<IRewardedAdsProvider>(resolver =>
             {
                 var config = resolver.Resolve<RewardedAdsConfigSO>().GetOrCreate();
@@ -129,24 +124,6 @@ namespace Game.Bootstrap
             builder.RegisterBuildCallback(resolver =>
             {
                 resolver.Resolve<WindowFactoryDI>().SetResolver(resolver);
-
-                var rewardedAdPresenters = Object.FindObjectsOfType<RewardedAdButtonPresenter>(true);
-                foreach (var rewardedAdPresenter in rewardedAdPresenters)
-                {
-                    if (rewardedAdPresenter != null)
-                    {
-                        resolver.Inject(rewardedAdPresenter);
-                    }
-                }
-
-                var battlePassOpenButtons = Object.FindObjectsOfType<BattlePassOpenButton>(true);
-                foreach (var battlePassOpenButton in battlePassOpenButtons)
-                {
-                    if (battlePassOpenButton != null)
-                    {
-                        resolver.Inject(battlePassOpenButton);
-                    }
-                }
             });
         }
     }
