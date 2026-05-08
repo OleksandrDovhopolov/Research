@@ -50,6 +50,15 @@ namespace Game.Features.Locations
             }
         }
 
+        public async UniTask WaitForLocationAsync(CancellationToken cancellationToken)
+        {
+            while (_location == null)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
+            }
+        }
+
         private async UniTask CreateLocationAsync(CancellationToken cancellationToken)
         {
             if (_mainLocationJson == null)

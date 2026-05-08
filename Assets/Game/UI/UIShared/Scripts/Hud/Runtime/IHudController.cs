@@ -11,6 +11,12 @@ namespace UIShared
         UniTask<TWidget> GetHudWidgetAsync<TWidget>(CancellationToken cancellationToken)
             where TWidget : Component, IHudWidget;
 
+        UniTask<TItem> CreateHudItemAsync<TItem>(
+            string addressableKey,
+            Transform parent,
+            CancellationToken cancellationToken)
+            where TItem : Component;
+
         TWidget GetHudWidget<TWidget>()
             where TWidget : Component, IHudWidget;
 
@@ -19,5 +25,7 @@ namespace UIShared
 
         void ReleaseHudWidget<TWidget>()
             where TWidget : Component, IHudWidget;
+
+        void ReleaseHudItem(Component item);
     }
 }

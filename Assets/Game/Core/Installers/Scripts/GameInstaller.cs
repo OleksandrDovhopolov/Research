@@ -56,6 +56,7 @@ namespace Game.Bootstrap
 
             // Location
             builder.RegisterComponent(_mainLocationBootstrap);
+            builder.RegisterLocationZoneInfoHud(_locationZoneInfoHudBootstrap);
 
             // Game Ready Gate
             builder.Register<IGameplayReadyGate, GameplayReadyGate>(Lifetime.Singleton);

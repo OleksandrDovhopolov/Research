@@ -20,6 +20,7 @@ namespace UIShared
         private readonly Dictionary<Type, Component> _createdWidgets = new();
         private readonly Dictionary<Type, GameObject> _loadedPrefabs = new();
         private readonly Dictionary<Type, Task<Component>> _creationTasks = new();
+        private readonly Dictionary<string, GameObject> _loadedItemPrefabs = new(StringComparer.Ordinal);
 
         private bool _isDisposed;
 
@@ -81,6 +82,36 @@ namespace UIShared
                 $"HUD widget '{widgetType.Name}' is not created. Use {nameof(GetHudWidgetAsync)} first or mark it as create-on-initialize.");
         }
 
+        public async UniTask<TItem> CreateHudItemAsync<TItem>(
+            string addressableKey,
+            Transform parent,
+            CancellationToken cancellationToken)
+            where TItem : Component
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrWhiteSpace(addressableKey))
+                throw new ArgumentException("HUD item addressable key must be assigned.", nameof(addressableKey));
+
+            if (parent == null)
+                throw new ArgumentNullException(nameof(parent));
+
+            var prefab = await LoadItemPrefabAsync(addressableKey, cancellationToken);
+            var instance = _resolver != null
+                ? _resolver.Instantiate(prefab, parent)
+                : Object.Instantiate(prefab, parent, false);
+
+            instance.transform.SetParent(parent, false);
+
+            var item = instance.GetComponent<TItem>();
+            if (item != null)
+                return item;
+
+            DestroyInstance(instance);
+            throw new InvalidOperationException(
+                $"HUD item prefab '{addressableKey}' does not contain component '{typeof(TItem).Name}'.");
+        }
+
         public bool TryGetHudWidget<TWidget>(out TWidget widget)
             where TWidget : Component, IHudWidget
         {
@@ -108,6 +139,14 @@ namespace UIShared
             ReleaseHudWidget(typeof(TWidget));
         }
 
+        public void ReleaseHudItem(Component item)
+        {
+            if (item == null)
+                return;
+
+            DestroyInstance(item.gameObject);
+        }
+
         public void Dispose()
         {
             if (_isDisposed)
@@ -125,6 +164,11 @@ namespace UIShared
                 _prefabLoader.ReleasePrefab(prefab);
 
             _loadedPrefabs.Clear();
+
+            foreach (var prefab in _loadedItemPrefabs.Values)
+                _prefabLoader.ReleasePrefab(prefab);
+
+            _loadedItemPrefabs.Clear();
         }
 
         private async UniTask<Component> GetHudWidgetAsync(Type widgetType, CancellationToken cancellationToken)
@@ -194,14 +238,39 @@ namespace UIShared
             HudWidgetDefinition definition,
             CancellationToken cancellationToken)
         {
-            if (_loadedPrefabs.TryGetValue(widgetType, out var loadedPrefab) && loadedPrefab != null)
-                return loadedPrefab;
+            if (_loadedPrefabs.TryGetValue(widgetType, out var loadedPrefab))
+            {
+                if (loadedPrefab != null)
+                    return loadedPrefab;
+
+                _loadedPrefabs.Remove(widgetType);
+            }
 
             var prefab = await _prefabLoader.LoadPrefabAsync(definition.AddressableKey, cancellationToken);
             if (prefab == null)
                 throw new InvalidOperationException($"Loaded null HUD prefab from address '{definition.AddressableKey}'.");
 
             _loadedPrefabs.Add(widgetType, prefab);
+            return prefab;
+        }
+
+        private async Task<GameObject> LoadItemPrefabAsync(
+            string addressableKey,
+            CancellationToken cancellationToken)
+        {
+            if (_loadedItemPrefabs.TryGetValue(addressableKey, out var loadedPrefab))
+            {
+                if (loadedPrefab != null)
+                    return loadedPrefab;
+
+                _loadedItemPrefabs.Remove(addressableKey);
+            }
+
+            var prefab = await _prefabLoader.LoadPrefabAsync(addressableKey, cancellationToken);
+            if (prefab == null)
+                throw new InvalidOperationException($"Loaded null HUD item prefab from address '{addressableKey}'.");
+
+            _loadedItemPrefabs.Add(addressableKey, prefab);
             return prefab;
         }
 

@@ -90,6 +90,30 @@ namespace UIShared.Tests.Editor
             Assert.That(ControllerTestWidget.BeforeReleasedCalls, Is.EqualTo(1));
         }
 
+        [Test]
+        public void CreateHudItemAsync_CreatesTransientItemUnderParent()
+        {
+            _prefab.AddComponent<ControllerTestItem>();
+            var parent = new GameObject("ItemsRoot").transform;
+            parent.SetParent(_rootObject.transform, false);
+
+            var item = _controller
+                .CreateHudItemAsync<ControllerTestItem>("ControllerTestItem", parent, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.That(item.transform.parent, Is.SameAs(parent));
+            Assert.That(_loader.LoadCount, Is.EqualTo(1));
+
+            _controller.ReleaseHudItem(item);
+
+            Assert.That(item == null, Is.True);
+        }
+
+        public sealed class ControllerTestItem : MonoBehaviour
+        {
+        }
+
         private sealed class FakeHudPrefabLoader : IHudPrefabLoader
         {
             private readonly GameObject _prefab;
