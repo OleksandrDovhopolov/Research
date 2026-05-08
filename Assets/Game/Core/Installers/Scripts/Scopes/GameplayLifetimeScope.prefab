@@ -64,9 +64,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b2f1aec1b56d624396988a9d5fde231, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _uiManager: {fileID: 0}
-  _hudService: {fileID: 0}
   _globalTimerService: {fileID: 0}
   _rewardSpecsConfigSo: {fileID: 11400000, guid: aaef6b3978f98c645b03c0530515339b, type: 2}
-  _cardCollectionScheduleFile: card_collection_schedule.json
-  _removeCardCollectionConfigSchedule: cards_event_schedule
+  _rewardedAdsConfigSo: {fileID: 0}
+  _liveOpsScheduleFile: liveops_schedule.json
+  _liveOpsScheduleConfigName: cards_event_schedule
+  _cameraSettings: {fileID: 0}
+  _cameraBehaviour: {fileID: 0}
+  _locationZoneInfoHudBootstrap: {fileID: 0}
+  _mainLocationBootstrap: {fileID: 0}
+  _hudRoot: {fileID: 0}
+  _hudWidgetRegistry: {fileID: 11400000, guid: 4ee341e5f63c45998acb2f2703f9c6a4, type: 2}

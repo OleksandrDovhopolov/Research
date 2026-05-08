@@ -101,7 +101,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3210837231320595796}
-  - component: {fileID: 391306020056364738}
   m_Layer: 0
   m_Name: CameraComponent
   m_TagString: Untagged
@@ -125,19 +124,3 @@ Transform:
   - {fileID: 3301349507961750780}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 32.8, y: 23.2, z: 0}
---- !u!114 &391306020056364738
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7974451566693395181}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f62e471cfba894445951654674dc5b34, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _camera: {fileID: 8264957256418984734}
-  _settings: {fileID: 11400000, guid: ed217864ea6ce994a8764122645b26ce, type: 2}
-  _dragMouseButton: 1
-  _enableMouseWheelZoom: 1

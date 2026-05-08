@@ -23,6 +23,7 @@ namespace Game.Features.Locations
         public IReadOnlyList<ILocationInteractable> InteractionObjects => _interactionObjects;
 
         private IObjectResolver _diContainer;
+        
         [Inject]
         private void Construct(IObjectResolver diContainer)
         {

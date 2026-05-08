@@ -10,6 +10,7 @@ using Inventory.API;
 using Rewards;
 using System.Collections.Generic;
 using CameraModule;
+using Cysharp.Threading.Tasks;
 using Game.Features.Locations;
 using InputSystem;
 using UIShared;
@@ -34,6 +35,10 @@ namespace Game.Bootstrap
         [Space, Header("Location")]
         [SerializeField] private LocationZoneInfoHudBootstrap _locationZoneInfoHudBootstrap;
         [SerializeField] private MainLocationBootstrap _mainLocationBootstrap;
+
+        [Space, Header("HUD")]
+        [SerializeField] private HudRoot _hudRoot;
+        [SerializeField] private HudWidgetRegistryAsset _hudWidgetRegistry;
         
         public override void InstallBindings(IContainerBuilder builder)
         {
@@ -50,10 +55,16 @@ namespace Game.Bootstrap
             builder.Register<ScreenPointConverter>(Lifetime.Singleton);
             builder.RegisterInstance(_cameraSettings);
             builder.RegisterComponent(_cameraBehaviour);
-            
+
+            // Location
+            builder.RegisterComponent(_mainLocationBootstrap);
+
             // Game Ready Gate
             builder.Register<IGameplayReadyGate, GameplayReadyGate>(Lifetime.Singleton);
-            
+
+            // HUD
+            builder.RegisterHud(_hudRoot, _hudWidgetRegistry, this.GetCancellationTokenOnDestroy());
+
             // ResourceManager
             builder.RegisterInstance(new WebClientOptions
             {
@@ -136,26 +147,7 @@ namespace Game.Bootstrap
                         resolver.Inject(battlePassOpenButton);
                     }
                 }
-
-                InitializeLocationZoneInfoHudBootstrap();
             });
-        }
-
-        private void InitializeLocationZoneInfoHudBootstrap()
-        {
-            if (_locationZoneInfoHudBootstrap == null)
-            {
-                Debug.LogWarning("[GameInstaller] LocationZoneInfoHudBootstrap reference is not assigned.");
-                return;
-            }
-
-            if (_mainLocationBootstrap == null)
-            {
-                Debug.LogWarning("[GameInstaller] MainLocationBootstrap reference is not assigned for zone info HUD.");
-                return;
-            }
-
-            _locationZoneInfoHudBootstrap.Initialize(_mainLocationBootstrap);
         }
     }
 }

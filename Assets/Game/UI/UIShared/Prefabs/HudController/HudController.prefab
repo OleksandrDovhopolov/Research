@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 6274321197511945911}
   - component: {fileID: 4201269264891642095}
   - component: {fileID: 6493684563248528598}
+  - component: {fileID: 7097802246578148231}
   m_Layer: 0
   m_Name: HudController
   m_TagString: Untagged
@@ -90,3 +91,19 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &7097802246578148231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4485045002225976084}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eca64096b864846806334b0a1a9fb6b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _screenLayer: {fileID: 6458578836539248948}
+  _worldLayer: {fileID: 6458578836539248948}
+  _overlayLayer: {fileID: 6458578836539248948}
+  _debugLayer: {fileID: 6458578836539248948}

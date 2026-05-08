@@ -14,7 +14,7 @@ namespace UIShared
         private readonly List<GameObject> _spawnedInstances = new();
 
         private MainLocationBootstrap _locationBootstrap;
-        private Transform _parentTransform;
+        private LocationZoneInfoHudWidget _hudWidget;
         private GameObject _prefab;
         private bool _isInitialized;
         private bool _isInitializing;
@@ -24,17 +24,14 @@ namespace UIShared
             _registry = registry;
         }
 
-        public async UniTask InitializeAsync(
-            MainLocationBootstrap locationBootstrap,
-            Transform parentTransform,
-            CancellationToken cancellationToken)
+        public async UniTask InitializeAsync(MainLocationBootstrap locationBootstrap, LocationZoneInfoHudWidget hudWidget, CancellationToken cancellationToken)
         {
             if (_isInitialized || _isInitializing)
                 return;
 
             _isInitializing = true;
             _locationBootstrap = locationBootstrap;
-            _parentTransform = parentTransform;
+            _hudWidget = hudWidget;
 
             try
             {
@@ -44,14 +41,20 @@ namespace UIShared
                     return;
                 }
 
-                if (_parentTransform == null)
+                if (_hudWidget == null)
                 {
-                    Debug.LogWarning("[ZoneInfoHud] Parent transform is not assigned.");
+                    Debug.LogWarning("[ZoneInfoHud] HUD widget is not assigned.");
+                    return;
+                }
+
+                if (_hudWidget.ItemsRoot == null)
+                {
+                    Debug.LogWarning("[ZoneInfoHud] HUD widget items root is not assigned.");
                     return;
                 }
 
                 await WaitForLocationAsync(cancellationToken);
-                _prefab = await ProdAddressablesWrapper.LoadAsync<GameObject>(LocationZoneInfoHudAddressables.LocationZoneInfoHudPrefab, cancellationToken);
+                _prefab = await ProdAddressablesWrapper.LoadAsync<GameObject>(LocationZoneInfoHudAddressables.LocationZoneInfoHudItemPrefab, cancellationToken);
 
                 SpawnItems();
                 _isInitialized = true;
@@ -86,7 +89,7 @@ namespace UIShared
             }
 
             _locationBootstrap = null;
-            _parentTransform = null;
+            _hudWidget = null;
             _isInitialized = false;
             _isInitializing = false;
         }
@@ -114,13 +117,13 @@ namespace UIShared
         private void CreateItem(ILocationInteractable interactable, LocationZoneInfoHudDefinition definition)
         {
             var spawnPosition = interactable.HudAnchor.position;
-            var itemObject = UnityEngine.Object.Instantiate(_prefab, spawnPosition, Quaternion.identity, _parentTransform);
+            var itemObject = UnityEngine.Object.Instantiate(_prefab, spawnPosition, Quaternion.identity, _hudWidget.ItemsRoot);
             itemObject.name = $"ZoneInfo_{interactable.InteractionId}";
 
             var itemView = itemObject.GetComponent<LocationZoneInfoHudItemView>();
             if (itemView == null)
             {
-                Debug.LogWarning($"[ZoneInfoHud] Prefab '{LocationZoneInfoHudAddressables.LocationZoneInfoHudPrefab}' does not contain {nameof(LocationZoneInfoHudItemView)}.");
+                Debug.LogWarning($"[ZoneInfoHud] Prefab '{LocationZoneInfoHudAddressables.LocationZoneInfoHudItemPrefab}' does not contain {nameof(LocationZoneInfoHudItemView)}.");
                 UnityEngine.Object.Destroy(itemObject);
                 return;
             }
