@@ -122,6 +122,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac6319a0f48efb04cab313f8356323a6
+    m_Address: Fishing_production
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: aeba0de0c5b17b344a2a2ac795df3994
     m_Address: sockeye_salmon
     m_ReadOnly: 0
