@@ -18,7 +18,7 @@ namespace Game.Fishing
     {
         public FishCollectionEntryViewData(
             string fishId,
-            string itemId,
+            string spriteAddress,
             string displayName,
             string waterBodyTypesText,
             string behaviorType,
@@ -28,7 +28,7 @@ namespace Game.Fishing
             FishBookProgress progress)
         {
             FishId = fishId ?? string.Empty;
-            ItemId = itemId ?? string.Empty;
+            SpriteAddress = spriteAddress ?? string.Empty;
             DisplayName = displayName ?? string.Empty;
             WaterBodyTypesText = waterBodyTypesText ?? string.Empty;
             BehaviorType = behaviorType ?? string.Empty;
@@ -39,7 +39,7 @@ namespace Game.Fishing
         }
 
         public string FishId { get; }
-        public string ItemId { get; }
+        public string SpriteAddress { get; }
         public string DisplayName { get; }
         public string WaterBodyTypesText { get; }
         public string BehaviorType { get; }

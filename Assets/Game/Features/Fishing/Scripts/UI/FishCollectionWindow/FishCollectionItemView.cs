@@ -15,11 +15,11 @@ namespace Game.Fishing
         [SerializeField] private TextMeshProUGUI _minWeightText;
         [SerializeField] private TextMeshProUGUI _maxWeightText;
 
-        public string ItemId { get; private set; }
+        public string SpriteAddress { get; private set; }
 
         public void SetData(FishCollectionEntryViewData data)
         {
-            ItemId = data?.ItemId ?? string.Empty;
+            SpriteAddress = data?.SpriteAddress ?? string.Empty;
             SetText(_displayNameText, data?.DisplayName);
             SetText(_waterBodyTypeText, data?.WaterBodyTypesText);
             SetText(_behaviorTypeText, data?.BehaviorType);
@@ -36,7 +36,7 @@ namespace Game.Fishing
 
         public void Cleanup()
         {
-            ItemId = string.Empty;
+            SpriteAddress = string.Empty;
 
             if (_icon != null)
                 _icon.sprite = null;

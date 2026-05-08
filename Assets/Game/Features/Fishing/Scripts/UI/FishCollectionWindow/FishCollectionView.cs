@@ -35,7 +35,7 @@ namespace Game.Fishing
                 var view = _entriesPool.GetNext();
                 view.transform.SetSiblingIndex(i);
                 view.SetData(entry);
-                LoadSpriteAsync(view, entry.ItemId, token).Forget();
+                LoadSpriteAsync(view, entry.SpriteAddress, token).Forget();
             }
 
             if (_scrollRect != null)
@@ -80,7 +80,7 @@ namespace Game.Fishing
 
             if (_spriteCache.TryGetValue(spriteAddress, out var cachedSprite))
             {
-                if (itemView.ItemId == spriteAddress)
+                if (itemView.SpriteAddress == spriteAddress)
                     itemView.SetSprite(cachedSprite);
                 return;
             }
@@ -105,7 +105,7 @@ namespace Game.Fishing
 
                 _spriteCache[spriteAddress] = sprite;
 
-                if (itemView != null && itemView.ItemId == spriteAddress)
+                if (itemView != null && itemView.SpriteAddress == spriteAddress)
                     itemView.SetSprite(sprite);
             }
             catch (OperationCanceledException)

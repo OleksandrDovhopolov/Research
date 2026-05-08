@@ -2,7 +2,7 @@
   "crafting_recipes": [
     {
       "id": "craft_red_lure",
-      "display_name": "Создание красной приманки",
+      "display_name": "Craft Red Lure",
       "station_id": "lure_crafting_station",
       "output_item_id": "item_red_lure",
       "output_count": 1,
@@ -13,7 +13,7 @@
     },
     {
       "id": "craft_green_lure",
-      "display_name": "Создание зелёной приманки",
+      "display_name": "Craft Green Lure",
       "station_id": "lure_crafting_station",
       "output_item_id": "item_green_lure",
       "output_count": 1,
@@ -24,7 +24,7 @@
     },
     {
       "id": "craft_blue_lure",
-      "display_name": "Создание синей приманки",
+      "display_name": "Craft Blue Lure",
       "station_id": "lure_crafting_station",
       "output_item_id": "item_blue_lure",
       "output_count": 1,
@@ -35,7 +35,7 @@
     },
     {
       "id": "craft_purple_lure",
-      "display_name": "Создание фиолетовой приманки",
+      "display_name": "Craft Purple Lure",
       "station_id": "lure_crafting_station",
       "output_item_id": "item_purple_lure",
       "output_count": 1,
@@ -46,7 +46,7 @@
     },
     {
       "id": "craft_gold_lure",
-      "display_name": "Создание золотой приманки",
+      "display_name": "Craft Gold Lure",
       "station_id": "lure_crafting_station",
       "output_item_id": "item_gold_lure",
       "output_count": 1,

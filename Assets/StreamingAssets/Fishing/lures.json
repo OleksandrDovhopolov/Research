@@ -2,7 +2,7 @@
   "lures": [
     {
       "id": "red_lure",
-      "display_name": "Красная приманка",
+      "display_name": "Red Lure",
       "item_id": "item_red_lure",
       "craft_recipe_id": "craft_red_lure",
       "rarity": "common",
@@ -10,7 +10,7 @@
     },
     {
       "id": "green_lure",
-      "display_name": "Зелёная приманка",
+      "display_name": "Green Lure",
       "item_id": "item_green_lure",
       "craft_recipe_id": "craft_green_lure",
       "rarity": "uncommon",
@@ -18,7 +18,7 @@
     },
     {
       "id": "blue_lure",
-      "display_name": "Синяя приманка",
+      "display_name": "Blue Lure",
       "item_id": "item_blue_lure",
       "craft_recipe_id": "craft_blue_lure",
       "rarity": "rare",
@@ -26,7 +26,7 @@
     },
     {
       "id": "purple_lure",
-      "display_name": "Фиолетовая приманка",
+      "display_name": "Purple Lure",
       "item_id": "item_purple_lure",
       "craft_recipe_id": "craft_purple_lure",
       "rarity": "epic",
@@ -34,7 +34,7 @@
     },
     {
       "id": "gold_lure",
-      "display_name": "Золотая приманка",
+      "display_name": "Gold Lure",
       "item_id": "item_gold_lure",
       "craft_recipe_id": "craft_gold_lure",
       "rarity": "legendary",

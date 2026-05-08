@@ -19,8 +19,8 @@
     },
     {
       "id": "medium",
-      "minigame_speed_multiplier": 1.0,
-      "success_tolerance_multiplier": 1.0
+      "minigame_speed_multiplier": 1,
+      "success_tolerance_multiplier": 1
     },
     {
       "id": "heavy",
@@ -36,35 +36,35 @@
   "fish_book_tabs": [
     {
       "id": "all",
-      "display_name": "Все рыбы",
+      "display_name": "All Fish",
       "filter": {
         "type": "all"
       }
     },
     {
       "id": "coastal",
-      "display_name": "Прибрежные",
+      "display_name": "Coastal",
       "filter": {
         "water_body_type": "coastal"
       }
     },
     {
       "id": "medium_depth",
-      "display_name": "Средняя глубина",
+      "display_name": "Medium Depth",
       "filter": {
         "water_body_type": "medium_depth"
       }
     },
     {
       "id": "deep_water",
-      "display_name": "Глубокие воды",
+      "display_name": "Deep Water",
       "filter": {
         "water_body_type": "deep_water"
       }
     },
     {
       "id": "event",
-      "display_name": "Событийные",
+      "display_name": "Event Fish",
       "filter": {
         "event_only": true
       }

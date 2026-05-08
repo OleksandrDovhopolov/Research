@@ -2,35 +2,35 @@
   "items": [
     {
       "id": "item_red_lure",
-      "display_name": "Красная приманка",
+      "display_name": "Red Lure",
       "type": "lure",
       "stackable": true,
       "max_stack": 999
     },
     {
       "id": "item_green_lure",
-      "display_name": "Зелёная приманка",
+      "display_name": "Green Lure",
       "type": "lure",
       "stackable": true,
       "max_stack": 999
     },
     {
       "id": "item_blue_lure",
-      "display_name": "Синяя приманка",
+      "display_name": "Blue Lure",
       "type": "lure",
       "stackable": true,
       "max_stack": 999
     },
     {
       "id": "item_purple_lure",
-      "display_name": "Фиолетовая приманка",
+      "display_name": "Purple Lure",
       "type": "lure",
       "stackable": true,
       "max_stack": 999
     },
     {
       "id": "item_gold_lure",
-      "display_name": "Золотая приманка",
+      "display_name": "Gold Lure",
       "type": "lure",
       "stackable": true,
       "max_stack": 999

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Game.Fishing
 {
@@ -14,12 +15,14 @@ namespace Game.Fishing
 
     public sealed class FishCollectionDataBuilder : IFishCollectionDataBuilder
     {
-        private readonly IFishingConfigProvider _configProvider;
+        private const string FishItemType = "fish";
+
+        private readonly IFishingConfigContentSource _contentSource;
         private readonly IFishBookService _fishBookService;
 
-        public FishCollectionDataBuilder(IFishingConfigProvider configProvider, IFishBookService fishBookService)
+        public FishCollectionDataBuilder(IFishingConfigContentSource contentSource, IFishBookService fishBookService)
         {
-            _configProvider = configProvider ?? throw new ArgumentNullException(nameof(configProvider));
+            _contentSource = contentSource ?? throw new ArgumentNullException(nameof(contentSource));
             _fishBookService = fishBookService ?? throw new ArgumentNullException(nameof(fishBookService));
         }
 
@@ -27,29 +30,32 @@ namespace Game.Fishing
         {
             ct.ThrowIfCancellationRequested();
 
-            var data = await _configProvider.LoadAsync(ct);
-            var entries = new List<FishCollectionEntryViewData>(data.Fish.Count);
+            var fishRoot = await LoadAsync<FishConfigRoot>(FishingConfigPaths.Fish, ct);
+            var zonesRoot = await LoadAsync<FishingZonesConfigRoot>(FishingConfigPaths.Zones, ct);
+            var waterBodyTypesById = (zonesRoot.WaterBodyTypes ?? new List<WaterBodyTypeConfig>())
+                .Where(x => x != null && !string.IsNullOrWhiteSpace(x.Id))
+                .GroupBy(x => x.Id, StringComparer.Ordinal)
+                .ToDictionary(group => group.Key, group => group.Last(), StringComparer.Ordinal);
+            var fishList = fishRoot.Fish ?? new List<FishConfig>();
+            var entries = new List<FishCollectionEntryViewData>(fishList.Count);
 
-            foreach (var fish in data.Fish)
+            foreach (var fish in fishList)
             {
                 ct.ThrowIfCancellationRequested();
-                if (fish == null)
+                if (fish == null || fish.EventOnly)
                     continue;
 
                 var progress = await _fishBookService.GetProgressAsync(fish.Id, ct);
-                var itemId = FishingStaticData.GetFishItemId(fish.Id);
-                data.ItemsById.TryGetValue(itemId, out var itemConfig);
-
-                var waterBodyTypes = ResolveWaterBodyTypes(data, fish);
+                var waterBodyTypes = ResolveWaterBodyTypes(waterBodyTypesById, fish);
                 var (minWeight, maxWeight) = CalculateWeightRange(fish);
 
                 entries.Add(new FishCollectionEntryViewData(
                     fish.Id,
-                    itemId,
+                    fish.Id,
                     fish.DisplayName,
                     waterBodyTypes,
                     fish.BehaviorType,
-                    itemConfig?.Type,
+                    FishItemType,
                     minWeight,
                     maxWeight,
                     progress));
@@ -78,7 +84,25 @@ namespace Game.Fishing
             return (float)Math.Round(weight, 2, MidpointRounding.AwayFromZero);
         }
 
-        private static string ResolveWaterBodyTypes(FishingStaticData data, FishConfig fish)
+        private async UniTask<T> LoadAsync<T>(string relativePath, CancellationToken ct) where T : class, new()
+        {
+            var json = await _contentSource.LoadJsonAsync(relativePath, ct);
+            if (string.IsNullOrWhiteSpace(json))
+                return new T();
+
+            try
+            {
+                return JsonConvert.DeserializeObject<T>(json) ?? new T();
+            }
+            catch (Exception exception)
+            {
+                throw new InvalidOperationException($"Failed to parse fish collection config '{relativePath}': {exception.Message}", exception);
+            }
+        }
+
+        private static string ResolveWaterBodyTypes(
+            IReadOnlyDictionary<string, WaterBodyTypeConfig> waterBodyTypesById,
+            FishConfig fish)
         {
             if (fish?.WaterBodyTypes == null || fish.WaterBodyTypes.Count == 0)
                 return string.Empty;
@@ -89,7 +113,7 @@ namespace Game.Fishing
                 if (string.IsNullOrWhiteSpace(waterBodyTypeId))
                     continue;
 
-                if (data.WaterBodyTypesById.TryGetValue(waterBodyTypeId, out var waterBodyType) &&
+                if (waterBodyTypesById.TryGetValue(waterBodyTypeId, out var waterBodyType) &&
                     !string.IsNullOrWhiteSpace(waterBodyType?.DisplayName))
                 {
                     names.Add(waterBodyType.DisplayName);

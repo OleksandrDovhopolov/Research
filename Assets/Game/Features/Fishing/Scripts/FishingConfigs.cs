@@ -213,7 +213,7 @@ namespace Game.Fishing
 
         public static string GetFishItemId(string fishId)
         {
-            return string.IsNullOrWhiteSpace(fishId) ? string.Empty : fishId;
+            return string.IsNullOrWhiteSpace(fishId) ? string.Empty : "item_" + fishId;
         }
 
         private static IReadOnlyDictionary<string, T> BuildDictionary<T>(IReadOnlyList<T> values, Func<T, string> keySelector)
