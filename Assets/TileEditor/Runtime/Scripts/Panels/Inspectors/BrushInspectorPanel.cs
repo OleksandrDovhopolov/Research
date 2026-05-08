@@ -125,6 +125,16 @@ namespace Fabros.TileEditor
                         _currentEditors.Add(enumEditor);
                         break;
 
+                    case StringOptionsProperty stringOptionsProperty:
+                        var stringOptionsEditor = Instantiate(_enumPropertyEditorPrefab, _editorsContainer);
+                        stringOptionsEditor.Init(
+                            stringOptionsProperty.GetName(),
+                            stringOptionsProperty.GetOptions(),
+                            stringOptionsProperty.GetSelectedIndex(),
+                            i => stringOptionsProperty.SetValue(i));
+                        _currentEditors.Add(stringOptionsEditor);
+                        break;
+
                     case StringProperty stringProperty:
                         var stringEditor = Instantiate(_stringPropertyEditorPrefab, _editorsContainer);
                         stringEditor.Init(

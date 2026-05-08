@@ -67,7 +67,7 @@ namespace Game.Fishing
                     builder.Append("}");
                 }
 
-                Debug.Log(builder.ToString());
+                Debug.LogWarning(builder.ToString());
             }
             catch (OperationCanceledException)
             {

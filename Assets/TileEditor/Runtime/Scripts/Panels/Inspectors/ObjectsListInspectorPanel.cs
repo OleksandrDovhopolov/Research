@@ -195,6 +195,16 @@ namespace Fabros.TileEditor
                     }))
                         sameProperties.Add(property);
                 }
+                else if (property is StringOptionsProperty stringOptionsProperty)
+                {
+                    if (_inspectedObjects.TrueForAll(lo =>
+                    {
+                        bool hasProperty = lo.TryGetProperty(propertyName, propertyType, out var optionsProp);
+                        if (!hasProperty || !(optionsProp is StringOptionsProperty otherOptions)) return false;
+                        return otherOptions.GetOptions().SequenceEqual(stringOptionsProperty.GetOptions());
+                    }))
+                        sameProperties.Add(property);
+                }
                 else
                 {
                     if (_inspectedObjects.TrueForAll(lo => lo.TryGetProperty(propertyName, propertyType, out _)))
@@ -273,6 +283,17 @@ namespace Fabros.TileEditor
                             i => SetObjectsPropertiesValue(propertyName, propertyType, i));
 
                         _currentProperyEditors.Add(enumEditor);
+                        break;
+
+                    case StringOptionsProperty stringOptionsProperty:
+                        var stringOptionsEditor = Instantiate(_enumPropertyEditorPrefab, _editorsContainer);
+                        stringOptionsEditor.Init(
+                            stringOptionsProperty.GetName(),
+                            stringOptionsProperty.GetOptions(),
+                            stringOptionsProperty.GetSelectedIndex(),
+                            i => SetObjectsPropertiesValue(propertyName, propertyType, i));
+
+                        _currentProperyEditors.Add(stringOptionsEditor);
                         break;
 
                     case StringProperty stringProperty:
