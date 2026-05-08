@@ -1,0 +1,21 @@
+{
+    "name": "Fishing",
+    "rootNamespace": "",
+    "references": [
+        "UIShared",
+        "Location.Contracts",
+        "VContainer",
+        "UniTask",
+        "Unity.TextMeshPro",
+        "Unity.ugui"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

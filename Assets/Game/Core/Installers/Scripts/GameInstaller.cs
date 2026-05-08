@@ -56,7 +56,16 @@ namespace Game.Bootstrap
             builder.RegisterComponent(_cameraBehaviour);
 
             // Location
-            builder.RegisterComponent(_mainLocationBootstrap);
+            if (_mainLocationBootstrap != null)
+            {
+                builder.RegisterComponent(_mainLocationBootstrap);
+                builder.RegisterInstance<ILocationInteractablesSource>(_mainLocationBootstrap);
+            }
+            else
+            {
+                Debug.LogWarning("[GameInstaller] MainLocationBootstrap reference is not assigned.");
+            }
+
             builder.RegisterLocationZoneInfoHud(_locationZoneInfoHudBootstrap);
 
             // Game Ready Gate

@@ -9,7 +9,7 @@ using VContainer;
 
 namespace Game.Features.Locations
 {
-    public sealed class MainLocationBootstrap : MonoBehaviour
+    public sealed class MainLocationBootstrap : MonoBehaviour, ILocationInteractablesSource
     {
         [SerializeField] private TextAsset _mainLocationJson;
         [SerializeField] private TileEditorSettings _tileEditorSettings;

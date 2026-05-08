@@ -18,7 +18,7 @@ namespace Fishing
         private bool _isInitializationStarted;
 
         [Inject]
-        public void Install(IHudController hudController, MainLocationBootstrap locationBootstrap)
+        public void Install(IHudController hudController, ILocationInteractablesSource locationSource)
         {
             if (_isInitializationStarted)
                 return;
@@ -29,15 +29,15 @@ namespace Fishing
                 return;
             }
 
-            if (locationBootstrap == null)
+            if (locationSource == null)
             {
-                Debug.LogWarning("[ZoneInfoHud] MainLocationBootstrap is not assigned.");
+                Debug.LogWarning("[ZoneInfoHud] Location interactables source is not assigned.");
                 return;
             }
 
             _isInitializationStarted = true;
             _hudController = hudController;
-            InitializeAsync(hudController, locationBootstrap, this.GetCancellationTokenOnDestroy()).Forget();
+            InitializeAsync(hudController, locationSource, this.GetCancellationTokenOnDestroy()).Forget();
         }
 
         private void OnDestroy()
@@ -47,11 +47,11 @@ namespace Fishing
             _isInitializationStarted = false;
         }
 
-        private async UniTaskVoid InitializeAsync(IHudController hudController, MainLocationBootstrap locationBootstrap, CancellationToken cancellationToken)
+        private async UniTaskVoid InitializeAsync(IHudController hudController, ILocationInteractablesSource locationSource, CancellationToken cancellationToken)
         {
             try
             {
-                await locationBootstrap.WaitForLocationAsync(cancellationToken);
+                await locationSource.WaitForLocationAsync(cancellationToken);
 
                 var hudWidget = await hudController.GetHudWidgetAsync<LocationZoneInfoHudWidget>(cancellationToken);
                 if (hudWidget.ItemsRoot == null)
@@ -60,7 +60,7 @@ namespace Fishing
                     return;
                 }
 
-                await SpawnItemsAsync(hudController, locationBootstrap, hudWidget, cancellationToken);
+                await SpawnItemsAsync(hudController, locationSource, hudWidget, cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -73,11 +73,11 @@ namespace Fishing
 
         private async UniTask SpawnItemsAsync(
             IHudController hudController,
-            MainLocationBootstrap locationBootstrap,
+            ILocationInteractablesSource locationSource,
             LocationZoneInfoHudWidget hudWidget,
             CancellationToken cancellationToken)
         {
-            foreach (var interactable in locationBootstrap.InteractionObjects)
+            foreach (var interactable in locationSource.InteractionObjects)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
