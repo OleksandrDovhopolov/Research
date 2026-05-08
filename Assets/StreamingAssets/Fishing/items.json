@@ -1,0 +1,340 @@
+{
+  "items": [
+    {
+      "id": "item_red_lure",
+      "display_name": "Красная приманка",
+      "type": "lure",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_green_lure",
+      "display_name": "Зелёная приманка",
+      "type": "lure",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_blue_lure",
+      "display_name": "Синяя приманка",
+      "type": "lure",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_purple_lure",
+      "display_name": "Фиолетовая приманка",
+      "type": "lure",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_gold_lure",
+      "display_name": "Золотая приманка",
+      "type": "lure",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_arctic_charr",
+      "display_name": "Arctic Charr",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_asp",
+      "display_name": "Asp",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_bitterling",
+      "display_name": "Bitterling",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_black_bullhead",
+      "display_name": "Black Bullhead",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_bluegill",
+      "display_name": "Bluegill",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_bluespotted_sunfish",
+      "display_name": "Bluespotted Sunfish",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_brook_trout",
+      "display_name": "Brook Trout",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_carp",
+      "display_name": "Carp",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_coho_salmon",
+      "display_name": "Coho Salmon",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_copper_redhorse",
+      "display_name": "Copper Redhorse",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_fallfish",
+      "display_name": "Fallfish",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_giant_barb",
+      "display_name": "Giant Barb",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_golden_trout",
+      "display_name": "Golden Trout",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_goldfish",
+      "display_name": "Goldfish",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_grass_carp",
+      "display_name": "Grass Carp",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_greater_redhorse",
+      "display_name": "Greater Redhorse",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_green_sunfish",
+      "display_name": "Green Sunfish",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_huchen",
+      "display_name": "Huchen",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_lake_sturgeon",
+      "display_name": "Lake Sturgeon",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_lake_whitefish",
+      "display_name": "Lake Whitefish",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_largemouth_bass",
+      "display_name": "Largemouth Bass",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_longear_sunfish",
+      "display_name": "Longear Sunfish",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_nile_perch",
+      "display_name": "Nile Perch",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_northern_pike",
+      "display_name": "Northern Pike",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_northern_studfish",
+      "display_name": "Northern Studfish",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_perch",
+      "display_name": "Perch",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_quillback",
+      "display_name": "Quillback",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_rainbow_smelt",
+      "display_name": "Rainbow Smelt",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_rainbowfish",
+      "display_name": "Rainbowfish",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_red_tailed_catfish",
+      "display_name": "Red-Tailed Catfish",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_roach",
+      "display_name": "Roach",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_rudd",
+      "display_name": "Rudd",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_salmon",
+      "display_name": "Salmon",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_sauger",
+      "display_name": "Sauger",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_shadow_bass",
+      "display_name": "Shadow Bass",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_sockeye_salmon",
+      "display_name": "Sockeye Salmon",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_speckled_dace",
+      "display_name": "Speckled Dace",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_spotted_sunfish",
+      "display_name": "Spotted Sunfish",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_striped_bass",
+      "display_name": "Striped Bass",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_white_catfish",
+      "display_name": "White Catfish",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_yellow_bass",
+      "display_name": "Yellow Bass",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_yellow_perch",
+      "display_name": "Yellow Perch",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    },
+    {
+      "id": "item_zander",
+      "display_name": "Zander",
+      "type": "fish",
+      "stackable": true,
+      "max_stack": 999
+    }
+  ]
+}

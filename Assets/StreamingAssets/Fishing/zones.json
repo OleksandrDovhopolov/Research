@@ -1,0 +1,114 @@
+{
+  "water_body_types": [
+    {
+      "id": "coastal",
+      "display_name": "Прибрежная зона"
+    },
+    {
+      "id": "medium_depth",
+      "display_name": "Средняя глубина"
+    },
+    {
+      "id": "deep_water",
+      "display_name": "Глубокие воды"
+    },
+    {
+      "id": "reed_water",
+      "display_name": "Заросли / камыши"
+    },
+    {
+      "id": "rocky_water",
+      "display_name": "Каменистая зона"
+    }
+  ],
+  "fishing_zones": [
+    {
+      "id": "zone_1",
+      "display_name": "Прибрежная зона 1",
+      "water_body_type": "coastal",
+      "is_unlock_feature_enabled": false,
+      "is_unlocked_by_default": true,
+      "unlock_condition": null,
+      "cooldown_enabled": false,
+      "cooldown_seconds": 0,
+      "allowed_lure_ids": ["red_lure", "green_lure", "blue_lure", "purple_lure", "gold_lure"]
+    },
+    {
+      "id": "zone_2",
+      "display_name": "Прибрежная зона 2",
+      "water_body_type": "coastal",
+      "is_unlock_feature_enabled": false,
+      "is_unlocked_by_default": true,
+      "unlock_condition": null,
+      "cooldown_enabled": false,
+      "cooldown_seconds": 0,
+      "allowed_lure_ids": ["red_lure", "green_lure", "blue_lure", "purple_lure", "gold_lure"]
+    },
+    {
+      "id": "zone_3",
+      "display_name": "Средняя глубина 1",
+      "water_body_type": "medium_depth",
+      "is_unlock_feature_enabled": false,
+      "is_unlocked_by_default": true,
+      "unlock_condition": null,
+      "cooldown_enabled": false,
+      "cooldown_seconds": 0,
+      "allowed_lure_ids": ["red_lure", "green_lure", "blue_lure", "purple_lure", "gold_lure"]
+    },
+    {
+      "id": "zone_4",
+      "display_name": "Средняя глубина 2",
+      "water_body_type": "medium_depth",
+      "is_unlock_feature_enabled": false,
+      "is_unlocked_by_default": true,
+      "unlock_condition": null,
+      "cooldown_enabled": false,
+      "cooldown_seconds": 0,
+      "allowed_lure_ids": ["red_lure", "green_lure", "blue_lure", "purple_lure", "gold_lure"]
+    },
+    {
+      "id": "zone_5",
+      "display_name": "Глубокая вода 1",
+      "water_body_type": "deep_water",
+      "is_unlock_feature_enabled": false,
+      "is_unlocked_by_default": true,
+      "unlock_condition": null,
+      "cooldown_enabled": false,
+      "cooldown_seconds": 0,
+      "allowed_lure_ids": ["red_lure", "green_lure", "blue_lure", "purple_lure", "gold_lure"]
+    },
+    {
+      "id": "zone_6",
+      "display_name": "Глубокая вода 2",
+      "water_body_type": "deep_water",
+      "is_unlock_feature_enabled": false,
+      "is_unlocked_by_default": true,
+      "unlock_condition": null,
+      "cooldown_enabled": false,
+      "cooldown_seconds": 0,
+      "allowed_lure_ids": ["red_lure", "green_lure", "blue_lure", "purple_lure", "gold_lure"]
+    },
+    {
+      "id": "zone_7",
+      "display_name": "Заросли 1",
+      "water_body_type": "reed_water",
+      "is_unlock_feature_enabled": false,
+      "is_unlocked_by_default": true,
+      "unlock_condition": null,
+      "cooldown_enabled": false,
+      "cooldown_seconds": 0,
+      "allowed_lure_ids": ["red_lure", "green_lure", "blue_lure", "purple_lure", "gold_lure"]
+    },
+    {
+      "id": "zone_8",
+      "display_name": "Каменистая зона 1",
+      "water_body_type": "rocky_water",
+      "is_unlock_feature_enabled": false,
+      "is_unlocked_by_default": true,
+      "unlock_condition": null,
+      "cooldown_enabled": false,
+      "cooldown_seconds": 0,
+      "allowed_lure_ids": ["red_lure", "green_lure", "blue_lure", "purple_lure", "gold_lure"]
+    }
+  ]
+}

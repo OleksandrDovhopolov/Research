@@ -1,14 +1,13 @@
 {
-    "name": "Fishing",
-    "rootNamespace": "",
+    "name": "Game.Fishing",
+    "rootNamespace": "Game.Fishing",
     "references": [
-        "Game.Fishing",
-        "UIShared",
-        "Location.Contracts",
-        "VContainer",
         "UniTask",
-        "Unity.TextMeshPro",
-        "Unity.ugui"
+        "VContainer",
+        "Inventory.API",
+        "Infrastructure",
+        "Core.Models",
+        "Location.Contracts"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

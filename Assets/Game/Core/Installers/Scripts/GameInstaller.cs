@@ -8,6 +8,8 @@ using Cysharp.Threading.Tasks;
 using EventOrchestration;
 using Fishing;
 using FortuneWheel;
+using Game.Crafting;
+using Game.Fishing;
 using Game.Features.Locations;
 using Infrastructure;
 using InputSystem;
@@ -95,6 +97,8 @@ namespace Game.Bootstrap
             builder.Register<IInventoryItemCategoryResolver>(_ => new RewardSpecInventoryItemCategoryResolver(rewardSpecsConfig), Lifetime.Singleton);
             
             builder.RegisterInventoryService();
+            builder.RegisterFishing();
+            builder.RegisterCrafting();
             builder.RegisterCardCollectionImpl();
             builder.RegisterBattlePass();
             builder.RegisterFortuneWheel();

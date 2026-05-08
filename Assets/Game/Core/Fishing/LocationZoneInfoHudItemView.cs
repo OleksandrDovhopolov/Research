@@ -1,7 +1,10 @@
+using Cysharp.Threading.Tasks;
+using Game.Fishing;
 using Game.Features.Locations;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 namespace Fishing
 {
@@ -13,6 +16,13 @@ namespace Fishing
 
         private ILocationInteractable _interactable;
         private Transform _target;
+        private IFishingZoneInfoLogger _zoneInfoLogger;
+
+        [Inject]
+        public void Construct(IFishingZoneInfoLogger zoneInfoLogger)
+        {
+            _zoneInfoLogger = zoneInfoLogger;
+        }
 
         public void Initialize(ILocationInteractable interactable, string label)
         {
@@ -85,8 +95,13 @@ namespace Fishing
 
         private void HandleClicked()
         {
-            var anchorName = _target != null ? _target.name : string.Empty;
-            Debug.LogWarning($"[ZoneInfoHud] Click key='{_interactable?.InteractionKey}', id='{_interactable?.InteractionId}', anchor='{anchorName}'.");
+            if (_zoneInfoLogger != null)
+            {
+                _zoneInfoLogger.LogZoneInfoAsync(_interactable).Forget();
+                return;
+            }
+
+            Debug.LogWarning($"[ZoneInfoHud] Click key='{_interactable?.InteractionKey}', id='{_interactable?.InteractionId}'. Fishing logger is not registered.");
         }
     }
 }
