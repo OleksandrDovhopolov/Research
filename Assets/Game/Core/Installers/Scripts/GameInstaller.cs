@@ -1,3 +1,4 @@
+using System;
 using CardCollectionImpl;
 using core;
 using CoreResources;
@@ -8,13 +9,14 @@ using Infrastructure;
 using Inventory.API;
 using Rewards;
 using System.Collections.Generic;
-using System.Linq;
 using CameraModule;
+using Game.Features.Locations;
 using InputSystem;
 using UIShared;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
+using Object = UnityEngine.Object;
 
 namespace Game.Bootstrap
 {
@@ -28,6 +30,10 @@ namespace Game.Bootstrap
         
         [SerializeField] private CameraSettings _cameraSettings;
         [SerializeField] private CameraBehaviour _cameraBehaviour;
+        
+        [Space, Header("Location")]
+        [SerializeField] private LocationZoneInfoHudBootstrap _locationZoneInfoHudBootstrap;
+        [SerializeField] private MainLocationBootstrap _mainLocationBootstrap;
         
         public override void InstallBindings(IContainerBuilder builder)
         {
@@ -130,7 +136,32 @@ namespace Game.Bootstrap
                         resolver.Inject(battlePassOpenButton);
                     }
                 }
+
+                InitializeLocationZoneInfoHudBootstrap();
             });
+        }
+
+        private void InitializeLocationZoneInfoHudBootstrap()
+        {
+            if (_locationZoneInfoHudBootstrap == null)
+            {
+                Debug.LogWarning("[GameInstaller] LocationZoneInfoHudBootstrap reference is not assigned.");
+                return;
+            }
+
+            if (_mainLocationBootstrap == null)
+            {
+                Debug.LogWarning("[GameInstaller] MainLocationBootstrap reference is not assigned for zone info HUD.");
+                return;
+            }
+
+            if (_locationZoneInfoHudBootstrap is not ILocationZoneInfoHudBootstrap bootstrap)
+            {
+                Debug.LogWarning($"[GameInstaller] '{_locationZoneInfoHudBootstrap.name}' does not implement {nameof(ILocationZoneInfoHudBootstrap)}.");
+                return;
+            }
+
+            bootstrap.Initialize(_mainLocationBootstrap);
         }
     }
 }

@@ -1,4 +1,5 @@
 using Game.Features.Locations;
+using UIShared;
 using UnityEngine;
 using VContainer;
 
@@ -29,8 +30,11 @@ namespace InputSystem
 
         public void OnPointerDown(Vector2 position)
         {
-            var (canvasHit, worldHit) = IsUIPressed(out _);
+            var (canvasHit, worldHit) = IsUIPressed(out var uiComponents);
             if (canvasHit) return;
+
+            if (worldHit && IsLocationZoneInfoHudPressed(uiComponents))
+                return;
             
             _handler = _filter.FindHandler(_raycaster.Raycast(position));
 
@@ -65,6 +69,23 @@ namespace InputSystem
         public void Dispose()
         {
             _handler = null;
+        }
+
+        private static bool IsLocationZoneInfoHudPressed(System.Collections.Generic.List<Transform> components)
+        {
+            if (components == null)
+                return false;
+
+            foreach (var component in components)
+            {
+                if (component == null)
+                    continue;
+
+                if (component.GetComponentInParent<LocationZoneInfoHudCanvasMarker>() != null)
+                    return true;
+            }
+
+            return false;
         }
     }
 }
