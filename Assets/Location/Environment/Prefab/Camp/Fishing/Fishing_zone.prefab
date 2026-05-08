@@ -518,7 +518,7 @@ MonoBehaviour:
   _priority: 0
   _isInteractionEnabled: 1
   _hudAnchor: {fileID: 4632212000576617679}
-  _hudOffset: {x: 0, y: 0, z: 0}
+  _hudOffset: {x: -5, y: 0, z: 5}
   _collider: {fileID: 542474368722798641}
   _colliderIsTrigger: 1
   _runtimeVisualRoot: {fileID: 3305857868183859579}

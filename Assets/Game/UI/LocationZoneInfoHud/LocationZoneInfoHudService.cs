@@ -114,7 +114,8 @@ namespace UIShared
 
         private void CreateItem(ILocationInteractable interactable, LocationZoneInfoHudDefinition definition)
         {
-            var itemObject = UnityEngine.Object.Instantiate(_prefab, _parentTransform, false);
+            var spawnPosition = interactable.HudAnchor.position;
+            var itemObject = UnityEngine.Object.Instantiate(_prefab, spawnPosition, Quaternion.identity, _parentTransform);
             itemObject.name = $"ZoneInfo_{interactable.InteractionId}";
 
             var itemView = itemObject.GetComponent<LocationZoneInfoHudItemView>();
