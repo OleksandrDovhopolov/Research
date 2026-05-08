@@ -5,26 +5,28 @@ namespace Game.Features.Locations
 {
     public sealed class LocationInteractionRouter
     {
-        private readonly List<ILocationInteractionHandler> _handlers = new();
-        private readonly List<ILocationInteractionHandler> _fallbackHandlers = new();
+        private readonly Dictionary<string, ILocationInteractionHandler> _handlers = new(System.StringComparer.Ordinal);
+        private ILocationInteractionHandler _fallbackHandler;
 
-        public void RegisterHandler(ILocationInteractionHandler handler, bool asFallback = false)
+        public void RegisterHandler(string interactionKey, ILocationInteractionHandler handler)
         {
-            if (handler == null)
+            if (string.IsNullOrWhiteSpace(interactionKey) || handler == null)
                 return;
 
-            var handlers = asFallback ? _fallbackHandlers : _handlers;
-            if (!handlers.Contains(handler))
-                handlers.Add(handler);
+            _handlers[interactionKey] = handler;
         }
 
-        public void UnregisterHandler(ILocationInteractionHandler handler)
+        public void RegisterFallbackHandler(ILocationInteractionHandler handler)
         {
-            if (handler == null)
+            _fallbackHandler = handler;
+        }
+
+        public void UnregisterHandler(string interactionKey)
+        {
+            if (string.IsNullOrWhiteSpace(interactionKey))
                 return;
 
-            _handlers.Remove(handler);
-            _fallbackHandlers.Remove(handler);
+            _handlers.Remove(interactionKey);
         }
 
         public bool Route(ILocationInteractable interactable, Vector3 worldPosition)
@@ -33,30 +35,29 @@ namespace Game.Features.Locations
                 return false;
 
             var context = new LocationInteractionContext(interactable, worldPosition);
-
-            if (TryHandle(context, _handlers))
-                return true;
-
-            if (TryHandle(context, _fallbackHandlers))
-                return true;
-
-            Debug.LogWarning($"[LocationInteraction] No handler registered for {context.InteractionType} ({context.InteractionId}).");
-            return false;
-        }
-
-        private static bool TryHandle(LocationInteractionContext context, IReadOnlyList<ILocationInteractionHandler> handlers)
-        {
-            for (var i = 0; i < handlers.Count; i++)
+            if (string.IsNullOrWhiteSpace(context.InteractionKey))
             {
-                var handler = handlers[i];
-                if (handler == null || !handler.CanHandle(context))
-                    continue;
+                Debug.LogWarning($"[LocationInteraction] Missing interaction key for '{context.InteractionId}'.");
+                return TryHandleFallback(context);
+            }
 
+            if (_handlers.TryGetValue(context.InteractionKey, out var handler) && handler != null)
+            {
                 handler.Handle(context);
                 return true;
             }
 
-            return false;
+            Debug.LogWarning($"[LocationInteraction] No handler registered for key='{context.InteractionKey}', id='{context.InteractionId}'.");
+            return TryHandleFallback(context);
+        }
+
+        private bool TryHandleFallback(LocationInteractionContext context)
+        {
+            if (_fallbackHandler == null)
+                return false;
+
+            _fallbackHandler.Handle(context);
+            return true;
         }
     }
 }

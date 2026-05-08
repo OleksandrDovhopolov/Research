@@ -13,6 +13,6 @@ namespace Game.Features.Locations
         public ILocationInteractable Interactable { get; }
         public Vector3 WorldPosition { get; }
         public string InteractionId => Interactable?.InteractionId;
-        public LocationInteractionType InteractionType => Interactable?.InteractionType ?? LocationInteractionType.Custom;
+        public string InteractionKey => Interactable?.InteractionKey;
     }
 }

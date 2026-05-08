@@ -31,7 +31,7 @@ namespace Game.Features.Locations
 
         private static void Log(LocationInteractionContext context, string action)
         {
-            Debug.LogWarning($"[LocationInteraction] {action}: {context.InteractionType} '{context.InteractionId}'. UI implementation is not connected yet.");
+            Debug.LogWarning($"[LocationInteraction] {action}: key='{context.InteractionKey}', id='{context.InteractionId}'. UI implementation is not connected yet.");
         }
     }
 }

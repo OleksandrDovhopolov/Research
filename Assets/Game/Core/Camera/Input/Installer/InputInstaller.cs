@@ -17,22 +17,30 @@ namespace InputSystem
             builder.Register<LocationRaycaster>(Lifetime.Singleton);
             builder.Register<LocationInteractionRouter>(Lifetime.Singleton);
             builder.Register<DefaultLocationInteractionUiGateway>(Lifetime.Singleton).As<ILocationInteractionUiGateway>();
-            builder.Register<DefaultLocationInteractionHandler>(Lifetime.Singleton);
-            
+            builder.Register<FishingZoneInteractionHandler>(Lifetime.Singleton);
+            builder.Register<FisherHouseInteractionHandler>(Lifetime.Singleton);
+            builder.Register<ChestInteractionHandler>(Lifetime.Singleton);
+            builder.Register<FishCollectionInteractionHandler>(Lifetime.Singleton);
+            builder.Register<UnknownLocationInteractionHandler>(Lifetime.Singleton);
+
             builder.RegisterBuildCallback(OnBuildCallback);
         }
-        
+
         private void OnBuildCallback(IObjectResolver resolver)
         {
             var inputHandler = resolver.Resolve<IInput>();
             var router = resolver.Resolve<LocationInteractionRouter>();
-            router.RegisterHandler(resolver.Resolve<DefaultLocationInteractionHandler>(), true);
+            router.RegisterHandler(LocationInteractionKeys.FishingZone, resolver.Resolve<FishingZoneInteractionHandler>());
+            router.RegisterHandler(LocationInteractionKeys.FisherHouse, resolver.Resolve<FisherHouseInteractionHandler>());
+            router.RegisterHandler(LocationInteractionKeys.Chest, resolver.Resolve<ChestInteractionHandler>());
+            router.RegisterHandler(LocationInteractionKeys.FishCollection, resolver.Resolve<FishCollectionInteractionHandler>());
+            router.RegisterFallbackHandler(resolver.Resolve<UnknownLocationInteractionHandler>());
 
             inputHandler.TapProcessorHandler = BuildTap(resolver);
             inputHandler.LongTapProcessorHandler = BuildLongTap(resolver);
             inputHandler.DragProcessorHandler = BuildDrag(resolver);
         }
-        
+
         private DragProcessor BuildDrag(IObjectResolver resolver)
         {
             var processor = Create<DragProcessor>(resolver);
@@ -44,7 +52,7 @@ namespace InputSystem
 
             return processor;
         }
-        
+
         private TapProcessor BuildTap(IObjectResolver resolver)
         {
             var processor = Create<TapProcessor>(resolver);

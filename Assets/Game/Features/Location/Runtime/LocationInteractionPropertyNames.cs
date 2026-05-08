@@ -3,7 +3,7 @@ namespace Game.Features.Locations
     public static class LocationInteractionPropertyNames
     {
         public const string InteractionId = "InteractionId";
-        public const string InteractionType = "InteractionType";
+        public const string InteractionKey = "InteractionKey";
         public const string IsInteractionEnabled = "InteractionEnabled";
         public const string Priority = "Priority";
         public const string HudOffsetX = "HudOffsetX";
