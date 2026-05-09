@@ -110,6 +110,7 @@ namespace Game.Bootstrap
             builder.Register<IPlayerStateSnapshotApplier, PlayerStateSnapshotApplier>(Lifetime.Singleton);
             builder.Register<IRewardResponseApplier, RewardResponseApplier>(Lifetime.Singleton);
             builder.Register<IRewardGrantService, ServerRewardGrantService>(Lifetime.Singleton);
+            builder.Register<ICraftingRewardApplier, GrantBackedCraftingRewardApplier>(Lifetime.Singleton);
             builder.Register<IRewardIntentService, ServerRewardIntentService>(Lifetime.Singleton);
             builder.Register<IRewardPlayerStateSyncService, ServerRewardPlayerStateSyncService>(Lifetime.Singleton);
             builder.Register<IRewardPlayerStateRefreshCoordinator, RewardPlayerStateRefreshCoordinator>(Lifetime.Singleton);

@@ -539,7 +539,7 @@ namespace Rewards.Tests.Editor
             public RewardGrantDetailedResult DetailedResult { get; set; } =
                 RewardGrantDetailedResult.BuildSuccess("Gems");
 
-            public UniTask<bool> TryGrantAsync(string rewardId, CancellationToken ct = default)
+            public UniTask<bool> TryGrantAsync(string rewardId, string rewardSource = RewardSources.Client, CancellationToken ct = default)
             {
                 ct.ThrowIfCancellationRequested();
                 return UniTask.FromResult(DetailedResult.Success);
@@ -551,7 +551,10 @@ namespace Rewards.Tests.Editor
                 return UniTask.FromResult(false);
             }
 
-            public async UniTask<RewardGrantDetailedResult> TryGrantDetailedAsync(string rewardId, CancellationToken ct = default)
+            public async UniTask<RewardGrantDetailedResult> TryGrantDetailedAsync(
+                string rewardId,
+                string rewardSource = RewardSources.Client,
+                CancellationToken ct = default)
             {
                 ct.ThrowIfCancellationRequested();
                 TryGrantDetailedCalls++;

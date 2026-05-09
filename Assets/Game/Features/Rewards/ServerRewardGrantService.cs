@@ -8,7 +8,6 @@ namespace Rewards
 {
     public sealed class ServerRewardGrantService : IRewardGrantService
     {
-        private const string RewardSource = "client";
         private const string GrantRewardPath = "rewards/grant";
 
         private readonly IPlayerIdentityProvider _playerIdentityProvider;
@@ -26,13 +25,16 @@ namespace Rewards
             _rewardResponseApplier = rewardResponseApplier ?? throw new ArgumentNullException(nameof(rewardResponseApplier));
         }
 
-        public async UniTask<bool> TryGrantAsync(string rewardId, CancellationToken ct = default)
+        public async UniTask<bool> TryGrantAsync(string rewardId, string rewardSource = RewardSources.Client, CancellationToken ct = default)
         {
-            var detailedResult = await TryGrantDetailedAsync(rewardId, ct);
+            var detailedResult = await TryGrantDetailedAsync(rewardId, rewardSource, ct);
             return detailedResult.Success;
         }
 
-        public async UniTask<RewardGrantDetailedResult> TryGrantDetailedAsync(string rewardId, CancellationToken ct = default)
+        public async UniTask<RewardGrantDetailedResult> TryGrantDetailedAsync(
+            string rewardId,
+            string rewardSource = RewardSources.Client,
+            CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
             if (string.IsNullOrWhiteSpace(rewardId))
@@ -59,7 +61,7 @@ namespace Rewards
             var command = new GrantRewardCommand
             {
                 PlayerId = playerId,
-                RewardSource = RewardSource,
+                RewardSource = string.IsNullOrWhiteSpace(rewardSource) ? RewardSources.Client : rewardSource,
                 RewardId = rewardId
             };
             var lockTaken = false;

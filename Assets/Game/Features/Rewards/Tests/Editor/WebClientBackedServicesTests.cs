@@ -36,7 +36,7 @@ namespace Rewards.Tests.Editor
                 webClient,
                 CreateRewardResponseApplier(snapshotHandler));
 
-            var result = service.TryGrantAsync("reward_a", CancellationToken.None).GetAwaiter().GetResult();
+            var result = service.TryGrantAsync("reward_a", ct: CancellationToken.None).GetAwaiter().GetResult();
 
             Assert.That(result, Is.True);
             Assert.That(snapshotHandler.AppliedCount, Is.EqualTo(1));
@@ -63,7 +63,7 @@ namespace Rewards.Tests.Editor
                 webClient,
                 CreateRewardResponseApplier(snapshotHandler));
 
-            var result = service.TryGrantAsync("reward_a", CancellationToken.None).GetAwaiter().GetResult();
+            var result = service.TryGrantAsync("reward_a", ct: CancellationToken.None).GetAwaiter().GetResult();
 
             Assert.That(result, Is.False);
             Assert.That(snapshotHandler.AppliedCount, Is.EqualTo(0));
@@ -93,10 +93,47 @@ namespace Rewards.Tests.Editor
                 webClient,
                 CreateRewardResponseApplier(snapshotHandler));
 
-            var result = service.TryGrantDetailedAsync("Gems", CancellationToken.None).GetAwaiter().GetResult();
+            var result = service.TryGrantDetailedAsync("Gems", ct: CancellationToken.None).GetAwaiter().GetResult();
 
             Assert.That(result.Success, Is.True);
             Assert.That(snapshotHandler.AppliedCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ServerRewardGrantService_TryGrantDetailedAsync_SerializesProvidedRewardSource()
+        {
+            var snapshotHandler = new StubSnapshotHandler();
+            GrantRewardCommand capturedCommand = null;
+            var webClient = new StubWebClient
+            {
+                PostResponder = (url, requestType, responseType, request) =>
+                {
+                    capturedCommand = request as GrantRewardCommand;
+                    return new GrantRewardResponse
+                    {
+                        Success = true,
+                        RewardId = "item_green_lure",
+                        PlayerState = new PlayerStateSnapshotDto
+                        {
+                            InventoryItems = new List<InventoryItemDto>()
+                        }
+                    };
+                }
+            };
+            var service = new ServerRewardGrantService(
+                new StubPlayerIdentityProvider("player-1"),
+                webClient,
+                CreateRewardResponseApplier(snapshotHandler));
+
+            var result = service.TryGrantDetailedAsync("item_green_lure", RewardSources.Crafting, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(capturedCommand, Is.Not.Null);
+            Assert.That(capturedCommand.PlayerId, Is.EqualTo("player-1"));
+            Assert.That(capturedCommand.RewardId, Is.EqualTo("item_green_lure"));
+            Assert.That(capturedCommand.RewardSource, Is.EqualTo(RewardSources.Crafting));
         }
 
         [Test]
@@ -121,7 +158,7 @@ namespace Rewards.Tests.Editor
                 webClient,
                 CreateRewardResponseApplier(snapshotHandler));
 
-            var result = service.TryGrantDetailedAsync("Gems", CancellationToken.None).GetAwaiter().GetResult();
+            var result = service.TryGrantDetailedAsync("Gems", ct: CancellationToken.None).GetAwaiter().GetResult();
 
             Assert.That(result.Success, Is.False);
             Assert.That(result.FailureType, Is.EqualTo(RewardGrantFailureType.Rejected));
@@ -141,7 +178,7 @@ namespace Rewards.Tests.Editor
                 webClient,
                 CreateRewardResponseApplier(snapshotHandler));
 
-            var result = service.TryGrantDetailedAsync("Gems", CancellationToken.None).GetAwaiter().GetResult();
+            var result = service.TryGrantDetailedAsync("Gems", ct: CancellationToken.None).GetAwaiter().GetResult();
 
             Assert.That(result.Success, Is.False);
             Assert.That(result.FailureType, Is.EqualTo(RewardGrantFailureType.Network));
@@ -219,6 +256,23 @@ namespace Rewards.Tests.Editor
         }
 
         [Test]
+        public void GrantBackedCraftingRewardApplier_UsesCraftingRewardSource()
+        {
+            var rewardGrantService = new StubRewardGrantService
+            {
+                DetailedResult = RewardGrantDetailedResult.BuildSuccess("item_green_lure")
+            };
+            var applier = new GrantBackedCraftingRewardApplier(rewardGrantService);
+
+            applier.ApplyAsync("item_green_lure", 1, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.That(rewardGrantService.LastRewardId, Is.EqualTo("item_green_lure"));
+            Assert.That(rewardGrantService.LastRewardSource, Is.EqualTo(RewardSources.Crafting));
+        }
+
+        [Test]
         public void PlayerStateSnapshotApplier_ApplyAsync_AppliesHandlersInOrder_WhenSnapshotValid()
         {
             var callOrder = new List<string>();
@@ -269,10 +323,10 @@ namespace Rewards.Tests.Editor
                 webClient,
                 CreateRewardResponseApplier(snapshotHandler));
 
-            var firstGrantTask = service.TryGrantAsync("reward_first", CancellationToken.None);
+            var firstGrantTask = service.TryGrantAsync("reward_first", ct: CancellationToken.None);
             webClient.WaitForFirstCallAsync(CancellationToken.None).GetAwaiter().GetResult();
 
-            var secondGrantTask = service.TryGrantAsync("reward_second", CancellationToken.None);
+            var secondGrantTask = service.TryGrantAsync("reward_second", ct: CancellationToken.None);
 
             // With grant serialization, second call must not reach web client before first is released.
             Assert.That(webClient.HasSecondCallStarted(100), Is.False);
@@ -301,11 +355,11 @@ namespace Rewards.Tests.Editor
                 webClient,
                 CreateRewardResponseApplier(snapshotHandler));
 
-            var firstGrantTask = service.TryGrantAsync("reward_first", CancellationToken.None);
+            var firstGrantTask = service.TryGrantAsync("reward_first", ct: CancellationToken.None);
             webClient.WaitForFirstCallAsync(CancellationToken.None).GetAwaiter().GetResult();
 
             using var secondCts = new CancellationTokenSource();
-            var secondGrantTask = service.TryGrantAsync("reward_second", secondCts.Token);
+            var secondGrantTask = service.TryGrantAsync("reward_second", ct: secondCts.Token);
             secondCts.Cancel();
 
             Assert.Throws<OperationCanceledException>(() => secondGrantTask.GetAwaiter().GetResult());
@@ -652,6 +706,30 @@ namespace Rewards.Tests.Editor
                 ct.ThrowIfCancellationRequested();
                 _callOrder.Add(_id);
                 return UniTask.CompletedTask;
+            }
+        }
+
+        private sealed class StubRewardGrantService : IRewardGrantService
+        {
+            public RewardGrantDetailedResult DetailedResult { get; set; } = RewardGrantDetailedResult.BuildSuccess(string.Empty);
+            public string LastRewardId { get; private set; }
+            public string LastRewardSource { get; private set; }
+
+            public UniTask<bool> TryGrantAsync(string rewardId, string rewardSource = RewardSources.Client, CancellationToken ct = default)
+            {
+                LastRewardId = rewardId;
+                LastRewardSource = rewardSource;
+                return UniTask.FromResult(DetailedResult.Success);
+            }
+
+            public UniTask<RewardGrantDetailedResult> TryGrantDetailedAsync(
+                string rewardId,
+                string rewardSource = RewardSources.Client,
+                CancellationToken ct = default)
+            {
+                LastRewardId = rewardId;
+                LastRewardSource = rewardSource;
+                return UniTask.FromResult(DetailedResult);
             }
         }
         

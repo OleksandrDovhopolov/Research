@@ -10,7 +10,6 @@ namespace Game.Crafting
             builder.Register<ICraftingConfigContentSource, StreamingAssetsCraftingConfigContentSource>(Lifetime.Singleton);
             builder.Register<ICraftingConfigProvider, JsonCraftingConfigProvider>(Lifetime.Singleton);
             builder.Register<ICraftingInventoryGateway, SaveBackedCraftingInventoryGateway>(Lifetime.Singleton);
-            builder.Register<ICraftingRewardApplier, SaveBackedCraftingRewardApplier>(Lifetime.Singleton);
             builder.Register<ICraftingService, CraftingService>(Lifetime.Singleton);
         }
     }

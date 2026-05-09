@@ -3,6 +3,7 @@
     "rootNamespace": "Rewards.Tests.Editor",
     "references": [
         "Rewards",
+        "Game.Crafting",
         "CoreResources",
         "Infrastructure",
         "Inventory.API",

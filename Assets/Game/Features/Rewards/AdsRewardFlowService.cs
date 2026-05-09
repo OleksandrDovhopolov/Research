@@ -264,7 +264,7 @@ namespace Rewards
 
             try
             {
-                var grantResult = await _rewardGrantService.TryGrantDetailedAsync(rewardId, timeoutCts.Token);
+                var grantResult = await _rewardGrantService.TryGrantDetailedAsync(rewardId, ct: timeoutCts.Token);
                 if (grantResult.Success)
                 {
                     Debug.Log("[AdsRewardFlow] Legacy grant request success.");

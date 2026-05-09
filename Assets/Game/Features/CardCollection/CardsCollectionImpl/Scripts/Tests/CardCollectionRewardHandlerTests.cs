@@ -182,7 +182,7 @@ namespace CardCollectionImpl
                 _grantResult = grantResult;
             }
 
-            public UniTask<bool> TryGrantAsync(string rewardId, CancellationToken ct = default)
+            public UniTask<bool> TryGrantAsync(string rewardId, string rewardSource = RewardSources.Client, CancellationToken ct = default)
             {
                 ct.ThrowIfCancellationRequested();
                 GrantByRewardIdCallsCount++;
@@ -197,7 +197,10 @@ namespace CardCollectionImpl
                 return UniTask.FromResult(_grantResult);
             }
 
-            public UniTask<RewardGrantDetailedResult> TryGrantDetailedAsync(string rewardId, CancellationToken ct = default)
+            public UniTask<RewardGrantDetailedResult> TryGrantDetailedAsync(
+                string rewardId,
+                string rewardSource = RewardSources.Client,
+                CancellationToken ct = default)
             {
                 ct.ThrowIfCancellationRequested();
                 GrantByRewardIdCallsCount++;

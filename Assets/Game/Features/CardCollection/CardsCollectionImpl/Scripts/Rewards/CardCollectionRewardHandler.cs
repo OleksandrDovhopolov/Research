@@ -74,7 +74,7 @@ namespace CardCollectionImpl
                 return false;
             }
 
-            return await _rewardGrantService.TryGrantAsync(rewardId, ct);
+            return await _rewardGrantService.TryGrantAsync(rewardId, ct: ct);
         }
         
         public RewardViewData CreateRewardViewData(string groupType)

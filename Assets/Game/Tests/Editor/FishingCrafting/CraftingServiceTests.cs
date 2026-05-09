@@ -146,6 +146,32 @@ namespace Game.Tests.Editor.FishingCrafting
             Assert.That(fixture.Service.GetActiveTasksAsync(CraftingStationIds.LureCrafting, CancellationToken.None).GetAwaiter().GetResult(), Is.Empty);
         }
 
+        [Test]
+        public void CollectAsync_WhenRewardApplyFails_KeepsTaskInSave()
+        {
+            var storage = InMemorySaveStorage.CreateWithDefaultSave();
+            var saveService = new SaveService(storage, new SaveMigrationService(), new NullSaveDebugMirror());
+            var clock = new FakeCraftingClock { UtcNow = DateTimeOffset.UtcNow };
+            var service = CreateService(saveService, new FailingCraftingRewardApplier(), clock);
+
+            var start = service.StartCraftAsync("craft_green_lure", CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+            clock.UtcNow = clock.UtcNow.AddSeconds(10);
+
+            var collect = service.CollectAsync(start.TaskId, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+            var tasks = service.GetActiveTasksAsync(CraftingStationIds.LureCrafting, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.That(collect.Success, Is.False);
+            Assert.That(collect.Error, Is.EqualTo(CraftingError.InventoryOperationFailed));
+            Assert.That(tasks, Has.Count.EqualTo(1));
+            Assert.That(tasks[0].Id.Value, Is.EqualTo(start.TaskId.Value));
+        }
+
         private static Fixture CreateFixture()
         {
             var data = new CraftingStaticData(new List<CraftingRecipeConfig>
@@ -173,7 +199,7 @@ namespace Game.Tests.Editor.FishingCrafting
 
         private static CraftingService CreateService(
             SaveService saveService,
-            FakeCraftingRewardApplier rewardApplier,
+            ICraftingRewardApplier rewardApplier,
             FakeCraftingClock clock,
             CraftingStaticData data = null)
         {
@@ -251,6 +277,14 @@ namespace Game.Tests.Editor.FishingCrafting
             {
                 _items[outputItemId] = GetAmount(outputItemId) + outputCount;
                 return UniTask.CompletedTask;
+            }
+        }
+
+        private sealed class FailingCraftingRewardApplier : ICraftingRewardApplier
+        {
+            public UniTask ApplyAsync(string outputItemId, int outputCount, CancellationToken ct = default)
+            {
+                throw new InvalidOperationException("Grant failed.");
             }
         }
 
