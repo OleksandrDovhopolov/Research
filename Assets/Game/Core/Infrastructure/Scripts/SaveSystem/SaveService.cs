@@ -20,7 +20,6 @@ namespace Infrastructure
         private static readonly TimeSpan SaveRateLimit = TimeSpan.FromMilliseconds(500);
 
         private readonly ISaveStorage _storage;
-        private readonly ISaveDebugMirror _debugMirror;
         private readonly SaveMigrationService _migrationService;
         private readonly SemaphoreSlim _semaphore = new(1, 1);
         private CancellationTokenSource _debounceCts = new();
@@ -34,11 +33,10 @@ namespace Infrastructure
         public event Action OnBeforeSave;
         public event Action OnAfterLoad;
 
-        public SaveService(ISaveStorage storage, SaveMigrationService migrationService, ISaveDebugMirror debugMirror)
+        public SaveService(ISaveStorage storage, SaveMigrationService migrationService)
         {
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
             _migrationService = migrationService ?? throw new ArgumentNullException(nameof(migrationService));
-            _debugMirror = debugMirror ?? throw new ArgumentNullException(nameof(debugMirror));
         }
 
         public async UniTask<GameSaveData> LoadAllAsync(CancellationToken cancellationToken)
@@ -90,12 +88,6 @@ namespace Infrastructure
             {
                 _semaphore.Release();
             }
-
-            await TryWriteDebugMirrorAsync(
-                JsonConvert.SerializeObject(loadedSnapshot, Formatting.Indented),
-                "load",
-                cancellationToken);
-
             OnAfterLoad?.Invoke();
 
             if (shouldPersistMigration)
@@ -142,9 +134,7 @@ namespace Infrastructure
             {
                 _semaphore.Release();
             }
-
             await _storage.SaveAsync(jsonToSave, cancellationToken);
-            await TryWriteDebugMirrorAsync(jsonToSave, "save", cancellationToken);
 
             await _semaphore.WaitAsync(cancellationToken);
             try
@@ -495,36 +485,6 @@ namespace Infrastructure
             return normalized.Length <= maxLength
                 ? normalized
                 : normalized.Substring(0, maxLength) + "...";
-        }
-
-        private async UniTask TryWriteDebugMirrorAsync(string json, string source, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var debugJson = BuildDebugMirrorJson(json);
-                await _debugMirror.WriteAsync(debugJson, cancellationToken);
-                Debug.Log($"[SaveService] Debug mirror updated after {source}. Length={(debugJson?.Length ?? 0)}");
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[SaveService] Debug mirror write failed after {source}. {ex}");
-            }
-        }
-
-        private static string BuildDebugMirrorJson(string sourceJson)
-        {
-            if (string.IsNullOrWhiteSpace(sourceJson))
-            {
-                return string.Empty;
-            }
-
-            var root = JObject.Parse(sourceJson);
-            root.Remove(nameof(GameSaveData.CardCollections));
-            return root.ToString(Formatting.Indented);
         }
 
         private void ThrowIfDisposed()

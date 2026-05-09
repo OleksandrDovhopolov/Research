@@ -158,7 +158,7 @@ namespace Inventory.Tests.Editor
         private static InventoryModuleService CreateService(StubInventoryServerApi api, string saveJson)
         {
             var storage = new InMemorySaveStorage(saveJson);
-            var saveService = new SaveService(storage, new SaveMigrationService(), new NullSaveDebugMirror());
+            var saveService = new SaveService(storage, new SaveMigrationService());
             var resolver = new StubInventoryItemCategoryResolver(new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["pack_a"] = InventoryBuiltInCategoryIds.CardPack,

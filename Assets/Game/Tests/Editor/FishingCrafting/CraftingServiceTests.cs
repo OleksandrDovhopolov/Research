@@ -79,7 +79,7 @@ namespace Game.Tests.Editor.FishingCrafting
                 .GetAwaiter()
                 .GetResult();
 
-            var recreatedSaveService = new SaveService(fixture.Storage, new SaveMigrationService(), new NullSaveDebugMirror());
+            var recreatedSaveService = new SaveService(fixture.Storage, new SaveMigrationService());
             var recreated = CreateService(recreatedSaveService, fixture.RewardApplier, fixture.Clock);
 
             var tasks = recreated.GetActiveTasksAsync(CraftingStationIds.LureCrafting, CancellationToken.None)
@@ -150,7 +150,7 @@ namespace Game.Tests.Editor.FishingCrafting
         public void CollectAsync_WhenRewardApplyFails_KeepsTaskInSave()
         {
             var storage = InMemorySaveStorage.CreateWithDefaultSave();
-            var saveService = new SaveService(storage, new SaveMigrationService(), new NullSaveDebugMirror());
+            var saveService = new SaveService(storage, new SaveMigrationService());
             var clock = new FakeCraftingClock { UtcNow = DateTimeOffset.UtcNow };
             var service = CreateService(saveService, new FailingCraftingRewardApplier(), clock);
 
@@ -190,7 +190,7 @@ namespace Game.Tests.Editor.FishingCrafting
                 }
             });
             var storage = InMemorySaveStorage.CreateWithDefaultSave();
-            var saveService = new SaveService(storage, new SaveMigrationService(), new NullSaveDebugMirror());
+            var saveService = new SaveService(storage, new SaveMigrationService());
             var rewardApplier = new FakeCraftingRewardApplier();
             var clock = new FakeCraftingClock { UtcNow = DateTimeOffset.UtcNow };
             var service = CreateService(saveService, rewardApplier, clock, data);

@@ -194,7 +194,7 @@ namespace Rewards.Tests.Editor
         private static TestFixtureContext CreateFixture(Func<AdjustResourceCommand, UniTask<AdjustResourceResponse>> handler)
         {
             var storage = new InMemorySaveStorage();
-            var saveService = new SaveService(storage, new SaveMigrationService(), new NullSaveDebugMirror());
+            var saveService = new SaveService(storage, new SaveMigrationService());
             var api = new StubResourceAdjustApi(handler);
             return new TestFixtureContext(saveService, api);
         }

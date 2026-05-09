@@ -164,11 +164,11 @@ namespace Infrastructure.Tests.Editor
             Assert.That(data.FortuneWheel.UpdatedAt, Is.EqualTo(12345));
         });
 
-        private SaveService CreateService(ISaveDebugMirror debugMirror = null)
+        private SaveService CreateService()
         {
             var storage = new LocalDiskStorage(TestFileName);
             var migration = new SaveMigrationService();
-            return new SaveService(storage, migration, debugMirror ?? new NullSaveDebugMirror());
+            return new SaveService(storage, migration);
         }
 
         private static void TryDelete(string path)
