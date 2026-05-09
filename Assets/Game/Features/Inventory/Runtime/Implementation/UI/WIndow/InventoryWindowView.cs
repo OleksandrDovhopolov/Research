@@ -132,11 +132,10 @@ namespace Inventory.Implementation
             try
             {
                 ct.ThrowIfCancellationRequested();
-                _requestedSpriteAddresses.Add(spriteId);
 
                 if (!_spriteLoadTasks.TryGetValue(spriteId, out var loadTask))
                 {
-                    loadTask = ProdAddressablesWrapper.LoadAsync<Sprite>(spriteId, ct);
+                    loadTask = LoadSpriteWithFallbackAsync(spriteId, ct);
                     _spriteLoadTasks[spriteId] = loadTask;
                 }
                 
@@ -163,6 +162,49 @@ namespace Inventory.Implementation
             finally
             {
                 _spriteLoadTasks.Remove(spriteId);
+            }
+        }
+
+        private async Task<Sprite> LoadSpriteWithFallbackAsync(string spriteId, CancellationToken ct)
+        {
+            Exception lastException = null;
+            foreach (var address in GetSpriteAddresses(spriteId))
+            {
+                try
+                {
+                    var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(address, ct);
+                    _requestedSpriteAddresses.Add(address);
+
+                    if (!string.Equals(address, spriteId, StringComparison.Ordinal))
+                    {
+                        Debug.LogWarning($"[InventoryWindowView] Loaded sprite fallback for '{spriteId}' using address '{address}'.");
+                    }
+
+                    return sprite;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception exception)
+                {
+                    lastException = exception;
+                }
+            }
+
+            throw lastException ?? new InvalidOperationException($"Failed to load sprite '{spriteId}'.");
+        }
+
+        private static IEnumerable<string> GetSpriteAddresses(string spriteId)
+        {
+            if (string.IsNullOrWhiteSpace(spriteId))
+                yield break;
+
+            yield return spriteId;
+
+            if (spriteId.StartsWith("item_", StringComparison.Ordinal) && spriteId.Length > "item_".Length)
+            {
+                yield return spriteId.Substring("item_".Length);
             }
         }
 

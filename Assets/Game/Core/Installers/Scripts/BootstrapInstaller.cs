@@ -18,6 +18,7 @@ namespace Game.Bootstrap
         [SerializeField] private AnalyticsMappingConfigSO _analyticsMappingConfig;
         [Header("Save Storage")]
         [SerializeField] private string _httpSaveAuthToken;
+        [SerializeField] private bool _enableLocalDebugSaveMirror;
         
         public override void InstallBindings(IContainerBuilder builder)
         {
@@ -34,6 +35,12 @@ namespace Game.Bootstrap
                 var token = string.IsNullOrWhiteSpace(_httpSaveAuthToken) ? null : _httpSaveAuthToken;
                 var playerIdentityProvider = _.Resolve<IPlayerIdentityProvider>();
                 return new HttpSaveStorage(token, playerIdentityProvider);
+            }, Lifetime.Singleton);
+            builder.Register<ISaveDebugMirror>(_ =>
+            {
+                return _enableLocalDebugSaveMirror
+                    ? new LocalDiskSaveDebugMirror()
+                    : new NullSaveDebugMirror();
             }, Lifetime.Singleton);
             builder.Register<SaveMigrationService>(Lifetime.Singleton);
             builder.Register<SaveService>(Lifetime.Singleton);

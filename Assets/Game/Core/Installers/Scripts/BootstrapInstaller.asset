@@ -17,3 +17,4 @@ MonoBehaviour:
   _analyticsRoutingConfig: {fileID: 11400000, guid: 39a18022bcc22ae48ab0073183661dca, type: 2}
   _analyticsMappingConfig: {fileID: 11400000, guid: 12e417ec2c74ad6428c6ecadb5a9276c, type: 2}
   _httpSaveAuthToken: 
+  _enableLocalDebugSaveMirror: 1

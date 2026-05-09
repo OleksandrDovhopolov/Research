@@ -17,7 +17,6 @@ namespace Game.Fishing
 
         public void OnDisable()
         {
-            Debug.LogWarning($"[DraggableUIItem] '{name}' disabled. Handlers will be cleared.");
             ClearHandlers();
         }
 
@@ -80,32 +79,21 @@ namespace Game.Fishing
         
         public void OnPointerDown(PointerEventData eventData)
         {
-            if (_onPointerDownHandler == null)
-                Debug.LogWarning($"[DraggableUIItem] '{name}' received pointer down, but no pointer-down handler is assigned.");
-
             _onPointerDownHandler?.Invoke(eventData);
         }
 
         public void OnPointerUp(PointerEventData eventData)
         {
-            if (_onPointerUpHandler == null)
-                Debug.LogWarning($"[DraggableUIItem] '{name}' received pointer up, but no pointer-up handler is assigned.");
-
             _onPointerUpHandler?.Invoke(eventData);
         }
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            Debug.LogWarning($"[DraggableUIItem] '{name}' begin drag. Locked={_isDragLocked}, HasHandler={_onBeginDragAction != null}.");
             if (_isDragLocked)
             {
-                Debug.LogWarning($"[DraggableUIItem] '{name}' begin drag ignored because drag is locked.");
                 _onLockedBeginDragAction?.Invoke(eventData);
                 return;
             }
-
-            if (_onBeginDragAction == null)
-                Debug.LogWarning($"[DraggableUIItem] '{name}' begin drag has no handler.");
 
             _onBeginDragAction?.Invoke(eventData);
         }
@@ -113,28 +101,15 @@ namespace Game.Fishing
         public void OnDrag(PointerEventData eventData)
         {
             if (_isDragLocked)
-            {
-                Debug.LogWarning($"[DraggableUIItem] '{name}' drag ignored because drag is locked.");
                 return;
-            }
-
-            if (_onDragAction == null)
-                Debug.LogWarning($"[DraggableUIItem] '{name}' drag has no handler.");
 
             _onDragAction?.Invoke(eventData);
         }
 
         public void OnEndDrag(PointerEventData eventData)
         {
-            Debug.LogWarning($"[DraggableUIItem] '{name}' end drag. Locked={_isDragLocked}, HasHandler={_onEndDragAction != null}.");
             if (_isDragLocked)
-            {
-                Debug.LogWarning($"[DraggableUIItem] '{name}' end drag ignored because drag is locked.");
                 return;
-            }
-
-            if (_onEndDragAction == null)
-                Debug.LogWarning($"[DraggableUIItem] '{name}' end drag has no handler.");
 
             _onEndDragAction?.Invoke(eventData);
         }

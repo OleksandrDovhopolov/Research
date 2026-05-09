@@ -172,7 +172,6 @@ namespace Game.Fishing
                     onEndDrag: eventData => OnLureEndDrag(lure, eventData));
                 var isDragLocked = ShouldLockLure(lure);
                 view.SetDragLocked(isDragLocked);
-                Debug.LogWarning($"[FishingHudWidget] Configure lure '{lure.LureId}'. DragLocked={isDragLocked}. {BuildLureLockDebugInfo(lure)}");
 
                 await LoadLureSpriteAsync(view, lure, renderVersion, ct);
             }
@@ -242,27 +241,14 @@ namespace Game.Fishing
         private void OnLureBeginDrag(FishingHudLureViewData lure, LureView view, PointerEventData eventData)
         {
             if (_isDisposed || lure == null || view == null || eventData == null)
-            {
-                Debug.LogWarning($"[FishingHudWidget] Begin drag ignored. Disposed={_isDisposed}, LureNull={lure == null}, ViewNull={view == null}, EventNull={eventData == null}.");
                 return;
-            }
 
             if (ShouldLockLure(lure))
-            {
-                Debug.LogWarning($"[FishingHudWidget] Begin drag locked for lure '{lure.LureId}'. {BuildLureLockDebugInfo(lure)}");
                 return;
-            }
-
-            if (_dragPreviewView == null)
-                Debug.LogWarning($"[FishingHudWidget] Drag preview view is not assigned for lure '{lure.LureId}'.");
-
-            if (_dragPreviewActiveContainer == null)
-                Debug.LogWarning($"[FishingHudWidget] Drag preview active container is not assigned for lure '{lure.LureId}'.");
 
             if (_dragPreviewActiveContainer != null && _dragPreviewView != null)
                 _dragPreviewView.transform.SetParent(_dragPreviewActiveContainer, false);
 
-            Debug.LogWarning($"[FishingHudWidget] Begin drag for lure '{lure.LureId}'. SpriteAssigned={view.CurrentSprite != null}, Count={view.CurrentCount}.");
             _dragPreviewView?.Show(view.CurrentSprite, view.CurrentCount);
             _dragPreviewView?.MoveToScreenPosition(eventData.position);
         }
@@ -270,16 +256,11 @@ namespace Game.Fishing
         private void OnLureLockedBeginDrag(FishingHudLureViewData lure, PointerEventData eventData)
         {
             var message = GetLureDragBlockedMessage(lure);
-            Debug.LogWarning($"[FishingHudWidget] Locked drag attempt for lure '{lure?.LureId ?? "null"}'. Message='{message}'. EventNull={eventData == null}.");
-
             if (string.IsNullOrWhiteSpace(message))
                 return;
 
             if (_uiManager == null)
-            {
-                Debug.LogWarning($"[FishingHudWidget] UIManager is not assigned. Cannot show info widget for locked lure '{lure?.LureId ?? "null"}'.");
                 return;
-            }
 
             _uiManager.Show<InfoWidgetController>(new InfoWidgetArg(message));
         }
@@ -287,30 +268,21 @@ namespace Game.Fishing
         private void OnLureDrag(PointerEventData eventData)
         {
             if (_isDisposed || eventData == null)
-            {
-                Debug.LogWarning($"[FishingHudWidget] Drag ignored. Disposed={_isDisposed}, EventNull={eventData == null}.");
                 return;
-            }
 
             if (_dragPreviewView == null)
-            {
-                Debug.LogWarning("[FishingHudWidget] Drag received, but drag preview view is not assigned.");
                 return;
-            }
 
             _dragPreviewView?.MoveToScreenPosition(eventData.position);
         }
 
         private void OnLureEndDrag(FishingHudLureViewData lure, PointerEventData eventData)
         {
-            Debug.LogWarning($"[FishingHudWidget] End drag for lure '{lure?.LureId ?? "null"}'. DropTargetAssigned={_dropTarget != null}, EventNull={eventData == null}.");
             var isDroppedInsideTarget = !_isDisposed &&
                                         lure != null &&
                                         _dropTarget != null &&
                                         eventData != null &&
                                         _dropTarget.IsPositionInsideRect(eventData.position);
-
-            Debug.LogWarning($"[FishingHudWidget] End drag result for lure '{lure?.LureId ?? "null"}'. DroppedInsideTarget={isDroppedInsideTarget}.");
 
             HideDragPreview();
 
@@ -322,14 +294,14 @@ namespace Game.Fishing
         {
             if (lure == null || string.IsNullOrWhiteSpace(lure.CraftRecipeId))
             {
-                Debug.LogWarning($"[FishingHudWidget] Production start ignored. LureNull={lure == null}, Count={lure?.Count ?? 0}, Recipe='{lure?.CraftRecipeId ?? "null"}'.");
+                Debug.LogWarning($"[FishingHudWidget] Craft start ignored. LureId='{lure?.LureId ?? "null"}', Recipe='{lure?.CraftRecipeId ?? "null"}'.");
                 return;
             }
 
             if (_craftingService == null)
             {
                 ShowInfo("Crafting service is not available.");
-                Debug.LogWarning($"[FishingHudWidget] Production start ignored for lure '{lure.LureId}'. Crafting service is not assigned.");
+                Debug.LogWarning($"[FishingHudWidget] Craft start failed for lure '{lure.LureId}'. Crafting service is not assigned.");
                 return;
             }
 
@@ -339,17 +311,18 @@ namespace Game.Fishing
 
             try
             {
+                Debug.LogWarning($"[FishingHudWidget] Starting lure craft. LureId='{lure.LureId}', Recipe='{lure.CraftRecipeId}'.");
                 var start = await _craftingService.StartCraftAsync(lure.CraftRecipeId, ct);
                 if (!start.Success)
                 {
                     ShowInfo(GetCraftingErrorMessage(start.Error));
-                    Debug.LogWarning($"[FishingHudWidget] Failed to start lure craft '{lure.CraftRecipeId}'. Error={start.Error}.");
+                    Debug.LogWarning($"[FishingHudWidget] Craft start rejected. LureId='{lure.LureId}', Recipe='{lure.CraftRecipeId}', Error={start.Error}.");
                     return;
                 }
 
                 SetActiveCraft(start.TaskId, start.CompleteAtUtc);
                 await SetProductionIconAsync(lure, ct);
-                Debug.Log($"[FishingHudWidget] Lure '{lure.LureId}' started production. Recipe='{lure.CraftRecipeId}'.");
+                Debug.LogWarning($"[FishingHudWidget] Craft started. LureId='{lure.LureId}', Recipe='{lure.CraftRecipeId}', TaskId='{start.TaskId}', CompleteAtUtc='{start.CompleteAtUtc:O}'.");
             }
             catch (OperationCanceledException)
             {
@@ -357,7 +330,7 @@ namespace Game.Fishing
             catch (Exception exception)
             {
                 ShowInfo("Failed to start lure production.");
-                Debug.LogError($"[FishingHudWidget] Failed to start lure craft '{lure.CraftRecipeId}'. {exception}");
+                Debug.LogError($"[FishingHudWidget] Craft start crashed. LureId='{lure.LureId}', Recipe='{lure.CraftRecipeId}'. {exception}");
             }
             finally
             {
@@ -370,15 +343,10 @@ namespace Game.Fishing
         private void HideDragPreview()
         {
             if (_dragPreviewView == null)
-            {
-                Debug.LogWarning("[FishingHudWidget] HideDragPreview skipped because drag preview view is not assigned.");
                 return;
-            }
 
             if (_dragPreviewInactiveContainer != null)
                 _dragPreviewView.transform.SetParent(_dragPreviewInactiveContainer, false);
-            else
-                Debug.LogWarning("[FishingHudWidget] Drag preview inactive container is not assigned.");
 
             _dragPreviewView.Hide();
         }
@@ -397,6 +365,7 @@ namespace Game.Fishing
                     return;
                 }
 
+                Debug.LogWarning($"[FishingHudWidget] Restoring active craft. TaskId='{activeTask.Id}', Recipe='{activeTask.Recipe?.Id}', CompleteAtUtc='{activeTask.CompleteAtUtc:O}'.");
                 SetActiveCraft(activeTask.Id, activeTask.CompleteAtUtc);
                 await SetProductionIconAsync(activeTask.Recipe?.Id, lures, ct);
             }
@@ -524,16 +493,18 @@ namespace Game.Fishing
 
             try
             {
+                Debug.LogWarning($"[FishingHudWidget] Collecting lure craft. TaskId='{_activeTaskId}', RequireReady={requireReady}.");
                 var collect = requireReady
                     ? await _craftingService.CollectAsync(_activeTaskId, ct)
                     : await _craftingService.CompleteAndCollectAsync(_activeTaskId, ct);
 
                 if (!collect.Success)
                 {
-                    Debug.LogWarning($"[FishingHudWidget] Failed to collect lure craft '{_activeTaskId}'. Error={collect.Error}.");
+                    Debug.LogWarning($"[FishingHudWidget] Craft collect failed. TaskId='{_activeTaskId}', Error={collect.Error}.");
                     return;
                 }
 
+                Debug.LogWarning($"[FishingHudWidget] Craft collected. TaskId='{_activeTaskId}', OutputItemId='{collect.OutputItemId}', OutputCount={collect.OutputCount}.");
                 ClearActiveCraft();
             }
             finally
@@ -556,7 +527,7 @@ namespace Game.Fishing
 
             if (_craftingService == null)
             {
-                Debug.LogWarning("[FishingHudWidget] Crafting service is not assigned.");
+                Debug.LogWarning("[FishingHudWidget] Speed-up failed. Crafting service is not assigned.");
                 return;
             }
 
@@ -565,6 +536,7 @@ namespace Game.Fishing
 
             try
             {
+                Debug.LogWarning($"[FishingHudWidget] Speed-up requested for task '{_activeTaskId}'.");
                 await CollectActiveCraftAsync(requireReady: false, ct);
             }
             catch (OperationCanceledException)
@@ -572,7 +544,7 @@ namespace Game.Fishing
             }
             catch (Exception exception)
             {
-                Debug.LogError($"[FishingHudWidget] Failed to speed up lure craft '{_activeTaskId}'. {exception}");
+                Debug.LogError($"[FishingHudWidget] Speed-up crashed for task '{_activeTaskId}'. {exception}");
             }
             finally
             {
@@ -593,7 +565,6 @@ namespace Game.Fishing
                 _luresByView.TryGetValue(lureView, out var lure);
                 var isLocked = shouldLock || ShouldLockLure(lure);
                 lureView.SetDragLocked(isLocked);
-                Debug.LogWarning($"[FishingHudWidget] Update lure drag lock for '{lure?.LureId ?? "null"}'. DragLocked={isLocked}. {BuildLureLockDebugInfo(lure)}");
             }
         }
 
@@ -603,11 +574,6 @@ namespace Game.Fishing
                    _isCraftOperationRunning ||
                    lure == null ||
                    string.IsNullOrWhiteSpace(lure.CraftRecipeId);
-        }
-
-        private string BuildLureLockDebugInfo(FishingHudLureViewData lure)
-        {
-            return $"LureNull={lure == null}, Count={lure?.Count ?? 0}, Recipe='{lure?.CraftRecipeId ?? "null"}', HasActiveCraft={_hasActiveCraft}, IsCraftOperationRunning={_isCraftOperationRunning}.";
         }
 
         private string GetLureDragBlockedMessage(FishingHudLureViewData lure)

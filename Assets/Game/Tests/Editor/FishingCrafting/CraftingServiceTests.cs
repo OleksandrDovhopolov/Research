@@ -79,7 +79,7 @@ namespace Game.Tests.Editor.FishingCrafting
                 .GetAwaiter()
                 .GetResult();
 
-            var recreatedSaveService = new SaveService(fixture.Storage, new SaveMigrationService());
+            var recreatedSaveService = new SaveService(fixture.Storage, new SaveMigrationService(), new NullSaveDebugMirror());
             var recreated = CreateService(recreatedSaveService, fixture.RewardApplier, fixture.Clock);
 
             var tasks = recreated.GetActiveTasksAsync(CraftingStationIds.LureCrafting, CancellationToken.None)
@@ -164,7 +164,7 @@ namespace Game.Tests.Editor.FishingCrafting
                 }
             });
             var storage = InMemorySaveStorage.CreateWithDefaultSave();
-            var saveService = new SaveService(storage, new SaveMigrationService());
+            var saveService = new SaveService(storage, new SaveMigrationService(), new NullSaveDebugMirror());
             var rewardApplier = new FakeCraftingRewardApplier();
             var clock = new FakeCraftingClock { UtcNow = DateTimeOffset.UtcNow };
             var service = CreateService(saveService, rewardApplier, clock, data);

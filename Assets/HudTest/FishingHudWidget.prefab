@@ -140,6 +140,7 @@ MonoBehaviour:
   _idleStateObject: {fileID: 4414897953105759114}
   _productionStateObject: {fileID: 5394132628760045123}
   _timerStateObject: {fileID: 7653719850580349537}
+  _productionIcon: {fileID: 4643950813643020655}
   _missTapRects:
   - {fileID: 6933598387129889316}
 --- !u!1 &1709807399792289138
