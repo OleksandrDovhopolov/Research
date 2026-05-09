@@ -9,6 +9,7 @@ namespace Game.Fishing
         private Action<PointerEventData> _onPointerDownHandler;
         private Action<PointerEventData> _onPointerUpHandler;
         private Action<PointerEventData> _onBeginDragAction;
+        private Action<PointerEventData> _onLockedBeginDragAction;
         private Action<PointerEventData> _onDragAction;
         private Action<PointerEventData> _onEndDragAction;
 
@@ -25,6 +26,7 @@ namespace Game.Fishing
             _onPointerDownHandler = null;
             _onPointerUpHandler = null;
             _onBeginDragAction = null;
+            _onLockedBeginDragAction = null;
             _onDragAction = null;
             _onEndDragAction = null;
         }
@@ -51,6 +53,12 @@ namespace Game.Fishing
             _onBeginDragAction = onBeginDragHandler;
             UnlockDrag();
             
+            return this;
+        }
+
+        public DraggableUIItem WithLockedBeginDragHandler(Action<PointerEventData> onLockedBeginDragHandler)
+        {
+            _onLockedBeginDragAction = onLockedBeginDragHandler;
             return this;
         }
         
@@ -92,6 +100,7 @@ namespace Game.Fishing
             if (_isDragLocked)
             {
                 Debug.LogWarning($"[DraggableUIItem] '{name}' begin drag ignored because drag is locked.");
+                _onLockedBeginDragAction?.Invoke(eventData);
                 return;
             }
 

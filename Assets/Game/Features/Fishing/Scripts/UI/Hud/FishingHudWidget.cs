@@ -12,6 +12,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using VContainer;
+using UISystem;
 
 namespace Game.Fishing
 {
@@ -47,6 +48,7 @@ namespace Game.Fishing
         private ICraftingService _craftingService;
         private ResourceManager _resourceManager;
         private IResourceOperationsService _resourceOperationsService;
+        private UIManager _uiManager;
         private IHudController _hudController;
         private HudMissTapInputController _missTapInputController;
         private RectTransform _rootRectTransform;
@@ -64,6 +66,7 @@ namespace Game.Fishing
             ICraftingService craftingService,
             ResourceManager resourceManager,
             IResourceOperationsService resourceOperationsService,
+            UIManager uiManager,
             IHudController hudController,
             HudMissTapInputController missTapInputController)
         {
@@ -72,6 +75,7 @@ namespace Game.Fishing
             _craftingService = craftingService;
             _resourceManager = resourceManager;
             _resourceOperationsService = resourceOperationsService;
+            _uiManager = uiManager;
             _hudController = hudController;
             _missTapInputController = missTapInputController;
 
@@ -173,6 +177,7 @@ namespace Game.Fishing
                 view.SetData(null, lure.Count);
                 view.SetDragHandlers(
                     onBeginDrag: eventData => OnLureBeginDrag(lure, view, eventData),
+                    onLockedBeginDrag: eventData => OnLureLockedBeginDrag(lure, eventData),
                     onDrag: OnLureDrag,
                     onEndDrag: eventData => OnLureEndDrag(lure, eventData));
                 var isDragLocked = ShouldLockLure(lure);
@@ -263,6 +268,23 @@ namespace Game.Fishing
             Debug.LogWarning($"[FishingHudWidget] Begin drag for lure '{lure.LureId}'. SpriteAssigned={view.CurrentSprite != null}, Count={view.CurrentCount}.");
             _dragPreviewView?.Show(view.CurrentSprite, view.CurrentCount);
             _dragPreviewView?.MoveToScreenPosition(eventData.position);
+        }
+
+        private void OnLureLockedBeginDrag(FishingHudLureViewData lure, PointerEventData eventData)
+        {
+            var message = GetLureDragBlockedMessage(lure);
+            Debug.LogWarning($"[FishingHudWidget] Locked drag attempt for lure '{lure?.LureId ?? "null"}'. Message='{message}'. EventNull={eventData == null}.");
+
+            if (string.IsNullOrWhiteSpace(message))
+                return;
+
+            if (_uiManager == null)
+            {
+                Debug.LogWarning($"[FishingHudWidget] UIManager is not assigned. Cannot show info widget for locked lure '{lure?.LureId ?? "null"}'.");
+                return;
+            }
+
+            _uiManager.Show<InfoWidgetController>(new InfoWidgetArg(message));
         }
 
         private void OnLureDrag(PointerEventData eventData)
@@ -531,6 +553,20 @@ namespace Game.Fishing
         private string BuildLureLockDebugInfo(FishingHudLureViewData lure)
         {
             return $"LureNull={lure == null}, Count={lure?.Count ?? 0}, Recipe='{lure?.CraftRecipeId ?? "null"}', HasActiveCraft={_hasActiveCraft}, IsCraftOperationRunning={_isCraftOperationRunning}.";
+        }
+
+        private string GetLureDragBlockedMessage(FishingHudLureViewData lure)
+        {
+            if (_hasActiveCraft || _isCraftOperationRunning)
+                return "Lure production is already running.";
+
+            if (lure == null)
+                return "Lure is not configured.";
+
+            if (string.IsNullOrWhiteSpace(lure.CraftRecipeId))
+                return "This lure does not have a craft recipe configured.";
+
+            return "Lure production cannot be started right now.";
         }
 
         private void ApplyCraftState()

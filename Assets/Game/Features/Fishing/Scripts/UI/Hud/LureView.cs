@@ -31,6 +31,7 @@ namespace Game.Fishing
 
         public void SetDragHandlers(
             Action<PointerEventData> onBeginDrag,
+            Action<PointerEventData> onLockedBeginDrag,
             Action<PointerEventData> onDrag,
             Action<PointerEventData> onEndDrag)
         {
@@ -39,6 +40,7 @@ namespace Game.Fishing
 
             _draggableItem
                 .WithBeginDragHandler(onBeginDrag)
+                .WithLockedBeginDragHandler(onLockedBeginDrag)
                 .WithDragHandler(onDrag)
                 .WithEndDragHandler(onEndDrag);
         }
