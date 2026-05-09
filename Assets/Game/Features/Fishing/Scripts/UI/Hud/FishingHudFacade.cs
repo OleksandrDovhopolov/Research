@@ -25,6 +25,7 @@ namespace Game.Fishing
         UniTask<CraftTask> GetActiveCraftAsync(CancellationToken ct = default);
         UniTask<CraftCollectResult> CollectAsync(CraftTaskId taskId, CancellationToken ct = default);
         UniTask<CraftCollectResult> CompleteAndCollectAsync(CraftTaskId taskId, CancellationToken ct = default);
+        UniTask<IReadOnlyList<FishingHudLureRenderData>> GetLureRenderDataAsync(CancellationToken ct = default);
         DateTimeOffset GetCurrentTimeUtc();
         void HideHud();
         void ShowInfo(string message);
@@ -92,8 +93,7 @@ namespace Game.Fishing
                 return false;
             }
 
-            var lures = await _lureDataBuilder.BuildAsync(ct);
-            var renderData = BuildRenderData(lures);
+            var renderData = await GetLureRenderDataAsync(ct);
             var widget = await _hudController.GetHudWidgetAsync<FishingHudWidget>(ct);
             await widget.RenderAsync(renderData, ct);
             return true;
@@ -117,6 +117,13 @@ namespace Game.Fishing
         public UniTask<CraftCollectResult> CompleteAndCollectAsync(CraftTaskId taskId, CancellationToken ct = default)
         {
             return _craftingService.CompleteAndCollectAsync(taskId, ct);
+        }
+
+        public async UniTask<IReadOnlyList<FishingHudLureRenderData>> GetLureRenderDataAsync(CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            var lures = await _lureDataBuilder.BuildAsync(ct);
+            return BuildRenderData(lures);
         }
 
         public DateTimeOffset GetCurrentTimeUtc()

@@ -126,17 +126,21 @@ namespace Game.Fishing
         public async UniTask RenderAsync(IReadOnlyList<FishingHudLureRenderData> lures, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
+            HideDragPreview();
+            ApplyLureRenderData(lures, ct);
+            await RestoreActiveCraftAsync(ct);
+        }
+
+        private void ApplyLureRenderData(IReadOnlyList<FishingHudLureRenderData> lures, CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
             _luresByView.Clear();
             _spritesByCraftRecipeId.Clear();
             _lurePool?.DisableAll();
-            HideDragPreview();
 
             var safeLures = lures ?? Array.Empty<FishingHudLureRenderData>();
             if (_lurePool == null || safeLures.Count == 0)
-            {
-                await RestoreActiveCraftAsync(ct);
                 return;
-            }
 
             for (var i = 0; i < safeLures.Count; i++)
             {
@@ -162,8 +166,6 @@ namespace Game.Fishing
                     onEndDrag: eventData => OnLureEndDrag(lure, eventData));
                 view.SetDragLocked(ShouldLockLure(lure));
             }
-
-            await RestoreActiveCraftAsync(ct);
         }
 
         private void OnLureBeginDrag(FishingHudLureViewData lure, LureView view, PointerEventData eventData)
@@ -409,12 +411,33 @@ namespace Game.Fishing
 
                 Debug.LogWarning($"[FishingHudWidget] Craft collected. TaskId='{_activeTaskId}', OutputItemId='{collect.OutputItemId}', OutputCount={collect.OutputCount}.");
                 ClearActiveCraft();
+                await RefreshLureCountsAsync(ct);
             }
             finally
             {
                 _isCraftOperationRunning = false;
                 UpdateLureDragLocks();
                 UpdateSpeedUpButtonState();
+            }
+        }
+
+        private async UniTask RefreshLureCountsAsync(CancellationToken ct)
+        {
+            if (_fishingHudActions == null)
+                return;
+
+            try
+            {
+                var renderData = await _fishingHudActions.GetLureRenderDataAsync(ct);
+                ApplyLureRenderData(renderData, ct);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"[FishingHudWidget] Failed to refresh lure counts after craft completion. {exception}");
             }
         }
 
