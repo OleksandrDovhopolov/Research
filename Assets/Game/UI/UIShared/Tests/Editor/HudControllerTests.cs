@@ -91,6 +91,43 @@ namespace UIShared.Tests.Editor
         }
 
         [Test]
+        public void HideHudWidget_DisablesInstanceAndKeepsCache()
+        {
+            var widget = _controller
+                .GetHudWidgetAsync<ControllerTestWidget>(CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            _controller.HideHudWidget<ControllerTestWidget>();
+
+            Assert.That(widget.gameObject.activeSelf, Is.False);
+            Assert.That(_controller.TryGetHudWidget<ControllerTestWidget>(out var cachedWidget), Is.True);
+            Assert.That(cachedWidget, Is.SameAs(widget));
+            Assert.That(cachedWidget.gameObject.activeSelf, Is.False);
+            Assert.That(ControllerTestWidget.BeforeReleasedCalls, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void GetHudWidgetAsync_EnablesHiddenCachedInstance()
+        {
+            var widget = _controller
+                .GetHudWidgetAsync<ControllerTestWidget>(CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            _controller.HideHudWidget<ControllerTestWidget>();
+
+            var shownWidget = _controller
+                .GetHudWidgetAsync<ControllerTestWidget>(CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.That(shownWidget, Is.SameAs(widget));
+            Assert.That(shownWidget.gameObject.activeSelf, Is.True);
+            Assert.That(_loader.LoadCount, Is.EqualTo(1));
+        }
+
+        [Test]
         public void CreateHudItemAsync_CreatesTransientItemUnderParent()
         {
             _prefab.AddComponent<ControllerTestItem>();

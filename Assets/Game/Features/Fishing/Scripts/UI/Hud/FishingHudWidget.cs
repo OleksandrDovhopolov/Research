@@ -15,7 +15,7 @@ using VContainer;
 
 namespace Game.Fishing
 {
-    public sealed class FishingHudWidget : MonoBehaviour, IHudWidget, IHudWidgetLifecycle
+    public sealed class FishingHudWidget : MonoBehaviour, IHudWidget, IHudWidgetLifecycle, IRectMissTap
     {
         private const int SpeedUpCost = 50;
         private const string SpeedUpReason = "fishing_lure_speed_up";
@@ -30,6 +30,7 @@ namespace Game.Fishing
         [SerializeField] private GameObject _idleStateObject;
         [SerializeField] private GameObject _productionStateObject;
         [SerializeField] private GameObject _timerStateObject;
+        [SerializeField] private RectTransform[] _missTapRects;
 
         private readonly Dictionary<string, Sprite> _spriteCache = new();
         private readonly Dictionary<string, Task<Sprite>> _spriteLoadTasks = new();
@@ -39,6 +40,9 @@ namespace Game.Fishing
         private ICraftingService _craftingService;
         private ResourceManager _resourceManager;
         private IResourceOperationsService _resourceOperationsService;
+        private IHudController _hudController;
+        private HudMissTapInputController _missTapInputController;
+        private RectTransform _rootRectTransform;
         private CancellationTokenSource _timerCts;
         private CraftTaskId _activeTaskId;
         private DateTimeOffset _activeCompleteAtUtc;
@@ -52,21 +56,27 @@ namespace Game.Fishing
         public void Install(
             ICraftingService craftingService,
             ResourceManager resourceManager,
-            IResourceOperationsService resourceOperationsService)
+            IResourceOperationsService resourceOperationsService,
+            IHudController hudController,
+            HudMissTapInputController missTapInputController)
         {
             UnsubscribeFromResources();
 
             _craftingService = craftingService;
             _resourceManager = resourceManager;
             _resourceOperationsService = resourceOperationsService;
+            _hudController = hudController;
+            _missTapInputController = missTapInputController;
 
             SubscribeToResources();
+            RegisterMissTap();
             UpdateSpeedUpButtonState();
         }
 
         private void Awake()
         {
             _canvas ??= GetComponent<Canvas>();
+            _rootRectTransform = transform as RectTransform;
             SetText(_priceText, SpeedUpCost.ToString());
 
             if (_speedUpButton != null)
@@ -74,6 +84,16 @@ namespace Game.Fishing
 
             ApplyCraftState();
             UpdateSpeedUpButtonState();
+        }
+
+        private void OnEnable()
+        {
+            RegisterMissTap();
+        }
+
+        private void OnDisable()
+        {
+            UnregisterMissTap();
         }
 
         /*private void LateUpdate()
@@ -92,9 +112,32 @@ namespace Game.Fishing
             Dispose();
         }
 
+        public bool OnMissTap()
+        {
+            if (_hudController != null)
+            {
+                _hudController.HideHudWidget<FishingHudWidget>();
+                return true;
+            }
+
+            gameObject.SetActive(false);
+            return true;
+        }
+
+        public IEnumerable<RectTransform> GetRectTransform()
+        {
+            if (_missTapRects is { Length: > 0 })
+                return _missTapRects;
+
+            _rootRectTransform ??= transform as RectTransform;
+            return _rootRectTransform != null
+                ? new[] { _rootRectTransform }
+                : Array.Empty<RectTransform>();
+        }
+
         public async UniTask RenderAsync(IReadOnlyList<FishingHudLureViewData> lures, CancellationToken ct)
         {
-            HudCameraFacingUtility.FaceCamera(transform, _canvas);
+            //HudCameraFacingUtility.FaceCamera(transform, _canvas);
             
             ct.ThrowIfCancellationRequested();
             var renderVersion = ++_renderVersion;
@@ -481,6 +524,7 @@ namespace Game.Fishing
                 return;
 
             _isDisposed = true;
+            UnregisterMissTap();
             StopTimer();
             UnsubscribeFromResources();
 
@@ -496,6 +540,17 @@ namespace Game.Fishing
             _requestedSpriteAddresses.Clear();
             _spriteCache.Clear();
             _spriteLoadTasks.Clear();
+        }
+
+        private void RegisterMissTap()
+        {
+            if (isActiveAndEnabled)
+                _missTapInputController?.AddHud(this);
+        }
+
+        private void UnregisterMissTap()
+        {
+            _missTapInputController?.RemoveHud(this);
         }
 
         private static string FormatTime(TimeSpan value)

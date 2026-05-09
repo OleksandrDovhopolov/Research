@@ -23,6 +23,9 @@ namespace UIShared
         bool TryGetHudWidget<TWidget>(out TWidget widget)
             where TWidget : Component, IHudWidget;
 
+        void HideHudWidget<TWidget>()
+            where TWidget : Component, IHudWidget;
+
         void ReleaseHudWidget<TWidget>()
             where TWidget : Component, IHudWidget;
 

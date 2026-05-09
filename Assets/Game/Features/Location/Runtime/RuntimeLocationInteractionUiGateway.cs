@@ -71,7 +71,6 @@ namespace Game.Features.Locations
             {
                 var cancellationToken = CancellationToken.None;
                 var widget = await _hudController.GetHudWidgetAsync<FishingHudWidget>(cancellationToken);
-                ApplyHudAnchorPosition(widget, context);
                 var lures = await _fishingHudLureDataBuilder.BuildAsync(cancellationToken);
                 await widget.RenderAsync(lures, cancellationToken);
             }
@@ -79,17 +78,6 @@ namespace Game.Features.Locations
             {
                 Debug.LogError($"[LocationInteraction] Failed to open fisher house production: key='{GetInteractionKey(context)}', id='{GetInteractionId(context)}'. {exception}");
             }
-        }
-
-        private static void ApplyHudAnchorPosition(Component widget, LocationInteractionContext context)
-        {
-            if (widget == null)
-                return;
-
-            var hudAnchor = context.Interactable?.HudAnchor;
-            widget.transform.position = hudAnchor != null
-                ? hudAnchor.position
-                : context.WorldPosition;
         }
 
         private static void Log(LocationInteractionContext context, string action)

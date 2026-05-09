@@ -73,7 +73,10 @@ namespace UIShared
             if (_createdWidgets.TryGetValue(widgetType, out var widget))
             {
                 if (widget != null)
+                {
+                    widget.gameObject.SetActive(true);
                     return (TWidget)widget;
+                }
 
                 _createdWidgets.Remove(widgetType);
             }
@@ -133,6 +136,26 @@ namespace UIShared
             return false;
         }
 
+        public void HideHudWidget<TWidget>()
+            where TWidget : Component, IHudWidget
+        {
+            ThrowIfDisposed();
+
+            var widgetType = typeof(TWidget);
+            ValidateWidgetType(widgetType);
+
+            if (!_createdWidgets.TryGetValue(widgetType, out var widget))
+                return;
+
+            if (widget == null)
+            {
+                _createdWidgets.Remove(widgetType);
+                return;
+            }
+
+            widget.gameObject.SetActive(false);
+        }
+
         public void ReleaseHudWidget<TWidget>()
             where TWidget : Component, IHudWidget
         {
@@ -179,7 +202,10 @@ namespace UIShared
             if (_createdWidgets.TryGetValue(widgetType, out var existingWidget))
             {
                 if (existingWidget != null)
+                {
+                    existingWidget.gameObject.SetActive(true);
                     return existingWidget;
+                }
 
                 _createdWidgets.Remove(widgetType);
             }

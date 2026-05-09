@@ -11,6 +11,7 @@ namespace UIShared
             builder.RegisterInstance(hudRoot);
             builder.RegisterInstance(hudWidgetRegistry);
             builder.Register<IHudPrefabLoader, AddressablesHudPrefabLoader>(Lifetime.Singleton);
+            builder.Register<HudMissTapInputController>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
             builder.Register<IHudController>(
                 resolver => new HudController(
                     hudRoot,
