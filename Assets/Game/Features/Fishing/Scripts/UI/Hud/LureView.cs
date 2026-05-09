@@ -13,8 +13,12 @@ namespace Game.Fishing
         [SerializeField] private TMP_Text _countText;
         [SerializeField] private DraggableUIItem _draggableItem;
 
+        public Sprite CurrentSprite => _icon != null ? _icon.sprite : null;
+        public int CurrentCount { get; private set; }
+
         public void SetData(Sprite sprite, int count)
         {
+            CurrentCount = count;
             SetSprite(sprite);
             SetText(_countText, count.ToString());
         }
@@ -52,6 +56,8 @@ namespace Game.Fishing
 
         public void Cleanup()
         {
+            CurrentCount = 0;
+
             if (_icon != null)
                 _icon.sprite = null;
 

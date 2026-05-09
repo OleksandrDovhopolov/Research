@@ -24,6 +24,13 @@ namespace Game.Fishing
         [SerializeField] private Canvas _canvas;
         [SerializeField] private UIListPool<LureView> _lurePool;
         [SerializeField] private DropUITarget _dropTarget;
+
+        [Space, Space, Header("Drag")]
+        [SerializeField] private LureDragPreviewView _dragPreviewView;
+        [SerializeField] private RectTransform _dragPreviewActiveContainer;
+        [SerializeField] private RectTransform _dragPreviewInactiveContainer;
+
+        [Space, Space, Header("General")]
         [SerializeField] private Button _speedUpButton;
         [SerializeField] private TMP_Text _priceText;
         [SerializeField] private TMP_Text _timeText;
@@ -93,6 +100,7 @@ namespace Game.Fishing
 
         private void OnDisable()
         {
+            HideDragPreview();
             UnregisterMissTap();
         }
 
@@ -103,6 +111,7 @@ namespace Game.Fishing
 
         public void OnCreatedByHudController()
         {
+            HideDragPreview();
             ApplyCraftState();
             UpdateSpeedUpButtonState();
         }
@@ -114,6 +123,8 @@ namespace Game.Fishing
 
         public bool OnMissTap()
         {
+            HideDragPreview();
+
             if (_hudController != null)
             {
                 _hudController.HideHudWidget<FishingHudWidget>();
@@ -138,11 +149,12 @@ namespace Game.Fishing
         public async UniTask RenderAsync(IReadOnlyList<FishingHudLureViewData> lures, CancellationToken ct)
         {
             //HudCameraFacingUtility.FaceCamera(transform, _canvas);
-            
+
             ct.ThrowIfCancellationRequested();
             var renderVersion = ++_renderVersion;
             _luresByView.Clear();
             _lurePool?.DisableAll();
+            HideDragPreview();
 
             if (_lurePool == null || lures == null || lures.Count == 0)
                 return;
@@ -160,10 +172,12 @@ namespace Game.Fishing
                 view.transform.SetSiblingIndex(i);
                 view.SetData(null, lure.Count);
                 view.SetDragHandlers(
-                    onBeginDrag: null,
-                    onDrag: null,
-                    onEndDrag: eventData => OnLureDroppedAsync(lure, eventData).Forget());
-                view.SetDragLocked(ShouldLockLure(lure));
+                    onBeginDrag: eventData => OnLureBeginDrag(lure, view, eventData),
+                    onDrag: OnLureDrag,
+                    onEndDrag: eventData => OnLureEndDrag(lure, eventData));
+                var isDragLocked = ShouldLockLure(lure);
+                view.SetDragLocked(isDragLocked);
+                Debug.LogWarning($"[FishingHudWidget] Configure lure '{lure.LureId}'. DragLocked={isDragLocked}. {BuildLureLockDebugInfo(lure)}");
 
                 await LoadLureSpriteAsync(view, lure, renderVersion, ct);
             }
@@ -223,59 +237,93 @@ namespace Game.Fishing
             }
         }
 
-        private async UniTaskVoid OnLureDroppedAsync(FishingHudLureViewData lure, PointerEventData eventData)
+        private void OnLureBeginDrag(FishingHudLureViewData lure, LureView view, PointerEventData eventData)
         {
-            if (_isDisposed || lure == null || _dropTarget == null || eventData == null)
-                return;
-
-            if (!_dropTarget.IsPositionInsideRect(eventData.position))
-                return;
-
-            if (_hasActiveCraft || _isCraftOperationRunning)
-                return;
-
-            if (_craftingService == null)
+            if (_isDisposed || lure == null || view == null || eventData == null)
             {
-                Debug.LogWarning("[FishingHudWidget] Crafting service is not assigned.");
+                Debug.LogWarning($"[FishingHudWidget] Begin drag ignored. Disposed={_isDisposed}, LureNull={lure == null}, ViewNull={view == null}, EventNull={eventData == null}.");
                 return;
             }
 
-            if (lure.Count <= 0 || string.IsNullOrWhiteSpace(lure.CraftRecipeId))
+            if (ShouldLockLure(lure))
+            {
+                Debug.LogWarning($"[FishingHudWidget] Begin drag locked for lure '{lure.LureId}'. {BuildLureLockDebugInfo(lure)}");
                 return;
-
-            _isCraftOperationRunning = true;
-            UpdateLureDragLocks();
-            UpdateSpeedUpButtonState();
-
-            try
-            {
-                var start = await _craftingService.StartCraftAsync(
-                    lure.CraftRecipeId,
-                    this.GetCancellationTokenOnDestroy());
-
-                if (!start.Success)
-                {
-                    if (start.Error != CraftingError.StationQueueFull)
-                        Debug.LogWarning($"[FishingHudWidget] Failed to start lure craft '{lure.CraftRecipeId}'. Error={start.Error}.");
-
-                    return;
-                }
-
-                SetActiveCraft(start.TaskId, start.CompleteAtUtc);
             }
-            catch (OperationCanceledException)
+
+            if (_dragPreviewView == null)
+                Debug.LogWarning($"[FishingHudWidget] Drag preview view is not assigned for lure '{lure.LureId}'.");
+
+            if (_dragPreviewActiveContainer == null)
+                Debug.LogWarning($"[FishingHudWidget] Drag preview active container is not assigned for lure '{lure.LureId}'.");
+
+            if (_dragPreviewActiveContainer != null && _dragPreviewView != null)
+                _dragPreviewView.transform.SetParent(_dragPreviewActiveContainer, false);
+
+            Debug.LogWarning($"[FishingHudWidget] Begin drag for lure '{lure.LureId}'. SpriteAssigned={view.CurrentSprite != null}, Count={view.CurrentCount}.");
+            _dragPreviewView?.Show(view.CurrentSprite, view.CurrentCount);
+            _dragPreviewView?.MoveToScreenPosition(eventData.position);
+        }
+
+        private void OnLureDrag(PointerEventData eventData)
+        {
+            if (_isDisposed || eventData == null)
             {
+                Debug.LogWarning($"[FishingHudWidget] Drag ignored. Disposed={_isDisposed}, EventNull={eventData == null}.");
+                return;
             }
-            catch (Exception exception)
+
+            if (_dragPreviewView == null)
             {
-                Debug.LogError($"[FishingHudWidget] Failed to start lure craft '{lure.CraftRecipeId}'. {exception}");
+                Debug.LogWarning("[FishingHudWidget] Drag received, but drag preview view is not assigned.");
+                return;
             }
-            finally
+
+            _dragPreviewView?.MoveToScreenPosition(eventData.position);
+        }
+
+        private void OnLureEndDrag(FishingHudLureViewData lure, PointerEventData eventData)
+        {
+            Debug.LogWarning($"[FishingHudWidget] End drag for lure '{lure?.LureId ?? "null"}'. DropTargetAssigned={_dropTarget != null}, EventNull={eventData == null}.");
+            var isDroppedInsideTarget = !_isDisposed &&
+                                        lure != null &&
+                                        _dropTarget != null &&
+                                        eventData != null &&
+                                        _dropTarget.IsPositionInsideRect(eventData.position);
+
+            Debug.LogWarning($"[FishingHudWidget] End drag result for lure '{lure?.LureId ?? "null"}'. DroppedInsideTarget={isDroppedInsideTarget}.");
+
+            HideDragPreview();
+
+            if (isDroppedInsideTarget)
+                TryStartLureProduction(lure);
+        }
+
+        private void TryStartLureProduction(FishingHudLureViewData lure)
+        {
+            if (lure == null || string.IsNullOrWhiteSpace(lure.CraftRecipeId))
             {
-                _isCraftOperationRunning = false;
-                UpdateLureDragLocks();
-                UpdateSpeedUpButtonState();
+                Debug.LogWarning($"[FishingHudWidget] Production start ignored. LureNull={lure == null}, Count={lure?.Count ?? 0}, Recipe='{lure?.CraftRecipeId ?? "null"}'.");
+                return;
             }
+
+            Debug.Log($"[FishingHudWidget] Lure '{lure.LureId}' started production. Recipe='{lure.CraftRecipeId}'.");
+        }
+
+        private void HideDragPreview()
+        {
+            if (_dragPreviewView == null)
+            {
+                Debug.LogWarning("[FishingHudWidget] HideDragPreview skipped because drag preview view is not assigned.");
+                return;
+            }
+
+            if (_dragPreviewInactiveContainer != null)
+                _dragPreviewView.transform.SetParent(_dragPreviewInactiveContainer, false);
+            else
+                Debug.LogWarning("[FishingHudWidget] Drag preview inactive container is not assigned.");
+
+            _dragPreviewView.Hide();
         }
 
         private void SetActiveCraft(CraftTaskId taskId, DateTimeOffset completeAtUtc)
@@ -466,7 +514,9 @@ namespace Game.Fishing
             foreach (var lureView in _lurePool.ActiveElements())
             {
                 _luresByView.TryGetValue(lureView, out var lure);
-                lureView.SetDragLocked(shouldLock || ShouldLockLure(lure));
+                var isLocked = shouldLock || ShouldLockLure(lure);
+                lureView.SetDragLocked(isLocked);
+                Debug.LogWarning($"[FishingHudWidget] Update lure drag lock for '{lure?.LureId ?? "null"}'. DragLocked={isLocked}. {BuildLureLockDebugInfo(lure)}");
             }
         }
 
@@ -475,8 +525,12 @@ namespace Game.Fishing
             return _hasActiveCraft ||
                    _isCraftOperationRunning ||
                    lure == null ||
-                   lure.Count <= 0 ||
                    string.IsNullOrWhiteSpace(lure.CraftRecipeId);
+        }
+
+        private string BuildLureLockDebugInfo(FishingHudLureViewData lure)
+        {
+            return $"LureNull={lure == null}, Count={lure?.Count ?? 0}, Recipe='{lure?.CraftRecipeId ?? "null"}', HasActiveCraft={_hasActiveCraft}, IsCraftOperationRunning={_isCraftOperationRunning}.";
         }
 
         private void ApplyCraftState()
@@ -527,6 +581,7 @@ namespace Game.Fishing
             UnregisterMissTap();
             StopTimer();
             UnsubscribeFromResources();
+            HideDragPreview();
 
             if (_speedUpButton != null)
                 _speedUpButton.onClick.RemoveListener(OnSpeedUpClicked);

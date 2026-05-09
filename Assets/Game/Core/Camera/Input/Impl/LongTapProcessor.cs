@@ -7,27 +7,27 @@ namespace InputSystem
     {
         public void Dispose()
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         public void OnPointerDown(Vector2 position)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         public void OnHold(Vector2 position, Vector2 delta)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         public void OnPointerUp(Vector2 position)
         {
-            throw new NotImplementedException();
+           // throw new NotImplementedException();
         }
 
         public void Cancel()
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
     }
 }

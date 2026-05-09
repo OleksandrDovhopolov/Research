@@ -12,16 +12,12 @@ namespace Game.Fishing
         private Action<PointerEventData> _onDragAction;
         private Action<PointerEventData> _onEndDragAction;
 
-        [SerializeField] private Transform _draggableTarget;
-
         private bool _isDragLocked;
-        
-        public Transform DraggableTargetTransform => _draggableTarget;
-        
+
         public void OnDisable()
         {
+            Debug.LogWarning($"[DraggableUIItem] '{name}' disabled. Handlers will be cleared.");
             ClearHandlers();
-            ResetTarget();
         }
 
         public void ClearHandlers()
@@ -76,52 +72,62 @@ namespace Game.Fishing
         
         public void OnPointerDown(PointerEventData eventData)
         {
+            if (_onPointerDownHandler == null)
+                Debug.LogWarning($"[DraggableUIItem] '{name}' received pointer down, but no pointer-down handler is assigned.");
+
             _onPointerDownHandler?.Invoke(eventData);
         }
 
         public void OnPointerUp(PointerEventData eventData)
         {
+            if (_onPointerUpHandler == null)
+                Debug.LogWarning($"[DraggableUIItem] '{name}' received pointer up, but no pointer-up handler is assigned.");
+
             _onPointerUpHandler?.Invoke(eventData);
         }
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            if (_isDragLocked) return;
-            SetDragPreviewActive(true);
+            Debug.LogWarning($"[DraggableUIItem] '{name}' begin drag. Locked={_isDragLocked}, HasHandler={_onBeginDragAction != null}.");
+            if (_isDragLocked)
+            {
+                Debug.LogWarning($"[DraggableUIItem] '{name}' begin drag ignored because drag is locked.");
+                return;
+            }
+
+            if (_onBeginDragAction == null)
+                Debug.LogWarning($"[DraggableUIItem] '{name}' begin drag has no handler.");
+
             _onBeginDragAction?.Invoke(eventData);
         }
 
         public void OnDrag(PointerEventData eventData)
         {
-            if (_isDragLocked) return;
-            if (_draggableTarget != null)
-                _draggableTarget.transform.position = eventData.position;
+            if (_isDragLocked)
+            {
+                Debug.LogWarning($"[DraggableUIItem] '{name}' drag ignored because drag is locked.");
+                return;
+            }
+
+            if (_onDragAction == null)
+                Debug.LogWarning($"[DraggableUIItem] '{name}' drag has no handler.");
+
             _onDragAction?.Invoke(eventData);
         }
 
         public void OnEndDrag(PointerEventData eventData)
         {
-            ResetTarget();
-            
-            if (_isDragLocked) return;
+            Debug.LogWarning($"[DraggableUIItem] '{name}' end drag. Locked={_isDragLocked}, HasHandler={_onEndDragAction != null}.");
+            if (_isDragLocked)
+            {
+                Debug.LogWarning($"[DraggableUIItem] '{name}' end drag ignored because drag is locked.");
+                return;
+            }
+
+            if (_onEndDragAction == null)
+                Debug.LogWarning($"[DraggableUIItem] '{name}' end drag has no handler.");
+
             _onEndDragAction?.Invoke(eventData);
-        }
-
-        private void ResetTarget()
-        {
-            if (_draggableTarget == null)
-                return;
-
-            _draggableTarget.transform.localPosition = Vector3.zero;
-            SetDragPreviewActive(false);
-        }
-
-        private void SetDragPreviewActive(bool isActive)
-        {
-            if (_draggableTarget == null || _draggableTarget.childCount == 0)
-                return;
-
-            _draggableTarget.GetChild(0).gameObject.SetActive(isActive);
         }
     }
 }
