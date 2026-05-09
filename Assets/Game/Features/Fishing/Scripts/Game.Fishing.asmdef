@@ -7,6 +7,7 @@
         "UIShared",
         "Unity.TextMeshPro",
         "Inventory.API",
+        "CoreResources",
         "Infrastructure",
         "Core.Models",
         "Location.Contracts",

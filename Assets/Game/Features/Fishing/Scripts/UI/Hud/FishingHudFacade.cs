@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CoreResources;
 using Cysharp.Threading.Tasks;
 using EventOrchestration.Abstractions;
 using Game.Crafting;
@@ -26,6 +27,8 @@ namespace Game.Fishing
         UniTask<CraftCollectResult> CollectAsync(CraftTaskId taskId, CancellationToken ct = default);
         UniTask<CraftCollectResult> CompleteAndCollectAsync(CraftTaskId taskId, CancellationToken ct = default);
         UniTask<IReadOnlyList<FishingHudLureRenderData>> GetLureRenderDataAsync(CancellationToken ct = default);
+        UniTask<bool> TrySpendSpeedUpGemsAsync(int amount, CancellationToken ct = default);
+        UniTask RefundSpeedUpGemsAsync(int amount, CancellationToken ct = default);
         DateTimeOffset GetCurrentTimeUtc();
         void HideHud();
         void ShowInfo(string message);
@@ -47,6 +50,7 @@ namespace Game.Fishing
         private readonly IFishingHudLureDataBuilder _lureDataBuilder;
         private readonly IHudController _hudController;
         private readonly ICraftingService _craftingService;
+        private readonly IResourceOperationsService _resourceOperationsService;
         private readonly IClock _clock;
         private readonly UIManager _uiManager;
         private readonly Dictionary<string, Sprite> _spritesByAddress = new(StringComparer.Ordinal);
@@ -62,6 +66,7 @@ namespace Game.Fishing
             IFishingHudLureDataBuilder lureDataBuilder,
             IHudController hudController,
             ICraftingService craftingService,
+            IResourceOperationsService resourceOperationsService,
             IClock clock,
             UIManager uiManager)
         {
@@ -69,6 +74,7 @@ namespace Game.Fishing
             _lureDataBuilder = lureDataBuilder ?? throw new ArgumentNullException(nameof(lureDataBuilder));
             _hudController = hudController ?? throw new ArgumentNullException(nameof(hudController));
             _craftingService = craftingService ?? throw new ArgumentNullException(nameof(craftingService));
+            _resourceOperationsService = resourceOperationsService ?? throw new ArgumentNullException(nameof(resourceOperationsService));
             _clock = clock ?? throw new ArgumentNullException(nameof(clock));
             _uiManager = uiManager;
         }
@@ -124,6 +130,49 @@ namespace Game.Fishing
             ct.ThrowIfCancellationRequested();
             var lures = await _lureDataBuilder.BuildAsync(ct);
             return BuildRenderData(lures);
+        }
+
+        public async UniTask<bool> TrySpendSpeedUpGemsAsync(int amount, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (amount <= 0)
+                return false;
+
+            try
+            {
+                Debug.LogWarning($"[FishingHudFacade] Spending gems for lure speed-up. Amount={amount}.");
+                return await _resourceOperationsService.RemoveAsync(ResourceType.Gems, amount, "fishing_lure_speed_up", ct);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"[FishingHudFacade] Failed to spend gems for lure speed-up. Amount={amount}. {exception}");
+                return false;
+            }
+        }
+
+        public async UniTask RefundSpeedUpGemsAsync(int amount, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (amount <= 0)
+                return;
+
+            try
+            {
+                Debug.LogWarning($"[FishingHudFacade] Refunding gems for lure speed-up. Amount={amount}.");
+                await _resourceOperationsService.AddAsync(ResourceType.Gems, amount, "fishing_lure_speed_up_refund", ct);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"[FishingHudFacade] Failed to refund gems for lure speed-up. Amount={amount}. {exception}");
+            }
         }
 
         public DateTimeOffset GetCurrentTimeUtc()

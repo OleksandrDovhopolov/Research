@@ -387,7 +387,7 @@ namespace Game.Fishing
             }
         }
 
-        private async UniTask CollectActiveCraftAsync(bool requireReady, CancellationToken ct)
+        private async UniTask CollectActiveCraftAsync(bool requireReady, CancellationToken ct, int refundOnFailureGems = 0)
         {
             if (!_hasActiveCraft || _fishingHudActions == null)
                 return;
@@ -406,12 +406,25 @@ namespace Game.Fishing
                 if (!collect.Success)
                 {
                     Debug.LogWarning($"[FishingHudWidget] Craft collect failed. TaskId='{_activeTaskId}', Error={collect.Error}.");
+                    if (refundOnFailureGems > 0)
+                        await _fishingHudActions.RefundSpeedUpGemsAsync(refundOnFailureGems, ct);
                     return;
                 }
 
                 Debug.LogWarning($"[FishingHudWidget] Craft collected. TaskId='{_activeTaskId}', OutputItemId='{collect.OutputItemId}', OutputCount={collect.OutputCount}.");
                 ClearActiveCraft();
                 await RefreshLureCountsAsync(ct);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch
+            {
+                if (refundOnFailureGems > 0)
+                    await _fishingHudActions.RefundSpeedUpGemsAsync(refundOnFailureGems, ct);
+
+                throw;
             }
             finally
             {
@@ -463,7 +476,14 @@ namespace Game.Fishing
             try
             {
                 Debug.LogWarning($"[FishingHudWidget] Speed-up requested for task '{_activeTaskId}'.");
-                await CollectActiveCraftAsync(requireReady: false, ct);
+                var spent = await _fishingHudActions.TrySpendSpeedUpGemsAsync(SpeedUpCost, ct);
+                if (!spent)
+                {
+                    ShowInfo("Not enough gems.");
+                    return;
+                }
+
+                await CollectActiveCraftAsync(requireReady: false, ct, refundOnFailureGems: SpeedUpCost);
             }
             catch (OperationCanceledException)
             {
