@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Game.Fishing;
-using UIShared;
 using UISystem;
 using UnityEngine;
 
@@ -11,20 +10,17 @@ namespace Game.Features.Locations
     public sealed class RuntimeLocationInteractionUiGateway : ILocationInteractionUiGateway
     {
         private readonly UIManager _uiManager;
-        private readonly IHudController _hudController;
         private readonly IFishCollectionDataBuilder _fishCollectionDataBuilder;
-        private readonly IFishingHudLureDataBuilder _fishingHudLureDataBuilder;
+        private readonly IFishingHudFacade _fishingHudFacade;
 
         public RuntimeLocationInteractionUiGateway(
             UIManager uiManager,
-            IHudController hudController,
             IFishCollectionDataBuilder fishCollectionDataBuilder,
-            IFishingHudLureDataBuilder fishingHudLureDataBuilder)
+            IFishingHudFacade fishingHudFacade)
         {
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
-            _hudController = hudController ?? throw new ArgumentNullException(nameof(hudController));
             _fishCollectionDataBuilder = fishCollectionDataBuilder ?? throw new ArgumentNullException(nameof(fishCollectionDataBuilder));
-            _fishingHudLureDataBuilder = fishingHudLureDataBuilder ?? throw new ArgumentNullException(nameof(fishingHudLureDataBuilder));
+            _fishingHudFacade = fishingHudFacade ?? throw new ArgumentNullException(nameof(fishingHudFacade));
         }
 
         public void OpenFishingTackleSelection(LocationInteractionContext context)
@@ -69,10 +65,7 @@ namespace Game.Features.Locations
         {
             try
             {
-                var cancellationToken = CancellationToken.None;
-                var widget = await _hudController.GetHudWidgetAsync<FishingHudWidget>(cancellationToken);
-                var lures = await _fishingHudLureDataBuilder.BuildAsync(cancellationToken);
-                await widget.RenderAsync(lures, cancellationToken);
+                await _fishingHudFacade.TryShowAsync(CancellationToken.None);
             }
             catch (Exception exception)
             {

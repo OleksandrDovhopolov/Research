@@ -1,18 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
-using EventOrchestration.Abstractions;
 using Game.Crafting;
-using Infrastructure;
 using TMPro;
 using UIShared;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using VContainer;
-using UISystem;
 
 namespace Game.Fishing
 {
@@ -39,21 +35,15 @@ namespace Game.Fishing
         [SerializeField] private Image _productionIcon;
         [SerializeField] private RectTransform[] _missTapRects;
 
-        private readonly Dictionary<string, Sprite> _spriteCache = new();
-        private readonly Dictionary<string, Task<Sprite>> _spriteLoadTasks = new();
         private readonly Dictionary<LureView, FishingHudLureViewData> _luresByView = new();
-        private readonly HashSet<string> _requestedSpriteAddresses = new();
+        private readonly Dictionary<string, Sprite> _spritesByCraftRecipeId = new(StringComparer.Ordinal);
 
-        private ICraftingService _craftingService;
-        private UIManager _uiManager;
-        private IClock _clock;
-        private IHudController _hudController;
+        private IFishingHudActions _fishingHudActions;
         private HudMissTapInputController _missTapInputController;
         private RectTransform _rootRectTransform;
         private CancellationTokenSource _timerCts;
         private CraftTaskId _activeTaskId;
         private DateTimeOffset _activeCompleteAtUtc;
-        private int _renderVersion;
         private bool _hasActiveCraft;
         private bool _isCraftOperationRunning;
         private bool _isSpeedUpRunning;
@@ -61,16 +51,10 @@ namespace Game.Fishing
 
         [Inject]
         public void Install(
-            ICraftingService craftingService,
-            UIManager uiManager,
-            IClock clock,
-            IHudController hudController,
+            IFishingHudActions fishingHudActions,
             HudMissTapInputController missTapInputController)
         {
-            _craftingService = craftingService;
-            _uiManager = uiManager;
-            _clock = clock;
-            _hudController = hudController;
+            _fishingHudActions = fishingHudActions;
             _missTapInputController = missTapInputController;
 
             RegisterMissTap();
@@ -82,6 +66,7 @@ namespace Game.Fishing
             _canvas ??= GetComponent<Canvas>();
             _rootRectTransform = transform as RectTransform;
             SetText(_priceText, SpeedUpCost.ToString());
+            SetProductionIcon(null);
 
             if (_speedUpButton != null)
                 _speedUpButton.onClick.AddListener(OnSpeedUpClicked);
@@ -117,9 +102,9 @@ namespace Game.Fishing
         {
             HideDragPreview();
 
-            if (_hudController != null)
+            if (_fishingHudActions != null)
             {
-                _hudController.HideHudWidget<FishingHudWidget>();
+                _fishingHudActions.HideHud();
                 return true;
             }
 
@@ -138,18 +123,18 @@ namespace Game.Fishing
                 : Array.Empty<RectTransform>();
         }
 
-        public async UniTask RenderAsync(IReadOnlyList<FishingHudLureViewData> lures, CancellationToken ct)
+        public async UniTask RenderAsync(IReadOnlyList<FishingHudLureRenderData> lures, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
-            var renderVersion = ++_renderVersion;
             _luresByView.Clear();
+            _spritesByCraftRecipeId.Clear();
             _lurePool?.DisableAll();
             HideDragPreview();
 
-            var safeLures = lures ?? Array.Empty<FishingHudLureViewData>();
+            var safeLures = lures ?? Array.Empty<FishingHudLureRenderData>();
             if (_lurePool == null || safeLures.Count == 0)
             {
-                await RestoreActiveCraftAsync(safeLures, ct);
+                await RestoreActiveCraftAsync(ct);
                 return;
             }
 
@@ -157,85 +142,28 @@ namespace Game.Fishing
             {
                 ct.ThrowIfCancellationRequested();
 
-                var lure = safeLures[i];
+                var renderData = safeLures[i];
+                var lure = renderData?.Lure;
                 if (lure == null)
                     continue;
 
                 var view = _lurePool.GetNext();
                 _luresByView[view] = lure;
                 view.transform.SetSiblingIndex(i);
-                view.SetData(null, lure.Count);
+
+                if (!string.IsNullOrWhiteSpace(lure.CraftRecipeId) && renderData.Sprite != null)
+                    _spritesByCraftRecipeId[lure.CraftRecipeId] = renderData.Sprite;
+
+                view.SetData(renderData.Sprite, lure.Count);
                 view.SetDragHandlers(
                     onBeginDrag: eventData => OnLureBeginDrag(lure, view, eventData),
                     onLockedBeginDrag: eventData => OnLureLockedBeginDrag(lure, eventData),
                     onDrag: OnLureDrag,
                     onEndDrag: eventData => OnLureEndDrag(lure, eventData));
-                var isDragLocked = ShouldLockLure(lure);
-                view.SetDragLocked(isDragLocked);
-
-                await LoadLureSpriteAsync(view, lure, renderVersion, ct);
+                view.SetDragLocked(ShouldLockLure(lure));
             }
 
-            await RestoreActiveCraftAsync(safeLures, ct);
-        }
-
-        private async UniTask LoadLureSpriteAsync(
-            LureView view,
-            FishingHudLureViewData lure,
-            int renderVersion,
-            CancellationToken ct)
-        {
-            if (view == null || lure == null || string.IsNullOrWhiteSpace(lure.SpriteAddress))
-                return;
-
-            var sprite = await LoadSpriteAsync(lure, ct);
-            if (renderVersion == _renderVersion && view != null)
-                view.SetSprite(sprite);
-        }
-
-        private async UniTask<Sprite> LoadSpriteAsync(FishingHudLureViewData lure, CancellationToken ct)
-        {
-            if (lure == null || string.IsNullOrWhiteSpace(lure.SpriteAddress))
-                return null;
-
-            var spriteAddress = lure.SpriteAddress;
-            if (_spriteCache.TryGetValue(spriteAddress, out var cachedSprite))
-                return cachedSprite;
-
-            try
-            {
-                ct.ThrowIfCancellationRequested();
-                _requestedSpriteAddresses.Add(spriteAddress);
-
-                if (!_spriteLoadTasks.TryGetValue(spriteAddress, out var loadTask))
-                {
-                    loadTask = ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, ct);
-                    _spriteLoadTasks[spriteAddress] = loadTask;
-                }
-
-                var sprite = await loadTask.AsUniTask().AttachExternalCancellation(ct);
-                if (sprite == null)
-                {
-                    Debug.LogWarning($"[FishingHudWidget] Sprite not found for lure '{lure.LureId}' at address '{spriteAddress}'.");
-                    return null;
-                }
-
-                _spriteCache[spriteAddress] = sprite;
-                return sprite;
-            }
-            catch (OperationCanceledException)
-            {
-                return null;
-            }
-            catch (Exception exception)
-            {
-                Debug.LogWarning($"[FishingHudWidget] Failed to load sprite for lure '{lure.LureId}' at address '{spriteAddress}'. {exception}");
-                return null;
-            }
-            finally
-            {
-                _spriteLoadTasks.Remove(spriteAddress);
-            }
+            await RestoreActiveCraftAsync(ct);
         }
 
         private void OnLureBeginDrag(FishingHudLureViewData lure, LureView view, PointerEventData eventData)
@@ -259,21 +187,15 @@ namespace Game.Fishing
             if (string.IsNullOrWhiteSpace(message))
                 return;
 
-            if (_uiManager == null)
-                return;
-
-            _uiManager.Show<InfoWidgetController>(new InfoWidgetArg(message));
+            ShowInfo(message);
         }
 
         private void OnLureDrag(PointerEventData eventData)
         {
-            if (_isDisposed || eventData == null)
+            if (_isDisposed || eventData == null || _dragPreviewView == null)
                 return;
 
-            if (_dragPreviewView == null)
-                return;
-
-            _dragPreviewView?.MoveToScreenPosition(eventData.position);
+            _dragPreviewView.MoveToScreenPosition(eventData.position);
         }
 
         private void OnLureEndDrag(FishingHudLureViewData lure, PointerEventData eventData)
@@ -298,10 +220,10 @@ namespace Game.Fishing
                 return;
             }
 
-            if (_craftingService == null)
+            if (_fishingHudActions == null)
             {
                 ShowInfo("Crafting service is not available.");
-                Debug.LogWarning($"[FishingHudWidget] Craft start failed for lure '{lure.LureId}'. Crafting service is not assigned.");
+                Debug.LogWarning($"[FishingHudWidget] Craft start failed for lure '{lure.LureId}'. Fishing HUD actions are not assigned.");
                 return;
             }
 
@@ -312,7 +234,7 @@ namespace Game.Fishing
             try
             {
                 Debug.LogWarning($"[FishingHudWidget] Starting lure craft. LureId='{lure.LureId}', Recipe='{lure.CraftRecipeId}'.");
-                var start = await _craftingService.StartCraftAsync(lure.CraftRecipeId, ct);
+                var start = await _fishingHudActions.StartCraftAsync(lure.CraftRecipeId, ct);
                 if (!start.Success)
                 {
                     ShowInfo(GetCraftingErrorMessage(start.Error));
@@ -321,7 +243,7 @@ namespace Game.Fishing
                 }
 
                 SetActiveCraft(start.TaskId, start.CompleteAtUtc);
-                await SetProductionIconAsync(lure, ct);
+                SetProductionIconByCraftRecipeId(lure.CraftRecipeId);
                 Debug.LogWarning($"[FishingHudWidget] Craft started. LureId='{lure.LureId}', Recipe='{lure.CraftRecipeId}', TaskId='{start.TaskId}', CompleteAtUtc='{start.CompleteAtUtc:O}'.");
             }
             catch (OperationCanceledException)
@@ -351,14 +273,14 @@ namespace Game.Fishing
             _dragPreviewView.Hide();
         }
 
-        private async UniTask RestoreActiveCraftAsync(IReadOnlyList<FishingHudLureViewData> lures, CancellationToken ct)
+        private async UniTask RestoreActiveCraftAsync(CancellationToken ct)
         {
-            if (_craftingService == null)
+            if (_fishingHudActions == null)
                 return;
 
             try
             {
-                var activeTask = await _craftingService.GetFirstActiveTaskAsync(CraftingStationIds.LureCrafting, ct);
+                var activeTask = await _fishingHudActions.GetActiveCraftAsync(ct);
                 if (activeTask == null)
                 {
                     ClearActiveCraft();
@@ -367,7 +289,7 @@ namespace Game.Fishing
 
                 Debug.LogWarning($"[FishingHudWidget] Restoring active craft. TaskId='{activeTask.Id}', Recipe='{activeTask.Recipe?.Id}', CompleteAtUtc='{activeTask.CompleteAtUtc:O}'.");
                 SetActiveCraft(activeTask.Id, activeTask.CompleteAtUtc);
-                await SetProductionIconAsync(activeTask.Recipe?.Id, lures, ct);
+                SetProductionIconByCraftRecipeId(activeTask.Recipe?.Id);
             }
             catch (OperationCanceledException)
             {
@@ -378,34 +300,15 @@ namespace Game.Fishing
             }
         }
 
-        private async UniTask SetProductionIconAsync(FishingHudLureViewData lure, CancellationToken ct)
+        private void SetProductionIconByCraftRecipeId(string craftRecipeId)
         {
-            var sprite = await LoadSpriteAsync(lure, ct);
-            SetProductionIcon(sprite);
-        }
-
-        private async UniTask SetProductionIconAsync(
-            string craftRecipeId,
-            IReadOnlyList<FishingHudLureViewData> lures,
-            CancellationToken ct)
-        {
-            if (string.IsNullOrWhiteSpace(craftRecipeId) || lures == null)
+            if (string.IsNullOrWhiteSpace(craftRecipeId))
             {
                 SetProductionIcon(null);
                 return;
             }
 
-            for (var i = 0; i < lures.Count; i++)
-            {
-                var lure = lures[i];
-                if (lure == null || !string.Equals(lure.CraftRecipeId, craftRecipeId, StringComparison.Ordinal))
-                    continue;
-
-                await SetProductionIconAsync(lure, ct);
-                return;
-            }
-
-            SetProductionIcon(null);
+            SetProductionIcon(_spritesByCraftRecipeId.TryGetValue(craftRecipeId, out var sprite) ? sprite : null);
         }
 
         private void SetProductionIcon(Sprite sprite)
@@ -484,7 +387,7 @@ namespace Game.Fishing
 
         private async UniTask CollectActiveCraftAsync(bool requireReady, CancellationToken ct)
         {
-            if (!_hasActiveCraft || _craftingService == null)
+            if (!_hasActiveCraft || _fishingHudActions == null)
                 return;
 
             _isCraftOperationRunning = true;
@@ -495,8 +398,8 @@ namespace Game.Fishing
             {
                 Debug.LogWarning($"[FishingHudWidget] Collecting lure craft. TaskId='{_activeTaskId}', RequireReady={requireReady}.");
                 var collect = requireReady
-                    ? await _craftingService.CollectAsync(_activeTaskId, ct)
-                    : await _craftingService.CompleteAndCollectAsync(_activeTaskId, ct);
+                    ? await _fishingHudActions.CollectAsync(_activeTaskId, ct)
+                    : await _fishingHudActions.CompleteAndCollectAsync(_activeTaskId, ct);
 
                 if (!collect.Success)
                 {
@@ -525,9 +428,9 @@ namespace Game.Fishing
             if (!_hasActiveCraft || _isSpeedUpRunning)
                 return;
 
-            if (_craftingService == null)
+            if (_fishingHudActions == null)
             {
-                Debug.LogWarning("[FishingHudWidget] Speed-up failed. Crafting service is not assigned.");
+                Debug.LogWarning("[FishingHudWidget] Speed-up failed. Fishing HUD actions are not assigned.");
                 return;
             }
 
@@ -609,13 +512,13 @@ namespace Game.Fishing
             if (string.IsNullOrWhiteSpace(message))
                 return;
 
-            if (_uiManager == null)
+            if (_fishingHudActions == null)
             {
-                Debug.LogWarning($"[FishingHudWidget] UIManager is not assigned. Info='{message}'.");
+                Debug.LogWarning($"[FishingHudWidget] Fishing HUD actions are not assigned. Info='{message}'.");
                 return;
             }
 
-            _uiManager.Show<InfoWidgetController>(new InfoWidgetArg(message));
+            _fishingHudActions.ShowInfo(message);
         }
 
         private void ApplyCraftState()
@@ -654,13 +557,7 @@ namespace Game.Fishing
 
             _lurePool?.DisableAll();
             _luresByView.Clear();
-
-            foreach (var spriteAddress in _requestedSpriteAddresses)
-                ProdAddressablesWrapper.Release(spriteAddress);
-
-            _requestedSpriteAddresses.Clear();
-            _spriteCache.Clear();
-            _spriteLoadTasks.Clear();
+            _spritesByCraftRecipeId.Clear();
         }
 
         private void RegisterMissTap()
@@ -686,7 +583,7 @@ namespace Game.Fishing
 
         private DateTimeOffset GetCurrentTime()
         {
-            return _clock?.UtcNow ?? DateTimeOffset.UtcNow;
+            return _fishingHudActions?.GetCurrentTimeUtc() ?? DateTimeOffset.UtcNow;
         }
 
         private static void SetText(TMP_Text label, string value)
