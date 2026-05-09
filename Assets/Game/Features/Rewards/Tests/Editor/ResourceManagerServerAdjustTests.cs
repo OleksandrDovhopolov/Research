@@ -128,6 +128,45 @@ namespace Rewards.Tests.Editor
         }
 
         [Test]
+        public void Remove_ServerSuccess_RaisesResourceAmountChanged()
+        {
+            var fixture = CreateFixture(_ => UniTask.FromResult(new AdjustResourceResponse
+            {
+                Success = true,
+                Resources = new ResourceSnapshotDto { Gold = 1, Energy = 2, Gems = 7 }
+            }));
+
+            fixture.SaveService
+                .UpdateModuleAsync(data => data.Resources, resources =>
+                {
+                    resources.Gold = 1;
+                    resources.Energy = 2;
+                    resources.Gems = 10;
+                }, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            var manager = fixture.CreateManager();
+            manager.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+            var operationsService = fixture.CreateOperationsService(manager);
+
+            ResourceType changedType = default;
+            var changedAmount = -1;
+            manager.ResourceAmountChanged += (type, amount) =>
+            {
+                changedType = type;
+                changedAmount = amount;
+            };
+
+            operationsService.RemoveAsync(ResourceType.Gems, 3, ResourceManager.CheatRemoveReason, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.AreEqual(ResourceType.Gems, changedType);
+            Assert.AreEqual(7, changedAmount);
+        }
+
+        [Test]
         public void Add_ServerRejects_ThrowsAndDoesNotMutate()
         {
             var fixture = CreateFixture(_ => UniTask.FromResult(new AdjustResourceResponse
