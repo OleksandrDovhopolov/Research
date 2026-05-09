@@ -21,6 +21,7 @@ namespace Game.Fishing
         private const string SpeedUpReason = "fishing_lure_speed_up";
         private const string SpeedUpRefundReason = "fishing_lure_speed_up_refund";
 
+        [SerializeField] private Canvas _canvas;
         [SerializeField] private UIListPool<LureView> _lurePool;
         [SerializeField] private DropUITarget _dropTarget;
         [SerializeField] private Button _speedUpButton;
@@ -65,6 +66,7 @@ namespace Game.Fishing
 
         private void Awake()
         {
+            _canvas ??= GetComponent<Canvas>();
             SetText(_priceText, SpeedUpCost.ToString());
 
             if (_speedUpButton != null)
@@ -73,6 +75,11 @@ namespace Game.Fishing
             ApplyCraftState();
             UpdateSpeedUpButtonState();
         }
+
+        /*private void LateUpdate()
+        {
+            HudCameraFacingUtility.FaceCamera(transform, _canvas);
+        }*/
 
         public void OnCreatedByHudController()
         {
@@ -87,6 +94,8 @@ namespace Game.Fishing
 
         public async UniTask RenderAsync(IReadOnlyList<FishingHudLureViewData> lures, CancellationToken ct)
         {
+            HudCameraFacingUtility.FaceCamera(transform, _canvas);
+            
             ct.ThrowIfCancellationRequested();
             var renderVersion = ++_renderVersion;
             _luresByView.Clear();

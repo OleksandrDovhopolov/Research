@@ -36,10 +36,10 @@ RectTransform:
   - {fileID: 8392242599948957151}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1988, y: 994}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!225 &7668246213595201355
 CanvasGroup:
@@ -126,6 +126,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e372d77fbb2484f958f8b1f4d010739, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _canvas: {fileID: 0}
   _lurePool:
     prefab: {fileID: 466556150937556407, guid: a0d98d19ea248b545b98e12b34bdae9d, type: 3}
     parent: {fileID: 8571383279797781655}
@@ -5533,7 +5534,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4139005986320776957}
-  m_LocalRotation: {x: 0.27657473, y: 0.19289686, z: -0.056772634, w: 0.9397203}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -5543,7 +5544,7 @@ RectTransform:
   - {fileID: 8058496994070577354}
   - {fileID: 3339530425417390784}
   m_Father: {fileID: 3468778897722977413}
-  m_LocalEulerAnglesHint: {x: 32.8, y: 23.2, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}

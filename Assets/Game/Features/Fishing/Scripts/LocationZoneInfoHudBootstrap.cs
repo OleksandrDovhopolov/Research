@@ -89,7 +89,7 @@ namespace Game.Fishing
                     hudWidget.ItemsRoot,
                     cancellationToken);
 
-                itemView.name = $"ZoneInfo_{interactable.InteractionId}";
+                //itemView.name = $"ZoneInfo_{interactable.InteractionId}";
                 itemView.transform.SetPositionAndRotation(interactable.HudAnchor.position, Quaternion.identity);
                 _spawnedItems.Add(itemView);
                 itemView.Initialize(interactable, definition.Label);

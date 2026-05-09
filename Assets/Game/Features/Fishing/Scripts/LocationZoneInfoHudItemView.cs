@@ -65,27 +65,7 @@ namespace Game.Fishing
 
             gameObject.SetActive(true);
             transform.position = _target.position;
-
-            var targetCamera = ResolveCamera();
-            if (targetCamera != null)
-                transform.rotation = targetCamera.transform.rotation;
-        }
-
-        private Camera ResolveCamera()
-        {
-            var mainCamera = Camera.main;
-
-            if (_canvas != null)
-            {
-                var canvasCamera = _canvas.worldCamera;
-                if (canvasCamera != null && canvasCamera.isActiveAndEnabled)
-                    return canvasCamera;
-
-                if (mainCamera != null && mainCamera.isActiveAndEnabled)
-                    _canvas.worldCamera = mainCamera;
-            }
-
-            return mainCamera;
+            HudCameraFacingUtility.FaceCamera(transform, _canvas);
         }
 
         private void ResolveReferences()
