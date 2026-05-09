@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Core.Models;
 using Cysharp.Threading.Tasks;
+using EventOrchestration.Abstractions;
 using Game.Crafting;
+using Infrastructure;
+using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace Game.Tests.Editor.FishingCrafting
@@ -27,6 +31,68 @@ namespace Game.Tests.Editor.FishingCrafting
         }
 
         [Test]
+        public void StartCraftAsync_SavesTaskInCraftingModule()
+        {
+            var fixture = CreateFixture();
+
+            var start = fixture.Service.StartCraftAsync("craft_green_lure", CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+            var saveData = fixture.SaveService.GetReadonlyModuleAsync(data => data.Crafting, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.That(start.Success, Is.True);
+            Assert.That(saveData.Tasks, Has.Count.EqualTo(1));
+            Assert.That(saveData.Tasks[0].TaskId, Is.EqualTo(start.TaskId.Value));
+            Assert.That(saveData.Tasks[0].RecipeId, Is.EqualTo("craft_green_lure"));
+            Assert.That(saveData.Tasks[0].StationId, Is.EqualTo(CraftingStationIds.LureCrafting));
+        }
+
+        [Test]
+        public void GetActiveTasksAsync_RestoresTaskFromSaveService()
+        {
+            var fixture = CreateFixture();
+            var start = fixture.Service.StartCraftAsync("craft_green_lure", CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+            var recreated = CreateService(fixture.SaveService, fixture.RewardApplier, fixture.Clock);
+
+            var tasks = recreated.GetActiveTasksAsync(CraftingStationIds.LureCrafting, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.That(start.Success, Is.True);
+            Assert.That(tasks, Has.Count.EqualTo(1));
+            Assert.That(tasks[0].Id.Value, Is.EqualTo(start.TaskId.Value));
+            Assert.That(tasks[0].Recipe.Id, Is.EqualTo("craft_green_lure"));
+        }
+
+        [Test]
+        public void GetActiveTasksAsync_RestoresTaskAfterSaveServiceRecreated()
+        {
+            var fixture = CreateFixture();
+            var start = fixture.Service.StartCraftAsync("craft_green_lure", CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+            fixture.SaveService.SaveAllAsync(CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            var recreatedSaveService = new SaveService(fixture.Storage, new SaveMigrationService());
+            var recreated = CreateService(recreatedSaveService, fixture.RewardApplier, fixture.Clock);
+
+            var tasks = recreated.GetActiveTasksAsync(CraftingStationIds.LureCrafting, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.That(start.Success, Is.True);
+            Assert.That(tasks, Has.Count.EqualTo(1));
+            Assert.That(tasks[0].Id.Value, Is.EqualTo(start.TaskId.Value));
+            Assert.That(tasks[0].Recipe.Id, Is.EqualTo("craft_green_lure"));
+        }
+
+        [Test]
         public void CollectAsync_BeforeComplete_ReturnsNotReady()
         {
             var fixture = CreateFixture();
@@ -40,7 +106,7 @@ namespace Game.Tests.Editor.FishingCrafting
 
             Assert.That(collect.Success, Is.False);
             Assert.That(collect.Error, Is.EqualTo(CraftingError.TaskNotReady));
-            Assert.That(fixture.Inventory.GetAmount("item_green_lure"), Is.EqualTo(0));
+            Assert.That(fixture.RewardApplier.GetAmount("item_green_lure"), Is.EqualTo(0));
         }
 
         [Test]
@@ -58,7 +124,8 @@ namespace Game.Tests.Editor.FishingCrafting
 
             Assert.That(collect.Success, Is.True);
             Assert.That(collect.OutputItemId, Is.EqualTo("item_green_lure"));
-            Assert.That(fixture.Inventory.GetAmount("item_green_lure"), Is.EqualTo(1));
+            Assert.That(fixture.RewardApplier.GetAmount("item_green_lure"), Is.EqualTo(1));
+            Assert.That(fixture.Service.GetActiveTasksAsync(CraftingStationIds.LureCrafting, CancellationToken.None).GetAwaiter().GetResult(), Is.Empty);
         }
 
         [Test]
@@ -75,7 +142,8 @@ namespace Game.Tests.Editor.FishingCrafting
 
             Assert.That(collect.Success, Is.True);
             Assert.That(collect.OutputItemId, Is.EqualTo("item_green_lure"));
-            Assert.That(fixture.Inventory.GetAmount("item_green_lure"), Is.EqualTo(1));
+            Assert.That(fixture.RewardApplier.GetAmount("item_green_lure"), Is.EqualTo(1));
+            Assert.That(fixture.Service.GetActiveTasksAsync(CraftingStationIds.LureCrafting, CancellationToken.None).GetAwaiter().GetResult(), Is.Empty);
         }
 
         private static Fixture CreateFixture()
@@ -95,23 +163,59 @@ namespace Game.Tests.Editor.FishingCrafting
                     IsEnabled = true
                 }
             });
-            var inventory = new FakeCraftingInventoryGateway();
+            var storage = InMemorySaveStorage.CreateWithDefaultSave();
+            var saveService = new SaveService(storage, new SaveMigrationService());
+            var rewardApplier = new FakeCraftingRewardApplier();
             var clock = new FakeCraftingClock { UtcNow = DateTimeOffset.UtcNow };
-            var service = new CraftingService(new FakeCraftingConfigProvider(data), inventory, clock);
-            return new Fixture(service, inventory, clock);
+            var service = CreateService(saveService, rewardApplier, clock, data);
+            return new Fixture(service, saveService, storage, rewardApplier, clock);
+        }
+
+        private static CraftingService CreateService(
+            SaveService saveService,
+            FakeCraftingRewardApplier rewardApplier,
+            FakeCraftingClock clock,
+            CraftingStaticData data = null)
+        {
+            data ??= new CraftingStaticData(new List<CraftingRecipeConfig>
+            {
+                new()
+                {
+                    Id = "craft_green_lure",
+                    DisplayName = "Craft Green Lure",
+                    StationId = CraftingStationIds.LureCrafting,
+                    OutputItemId = "item_green_lure",
+                    OutputCount = 1,
+                    CraftTimeSeconds = 5,
+                    Ingredients = new List<CraftingIngredientConfig>(),
+                    Requirements = new List<CraftingRequirementConfig>(),
+                    IsEnabled = true
+                }
+            });
+
+            return new CraftingService(new FakeCraftingConfigProvider(data), rewardApplier, saveService, clock);
         }
 
         private sealed class Fixture
         {
-            public Fixture(CraftingService service, FakeCraftingInventoryGateway inventory, FakeCraftingClock clock)
+            public Fixture(
+                CraftingService service,
+                SaveService saveService,
+                InMemorySaveStorage storage,
+                FakeCraftingRewardApplier rewardApplier,
+                FakeCraftingClock clock)
             {
                 Service = service;
-                Inventory = inventory;
+                SaveService = saveService;
+                Storage = storage;
+                RewardApplier = rewardApplier;
                 Clock = clock;
             }
 
             public CraftingService Service { get; }
-            public FakeCraftingInventoryGateway Inventory { get; }
+            public SaveService SaveService { get; }
+            public InMemorySaveStorage Storage { get; }
+            public FakeCraftingRewardApplier RewardApplier { get; }
             public FakeCraftingClock Clock { get; }
         }
 
@@ -134,7 +238,7 @@ namespace Game.Tests.Editor.FishingCrafting
             }
         }
 
-        private sealed class FakeCraftingInventoryGateway : ICraftingInventoryGateway
+        private sealed class FakeCraftingRewardApplier : ICraftingRewardApplier
         {
             private readonly Dictionary<string, int> _items = new();
 
@@ -143,16 +247,56 @@ namespace Game.Tests.Editor.FishingCrafting
                 return _items.TryGetValue(itemId, out var amount) ? amount : 0;
             }
 
-            public UniTask AddItemAsync(string itemId, int amount, CancellationToken ct = default)
+            public UniTask ApplyAsync(string outputItemId, int outputCount, CancellationToken ct = default)
             {
-                _items[itemId] = GetAmount(itemId) + amount;
+                _items[outputItemId] = GetAmount(outputItemId) + outputCount;
                 return UniTask.CompletedTask;
             }
         }
 
-        private sealed class FakeCraftingClock : ICraftingClock
+        private sealed class FakeCraftingClock : IClock
         {
             public DateTimeOffset UtcNow { get; set; }
+        }
+
+        private sealed class InMemorySaveStorage : ISaveStorage
+        {
+            private string _json;
+
+            public static InMemorySaveStorage CreateWithDefaultSave()
+            {
+                return new InMemorySaveStorage
+                {
+                    _json = JsonConvert.SerializeObject(GameSaveData.CreateDefault(2, "crafting-tests"))
+                };
+            }
+
+            public UniTask SaveAsync(string data, CancellationToken cancellationToken)
+            {
+                _json = data;
+                return UniTask.CompletedTask;
+            }
+
+            public UniTask<string> LoadAsync(CancellationToken cancellationToken)
+            {
+                return UniTask.FromResult(_json);
+            }
+
+            public bool Exists()
+            {
+                return !string.IsNullOrWhiteSpace(_json);
+            }
+
+            public UniTask DeleteAsync(CancellationToken cancellationToken)
+            {
+                _json = null;
+                return UniTask.CompletedTask;
+            }
+
+            public UniTask<long> GetLastModifiedTimestampAsync(CancellationToken cancellationToken)
+            {
+                return UniTask.FromResult(0L);
+            }
         }
     }
 }

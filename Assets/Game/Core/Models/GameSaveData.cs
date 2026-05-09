@@ -14,6 +14,7 @@ namespace Core.Models
         public List<EventStateSaveData> EventStates = new();
         public ResourcesModuleSaveData Resources = new();
         public FortuneWheelModuleSaveData FortuneWheel = new();
+        public CraftingModuleSaveData Crafting = new();
         public Dictionary<string, string> CustomModulesJson = new();
 
         public static GameSaveData CreateDefault(int schemaVersion, string saveId)
@@ -109,5 +110,22 @@ namespace Core.Models
     {
         public int AvailableSpins { get; set; }
         public long UpdatedAt { get; set; }
+    }
+
+    [Serializable]
+    public sealed class CraftingModuleSaveData
+    {
+        public int Version = 1;
+        public List<CraftTaskSaveData> Tasks = new();
+    }
+
+    [Serializable]
+    public sealed class CraftTaskSaveData
+    {
+        public string TaskId;
+        public string RecipeId;
+        public string StationId;
+        public long StartedAtUnixSeconds;
+        public long CompleteAtUnixSeconds;
     }
 }

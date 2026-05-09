@@ -306,6 +306,8 @@ namespace Infrastructure
             data.EventStates ??= new List<EventStateSaveData>();
             data.Resources ??= new ResourcesModuleSaveData();
             data.FortuneWheel ??= new FortuneWheelModuleSaveData();
+            data.Crafting ??= new CraftingModuleSaveData();
+            data.Crafting.Tasks ??= new List<CraftTaskSaveData>();
             data.CustomModulesJson ??= new Dictionary<string, string>();
             data.Meta.SaveId ??= Guid.NewGuid().ToString("N");
             data.Meta.Hash ??= string.Empty;
@@ -319,6 +321,20 @@ namespace Infrastructure
             data.Resources.Version = Math.Max(1, data.Resources.Version);
             data.FortuneWheel.AvailableSpins = Math.Max(0, data.FortuneWheel.AvailableSpins);
             data.FortuneWheel.UpdatedAt = Math.Max(0, data.FortuneWheel.UpdatedAt);
+            data.Crafting.Version = Math.Max(1, data.Crafting.Version);
+            data.Crafting.Tasks ??= new List<CraftTaskSaveData>();
+            data.Crafting.Tasks = data.Crafting.Tasks
+                .Where(task => task != null &&
+                               !string.IsNullOrWhiteSpace(task.TaskId) &&
+                               !string.IsNullOrWhiteSpace(task.RecipeId) &&
+                               !string.IsNullOrWhiteSpace(task.StationId))
+                .Select(task =>
+                {
+                    task.StartedAtUnixSeconds = Math.Max(0, task.StartedAtUnixSeconds);
+                    task.CompleteAtUnixSeconds = Math.Max(task.StartedAtUnixSeconds, task.CompleteAtUnixSeconds);
+                    return task;
+                })
+                .ToList();
 
             foreach (var owner in data.Inventory.Owners)
             {

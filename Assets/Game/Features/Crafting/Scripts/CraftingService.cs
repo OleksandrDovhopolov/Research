@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Core.Models;
 using Cysharp.Threading.Tasks;
+using EventOrchestration.Abstractions;
+using Infrastructure;
 
 namespace Game.Crafting
 {
@@ -11,17 +14,19 @@ namespace Game.Crafting
         private const int DefaultStationSlotLimit = 1;
 
         private readonly ICraftingConfigProvider _configProvider;
-        private readonly ICraftingInventoryGateway _inventoryGateway;
-        private readonly ICraftingClock _clock;
-        private readonly Dictionary<string, CraftTask> _tasksById = new(StringComparer.Ordinal);
+        private readonly ICraftingRewardApplier _rewardApplier;
+        private readonly SaveService _saveService;
+        private readonly IClock _clock;
 
         public CraftingService(
             ICraftingConfigProvider configProvider,
-            ICraftingInventoryGateway inventoryGateway,
-            ICraftingClock clock)
+            ICraftingRewardApplier rewardApplier,
+            SaveService saveService,
+            IClock clock)
         {
             _configProvider = configProvider ?? throw new ArgumentNullException(nameof(configProvider));
-            _inventoryGateway = inventoryGateway ?? throw new ArgumentNullException(nameof(inventoryGateway));
+            _rewardApplier = rewardApplier ?? throw new ArgumentNullException(nameof(rewardApplier));
+            _saveService = saveService ?? throw new ArgumentNullException(nameof(saveService));
             _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         }
 
@@ -38,7 +43,7 @@ namespace Game.Crafting
             if (!recipe.IsEnabled)
                 return CraftStartResult.Fail(CraftingError.RecipeDisabled);
 
-            if (GetActiveTaskCount(recipe.StationId) >= GetStationSlotLimit(recipe.StationId))
+            if (await GetActiveTaskCountAsync(recipe.StationId, ct) >= GetStationSlotLimit(recipe.StationId))
                 return CraftStartResult.Fail(CraftingError.StationQueueFull);
 
             var now = _clock.UtcNow;
@@ -48,8 +53,48 @@ namespace Game.Crafting
                 now,
                 now.AddSeconds(Math.Max(0, recipe.CraftTimeSeconds)));
 
-            _tasksById[task.Id.Value] = task;
+            await _saveService.UpdateModuleAsync(data => data.Crafting, crafting =>
+            {
+                crafting.Tasks ??= new List<CraftTaskSaveData>();
+                crafting.Tasks.Add(ToSaveData(task));
+            }, ct);
+
             return CraftStartResult.Ok(task);
+        }
+
+        public async UniTask<IReadOnlyList<CraftTask>> GetActiveTasksAsync(string stationId, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (string.IsNullOrWhiteSpace(stationId))
+                return Array.Empty<CraftTask>();
+
+            var data = await _configProvider.LoadAsync(ct);
+            var saveData = await GetSaveDataAsync(ct);
+            if (saveData.Tasks == null || saveData.Tasks.Count == 0)
+                return Array.Empty<CraftTask>();
+
+            var result = new List<CraftTask>();
+            foreach (var taskSaveData in saveData.Tasks)
+            {
+                if (taskSaveData == null ||
+                    !string.Equals(taskSaveData.StationId, stationId, StringComparison.Ordinal) ||
+                    !data.RecipesById.TryGetValue(taskSaveData.RecipeId, out var recipe))
+                {
+                    continue;
+                }
+
+                result.Add(ToDomainTask(taskSaveData, recipe));
+            }
+
+            return result
+                .OrderBy(task => task.StartedAtUtc)
+                .ToArray();
+        }
+
+        public async UniTask<CraftTask> GetFirstActiveTaskAsync(string stationId, CancellationToken ct = default)
+        {
+            var tasks = await GetActiveTasksAsync(stationId, ct);
+            return tasks.Count > 0 ? tasks[0] : null;
         }
 
         public async UniTask<CraftCollectResult> CollectAsync(CraftTaskId taskId, CancellationToken ct = default)
@@ -68,23 +113,43 @@ namespace Game.Crafting
             CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
-            if (taskId.IsEmpty || !_tasksById.TryGetValue(taskId.Value, out var task))
+            if (taskId.IsEmpty)
                 return CraftCollectResult.Fail(CraftingError.TaskNotFound);
 
+            var taskSaveData = await FindSavedTaskAsync(taskId, ct);
+            if (taskSaveData == null)
+                return CraftCollectResult.Fail(CraftingError.TaskNotFound);
+
+            var data = await _configProvider.LoadAsync(ct);
+            if (!data.RecipesById.TryGetValue(taskSaveData.RecipeId, out var recipe))
+                return CraftCollectResult.Fail(CraftingError.RecipeNotFound);
+
+            var task = ToDomainTask(taskSaveData, recipe);
             if (requireComplete && !task.IsComplete(_clock.UtcNow))
                 return CraftCollectResult.Fail(CraftingError.TaskNotReady);
 
-            await _inventoryGateway.AddItemAsync(task.Recipe.OutputItemId, task.Recipe.OutputCount, ct);
-            _tasksById.Remove(taskId.Value);
+            try
+            {
+                await _rewardApplier.ApplyAsync(task.Recipe.OutputItemId, task.Recipe.OutputCount, ct);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception)
+            {
+                return CraftCollectResult.Fail(CraftingError.InventoryOperationFailed);
+            }
+
+            await RemoveSavedTaskAsync(taskId, ct);
 
             return CraftCollectResult.Ok(task.Recipe.OutputItemId, task.Recipe.OutputCount);
         }
 
-        private int GetActiveTaskCount(string stationId)
+        private async UniTask<int> GetActiveTaskCountAsync(string stationId, CancellationToken ct)
         {
-            return _tasksById.Values.Count(task =>
-                task != null &&
-                string.Equals(task.Recipe?.StationId, stationId, StringComparison.Ordinal));
+            var activeTasks = await GetActiveTasksAsync(stationId, ct);
+            return activeTasks.Count;
         }
 
         private static int GetStationSlotLimit(string stationId)
@@ -92,6 +157,51 @@ namespace Game.Crafting
             return string.Equals(stationId, CraftingStationIds.LureCrafting, StringComparison.Ordinal)
                 ? DefaultStationSlotLimit
                 : DefaultStationSlotLimit;
+        }
+
+        private async UniTask<CraftingModuleSaveData> GetSaveDataAsync(CancellationToken ct)
+        {
+            return await _saveService.GetReadonlyModuleAsync(data => data.Crafting, ct) ?? new CraftingModuleSaveData();
+        }
+
+        private async UniTask<CraftTaskSaveData> FindSavedTaskAsync(CraftTaskId taskId, CancellationToken ct)
+        {
+            var saveData = await GetSaveDataAsync(ct);
+            return saveData.Tasks?.FirstOrDefault(task =>
+                task != null &&
+                string.Equals(task.TaskId, taskId.Value, StringComparison.Ordinal));
+        }
+
+        private async UniTask RemoveSavedTaskAsync(CraftTaskId taskId, CancellationToken ct)
+        {
+            await _saveService.UpdateModuleAsync(data => data.Crafting, crafting =>
+            {
+                crafting.Tasks ??= new List<CraftTaskSaveData>();
+                crafting.Tasks.RemoveAll(task =>
+                    task == null ||
+                    string.Equals(task.TaskId, taskId.Value, StringComparison.Ordinal));
+            }, ct);
+        }
+
+        private static CraftTaskSaveData ToSaveData(CraftTask task)
+        {
+            return new CraftTaskSaveData
+            {
+                TaskId = task.Id.Value,
+                RecipeId = task.Recipe.Id,
+                StationId = task.Recipe.StationId,
+                StartedAtUnixSeconds = task.StartedAtUtc.ToUnixTimeSeconds(),
+                CompleteAtUnixSeconds = task.CompleteAtUtc.ToUnixTimeSeconds()
+            };
+        }
+
+        private static CraftTask ToDomainTask(CraftTaskSaveData taskSaveData, CraftingRecipeConfig recipe)
+        {
+            return new CraftTask(
+                new CraftTaskId(taskSaveData.TaskId),
+                recipe,
+                DateTimeOffset.FromUnixTimeSeconds(Math.Max(0, taskSaveData.StartedAtUnixSeconds)),
+                DateTimeOffset.FromUnixTimeSeconds(Math.Max(taskSaveData.StartedAtUnixSeconds, taskSaveData.CompleteAtUnixSeconds)));
         }
     }
 }

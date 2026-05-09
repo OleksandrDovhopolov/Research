@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
@@ -112,6 +113,8 @@ namespace Game.Crafting
     public interface ICraftingService
     {
         UniTask<CraftStartResult> StartCraftAsync(string recipeId, CancellationToken ct = default);
+        UniTask<IReadOnlyList<CraftTask>> GetActiveTasksAsync(string stationId, CancellationToken ct = default);
+        UniTask<CraftTask> GetFirstActiveTaskAsync(string stationId, CancellationToken ct = default);
         UniTask<CraftCollectResult> CollectAsync(CraftTaskId taskId, CancellationToken ct = default);
         UniTask<CraftCollectResult> CompleteAndCollectAsync(CraftTaskId taskId, CancellationToken ct = default);
     }
@@ -121,13 +124,8 @@ namespace Game.Crafting
         UniTask AddItemAsync(string itemId, int amount, CancellationToken ct = default);
     }
 
-    public interface ICraftingClock
+    public interface ICraftingRewardApplier
     {
-        DateTimeOffset UtcNow { get; }
-    }
-
-    public sealed class SystemCraftingClock : ICraftingClock
-    {
-        public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
+        UniTask ApplyAsync(string outputItemId, int outputCount, CancellationToken ct = default);
     }
 }

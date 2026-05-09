@@ -6,7 +6,8 @@
         "VContainer",
         "Inventory.API",
         "Infrastructure",
-        "Core.Models"
+        "Core.Models",
+        "EventOrchestration"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
