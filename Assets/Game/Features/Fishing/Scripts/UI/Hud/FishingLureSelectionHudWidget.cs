@@ -88,7 +88,9 @@ namespace Game.Fishing
                 var result = await _actions.TryStartFishingAsync(_zoneId, lure.LureId, ct);
                 if (!result.Success)
                 {
-                    ShowInfo(MapErrorToMessage(result.Error));
+                    var message = MapErrorToMessage(result.Error);
+                    if (!string.IsNullOrWhiteSpace(message))
+                        ShowInfo(message);
                     return;
                 }
 
@@ -145,6 +147,7 @@ namespace Game.Fishing
         {
             return error switch
             {
+                FishingError.None => string.Empty,
                 FishingError.ZoneNotFound => "Fishing zone was not found.",
                 FishingError.ZoneLocked => "This fishing zone is locked.",
                 FishingError.LureNotFound => "Lure was not found.",

@@ -11,6 +11,7 @@ namespace Game.Fishing
     public interface IFishingMinigameFacade
     {
         UniTask<bool> TryShowAsync(string zoneId, CancellationToken ct = default);
+        UniTask<bool> TryShowAsync(string zoneId, string lureId, CancellationToken ct = default);
     }
 
     public sealed class FishingMinigameFacade : IFishingMinigameFacade
@@ -33,8 +34,14 @@ namespace Game.Fishing
 
         public async UniTask<bool> TryShowAsync(string zoneId, CancellationToken ct = default)
         {
+            return await TryShowAsync(zoneId, DefaultLureId, ct);
+        }
+
+        public async UniTask<bool> TryShowAsync(string zoneId, string lureId, CancellationToken ct = default)
+        {
             ct.ThrowIfCancellationRequested();
-            Debug.LogWarning($"[FishingMinigameFacade] TryShow requested. ZoneId='{zoneId}', LureId='{DefaultLureId}'.");
+            var resolvedLureId = string.IsNullOrWhiteSpace(lureId) ? DefaultLureId : lureId;
+            Debug.LogWarning($"[FishingMinigameFacade] TryShow requested. ZoneId='{zoneId}', LureId='{resolvedLureId}'.");
 
             if (string.IsNullOrWhiteSpace(zoneId))
             {
@@ -46,24 +53,24 @@ namespace Game.Fishing
             FishingStartResult startResult;
             try
             {
-                startResult = await _fishingService.StartFishingAsync(zoneId, DefaultLureId, ct);
-                Debug.LogWarning($"[FishingMinigameFacade] StartFishingAsync finished. ZoneId='{zoneId}', Success={startResult?.Success ?? false}, Error={startResult?.Error ?? FishingError.ConfigInvalid}, AttemptId='{startResult?.AttemptId.ToString() ?? string.Empty}', FishId='{startResult?.SelectedFish?.Id ?? string.Empty}'.");
+                startResult = await _fishingService.StartFishingAsync(zoneId, resolvedLureId, ct);
+                Debug.LogWarning($"[FishingMinigameFacade] StartFishingAsync finished. ZoneId='{zoneId}', LureId='{resolvedLureId}', Success={startResult?.Success ?? false}, Error={startResult?.Error ?? FishingError.ConfigInvalid}, AttemptId='{startResult?.AttemptId.ToString() ?? string.Empty}', FishId='{startResult?.SelectedFish?.Id ?? string.Empty}'.");
             }
             catch (OperationCanceledException)
             {
-                Debug.LogWarning($"[FishingMinigameFacade] TryShow cancelled during StartFishingAsync. ZoneId='{zoneId}'.");
+                Debug.LogWarning($"[FishingMinigameFacade] TryShow cancelled during StartFishingAsync. ZoneId='{zoneId}', LureId='{resolvedLureId}'.");
                 throw;
             }
             catch (Exception exception)
             {
-                Debug.LogError($"[FishingMinigameFacade] Failed to start fishing in zone '{zoneId}'. {exception}");
+                Debug.LogError($"[FishingMinigameFacade] Failed to start fishing in zone '{zoneId}' with lure '{resolvedLureId}'. {exception}");
                 ShowInfo("Fishing is temporarily unavailable.");
                 return false;
             }
 
             if (startResult == null || !startResult.Success)
             {
-                Debug.LogWarning($"[FishingMinigameFacade] TryShow failed after start. ZoneId='{zoneId}', Error={startResult?.Error ?? FishingError.ConfigInvalid}.");
+                Debug.LogWarning($"[FishingMinigameFacade] TryShow failed after start. ZoneId='{zoneId}', LureId='{resolvedLureId}', Error={startResult?.Error ?? FishingError.ConfigInvalid}.");
                 ShowInfo(GetStartErrorMessage(startResult?.Error ?? FishingError.ConfigInvalid));
                 return false;
             }
@@ -157,7 +164,7 @@ namespace Game.Fishing
                 case FishingError.LureNotAllowedInZone:
                     return "The selected lure cannot be used here.";
                 case FishingError.LureNotInInventory:
-                    return "You need a gold lure to fish here.";
+                    return "You do not have the selected lure.";
                 case FishingError.NoAvailableFish:
                     return "No fish are biting right now.";
                 case FishingError.EventRequired:
