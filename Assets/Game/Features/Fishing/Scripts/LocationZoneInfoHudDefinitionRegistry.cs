@@ -8,6 +8,8 @@ namespace Game.Fishing
         private readonly Dictionary<string, LocationZoneInfoHudDefinition> _definitions = new(System.StringComparer.Ordinal)
         {
             [LocationInteractionKeys.FishingZone] = new LocationZoneInfoHudDefinition(LocationInteractionKeys.FishingZone, "Info", true),
+            [LocationInteractionKeys.FisherHouse] = new LocationZoneInfoHudDefinition(LocationInteractionKeys.FisherHouse, "House", true),
+            [LocationInteractionKeys.FishCollection] = new LocationZoneInfoHudDefinition(LocationInteractionKeys.FishCollection, "Collection", true),
         };
 
         public bool TryGetDefinition(string interactionKey, out LocationZoneInfoHudDefinition definition)
