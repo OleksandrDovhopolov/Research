@@ -85,8 +85,14 @@ namespace Game.Features.Locations
             try
             {
                 var zoneId = _zoneIdResolver.ResolveZoneId(context.Interactable);
+                Debug.LogWarning($"[LocationInteraction] Open fishing minigame requested: key='{GetInteractionKey(context)}', id='{GetInteractionId(context)}', zoneId='{zoneId}'.");
                 if (!await _fishingMinigameFacade.TryShowAsync(zoneId, CancellationToken.None))
+                {
+                    Debug.LogWarning($"[LocationInteraction] Fishing minigame open rejected: key='{GetInteractionKey(context)}', id='{GetInteractionId(context)}', zoneId='{zoneId}'.");
                     return;
+                }
+
+                Debug.LogWarning($"[LocationInteraction] Fishing minigame open dispatched: key='{GetInteractionKey(context)}', id='{GetInteractionId(context)}', zoneId='{zoneId}'.");
             }
             catch (Exception exception)
             {

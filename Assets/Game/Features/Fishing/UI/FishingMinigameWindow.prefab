@@ -109,9 +109,6 @@ MonoBehaviour:
   _timingCircleOuter: {fileID: 21300000, guid: b91af0c3ffb1b7445b1392c216c2d291, type: 3}
   _timingCircleShrinking: {fileID: 21300000, guid: bac57b4743d20074699cdf4427a92445, type: 3}
   _timingCircleTarget: {fileID: 21300000, guid: 77137063d947de944a0f1efc38826574, type: 3}
-  _timingCirclePerfectZone: {fileID: 21300000, guid: 6e1ab7c2b59cbd649a8355962ba95399, type: 3}
-  _circleSuccessFlash: {fileID: 21300000, guid: 2670ff10544287d4f84c388224543f00, type: 3}
-  _circleFailFlash: {fileID: 21300000, guid: 8ad0d0ab284033b45a834c7da5a982f4, type: 3}
   _circlePulse: {fileID: 21300000, guid: 06a44fa156cf1c34ba7ead1c879d2f13, type: 3}
 --- !u!114 &100006
 MonoBehaviour:

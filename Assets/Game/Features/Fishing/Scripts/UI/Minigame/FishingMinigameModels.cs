@@ -34,9 +34,11 @@ namespace Game.Fishing
         public async UniTask<bool> TryShowAsync(string zoneId, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
+            Debug.LogWarning($"[FishingMinigameFacade] TryShow requested. ZoneId='{zoneId}', LureId='{DefaultLureId}'.");
 
             if (string.IsNullOrWhiteSpace(zoneId))
             {
+                Debug.LogWarning("[FishingMinigameFacade] TryShow rejected because zone id is empty.");
                 ShowInfo("Fishing zone is unavailable.");
                 return false;
             }
@@ -45,9 +47,11 @@ namespace Game.Fishing
             try
             {
                 startResult = await _fishingService.StartFishingAsync(zoneId, DefaultLureId, ct);
+                Debug.LogWarning($"[FishingMinigameFacade] StartFishingAsync finished. ZoneId='{zoneId}', Success={startResult?.Success ?? false}, Error={startResult?.Error ?? FishingError.ConfigInvalid}, AttemptId='{startResult?.AttemptId.ToString() ?? string.Empty}', FishId='{startResult?.SelectedFish?.Id ?? string.Empty}'.");
             }
             catch (OperationCanceledException)
             {
+                Debug.LogWarning($"[FishingMinigameFacade] TryShow cancelled during StartFishingAsync. ZoneId='{zoneId}'.");
                 throw;
             }
             catch (Exception exception)
@@ -59,17 +63,20 @@ namespace Game.Fishing
 
             if (startResult == null || !startResult.Success)
             {
+                Debug.LogWarning($"[FishingMinigameFacade] TryShow failed after start. ZoneId='{zoneId}', Error={startResult?.Error ?? FishingError.ConfigInvalid}.");
                 ShowInfo(GetStartErrorMessage(startResult?.Error ?? FishingError.ConfigInvalid));
                 return false;
             }
 
             var runtimeConfig = await BuildRuntimeConfigAsync(startResult.SelectedFish, ct);
+            Debug.LogWarning($"[FishingMinigameFacade] Runtime config prepared. ZoneId='{zoneId}', AttemptId='{startResult.AttemptId}', FishId='{startResult.SelectedFish?.Id ?? string.Empty}', Behavior='{startResult.SelectedFish?.BehaviorType ?? string.Empty}', StartRadius={runtimeConfig.StartRadius:0.##}, TargetRadius={runtimeConfig.TargetRadius:0.##}, EndRadius={runtimeConfig.EndRadius:0.##}, Duration={runtimeConfig.ShrinkDurationSeconds:0.###}, SuccessThreshold={runtimeConfig.SuccessRadiusThreshold:0.###}, PerfectThreshold={runtimeConfig.PerfectRadiusThreshold:0.###}.");
             var args = new FishingMinigameArgs(zoneId, startResult.AttemptId, startResult.SelectedFish, runtimeConfig);
 
             try
             {
                 await _uiManager.GetWindowAsync<FishingMinigameController>();
                 _uiManager.Show<FishingMinigameController>(args);
+                Debug.LogWarning($"[FishingMinigameFacade] FishingMinigameController show dispatched. ZoneId='{zoneId}', AttemptId='{startResult.AttemptId}', FishId='{startResult.SelectedFish?.Id ?? string.Empty}'.");
                 return true;
             }
             catch (Exception exception)
@@ -116,6 +123,7 @@ namespace Game.Fishing
             if (string.IsNullOrWhiteSpace(message))
                 return;
 
+            Debug.LogWarning($"[FishingMinigameFacade] ShowInfo: '{message}'.");
             _uiManager.Show<InfoWidgetController>(new InfoWidgetArg(message));
         }
 
@@ -126,7 +134,9 @@ namespace Game.Fishing
 
             try
             {
+                Debug.LogWarning($"[FishingMinigameFacade] Cancelling fishing attempt after UI failure. AttemptId='{attemptId}'.");
                 await _fishingService.CompleteFishingAsync(attemptId, false, CancellationToken.None);
+                Debug.LogWarning($"[FishingMinigameFacade] Fishing attempt cancelled after UI failure. AttemptId='{attemptId}'.");
             }
             catch (Exception exception)
             {

@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UIShared;
 using UISystem;
 using UnityEngine;
 using VContainer;
@@ -24,22 +25,27 @@ namespace Game.Fishing
 
         protected override void OnShowStart()
         {
+            _attemptCompletionDispatched = false;
+            Debug.LogWarning($"[FishingMinigameController] OnShowStart. ZoneId='{Args.ZoneId}', AttemptId='{Args.AttemptId}', FishId='{Args.SelectedFish?.Id ?? string.Empty}'.");
             View.Initialize(Args);
         }
 
         protected override void OnShowComplete()
         {
             View.ResolutionCommitted += OnResolutionCommitted;
+            Debug.LogWarning($"[FishingMinigameController] OnShowComplete. AttemptId='{Args.AttemptId}'.");
             View.BeginRunning();
         }
 
         protected override void OnHideStart(bool isClosed)
         {
             View.ResolutionCommitted -= OnResolutionCommitted;
+            Debug.LogWarning($"[FishingMinigameController] OnHideStart. AttemptId='{Args.AttemptId}', IsClosed={isClosed}, CompletionDispatched={_attemptCompletionDispatched}.");
 
             if (!_attemptCompletionDispatched && !Args.AttemptId.IsEmpty)
             {
                 _attemptCompletionDispatched = true;
+                Debug.LogWarning($"[FishingMinigameController] Attempt unresolved before hide. Completing as failed. AttemptId='{Args.AttemptId}'.");
                 CompletePendingAttemptAsFailedAsync(Args.AttemptId).Forget();
             }
         }
@@ -47,20 +53,26 @@ namespace Game.Fishing
         private void OnResolutionCommitted(FishingMinigameResolution resolution)
         {
             if (_attemptCompletionDispatched)
+            {
+                Debug.LogWarning($"[FishingMinigameController] Resolution ignored because completion was already dispatched. AttemptId='{Args.AttemptId}'.");
                 return;
+            }
 
             _attemptCompletionDispatched = true;
+            Debug.LogWarning($"[FishingMinigameController] Resolution committed. AttemptId='{Args.AttemptId}', Success={resolution.IsSuccess}, Perfect={resolution.IsPerfect}, Timeout={resolution.IsTimeout}, Radius={resolution.CurrentRadius:0.###}.");
             ResolveAttemptAsync(resolution).Forget();
         }
 
         private async UniTaskVoid ResolveAttemptAsync(FishingMinigameResolution resolution)
         {
             View.ShowResolvingState();
+            Debug.LogWarning($"[FishingMinigameController] Resolving attempt. AttemptId='{Args.AttemptId}', MinigameSuccess={resolution.IsSuccess}.");
 
             FishingCatchResult result = null;
             try
             {
                 result = await _fishingService.CompleteFishingAsync(Args.AttemptId, resolution.IsSuccess, CancellationToken.None);
+                Debug.LogWarning($"[FishingMinigameController] CompleteFishingAsync finished. AttemptId='{Args.AttemptId}', Success={result?.Success ?? false}, Error={result?.Error ?? FishingError.ConfigInvalid}, FishId='{result?.FishId ?? string.Empty}', Weight={result?.Weight ?? 0f:0.##}, State={(result != null ? result.State.ToString() : string.Empty)}.");
             }
             catch (Exception exception)
             {
@@ -69,9 +81,10 @@ namespace Game.Fishing
 
             var isCatchSuccessful = result != null && result.Success;
             var title = BuildResultTitle(isCatchSuccessful, resolution.IsPerfect, resolution.IsTimeout);
-            var details = BuildResultDetails(isCatchSuccessful, result);
 
-            await View.ShowResultAsync(isCatchSuccessful, resolution.IsPerfect && isCatchSuccessful, title, details, CancellationToken.None);
+            ShowInfoResult(title);
+            await View.ShowResultAsync(isCatchSuccessful, resolution.IsPerfect && isCatchSuccessful, CancellationToken.None);
+            Debug.LogWarning($"[FishingMinigameController] Result shown. AttemptId='{Args.AttemptId}', CatchSuccessful={isCatchSuccessful}, Title='{title}'.");
             UIManager.Hide<FishingMinigameController>();
         }
 
@@ -80,6 +93,7 @@ namespace Game.Fishing
             try
             {
                 await _fishingService.CompleteFishingAsync(attemptId, false, CancellationToken.None);
+                Debug.LogWarning($"[FishingMinigameController] Pending attempt completed as failed. AttemptId='{attemptId}'.");
             }
             catch (Exception exception)
             {
@@ -89,24 +103,12 @@ namespace Game.Fishing
 
         private string BuildResultTitle(bool isCatchSuccessful, bool isPerfect, bool isTimeout)
         {
-            if (isCatchSuccessful)
-                return isPerfect ? "Perfect catch!" : "Fish caught!";
-
-            return isTimeout ? "Too slow" : "Missed";
+            return isCatchSuccessful ? "Success" : "Fail";
         }
 
-        private string BuildResultDetails(bool isCatchSuccessful, FishingCatchResult result)
+        private void ShowInfoResult(string title)
         {
-            if (isCatchSuccessful && result != null)
-            {
-                var fishName = string.IsNullOrWhiteSpace(Args.SelectedFish?.DisplayName) ? result.FishId : Args.SelectedFish.DisplayName;
-                return $"{fishName}\n{result.Weight:0.##} kg - {result.State}";
-            }
-
-            if (result != null && result.Error == FishingError.MinigameFailed)
-                return "Tap when the shrinking circle reaches the target.";
-
-            return "Fishing failed. Try again.";
+            UIManager.Show<InfoWidgetController>(new InfoWidgetArg(title));
         }
     }
 }
