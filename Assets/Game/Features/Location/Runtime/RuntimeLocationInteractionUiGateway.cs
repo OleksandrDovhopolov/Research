@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Game.Fishing;
+using UIShared;
 using UISystem;
 using UnityEngine;
 
@@ -12,20 +13,26 @@ namespace Game.Features.Locations
         private readonly UIManager _uiManager;
         private readonly IFishCollectionDataBuilder _fishCollectionDataBuilder;
         private readonly IFishingHudFacade _fishingHudFacade;
+        private readonly IFishingMinigameFacade _fishingMinigameFacade;
+        private readonly ILocationFishingZoneIdResolver _zoneIdResolver;
 
         public RuntimeLocationInteractionUiGateway(
             UIManager uiManager,
             IFishCollectionDataBuilder fishCollectionDataBuilder,
-            IFishingHudFacade fishingHudFacade)
+            IFishingHudFacade fishingHudFacade,
+            IFishingMinigameFacade fishingMinigameFacade,
+            ILocationFishingZoneIdResolver zoneIdResolver)
         {
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
             _fishCollectionDataBuilder = fishCollectionDataBuilder ?? throw new ArgumentNullException(nameof(fishCollectionDataBuilder));
             _fishingHudFacade = fishingHudFacade ?? throw new ArgumentNullException(nameof(fishingHudFacade));
+            _fishingMinigameFacade = fishingMinigameFacade ?? throw new ArgumentNullException(nameof(fishingMinigameFacade));
+            _zoneIdResolver = zoneIdResolver ?? throw new ArgumentNullException(nameof(zoneIdResolver));
         }
 
         public void OpenFishingTackleSelection(LocationInteractionContext context)
         {
-            Log(context, "Open fishing tackle selection");
+            OpenFishingTackleSelectionAsync(context).Forget();
         }
 
         public void OpenFisherHouseProduction(LocationInteractionContext context)
@@ -70,6 +77,21 @@ namespace Game.Features.Locations
             catch (Exception exception)
             {
                 Debug.LogError($"[LocationInteraction] Failed to open fisher house production: key='{GetInteractionKey(context)}', id='{GetInteractionId(context)}'. {exception}");
+            }
+        }
+
+        private async UniTaskVoid OpenFishingTackleSelectionAsync(LocationInteractionContext context)
+        {
+            try
+            {
+                var zoneId = _zoneIdResolver.ResolveZoneId(context.Interactable);
+                if (!await _fishingMinigameFacade.TryShowAsync(zoneId, CancellationToken.None))
+                    return;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"[LocationInteraction] Failed to open fishing minigame: key='{GetInteractionKey(context)}', id='{GetInteractionId(context)}'. {exception}");
+                _uiManager.Show<InfoWidgetController>(new InfoWidgetArg("Fishing is temporarily unavailable."));
             }
         }
 

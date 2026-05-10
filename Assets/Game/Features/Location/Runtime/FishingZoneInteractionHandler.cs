@@ -1,24 +1,17 @@
-using Cysharp.Threading.Tasks;
-using Game.Fishing;
-
 namespace Game.Features.Locations
 {
     public sealed class FishingZoneInteractionHandler : ILocationInteractionHandler
     {
-        private readonly IFishingZoneInfoLogger _zoneInfoLogger;
-        private readonly ILocationFishingZoneIdResolver _zoneIdResolver;
+        private readonly ILocationInteractionUiGateway _uiGateway;
 
-        public FishingZoneInteractionHandler(
-            IFishingZoneInfoLogger zoneInfoLogger,
-            ILocationFishingZoneIdResolver zoneIdResolver)
+        public FishingZoneInteractionHandler(ILocationInteractionUiGateway uiGateway)
         {
-            _zoneInfoLogger = zoneInfoLogger;
-            _zoneIdResolver = zoneIdResolver;
+            _uiGateway = uiGateway;
         }
 
         public void Handle(LocationInteractionContext context)
         {
-            _zoneInfoLogger.LogZoneInfoAsync(_zoneIdResolver.ResolveZoneId(context.Interactable)).Forget();
+            _uiGateway.OpenFishingTackleSelection(context);
         }
     }
 }
