@@ -20,11 +20,13 @@ namespace Game.Fishing
         protected override void OnHideStart(bool isClosed)
         {
             View.CloseClick -= CloseWindow;
-            View.Dispose();
         }
 
         private void CloseWindow()
         {
+            if (View.IsLoading)
+                return;
+
             UIManager.Hide<FishCollectionController>();
         }
     }
