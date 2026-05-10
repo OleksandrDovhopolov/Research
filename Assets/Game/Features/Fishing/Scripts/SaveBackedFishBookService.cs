@@ -2,15 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Core.Models;
 using Cysharp.Threading.Tasks;
 using Infrastructure;
-using Newtonsoft.Json;
 
 namespace Game.Fishing
 {
     public sealed class SaveBackedFishBookService : IFishBookService
     {
-        private const string SaveKey = "fishing_book";
+        private const int CommonStateMask = 1 << 0;
+        private const int RareStateMask = 1 << 1;
+        private const int EpicStateMask = 1 << 2;
+        private const int LegendaryStateMask = 1 << 3;
         private readonly SaveService _saveService;
 
         public SaveBackedFishBookService(SaveService saveService)
@@ -24,33 +27,28 @@ namespace Game.Fishing
             if (result == null || !result.Success || string.IsNullOrWhiteSpace(result.FishId))
                 return;
 
-            await _saveService.UpdateModuleAsync(data => data.CustomModulesJson, modules =>
+            await _saveService.UpdateModuleAsync(data => data.Fishing, fishing =>
             {
-                var saveData = Deserialize(modules);
-                var progress = saveData.Progress.FirstOrDefault(x => string.Equals(x.FishId, result.FishId, StringComparison.Ordinal));
-                if (progress == null)
+                fishing.CaughtFish ??= new List<CaughtFishSaveData>();
+
+                var caughtFish = fishing.CaughtFish.FirstOrDefault(x => string.Equals(x.FishId, result.FishId, StringComparison.Ordinal));
+                if (caughtFish == null)
                 {
-                    progress = new FishBookProgress
+                    caughtFish = new CaughtFishSaveData
                     {
                         FishId = result.FishId,
-                        IsDiscovered = true,
                         IsNew = true,
                         CaughtCount = 0,
                         BestWeight = 0f,
-                        UnlockedWeightStates = new List<string>()
+                        CaughtStatesMask = 0
                     };
-                    saveData.Progress.Add(progress);
+                    fishing.CaughtFish.Add(caughtFish);
                 }
 
-                progress.IsDiscovered = true;
-                progress.CaughtCount += 1;
-                progress.BestWeight = Math.Max(progress.BestWeight, result.Weight);
-
-                var stateId = ToStateId(result.State);
-                if (!progress.UnlockedWeightStates.Contains(stateId))
-                    progress.UnlockedWeightStates.Add(stateId);
-
-                modules[SaveKey] = JsonConvert.SerializeObject(saveData);
+                caughtFish.CaughtCount += 1;
+                caughtFish.IsNew = true;
+                caughtFish.BestWeight = Math.Max(caughtFish.BestWeight, result.Weight);
+                caughtFish.CaughtStatesMask |= ToStateMask(result.State);
             }, ct);
         }
 
@@ -60,9 +58,9 @@ namespace Game.Fishing
             if (string.IsNullOrWhiteSpace(fishId))
                 return null;
 
-            var modules = await _saveService.GetReadonlyModuleAsync(data => data.CustomModulesJson, ct);
-            var saveData = Deserialize(modules);
-            return saveData.Progress.FirstOrDefault(x => string.Equals(x.FishId, fishId, StringComparison.Ordinal));
+            var fishing = await _saveService.GetReadonlyModuleAsync(data => data.Fishing, ct);
+            var caughtFish = fishing?.CaughtFish?.FirstOrDefault(x => string.Equals(x.FishId, fishId, StringComparison.Ordinal));
+            return MapToProgress(caughtFish);
         }
 
         public async UniTask MarkAsViewedAsync(string fishId, CancellationToken ct = default)
@@ -71,47 +69,56 @@ namespace Game.Fishing
             if (string.IsNullOrWhiteSpace(fishId))
                 return;
 
-            await _saveService.UpdateModuleAsync(data => data.CustomModulesJson, modules =>
+            await _saveService.UpdateModuleAsync(data => data.Fishing, fishing =>
             {
-                var saveData = Deserialize(modules);
-                var progress = saveData.Progress.FirstOrDefault(x => string.Equals(x.FishId, fishId, StringComparison.Ordinal));
-                if (progress == null)
+                var caughtFish = fishing?.CaughtFish?.FirstOrDefault(x => string.Equals(x.FishId, fishId, StringComparison.Ordinal));
+                if (caughtFish == null)
                     return;
 
-                progress.IsNew = false;
-                modules[SaveKey] = JsonConvert.SerializeObject(saveData);
+                caughtFish.IsNew = false;
             }, ct);
         }
 
-        private static FishBookSaveData Deserialize(Dictionary<string, string> modules)
+        private static FishBookProgress MapToProgress(CaughtFishSaveData caughtFish)
         {
-            if (modules == null || !modules.TryGetValue(SaveKey, out var json) || string.IsNullOrWhiteSpace(json))
-                return new FishBookSaveData();
+            if (caughtFish == null || string.IsNullOrWhiteSpace(caughtFish.FishId))
+                return null;
 
-            try
+            return new FishBookProgress
             {
-                return JsonConvert.DeserializeObject<FishBookSaveData>(json) ?? new FishBookSaveData();
-            }
-            catch
-            {
-                return new FishBookSaveData();
-            }
-        }
-
-        private static string ToStateId(FishWeightState state)
-        {
-            return state switch
-            {
-                FishWeightState.Legendary => "legendary",
-                FishWeightState.Epic => "epic",
-                FishWeightState.Rare => "rare",
-                _ => "common"
+                FishId = caughtFish.FishId,
+                IsDiscovered = true,
+                IsNew = caughtFish.IsNew,
+                CaughtCount = Math.Max(0, caughtFish.CaughtCount),
+                BestWeight = Math.Max(0f, caughtFish.BestWeight),
+                UnlockedWeightStates = GetUnlockedStates(caughtFish.CaughtStatesMask)
             };
         }
 
-        private sealed class FishBookSaveData
+        private static int ToStateMask(FishWeightState state)
         {
-            [JsonProperty("progress")] public List<FishBookProgress> Progress = new();
+            return state switch
+            {
+                FishWeightState.Legendary => LegendaryStateMask,
+                FishWeightState.Epic => EpicStateMask,
+                FishWeightState.Rare => RareStateMask,
+                _ => CommonStateMask
+            };
+        }
+
+        private static List<string> GetUnlockedStates(int caughtStatesMask)
+        {
+            var states = new List<string>(4);
+            if ((caughtStatesMask & CommonStateMask) != 0)
+                states.Add("common");
+            if ((caughtStatesMask & RareStateMask) != 0)
+                states.Add("rare");
+            if ((caughtStatesMask & EpicStateMask) != 0)
+                states.Add("epic");
+            if ((caughtStatesMask & LegendaryStateMask) != 0)
+                states.Add("legendary");
+
+            return states;
         }
     }
 }

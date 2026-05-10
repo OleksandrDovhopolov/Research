@@ -7,6 +7,7 @@ using CoreResources;
 using Cysharp.Threading.Tasks;
 using EventOrchestration;
 using Inventory.API;
+using Game.Fishing;
 using Rewards;
 using UIShared;
 using UISystem;
@@ -35,6 +36,9 @@ namespace Game.Cheat
         private RewardSpecsConfigSO _rewardSpecsConfigSo;
         private IBattlePassServerService _battlePassServerService;
         private IBattlePassSnapshotStore _battlePassSnapshotStore;
+        private IFishingConfigProvider _fishingConfigProvider;
+        private IFishCatchResolver _fishCatchResolver;
+        private ICaughtFishService _caughtFishService;
 
         [Inject]
         private void Construct(
@@ -47,6 +51,9 @@ namespace Game.Cheat
             ICardCollectionSessionFacade cardCollectionSessionFacade,
             IBattlePassServerService battlePassServerService,
             IBattlePassSnapshotStore battlePassSnapshotStore,
+            IFishingConfigProvider fishingConfigProvider,
+            IFishCatchResolver fishCatchResolver,
+            ICaughtFishService caughtFishService,
             RewardSpecsConfigSO rewardSpecsConfigSo)
         {
             _uiManager = uiManager;
@@ -58,6 +65,9 @@ namespace Game.Cheat
             _cardCollectionSessionFacade = cardCollectionSessionFacade;
             _battlePassServerService = battlePassServerService;
             _battlePassSnapshotStore = battlePassSnapshotStore;
+            _fishingConfigProvider = fishingConfigProvider;
+            _fishCatchResolver = fishCatchResolver;
+            _caughtFishService = caughtFishService;
             _rewardSpecsConfigSo = rewardSpecsConfigSo;
         }
         
@@ -118,6 +128,7 @@ namespace Game.Cheat
                 new ResourcesCheatModule(_resourceManager, _resourceOperationsService, _animateCurrency),
                 new RewardCheatModule(_uiManager, _rewardSpecsConfigSo),
                 new BattlePassCheatModule(_battlePassServerService, _battlePassSnapshotStore, destroyCt),
+                new FishingCheatModule(_fishingConfigProvider, _fishCatchResolver, _caughtFishService, destroyCt),
                 //new InventoryCheatModule(_inventoryService),
             };
             

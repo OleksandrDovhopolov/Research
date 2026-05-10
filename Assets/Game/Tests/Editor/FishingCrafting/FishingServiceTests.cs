@@ -39,11 +39,11 @@ namespace Game.Tests.Editor.FishingCrafting
             Assert.That(result.Success, Is.False);
             Assert.That(result.Error, Is.EqualTo(FishingError.MinigameFailed));
             Assert.That(fixture.Inventory.GetAmount("item_roach"), Is.EqualTo(0));
-            Assert.That(fixture.Book.Registered.Count, Is.EqualTo(0));
+            Assert.That(fixture.CaughtFishService.Handled.Count, Is.EqualTo(0));
         }
 
         [Test]
-        public void CompleteFishingAsync_WhenMinigameSucceeds_GrantsFishAndUpdatesBook()
+        public void CompleteFishingAsync_WhenMinigameSucceeds_GrantsFishAndUpdatesCaughtFishFlow()
         {
             var fixture = CreateFixture();
             fixture.Inventory.Add("item_green_lure", 1);
@@ -58,7 +58,8 @@ namespace Game.Tests.Editor.FishingCrafting
             Assert.That(result.Success, Is.True);
             Assert.That(result.FishId, Is.EqualTo("roach"));
             Assert.That(fixture.Inventory.GetAmount("item_roach"), Is.EqualTo(1));
-            Assert.That(fixture.Book.Registered.Count, Is.EqualTo(1));
+            Assert.That(fixture.CaughtFishService.Handled.Count, Is.EqualTo(1));
+            Assert.That(fixture.CaughtFishService.Handled[0].FishId, Is.EqualTo("roach"));
         }
 
         private static Fixture CreateFixture()
@@ -112,30 +113,30 @@ namespace Game.Tests.Editor.FishingCrafting
                 new[] { "craft_green_lure" });
 
             var inventory = new FakeFishingInventoryGateway();
-            var book = new FakeFishBookService();
+            var caughtFishService = new FakeCaughtFishService();
             var service = new FishingService(
                 new FakeFishingConfigProvider(data),
                 new FishSelector(new FixedFishingRandom(0)),
                 new FishWeightService(new FixedFishingRandom(0.5)),
-                book,
+                caughtFishService,
                 inventory,
                 new EmptyActiveFishingEventsProvider());
 
-            return new Fixture(service, inventory, book);
+            return new Fixture(service, inventory, caughtFishService);
         }
 
         private sealed class Fixture
         {
-            public Fixture(FishingService service, FakeFishingInventoryGateway inventory, FakeFishBookService book)
+            public Fixture(FishingService service, FakeFishingInventoryGateway inventory, FakeCaughtFishService caughtFishService)
             {
                 Service = service;
                 Inventory = inventory;
-                Book = book;
+                CaughtFishService = caughtFishService;
             }
 
             public FishingService Service { get; }
             public FakeFishingInventoryGateway Inventory { get; }
-            public FakeFishBookService Book { get; }
+            public FakeCaughtFishService CaughtFishService { get; }
         }
 
         private sealed class FakeFishingConfigProvider : IFishingConfigProvider
@@ -192,24 +193,14 @@ namespace Game.Tests.Editor.FishingCrafting
             }
         }
 
-        private sealed class FakeFishBookService : IFishBookService
+        private sealed class FakeCaughtFishService : ICaughtFishService
         {
-            public List<FishingCatchResult> Registered { get; } = new();
+            public List<FishingCatchResult> Handled { get; } = new();
 
-            public UniTask RegisterCatchAsync(FishingCatchResult result, CancellationToken ct = default)
+            public UniTask<FishingCatchResult> HandleCatchAsync(FishingCatchResult result, CancellationToken ct = default)
             {
-                Registered.Add(result);
-                return UniTask.CompletedTask;
-            }
-
-            public UniTask<FishBookProgress> GetProgressAsync(string fishId, CancellationToken ct = default)
-            {
-                return UniTask.FromResult<FishBookProgress>(null);
-            }
-
-            public UniTask MarkAsViewedAsync(string fishId, CancellationToken ct = default)
-            {
-                return UniTask.CompletedTask;
+                Handled.Add(result);
+                return UniTask.FromResult(result);
             }
         }
 

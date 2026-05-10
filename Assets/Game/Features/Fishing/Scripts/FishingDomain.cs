@@ -176,6 +176,21 @@ namespace Game.Fishing
         UniTask MarkAsViewedAsync(string fishId, CancellationToken ct = default);
     }
 
+    public interface IFishCatchResolver
+    {
+        UniTask<FishingCatchResult> ResolveCatchAsync(string fishId, CancellationToken ct = default);
+    }
+
+    public interface ICaughtFishService
+    {
+        UniTask<FishingCatchResult> HandleCatchAsync(FishingCatchResult result, CancellationToken ct = default);
+    }
+
+    public interface ICaughtFishPresenter
+    {
+        void Present(FishingCatchResult result, FishBookProgress progress);
+    }
+
     public interface IFishingInventoryGateway
     {
         UniTask<bool> HasItemAsync(string itemId, int amount, CancellationToken ct = default);

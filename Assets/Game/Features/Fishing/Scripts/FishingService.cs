@@ -11,7 +11,7 @@ namespace Game.Fishing
         private readonly IFishingConfigProvider _configProvider;
         private readonly IFishSelector _fishSelector;
         private readonly IFishWeightService _fishWeightService;
-        private readonly IFishBookService _fishBookService;
+        private readonly ICaughtFishService _caughtFishService;
         private readonly IFishingInventoryGateway _inventoryGateway;
         private readonly IActiveFishingEventsProvider _eventsProvider;
         private readonly Dictionary<string, FishingAttempt> _attempts = new(StringComparer.Ordinal);
@@ -20,14 +20,14 @@ namespace Game.Fishing
             IFishingConfigProvider configProvider,
             IFishSelector fishSelector,
             IFishWeightService fishWeightService,
-            IFishBookService fishBookService,
+            ICaughtFishService caughtFishService,
             IFishingInventoryGateway inventoryGateway,
             IActiveFishingEventsProvider eventsProvider)
         {
             _configProvider = configProvider ?? throw new ArgumentNullException(nameof(configProvider));
             _fishSelector = fishSelector ?? throw new ArgumentNullException(nameof(fishSelector));
             _fishWeightService = fishWeightService ?? throw new ArgumentNullException(nameof(fishWeightService));
-            _fishBookService = fishBookService ?? throw new ArgumentNullException(nameof(fishBookService));
+            _caughtFishService = caughtFishService ?? throw new ArgumentNullException(nameof(caughtFishService));
             _inventoryGateway = inventoryGateway ?? throw new ArgumentNullException(nameof(inventoryGateway));
             _eventsProvider = eventsProvider ?? throw new ArgumentNullException(nameof(eventsProvider));
         }
@@ -91,8 +91,7 @@ namespace Game.Fishing
             await _inventoryGateway.AddItemAsync(itemId, 1, ct);
 
             var result = FishingCatchResult.Ok(attempt.SelectedFish.Id, itemId, roll.Weight, roll.State);
-            await _fishBookService.RegisterCatchAsync(result, ct);
-            return result;
+            return await _caughtFishService.HandleCatchAsync(result, ct);
         }
     }
 }

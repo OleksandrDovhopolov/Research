@@ -14,6 +14,9 @@ namespace Game.Fishing
             builder.Register<IFishingRandom, SystemFishingRandom>(Lifetime.Singleton);
             builder.Register<IFishSelector, FishSelector>(Lifetime.Singleton);
             builder.Register<IFishWeightService, FishWeightService>(Lifetime.Singleton);
+            builder.Register<IFishCatchResolver, ConfigBackedFishCatchResolver>(Lifetime.Singleton);
+            builder.Register<ICaughtFishPresenter, LoggingCaughtFishPresenter>(Lifetime.Singleton);
+            builder.Register<ICaughtFishService, CaughtFishService>(Lifetime.Singleton);
             builder.Register<IActiveFishingEventsProvider, EmptyActiveFishingEventsProvider>(Lifetime.Singleton);
             builder.Register<IFishingInventoryGateway, SaveBackedFishingInventoryGateway>(Lifetime.Singleton);
             builder.Register<IFishBookService, SaveBackedFishBookService>(Lifetime.Singleton);

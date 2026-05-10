@@ -15,6 +15,7 @@ namespace Core.Models
         public ResourcesModuleSaveData Resources = new();
         public FortuneWheelModuleSaveData FortuneWheel = new();
         public CraftingModuleSaveData Crafting = new();
+        public FishingModuleSaveData Fishing = new();
         public Dictionary<string, string> CustomModulesJson = new();
 
         public static GameSaveData CreateDefault(int schemaVersion, string saveId)
@@ -127,5 +128,22 @@ namespace Core.Models
         public string StationId;
         public long StartedAtUnixSeconds;
         public long CompleteAtUnixSeconds;
+    }
+
+    [Serializable]
+    public sealed class FishingModuleSaveData
+    {
+        public int Version = 1;
+        public List<CaughtFishSaveData> CaughtFish = new();
+    }
+
+    [Serializable]
+    public sealed class CaughtFishSaveData
+    {
+        public string FishId;
+        public int CaughtStatesMask;
+        public float BestWeight;
+        public int CaughtCount;
+        public bool IsNew;
     }
 }

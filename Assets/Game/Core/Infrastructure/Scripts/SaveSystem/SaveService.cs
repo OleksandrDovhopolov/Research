@@ -306,6 +306,8 @@ namespace Infrastructure
             data.FortuneWheel ??= new FortuneWheelModuleSaveData();
             data.Crafting ??= new CraftingModuleSaveData();
             data.Crafting.Tasks ??= new List<CraftTaskSaveData>();
+            data.Fishing ??= new FishingModuleSaveData();
+            data.Fishing.CaughtFish ??= new List<CaughtFishSaveData>();
             data.CustomModulesJson ??= new Dictionary<string, string>();
             data.Meta.SaveId ??= Guid.NewGuid().ToString("N");
             data.Meta.Hash ??= string.Empty;
@@ -331,6 +333,19 @@ namespace Infrastructure
                     task.StartedAtUnixSeconds = Math.Max(0, task.StartedAtUnixSeconds);
                     task.CompleteAtUnixSeconds = Math.Max(task.StartedAtUnixSeconds, task.CompleteAtUnixSeconds);
                     return task;
+                })
+                .ToList();
+
+            data.Fishing.Version = Math.Max(1, data.Fishing.Version);
+            data.Fishing.CaughtFish ??= new List<CaughtFishSaveData>();
+            data.Fishing.CaughtFish = data.Fishing.CaughtFish
+                .Where(entry => entry != null && !string.IsNullOrWhiteSpace(entry.FishId))
+                .Select(entry =>
+                {
+                    entry.CaughtStatesMask = Math.Max(0, entry.CaughtStatesMask) & 0b1111;
+                    entry.BestWeight = Math.Max(0f, entry.BestWeight);
+                    entry.CaughtCount = Math.Max(0, entry.CaughtCount);
+                    return entry;
                 })
                 .ToList();
 
