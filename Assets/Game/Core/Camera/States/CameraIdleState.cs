@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
@@ -11,7 +10,7 @@ namespace CameraModule
     {
         const int TouchQueueSize = 2;
         Queue<float> _touchQueue = new Queue<float>();
-
+        
         public CameraIdleState(CameraBehaviour cameraBehaviour, CameraSettings cameraSettings) : base(cameraBehaviour, cameraSettings)
         {
         }
@@ -44,6 +43,7 @@ namespace CameraModule
                 if (_touchQueue.Count > TouchQueueSize)
                     _touchQueue.Dequeue();
             }
+            
             if (touch.phase != TouchPhase.Began)
                 return;
             _cameraBehaviour.ResetMoveData();
@@ -52,9 +52,10 @@ namespace CameraModule
         public override void OnDragStart()
         {
             //if (_cameraBehaviour.IsCameraMovementUnavailable()) return;
-
+            
             _cameraBehaviour.transform.DOKill();
             _cameraBehaviour.ResetMoveData();
+            
             var fingers = _cameraBehaviour.FingerFilter.UpdateAndGetFingers();
             if (fingers.Count == 2)
             {
@@ -68,7 +69,7 @@ namespace CameraModule
                     ChangeState<CameraOneHandZoomState>();
                     return;
                 }
-                ChangeState<CameraDragState>();
+                //ChangeState<CameraDragState>();
             }
         }
     }

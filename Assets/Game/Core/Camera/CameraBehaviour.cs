@@ -13,6 +13,8 @@ namespace CameraModule
 {
     public class CameraBehaviour : MonoBehaviour
     {
+        private const float DefaultOrthographicSize = 30f;
+
         [SerializeField] Camera camera;
         
         private CameraSettings _settings;
@@ -68,7 +70,7 @@ namespace CameraModule
         {
             _screenDepth = GetScreenDepth();
             _fingerFilter.UpdateRequiredSelectable(gameObject);
-            camera.orthographicSize = 13f;
+            camera.orthographicSize = Mathf.Clamp(DefaultOrthographicSize, MaxScale, MinScale);
         }
         
         private LeanScreenDepth GetScreenDepth()
