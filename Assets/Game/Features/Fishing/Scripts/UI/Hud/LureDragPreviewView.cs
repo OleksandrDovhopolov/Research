@@ -15,7 +15,6 @@ namespace Game.Fishing
         {
             _root ??= transform as RectTransform;
             _canvas = GetComponentInParent<Canvas>();
-            Hide();
         }
 
         public void Show(Sprite sprite, int count)
@@ -23,10 +22,14 @@ namespace Game.Fishing
             if (_root == null)
                 _root = transform as RectTransform;
 
-            if (_icon != null)
-                _icon.sprite = sprite;
+            if (!gameObject.activeSelf)
+                gameObject.SetActive(true);
 
-            gameObject.SetActive(true);
+            if (_icon != null)
+            {
+                _icon.sprite = sprite;
+                _icon.enabled = sprite != null;
+            }
         }
 
         public void MoveToScreenPosition(Vector2 screenPosition)
@@ -53,7 +56,10 @@ namespace Game.Fishing
         public void Hide()
         {
             if (_icon != null)
+            {
                 _icon.sprite = null;
+                _icon.enabled = false;
+            }
 
             if (_root != null)
                 _root.anchoredPosition = Vector2.zero;
