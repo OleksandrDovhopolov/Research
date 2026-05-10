@@ -6,26 +6,15 @@ using Game.Crafting;
 using TMPro;
 using UIShared;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using VContainer;
 
 namespace Game.Fishing
 {
-    public sealed class FishingHudWidget : MonoBehaviour, IHudWidget, IHudWidgetLifecycle, IRectMissTap
+    public sealed class FishingHudWidget : LureListHudWidgetBase
     {
         private const int SpeedUpCost = 50;
 
-        [SerializeField] private Canvas _canvas;
-        [SerializeField] private UIListPool<LureView> _lurePool;
-        [SerializeField] private DropUITarget _dropTarget;
-
-        [Space, Space, Header("Drag")]
-        [SerializeField] private LureDragPreviewView _dragPreviewView;
-        [SerializeField] private RectTransform _dragPreviewActiveContainer;
-        [SerializeField] private RectTransform _dragPreviewInactiveContainer;
-
-        [Space, Space, Header("General")]
         [SerializeField] private Button _speedUpButton;
         [SerializeField] private TMP_Text _priceText;
         [SerializeField] private TMP_Text _timeText;
@@ -33,38 +22,27 @@ namespace Game.Fishing
         [SerializeField] private GameObject _productionStateObject;
         [SerializeField] private GameObject _timerStateObject;
         [SerializeField] private Image _productionIcon;
-        [SerializeField] private RectTransform[] _missTapRects;
 
-        private readonly Dictionary<LureView, FishingHudLureViewData> _luresByView = new();
         private readonly Dictionary<string, Sprite> _spritesByCraftRecipeId = new(StringComparer.Ordinal);
 
         private IFishingHudActions _fishingHudActions;
-        private HudMissTapInputController _missTapInputController;
-        private RectTransform _rootRectTransform;
         private CancellationTokenSource _timerCts;
         private CraftTaskId _activeTaskId;
         private DateTimeOffset _activeCompleteAtUtc;
         private bool _hasActiveCraft;
         private bool _isCraftOperationRunning;
         private bool _isSpeedUpRunning;
-        private bool _isDisposed;
 
         [Inject]
-        public void Install(
-            IFishingHudActions fishingHudActions,
-            HudMissTapInputController missTapInputController)
+        public void Install(IFishingHudActions fishingHudActions, HudMissTapInputController missTapInputController)
         {
             _fishingHudActions = fishingHudActions;
-            _missTapInputController = missTapInputController;
-
-            RegisterMissTap();
-            UpdateSpeedUpButtonState();
+            InstallBase(missTapInputController);
         }
 
-        private void Awake()
+        protected override void Awake()
         {
-            _canvas ??= GetComponent<Canvas>();
-            _rootRectTransform = transform as RectTransform;
+            base.Awake();
             SetText(_priceText, SpeedUpCost.ToString());
             SetProductionIcon(null);
 
@@ -75,146 +53,101 @@ namespace Game.Fishing
             UpdateSpeedUpButtonState();
         }
 
-        private void OnEnable()
+        protected override void OnInstalled()
         {
-            RegisterMissTap();
-        }
-
-        private void OnDisable()
-        {
-            HideDragPreview();
-            UnregisterMissTap();
-        }
-
-        public void OnCreatedByHudController()
-        {
-            HideDragPreview();
-            ApplyCraftState();
             UpdateSpeedUpButtonState();
         }
 
-        public void OnBeforeReleased()
+        protected override void OnCreatedByHudControllerInternal()
         {
-            Dispose();
-        }
-
-        public bool OnMissTap()
-        {
-            HideDragPreview();
-
-            if (_fishingHudActions != null)
-            {
-                _fishingHudActions.HideHud();
-                return true;
-            }
-
-            gameObject.SetActive(false);
-            return true;
-        }
-
-        public IEnumerable<RectTransform> GetRectTransform()
-        {
-            if (_missTapRects is { Length: > 0 })
-                return _missTapRects;
-
-            _rootRectTransform ??= transform as RectTransform;
-            return _rootRectTransform != null
-                ? new[] { _rootRectTransform }
-                : Array.Empty<RectTransform>();
+            ApplyCraftState();
+            UpdateSpeedUpButtonState();
         }
 
         public async UniTask RenderAsync(IReadOnlyList<FishingHudLureRenderData> lures, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
-            HideDragPreview();
-            ApplyLureRenderData(lures, ct);
+            RenderLureViews(lures, ct);
             await RestoreActiveCraftAsync(ct);
         }
 
-        private void ApplyLureRenderData(IReadOnlyList<FishingHudLureRenderData> lures, CancellationToken ct)
+        protected override void OnBeforeRenderLures()
         {
-            ct.ThrowIfCancellationRequested();
-            _luresByView.Clear();
             _spritesByCraftRecipeId.Clear();
-            _lurePool?.DisableAll();
-
-            var safeLures = lures ?? Array.Empty<FishingHudLureRenderData>();
-            if (_lurePool == null || safeLures.Count == 0)
-                return;
-
-            for (var i = 0; i < safeLures.Count; i++)
-            {
-                ct.ThrowIfCancellationRequested();
-
-                var renderData = safeLures[i];
-                var lure = renderData?.Lure;
-                if (lure == null)
-                    continue;
-
-                var view = _lurePool.GetNext();
-                _luresByView[view] = lure;
-                view.transform.SetSiblingIndex(i);
-
-                if (!string.IsNullOrWhiteSpace(lure.CraftRecipeId) && renderData.Sprite != null)
-                    _spritesByCraftRecipeId[lure.CraftRecipeId] = renderData.Sprite;
-
-                view.SetData(renderData.Sprite, lure.Count);
-                view.SetDragHandlers(
-                    onBeginDrag: eventData => OnLureBeginDrag(lure, view, eventData),
-                    onLockedBeginDrag: eventData => OnLureLockedBeginDrag(lure, eventData),
-                    onDrag: OnLureDrag,
-                    onEndDrag: eventData => OnLureEndDrag(lure, eventData));
-                view.SetDragLocked(ShouldLockLure(lure));
-            }
         }
 
-        private void OnLureBeginDrag(FishingHudLureViewData lure, LureView view, PointerEventData eventData)
+        protected override void OnLureViewConfigured(FishingHudLureRenderData renderData, LureView view)
         {
-            if (_isDisposed || lure == null || view == null || eventData == null)
+            var lure = renderData?.Lure;
+            if (lure == null || string.IsNullOrWhiteSpace(lure.CraftRecipeId) || renderData.Sprite == null)
                 return;
 
-            if (ShouldLockLure(lure))
-                return;
-
-            if (_dragPreviewActiveContainer != null && _dragPreviewView != null)
-                _dragPreviewView.transform.SetParent(_dragPreviewActiveContainer, false);
-
-            _dragPreviewView?.Show(view.CurrentSprite, view.CurrentCount);
-            _dragPreviewView?.MoveToScreenPosition(eventData.position);
+            _spritesByCraftRecipeId[lure.CraftRecipeId] = renderData.Sprite;
         }
 
-        private void OnLureLockedBeginDrag(FishingHudLureViewData lure, PointerEventData eventData)
+        protected override bool ShouldLockLure(FishingHudLureViewData lure)
         {
-            var message = GetLureDragBlockedMessage(lure);
+            return _hasActiveCraft ||
+                   _isCraftOperationRunning ||
+                   lure == null ||
+                   string.IsNullOrWhiteSpace(lure.CraftRecipeId);
+        }
+
+        protected override string GetLureDragBlockedMessage(FishingHudLureViewData lure)
+        {
+            if (_hasActiveCraft || _isCraftOperationRunning)
+                return "Lure production is already running.";
+
+            if (lure == null)
+                return "Lure is not configured.";
+
+            if (string.IsNullOrWhiteSpace(lure.CraftRecipeId))
+                return "This lure does not have a craft recipe configured.";
+
+            return "Lure production cannot be started right now.";
+        }
+
+        protected override async UniTask HandleDroppedLureAsync(FishingHudLureViewData lure, CancellationToken ct)
+        {
+            await TryStartLureProductionAsync(lure, ct);
+        }
+
+        protected override void ShowInfo(string message)
+        {
             if (string.IsNullOrWhiteSpace(message))
                 return;
 
-            ShowInfo(message);
-        }
-
-        private void OnLureDrag(PointerEventData eventData)
-        {
-            if (_isDisposed || eventData == null || _dragPreviewView == null)
+            if (_fishingHudActions == null)
+            {
+                Debug.LogWarning($"[FishingHudWidget] Fishing HUD actions are not assigned. Info='{message}'.");
                 return;
+            }
 
-            _dragPreviewView.MoveToScreenPosition(eventData.position);
+            _fishingHudActions.ShowInfo(message);
         }
 
-        private void OnLureEndDrag(FishingHudLureViewData lure, PointerEventData eventData)
+        protected override void HideHud()
         {
-            var isDroppedInsideTarget = !_isDisposed &&
-                                        lure != null &&
-                                        _dropTarget != null &&
-                                        eventData != null &&
-                                        _dropTarget.IsPositionInsideRect(eventData.position);
+            if (_fishingHudActions != null)
+            {
+                _fishingHudActions.HideHud();
+                return;
+            }
 
-            HideDragPreview();
-
-            if (isDroppedInsideTarget)
-                TryStartLureProductionAsync(lure, this.GetCancellationTokenOnDestroy()).Forget();
+            gameObject.SetActive(false);
         }
 
-        private async UniTaskVoid TryStartLureProductionAsync(FishingHudLureViewData lure, CancellationToken ct)
+        protected override void OnDisposing()
+        {
+            StopTimer();
+
+            if (_speedUpButton != null)
+                _speedUpButton.onClick.RemoveListener(OnSpeedUpClicked);
+
+            _spritesByCraftRecipeId.Clear();
+        }
+
+        private async UniTask TryStartLureProductionAsync(FishingHudLureViewData lure, CancellationToken ct)
         {
             if (lure == null || string.IsNullOrWhiteSpace(lure.CraftRecipeId))
             {
@@ -230,7 +163,7 @@ namespace Game.Fishing
             }
 
             _isCraftOperationRunning = true;
-            UpdateLureDragLocks();
+            RefreshDragLocks();
             UpdateSpeedUpButtonState();
 
             try
@@ -259,20 +192,9 @@ namespace Game.Fishing
             finally
             {
                 _isCraftOperationRunning = false;
-                UpdateLureDragLocks();
+                RefreshDragLocks();
                 UpdateSpeedUpButtonState();
             }
-        }
-
-        private void HideDragPreview()
-        {
-            if (_dragPreviewView == null)
-                return;
-
-            if (_dragPreviewInactiveContainer != null)
-                _dragPreviewView.transform.SetParent(_dragPreviewInactiveContainer, false);
-
-            _dragPreviewView.Hide();
         }
 
         private async UniTask RestoreActiveCraftAsync(CancellationToken ct)
@@ -330,6 +252,7 @@ namespace Game.Fishing
             ApplyCraftState();
             StartTimer();
             UpdateSpeedUpButtonState();
+            RefreshDragLocks();
         }
 
         private void ClearActiveCraft()
@@ -342,6 +265,7 @@ namespace Game.Fishing
             SetProductionIcon(null);
             ApplyCraftState();
             UpdateSpeedUpButtonState();
+            RefreshDragLocks();
         }
 
         private void StartTimer()
@@ -393,7 +317,7 @@ namespace Game.Fishing
                 return;
 
             _isCraftOperationRunning = true;
-            UpdateLureDragLocks();
+            RefreshDragLocks();
             UpdateSpeedUpButtonState();
 
             try
@@ -429,7 +353,7 @@ namespace Game.Fishing
             finally
             {
                 _isCraftOperationRunning = false;
-                UpdateLureDragLocks();
+                RefreshDragLocks();
                 UpdateSpeedUpButtonState();
             }
         }
@@ -442,7 +366,7 @@ namespace Game.Fishing
             try
             {
                 var renderData = await _fishingHudActions.GetLureRenderDataAsync(ct);
-                ApplyLureRenderData(renderData, ct);
+                RenderLureViews(renderData, ct);
             }
             catch (OperationCanceledException)
             {
@@ -495,45 +419,9 @@ namespace Game.Fishing
             finally
             {
                 _isSpeedUpRunning = false;
-                UpdateLureDragLocks();
+                RefreshDragLocks();
                 UpdateSpeedUpButtonState();
             }
-        }
-
-        private void UpdateLureDragLocks()
-        {
-            if (_lurePool == null)
-                return;
-
-            var shouldLock = _hasActiveCraft || _isCraftOperationRunning;
-            foreach (var lureView in _lurePool.ActiveElements())
-            {
-                _luresByView.TryGetValue(lureView, out var lure);
-                var isLocked = shouldLock || ShouldLockLure(lure);
-                lureView.SetDragLocked(isLocked);
-            }
-        }
-
-        private bool ShouldLockLure(FishingHudLureViewData lure)
-        {
-            return _hasActiveCraft ||
-                   _isCraftOperationRunning ||
-                   lure == null ||
-                   string.IsNullOrWhiteSpace(lure.CraftRecipeId);
-        }
-
-        private string GetLureDragBlockedMessage(FishingHudLureViewData lure)
-        {
-            if (_hasActiveCraft || _isCraftOperationRunning)
-                return "Lure production is already running.";
-
-            if (lure == null)
-                return "Lure is not configured.";
-
-            if (string.IsNullOrWhiteSpace(lure.CraftRecipeId))
-                return "This lure does not have a craft recipe configured.";
-
-            return "Lure production cannot be started right now.";
         }
 
         private string GetCraftingErrorMessage(CraftingError error)
@@ -548,20 +436,6 @@ namespace Game.Fishing
                 CraftingError.ConfigInvalid => "Crafting configuration is invalid.",
                 _ => "Failed to start lure production."
             };
-        }
-
-        private void ShowInfo(string message)
-        {
-            if (string.IsNullOrWhiteSpace(message))
-                return;
-
-            if (_fishingHudActions == null)
-            {
-                Debug.LogWarning($"[FishingHudWidget] Fishing HUD actions are not assigned. Info='{message}'.");
-                return;
-            }
-
-            _fishingHudActions.ShowInfo(message);
         }
 
         private void ApplyCraftState()
@@ -580,38 +454,9 @@ namespace Game.Fishing
             _speedUpButton.interactable = _hasActiveCraft && !_isCraftOperationRunning && !_isSpeedUpRunning;
         }
 
-        private void OnDestroy()
+        private DateTimeOffset GetCurrentTime()
         {
-            Dispose();
-        }
-
-        private void Dispose()
-        {
-            if (_isDisposed)
-                return;
-
-            _isDisposed = true;
-            UnregisterMissTap();
-            StopTimer();
-            HideDragPreview();
-
-            if (_speedUpButton != null)
-                _speedUpButton.onClick.RemoveListener(OnSpeedUpClicked);
-
-            _lurePool?.DisableAll();
-            _luresByView.Clear();
-            _spritesByCraftRecipeId.Clear();
-        }
-
-        private void RegisterMissTap()
-        {
-            if (isActiveAndEnabled)
-                _missTapInputController?.AddHud(this);
-        }
-
-        private void UnregisterMissTap()
-        {
-            _missTapInputController?.RemoveHud(this);
+            return _fishingHudActions?.GetCurrentTimeUtc() ?? DateTimeOffset.UtcNow;
         }
 
         private static string FormatTime(TimeSpan value)
@@ -622,11 +467,6 @@ namespace Game.Fishing
             return value.TotalHours >= 1d
                 ? $"{(int)value.TotalHours:00}:{value.Minutes:00}:{value.Seconds:00}"
                 : $"{value.Minutes:00}:{value.Seconds:00}";
-        }
-
-        private DateTimeOffset GetCurrentTime()
-        {
-            return _fishingHudActions?.GetCurrentTimeUtc() ?? DateTimeOffset.UtcNow;
         }
 
         private static void SetText(TMP_Text label, string value)

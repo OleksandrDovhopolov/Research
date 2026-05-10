@@ -21,3 +21,7 @@ MonoBehaviour:
     _addressableKey: FishingHudWidget
     _layer: 0
     _createOnInitialize: 0
+  - _widgetTypeName: Game.Fishing.FishingLureSelectionHudWidget
+    _addressableKey: LureSelectorHudWidget
+    _layer: 0
+    _createOnInitialize: 0

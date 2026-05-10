@@ -23,6 +23,8 @@ namespace Game.Fishing
             builder.Register<IFishCollectionDataBuilder, FishCollectionDataBuilder>(Lifetime.Singleton);
             builder.Register<IFishingHudLureDataBuilder, FishingHudLureDataBuilder>(Lifetime.Singleton);
             builder.RegisterEntryPoint<FishingHudFacade>(Lifetime.Singleton);
+            builder.Register<IFishingLureSelectionStartService, FishingLureSelectionStartService>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<FishingLureSelectionHudFacade>(Lifetime.Singleton);
             builder.Register<IFishingMinigameFacade, FishingMinigameFacade>(Lifetime.Singleton);
             builder.Register<IFishingService, FishingService>(Lifetime.Singleton);
             builder.Register<IFishingZoneInfoLogger, FishingZoneInfoLogger>(Lifetime.Singleton);

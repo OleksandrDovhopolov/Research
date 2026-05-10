@@ -13,20 +13,20 @@ namespace Game.Features.Locations
         private readonly UIManager _uiManager;
         private readonly IFishCollectionDataBuilder _fishCollectionDataBuilder;
         private readonly IFishingHudFacade _fishingHudFacade;
-        private readonly IFishingMinigameFacade _fishingMinigameFacade;
+        private readonly IFishingLureSelectionHudFacade _fishingLureSelectionHudFacade;
         private readonly ILocationFishingZoneIdResolver _zoneIdResolver;
 
         public RuntimeLocationInteractionUiGateway(
             UIManager uiManager,
             IFishCollectionDataBuilder fishCollectionDataBuilder,
             IFishingHudFacade fishingHudFacade,
-            IFishingMinigameFacade fishingMinigameFacade,
+            IFishingLureSelectionHudFacade fishingLureSelectionHudFacade,
             ILocationFishingZoneIdResolver zoneIdResolver)
         {
             _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
             _fishCollectionDataBuilder = fishCollectionDataBuilder ?? throw new ArgumentNullException(nameof(fishCollectionDataBuilder));
             _fishingHudFacade = fishingHudFacade ?? throw new ArgumentNullException(nameof(fishingHudFacade));
-            _fishingMinigameFacade = fishingMinigameFacade ?? throw new ArgumentNullException(nameof(fishingMinigameFacade));
+            _fishingLureSelectionHudFacade = fishingLureSelectionHudFacade ?? throw new ArgumentNullException(nameof(fishingLureSelectionHudFacade));
             _zoneIdResolver = zoneIdResolver ?? throw new ArgumentNullException(nameof(zoneIdResolver));
         }
 
@@ -85,18 +85,18 @@ namespace Game.Features.Locations
             try
             {
                 var zoneId = _zoneIdResolver.ResolveZoneId(context.Interactable);
-                Debug.LogWarning($"[LocationInteraction] Open fishing minigame requested: key='{GetInteractionKey(context)}', id='{GetInteractionId(context)}', zoneId='{zoneId}'.");
-                if (!await _fishingMinigameFacade.TryShowAsync(zoneId, CancellationToken.None))
+                Debug.LogWarning($"[LocationInteraction] Open fishing lure selection requested: key='{GetInteractionKey(context)}', id='{GetInteractionId(context)}', zoneId='{zoneId}'.");
+                if (!await _fishingLureSelectionHudFacade.TryShowAsync(zoneId, CancellationToken.None))
                 {
-                    Debug.LogWarning($"[LocationInteraction] Fishing minigame open rejected: key='{GetInteractionKey(context)}', id='{GetInteractionId(context)}', zoneId='{zoneId}'.");
+                    Debug.LogWarning($"[LocationInteraction] Fishing lure selection open rejected: key='{GetInteractionKey(context)}', id='{GetInteractionId(context)}', zoneId='{zoneId}'.");
                     return;
                 }
 
-                Debug.LogWarning($"[LocationInteraction] Fishing minigame open dispatched: key='{GetInteractionKey(context)}', id='{GetInteractionId(context)}', zoneId='{zoneId}'.");
+                Debug.LogWarning($"[LocationInteraction] Fishing lure selection open dispatched: key='{GetInteractionKey(context)}', id='{GetInteractionId(context)}', zoneId='{zoneId}'.");
             }
             catch (Exception exception)
             {
-                Debug.LogError($"[LocationInteraction] Failed to open fishing minigame: key='{GetInteractionKey(context)}', id='{GetInteractionId(context)}'. {exception}");
+                Debug.LogError($"[LocationInteraction] Failed to open fishing lure selection: key='{GetInteractionKey(context)}', id='{GetInteractionId(context)}'. {exception}");
                 _uiManager.Show<InfoWidgetController>(new InfoWidgetArg("Fishing is temporarily unavailable."));
             }
         }

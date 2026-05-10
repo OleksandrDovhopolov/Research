@@ -22,6 +22,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 063461bedd269914ab5c7c125e9fb38d
+    m_Address: LureSelectorHudWidget
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1b23f8eeafa77564f8fc07c5bded7b89
     m_Address: fallfish
     m_ReadOnly: 0
@@ -29,11 +34,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1bd8bf266177abb49b3a1581a44aba3e
     m_Address: FishCollectionWindow
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e5f70123456789abcdef012349abcde0
-    m_Address: FishingMinigameWindow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -219,6 +219,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e337c4c84d04fac43b63e8bdccbb8521
     m_Address: northern_pike
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e5f70123456789abcdef012349abcde0
+    m_Address: FishingMinigameWindow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
