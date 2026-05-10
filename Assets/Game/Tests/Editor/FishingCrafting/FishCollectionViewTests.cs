@@ -54,7 +54,9 @@ namespace Game.Tests.Editor.FishingCrafting
             var sprites = new Dictionary<string, Sprite>(StringComparer.Ordinal)
             {
                 ["fish_a"] = spriteA,
-                ["fish_b"] = spriteB
+                ["fish_b"] = spriteB,
+                ["lure_a"] = spriteA,
+                ["lure_b"] = spriteB
             };
 
             SetStaticField<Func<string, CancellationToken, Task<Sprite>>>("s_spriteLoader", async (address, _) =>
@@ -67,8 +69,8 @@ namespace Game.Tests.Editor.FishingCrafting
             var (view, contentContainer, loadingContainer, _) = CreateView();
             var entries = new[]
             {
-                CreateEntry("fish_a"),
-                CreateEntry("fish_b")
+                CreateEntry("fish_a", "lure_a"),
+                CreateEntry("fish_b", "lure_b")
             };
 
             view.Render(entries);
@@ -82,6 +84,8 @@ namespace Game.Tests.Editor.FishingCrafting
             Assert.That(contentContainer.activeSelf, Is.True);
             Assert.That(loadCounts["fish_a"], Is.EqualTo(1));
             Assert.That(loadCounts["fish_b"], Is.EqualTo(1));
+            Assert.That(loadCounts["lure_a"], Is.EqualTo(1));
+            Assert.That(loadCounts["lure_b"], Is.EqualTo(1));
 
             view.Render(entries);
 
@@ -89,6 +93,8 @@ namespace Game.Tests.Editor.FishingCrafting
             Assert.That(contentContainer.activeSelf, Is.True);
             Assert.That(loadCounts["fish_a"], Is.EqualTo(1));
             Assert.That(loadCounts["fish_b"], Is.EqualTo(1));
+            Assert.That(loadCounts["lure_a"], Is.EqualTo(1));
+            Assert.That(loadCounts["lure_b"], Is.EqualTo(1));
         }
 
         [UnityTest]
@@ -107,14 +113,14 @@ namespace Game.Tests.Editor.FishingCrafting
             var (view, contentContainer, loadingContainer, _) = CreateView();
             var entries = new[]
             {
-                CreateEntry("shared_fish"),
-                CreateEntry("shared_fish")
+                CreateEntry("shared_fish", "shared_lure"),
+                CreateEntry("shared_fish", "shared_lure")
             };
 
             view.Render(entries);
             yield return null;
 
-            Assert.That(loadCount, Is.EqualTo(1));
+            Assert.That(loadCount, Is.EqualTo(2));
             Assert.That(loadingContainer.activeSelf, Is.False);
             Assert.That(contentContainer.activeSelf, Is.True);
         }
@@ -181,12 +187,12 @@ namespace Game.Tests.Editor.FishingCrafting
             });
             SetStaticField<Action<string>>("s_spriteReleaser", address =>
             {
-                if (address == "fish_release")
+                if (address == "fish_release" || address == "lure_release")
                     releaseCount++;
             });
 
             var (view, contentContainer, _, _) = CreateView();
-            var entries = new[] { CreateEntry("fish_release") };
+            var entries = new[] { CreateEntry("fish_release", "lure_release") };
 
             view.Render(entries);
             yield return null;
@@ -202,7 +208,7 @@ namespace Game.Tests.Editor.FishingCrafting
 
             UnityEngine.Object.DestroyImmediate(view.gameObject);
 
-            Assert.That(releaseCount, Is.EqualTo(1));
+            Assert.That(releaseCount, Is.EqualTo(2));
         }
 
         private (FishCollectionView View, GameObject ContentContainer, GameObject LoadingContainer, UIListPool<FishCollectionItemView> Pool) CreateView()
@@ -234,8 +240,13 @@ namespace Game.Tests.Editor.FishingCrafting
             return (view, contentContainer, loadingContainer, pool);
         }
 
-        private FishCollectionEntryViewData CreateEntry(string spriteAddress)
+        private FishCollectionEntryViewData CreateEntry(string spriteAddress, params string[] lureSpriteAddresses)
         {
+            var lures = lureSpriteAddresses == null
+                ? Array.Empty<FishCollectionLureViewData>()
+                : Array.ConvertAll(lureSpriteAddresses, lureSpriteAddress =>
+                    new FishCollectionLureViewData(lureSpriteAddress, lureSpriteAddress, lureSpriteAddress));
+
             return new FishCollectionEntryViewData(
                 fishId: spriteAddress,
                 spriteAddress: spriteAddress,
@@ -245,6 +256,9 @@ namespace Game.Tests.Editor.FishingCrafting
                 itemType: "fish",
                 minWeight: 0f,
                 maxWeight: 0f,
+                bestCaughtWeight: 0f,
+                isDiscovered: false,
+                lures: lures,
                 progress: null);
         }
 

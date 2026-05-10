@@ -32,7 +32,12 @@ namespace Game.Fishing
 
             var fishRoot = await LoadAsync<FishConfigRoot>(FishingConfigPaths.Fish, ct);
             var zonesRoot = await LoadAsync<FishingZonesConfigRoot>(FishingConfigPaths.Zones, ct);
+            var luresRoot = await LoadAsync<LuresConfigRoot>(FishingConfigPaths.Lures, ct);
             var waterBodyTypesById = (zonesRoot.WaterBodyTypes ?? new List<WaterBodyTypeConfig>())
+                .Where(x => x != null && !string.IsNullOrWhiteSpace(x.Id))
+                .GroupBy(x => x.Id, StringComparer.Ordinal)
+                .ToDictionary(group => group.Key, group => group.Last(), StringComparer.Ordinal);
+            var luresById = (luresRoot.Lures ?? new List<LureConfig>())
                 .Where(x => x != null && !string.IsNullOrWhiteSpace(x.Id))
                 .GroupBy(x => x.Id, StringComparer.Ordinal)
                 .ToDictionary(group => group.Key, group => group.Last(), StringComparer.Ordinal);
@@ -47,6 +52,7 @@ namespace Game.Fishing
 
                 var progress = await _fishBookService.GetProgressAsync(fish.Id, ct);
                 var waterBodyTypes = ResolveWaterBodyTypes(waterBodyTypesById, fish);
+                var lures = ResolveLures(luresById, fish);
                 var (minWeight, maxWeight) = CalculateWeightRange(fish);
 
                 entries.Add(new FishCollectionEntryViewData(
@@ -58,6 +64,9 @@ namespace Game.Fishing
                     FishItemType,
                     minWeight,
                     maxWeight,
+                    progress?.BestWeight ?? 0f,
+                    progress?.IsDiscovered == true,
+                    lures,
                     progress));
             }
 
@@ -125,6 +134,32 @@ namespace Game.Fishing
             }
 
             return string.Join(", ", names.Where(name => !string.IsNullOrWhiteSpace(name)));
+        }
+
+        private static IReadOnlyList<FishCollectionLureViewData> ResolveLures(
+            IReadOnlyDictionary<string, LureConfig> luresById,
+            FishConfig fish)
+        {
+            if (fish?.AvailableLureIds == null || fish.AvailableLureIds.Count == 0)
+                return Array.Empty<FishCollectionLureViewData>();
+
+            var result = new List<FishCollectionLureViewData>(fish.AvailableLureIds.Count);
+            foreach (var lureId in fish.AvailableLureIds)
+            {
+                if (string.IsNullOrWhiteSpace(lureId))
+                    continue;
+
+                if (luresById.TryGetValue(lureId, out var lure) && lure != null)
+                {
+                    result.Add(new FishCollectionLureViewData(lure.Id, lure.Id, lure.DisplayName));
+                }
+                else
+                {
+                    result.Add(new FishCollectionLureViewData(lureId, lureId, lureId));
+                }
+            }
+
+            return result;
         }
     }
 }

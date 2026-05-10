@@ -58,7 +58,7 @@ namespace Game.Fishing
             ApplySpritesToVisibleItems();
 
             var spriteAddressesToLoad = entries
-                .Select(entry => entry?.SpriteAddress)
+                .SelectMany(GetSpriteAddresses)
                 .Where(spriteAddress => !string.IsNullOrWhiteSpace(spriteAddress))
                 .Distinct(StringComparer.Ordinal)
                 .Where(spriteAddress => !_spriteCache.ContainsKey(spriteAddress))
@@ -225,11 +225,47 @@ namespace Game.Fishing
 
             foreach (var itemView in _entriesPool.ActiveElements())
             {
-                if (itemView == null || string.IsNullOrWhiteSpace(itemView.SpriteAddress))
+                if (itemView == null)
                     continue;
 
-                if (_spriteCache.TryGetValue(itemView.SpriteAddress, out var sprite))
-                    itemView.SetSprite(sprite);
+                if (!string.IsNullOrWhiteSpace(itemView.SpriteAddress) &&
+                    _spriteCache.TryGetValue(itemView.SpriteAddress, out var fishSprite))
+                {
+                    itemView.SetSprite(fishSprite);
+                }
+
+                var lureSpriteAddresses = itemView.LureSpriteAddresses;
+                if (lureSpriteAddresses == null)
+                    continue;
+
+                for (var i = 0; i < lureSpriteAddresses.Count; i++)
+                {
+                    var lureSpriteAddress = lureSpriteAddresses[i];
+                    if (string.IsNullOrWhiteSpace(lureSpriteAddress))
+                        continue;
+
+                    if (_spriteCache.TryGetValue(lureSpriteAddress, out var lureSprite))
+                        itemView.SetLureSprite(lureSpriteAddress, lureSprite);
+                }
+            }
+        }
+
+        private static IEnumerable<string> GetSpriteAddresses(FishCollectionEntryViewData entry)
+        {
+            if (entry == null)
+                yield break;
+
+            if (!string.IsNullOrWhiteSpace(entry.SpriteAddress))
+                yield return entry.SpriteAddress;
+
+            if (entry.Lures == null)
+                yield break;
+
+            for (var i = 0; i < entry.Lures.Count; i++)
+            {
+                var lure = entry.Lures[i];
+                if (lure != null && !string.IsNullOrWhiteSpace(lure.SpriteAddress))
+                    yield return lure.SpriteAddress;
             }
         }
 

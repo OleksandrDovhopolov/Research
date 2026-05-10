@@ -25,6 +25,9 @@ namespace Game.Fishing
             string itemType,
             float minWeight,
             float maxWeight,
+            float bestCaughtWeight,
+            bool isDiscovered,
+            IReadOnlyList<FishCollectionLureViewData> lures,
             FishBookProgress progress)
         {
             FishId = fishId ?? string.Empty;
@@ -35,6 +38,9 @@ namespace Game.Fishing
             ItemType = itemType ?? string.Empty;
             MinWeight = minWeight;
             MaxWeight = maxWeight;
+            BestCaughtWeight = bestCaughtWeight;
+            IsDiscovered = isDiscovered;
+            Lures = lures ?? Array.Empty<FishCollectionLureViewData>();
             Progress = progress;
         }
 
@@ -46,6 +52,23 @@ namespace Game.Fishing
         public string ItemType { get; }
         public float MinWeight { get; }
         public float MaxWeight { get; }
+        public float BestCaughtWeight { get; }
+        public bool IsDiscovered { get; }
+        public IReadOnlyList<FishCollectionLureViewData> Lures { get; }
         public FishBookProgress Progress { get; }
+    }
+
+    public sealed class FishCollectionLureViewData
+    {
+        public FishCollectionLureViewData(string lureId, string spriteAddress, string displayName)
+        {
+            LureId = lureId ?? string.Empty;
+            SpriteAddress = spriteAddress ?? string.Empty;
+            DisplayName = displayName ?? string.Empty;
+        }
+
+        public string LureId { get; }
+        public string SpriteAddress { get; }
+        public string DisplayName { get; }
     }
 }

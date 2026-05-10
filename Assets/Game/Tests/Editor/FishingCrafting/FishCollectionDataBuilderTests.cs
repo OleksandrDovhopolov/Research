@@ -58,6 +58,20 @@ namespace Game.Tests.Editor.FishingCrafting
         }
 
         [Test]
+        public void BuildAsync_ResolvesLureViewData_AndBestCaughtWeight()
+        {
+            var builder = CreateBuilder();
+
+            var args = builder.BuildAsync(CancellationToken.None).GetAwaiter().GetResult();
+            var roach = args.Entries[0];
+
+            Assert.That(roach.BestCaughtWeight, Is.EqualTo(2.34f));
+            Assert.That(roach.IsDiscovered, Is.True);
+            Assert.That(roach.Lures.Select(x => x.LureId), Is.EqualTo(new[] { "red_lure", "green_lure" }));
+            Assert.That(roach.Lures.Select(x => x.SpriteAddress), Is.EqualTo(new[] { "red_lure", "green_lure" }));
+        }
+
+        [Test]
         public void BuildAsync_KeepsEntryWhenProgressIsMissing()
         {
             var builder = CreateBuilder();
@@ -67,6 +81,8 @@ namespace Game.Tests.Editor.FishingCrafting
 
             Assert.That(pike.Progress, Is.Null);
             Assert.That(pike.DisplayName, Is.EqualTo("Pike"));
+            Assert.That(pike.IsDiscovered, Is.False);
+            Assert.That(pike.BestCaughtWeight, Is.EqualTo(0f));
         }
 
         [Test]
@@ -110,6 +126,7 @@ namespace Game.Tests.Editor.FishingCrafting
                             {
                                 Id = "roach",
                                 DisplayName = "Roach",
+                                AvailableLureIds = new List<string> { "red_lure", "green_lure" },
                                 WaterBodyTypes = new List<string> { "lake" },
                                 BehaviorType = "calm",
                                 WeightThresholds = new FishWeightThresholds
@@ -124,6 +141,7 @@ namespace Game.Tests.Editor.FishingCrafting
                             {
                                 Id = "pike",
                                 DisplayName = "Pike",
+                                AvailableLureIds = new List<string> { "green_lure" },
                                 WaterBodyTypes = new List<string> { "fresh", "river" },
                                 BehaviorType = "aggressive",
                                 WeightThresholds = new FishWeightThresholds
@@ -159,6 +177,14 @@ namespace Game.Tests.Editor.FishingCrafting
                             new() { Id = "lake", DisplayName = "Lake" },
                             new() { Id = "fresh", DisplayName = "Fresh Water" },
                             new() { Id = "river", DisplayName = "River" }
+                        }
+                    })),
+                    FishingConfigPaths.Lures => UniTask.FromResult(JsonConvert.SerializeObject(new LuresConfigRoot
+                    {
+                        Lures = new List<LureConfig>
+                        {
+                            new() { Id = "red_lure", DisplayName = "Red Lure" },
+                            new() { Id = "green_lure", DisplayName = "Green Lure" }
                         }
                     })),
                     _ => UniTask.FromResult(string.Empty)
