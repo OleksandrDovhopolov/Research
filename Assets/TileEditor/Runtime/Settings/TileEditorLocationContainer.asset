@@ -25,3 +25,11 @@ MonoBehaviour:
     <GroupName>k__BackingField: main_location
     <PrefabFolders>k__BackingField:
     - main_location
+  - <Location>k__BackingField: {fileID: 4900000, guid: 6f945bdf9ba313445ab4be62b9f3ffb4, type: 3}
+    <GroupName>k__BackingField: Fishing
+    <PrefabFolders>k__BackingField:
+    - Fishing
+  - <Location>k__BackingField: {fileID: 4900000, guid: a6c2dfe4cce95434082177310309d62f, type: 3}
+    <GroupName>k__BackingField: Test
+    <PrefabFolders>k__BackingField:
+    - Test

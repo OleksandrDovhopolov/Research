@@ -828,7 +828,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3024ba682f8862e4b9cae6a86c9e3432, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainLocationJson: {fileID: 4900000, guid: 900bd254bde267943b50aa2f3e188118, type: 3}
+  _mainLocationJson: {fileID: 4900000, guid: 6f945bdf9ba313445ab4be62b9f3ffb4, type: 3}
   _tileEditorSettings: {fileID: 11400000, guid: ed217864ea6ce994a8764122645b26ce, type: 2}
   _locationRoot: {fileID: 508951255}
 --- !u!4 &997596157
@@ -1309,7 +1309,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3210837231320595796, guid: ccdecefd6361c2040be07192f6d62b45, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3210837231320595796, guid: ccdecefd6361c2040be07192f6d62b45, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1342,6 +1342,10 @@ PrefabInstance:
     - target: {fileID: 7974451566693395181, guid: ccdecefd6361c2040be07192f6d62b45, type: 3}
       propertyPath: m_Name
       value: CameraComponent
+      objectReference: {fileID: 0}
+    - target: {fileID: 8264957256418984734, guid: ccdecefd6361c2040be07192f6d62b45, type: 3}
+      propertyPath: orthographic size
+      value: 40
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

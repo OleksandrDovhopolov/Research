@@ -382,6 +382,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9f823d25553ed654d978c916a84af07f
+    m_Address: Cental_Location
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a16d59af150ba4422a75afadfa0bb57f
     m_Address: Trail_Tile_05
     m_ReadOnly: 0
@@ -572,6 +577,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1a5eba309ff4bf4cb8e1597fd9cf304
+    m_Address: Test_Location
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d2449a62cd3f74f7abb24c7af89a1923
     m_Address: Rock_06
     m_ReadOnly: 0
@@ -584,6 +594,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d7ef2d46a69c141c997438d57f96d295
     m_Address: Rock_Hight_01_02
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d8a490b7b3bb8574eb8bb8e63978f0c6
+    m_Address: Right_Location
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -619,6 +634,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e97e915c0f9d24de1bd8fef09fd6cc7a
     m_Address: Trail_Tile_Stones_03
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ecee325706a65b245b5723d2b93992bf
+    m_Address: Left_Location
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
