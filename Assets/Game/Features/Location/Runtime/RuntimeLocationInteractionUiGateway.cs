@@ -40,19 +40,9 @@ namespace Game.Features.Locations
             OpenFisherHouseProductionAsync(context).Forget();
         }
 
-        public void OpenChestItems(LocationInteractionContext context)
-        {
-            Log(context, "Open chest items");
-        }
-
         public void OpenFishCollection(LocationInteractionContext context)
         {
             OpenFishCollectionAsync(context).Forget();
-        }
-
-        public void OpenCustom(LocationInteractionContext context)
-        {
-            Log(context, "Open custom interaction");
         }
 
         private async UniTaskVoid OpenFishCollectionAsync(LocationInteractionContext context)

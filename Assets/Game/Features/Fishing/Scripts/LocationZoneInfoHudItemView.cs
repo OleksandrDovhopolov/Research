@@ -1,3 +1,4 @@
+using System;
 using Cysharp.Threading.Tasks;
 using Game.Features.Locations;
 using TMPro;
@@ -13,16 +14,18 @@ namespace Game.Fishing
         [SerializeField] private Button _button;
         [SerializeField] private TMP_Text _label;
 
-        private ILocationInteractable _interactable;
         private Transform _target;
+        private ILocationInteractable _interactable;
         private IFishingZoneInfoLogger _zoneInfoLogger;
         private ILocationFishingZoneIdResolver _zoneIdResolver;
+        private IFishingLureSelectionHudFacade _fishingLureSelectionHudFacade;
 
         [Inject]
-        public void Construct(IFishingZoneInfoLogger zoneInfoLogger, ILocationFishingZoneIdResolver zoneIdResolver)
+        public void Construct(IFishingZoneInfoLogger zoneInfoLogger, ILocationFishingZoneIdResolver zoneIdResolver, IFishingLureSelectionHudFacade fishingLureSelectionHudFacade)
         {
             _zoneInfoLogger = zoneInfoLogger;
             _zoneIdResolver = zoneIdResolver;
+            _fishingLureSelectionHudFacade = fishingLureSelectionHudFacade ?? throw new ArgumentNullException(nameof(fishingLureSelectionHudFacade));
         }
 
         public void Initialize(ILocationInteractable interactable, string label)

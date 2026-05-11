@@ -20,7 +20,6 @@ namespace InputSystem
             builder.Register<LocationFishingZoneIdResolver>(Lifetime.Singleton).As<ILocationFishingZoneIdResolver>();
             builder.Register<FishingZoneInteractionHandler>(Lifetime.Singleton);
             builder.Register<FisherHouseInteractionHandler>(Lifetime.Singleton);
-            builder.Register<ChestInteractionHandler>(Lifetime.Singleton);
             builder.Register<FishCollectionInteractionHandler>(Lifetime.Singleton);
             builder.Register<UnknownLocationInteractionHandler>(Lifetime.Singleton);
 
@@ -33,7 +32,6 @@ namespace InputSystem
             var router = resolver.Resolve<LocationInteractionRouter>();
             router.RegisterHandler(LocationInteractionKeys.FishingZone, resolver.Resolve<FishingZoneInteractionHandler>());
             router.RegisterHandler(LocationInteractionKeys.FisherHouse, resolver.Resolve<FisherHouseInteractionHandler>());
-            router.RegisterHandler(LocationInteractionKeys.Chest, resolver.Resolve<ChestInteractionHandler>());
             router.RegisterHandler(LocationInteractionKeys.FishCollection, resolver.Resolve<FishCollectionInteractionHandler>());
             router.RegisterFallbackHandler(resolver.Resolve<UnknownLocationInteractionHandler>());
 
