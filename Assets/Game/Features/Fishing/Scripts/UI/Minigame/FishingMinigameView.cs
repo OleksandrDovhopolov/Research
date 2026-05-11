@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UISystem;
@@ -13,19 +14,21 @@ namespace Game.Fishing
         private const float PulseAmplitude = 0.08f;
         private const float PulseSpeed = 2.7f;
 
-        [SerializeField] private Sprite _timingCircleOuter;
         [SerializeField] private Sprite _timingCircleShrinking;
         [SerializeField] private Sprite _timingCircleTarget;
+        [SerializeField] private Sprite _circleSuccessFlash;
+        [SerializeField] private Sprite _circleFailFlash;
         [SerializeField] private Sprite _circlePulse;
 
         private Button _screenTapButton;
         private RawImage _background;
         private RawImage _panel;
         private RectTransform _circleRoot;
-        private Image _outerRing;
         private Image _pulseRing;
         private Image _targetRing;
         private Image _shrinkingRing;
+        private Image _successFlash;
+        private Image _failFlash;
 
         private FishingMinigameArgs _args;
         private float _elapsed;
@@ -71,10 +74,12 @@ namespace Game.Fishing
             EnsureBuilt();
             ApplyLayout();
 
+
+            SetGraphicVisible(_successFlash, false);
+            SetGraphicVisible(_failFlash, false);
+            
             if (_screenTapButton != null)
                 _screenTapButton.interactable = true;
-
-            Debug.LogWarning($"[FishingMinigameView] Initialized. ZoneId='{_args.ZoneId}', AttemptId='{_args.AttemptId}', FishId='{_args.SelectedFish?.Id ?? string.Empty}', StartRadius={_args.RuntimeConfig.StartRadius:0.##}, TargetRadius={_args.RuntimeConfig.TargetRadius:0.##}, EndRadius={_args.RuntimeConfig.EndRadius:0.##}, Duration={_args.RuntimeConfig.ShrinkDurationSeconds:0.###}.");
         }
 
         public void BeginRunning()
@@ -82,17 +87,15 @@ namespace Game.Fishing
             _elapsed = 0f;
             _isRunning = true;
             _resolutionCommitted = false;
-            Debug.LogWarning($"[FishingMinigameView] BeginRunning. AttemptId='{_args?.AttemptId.ToString() ?? string.Empty}'.");
         }
 
         public void ShowResolvingState()
         {
             _isRunning = false;
-            
+
+
             if (_screenTapButton != null)
                 _screenTapButton.interactable = false;
-
-            Debug.LogWarning($"[FishingMinigameView] ShowResolvingState. AttemptId='{_args?.AttemptId.ToString() ?? string.Empty}'.");
         }
 
         public async UniTask ShowResultAsync(bool isSuccess, bool isPerfect, CancellationToken ct)
@@ -102,8 +105,8 @@ namespace Game.Fishing
             if (_screenTapButton != null)
                 _screenTapButton.interactable = false;
 
-            
-            Debug.LogWarning($"[FishingMinigameView] ShowResult. AttemptId='{_args?.AttemptId.ToString() ?? string.Empty}', Success={isSuccess}, Perfect={isPerfect}.");
+            SetGraphicVisible(_successFlash, isSuccess);
+            SetGraphicVisible(_failFlash, !isSuccess);
 
             await UniTask.Delay(TimeSpan.FromSeconds(ResultDisplaySeconds), DelayType.UnscaledDeltaTime, PlayerLoopTiming.Update, ct);
         }
@@ -140,12 +143,11 @@ namespace Game.Fishing
             _circleRoot = CreateRect("CircleRoot", panelRect);
             SetRect(_circleRoot, new Vector2(0.5f, 0.48f), new Vector2(0.5f, 0.48f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(520f, 520f));
 
-            _outerRing = CreateSpriteImage("OuterRing", _circleRoot, _timingCircleOuter, Color.white);
             _pulseRing = CreateSpriteImage("PulseRing", _circleRoot, _circlePulse, new Color(1f, 1f, 1f, 0.72f));
             _targetRing = CreateSpriteImage("TargetRing", _circleRoot, _timingCircleTarget, Color.white);
             _shrinkingRing = CreateSpriteImage("ShrinkingRing", _circleRoot, _timingCircleShrinking, Color.white);
-
-            Debug.LogWarning("[FishingMinigameView] UI hierarchy was built.");
+            _successFlash = CreateSpriteImage("SuccessFlash", _circleRoot, _circleSuccessFlash, new Color(1f, 1f, 1f, 0.96f));
+            _failFlash = CreateSpriteImage("FailFlash", _circleRoot, _circleFailFlash, new Color(1f, 1f, 1f, 0.96f));
         }
 
         private void ApplyLayout()
@@ -156,15 +158,20 @@ namespace Game.Fishing
             var config = _args.RuntimeConfig;
             var outerRadius = Mathf.Max(config.StartRadius, config.TargetRadius) + 24f;
 
-            SetCircleDiameter(_outerRing.rectTransform, outerRadius * 2f);
             SetCircleDiameter(_pulseRing.rectTransform, (config.TargetRadius + config.SuccessRadiusThreshold) * 2f);
             SetCircleDiameter(_targetRing.rectTransform, config.TargetRadius * 2f);
+            SetCircleDiameter(_successFlash.rectTransform, outerRadius * 2.08f);
+            SetCircleDiameter(_failFlash.rectTransform, outerRadius * 2.08f);
             ApplyShrinkingRadius(config.StartRadius);
 
-            ApplySprite(_outerRing, _timingCircleOuter, Color.white);
             ApplySprite(_pulseRing, _circlePulse, new Color(1f, 1f, 1f, 0.72f));
             ApplySprite(_targetRing, _timingCircleTarget, Color.white);
             ApplySprite(_shrinkingRing, _timingCircleShrinking, Color.white);
+            ApplySprite(_successFlash, _circleSuccessFlash, new Color(1f, 1f, 1f, 0.96f));
+            ApplySprite(_failFlash, _circleFailFlash, new Color(1f, 1f, 1f, 0.96f));
+
+            SetGraphicVisible(_successFlash, false);
+            SetGraphicVisible(_failFlash, false);
         }
 
         private void ApplyShrinkingRadius(float radius)
@@ -185,7 +192,6 @@ namespace Game.Fishing
             if (!_isRunning)
                 return;
 
-            Debug.LogWarning($"[FishingMinigameView] Screen tap received. AttemptId='{_args?.AttemptId.ToString() ?? string.Empty}', Radius={_currentRadius:0.###}.");
             CommitResolution(isTap: true, isTimeout: false);
         }
 
@@ -200,7 +206,6 @@ namespace Game.Fishing
             var distance = Mathf.Abs(_currentRadius - _args.RuntimeConfig.TargetRadius);
             var isSuccess = isTap && distance <= _args.RuntimeConfig.SuccessRadiusThreshold;
             var isPerfect = isSuccess && distance <= _args.RuntimeConfig.PerfectRadiusThreshold;
-            Debug.LogWarning($"[FishingMinigameView] CommitResolution. AttemptId='{_args.AttemptId}', IsTap={isTap}, IsTimeout={isTimeout}, Radius={_currentRadius:0.###}, TargetRadius={_args.RuntimeConfig.TargetRadius:0.###}, Distance={distance:0.###}, SuccessThreshold={_args.RuntimeConfig.SuccessRadiusThreshold:0.###}, PerfectThreshold={_args.RuntimeConfig.PerfectRadiusThreshold:0.###}, Success={isSuccess}, Perfect={isPerfect}.");
             ResolutionCommitted?.Invoke(new FishingMinigameResolution(isSuccess, isPerfect, isTimeout, _currentRadius));
         }
 
@@ -214,6 +219,12 @@ namespace Game.Fishing
             image.enabled = sprite != null;
             image.preserveAspect = true;
             image.raycastTarget = false;
+        }
+
+        private static void SetGraphicVisible(Graphic graphic, bool isVisible)
+        {
+            if (graphic != null)
+                graphic.gameObject.SetActive(isVisible);
         }
 
         private static RectTransform CreateRect(string name, RectTransform parent)
