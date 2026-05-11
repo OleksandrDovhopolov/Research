@@ -1,5 +1,4 @@
 using System;
-using Cysharp.Threading.Tasks;
 using Game.Features.Locations;
 using TMPro;
 using UnityEngine;
@@ -16,16 +15,12 @@ namespace Game.Fishing
 
         private Transform _target;
         private ILocationInteractable _interactable;
-        private IFishingZoneInfoLogger _zoneInfoLogger;
-        private ILocationFishingZoneIdResolver _zoneIdResolver;
-        private IFishingLureSelectionHudFacade _fishingLureSelectionHudFacade;
+        private LocationInteractionRouter _locationInteractionRouter;
 
         [Inject]
-        public void Construct(IFishingZoneInfoLogger zoneInfoLogger, ILocationFishingZoneIdResolver zoneIdResolver, IFishingLureSelectionHudFacade fishingLureSelectionHudFacade)
+        public void Construct(LocationInteractionRouter locationInteractionRouter)
         {
-            _zoneInfoLogger = zoneInfoLogger;
-            _zoneIdResolver = zoneIdResolver;
-            _fishingLureSelectionHudFacade = fishingLureSelectionHudFacade ?? throw new ArgumentNullException(nameof(fishingLureSelectionHudFacade));
+            _locationInteractionRouter = locationInteractionRouter ?? throw new ArgumentNullException(nameof(locationInteractionRouter));
         }
 
         public void Initialize(ILocationInteractable interactable, string label)
@@ -79,9 +74,9 @@ namespace Game.Fishing
 
         private void HandleClicked()
         {
-            if (_zoneInfoLogger != null)
+            if (_interactable != null)
             {
-                _zoneInfoLogger.LogZoneInfoAsync(_zoneIdResolver.ResolveZoneId(_interactable)).Forget();
+                _locationInteractionRouter?.Route(_interactable, _target.position);
                 return;
             }
 

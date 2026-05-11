@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace Game.Features.Locations
 {
+    //TODO does it should be in Assets/Game/Features/Location/Contracts/Location.Contracts.asmdef  / 
+    // + Assets/Game/Features/Location/Runtime should have asmdef ? 
     public sealed class LocationInteractionRouter
     {
         private readonly Dictionary<string, ILocationInteractionHandler> _handlers = new(System.StringComparer.Ordinal);

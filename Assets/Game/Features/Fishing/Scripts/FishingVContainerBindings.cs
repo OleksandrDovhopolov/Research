@@ -27,7 +27,6 @@ namespace Game.Fishing
             builder.RegisterEntryPoint<FishingLureSelectionHudFacade>(Lifetime.Singleton);
             builder.Register<IFishingMinigameFacade, FishingMinigameFacade>(Lifetime.Singleton);
             builder.Register<IFishingService, FishingService>(Lifetime.Singleton);
-            builder.Register<IFishingZoneInfoLogger, FishingZoneInfoLogger>(Lifetime.Singleton);
         }
     }
 }

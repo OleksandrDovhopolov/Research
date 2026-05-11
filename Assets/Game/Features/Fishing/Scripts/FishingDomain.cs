@@ -203,11 +203,6 @@ namespace Game.Fishing
         IReadOnlyCollection<string> GetActiveEventIds();
     }
 
-    public interface IFishingZoneInfoLogger
-    {
-        UniTask LogZoneInfoAsync(string zoneId, CancellationToken ct = default);
-    }
-
     public interface IFishingRandom
     {
         double NextDouble();

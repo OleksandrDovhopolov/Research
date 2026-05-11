@@ -10,7 +10,7 @@
         "CoreResources",
         "Infrastructure",
         "Core.Models",
-        "Location.Contracts",
+        "Location",
         "UISystem",
         "Game.Crafting",
         "EventOrchestration"

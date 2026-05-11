@@ -1,8 +1,10 @@
+using System;
 using Fabros.TileEditor;
 using UnityEngine;
 
 namespace Game.Features.Locations
 {
+    [Obsolete]
     public sealed class RuntimeOrthographicLocationCameraController : MonoBehaviour
     {
         private const float ZoomMin = 1f;
