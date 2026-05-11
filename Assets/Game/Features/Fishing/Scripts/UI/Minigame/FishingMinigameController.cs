@@ -63,6 +63,8 @@ namespace Game.Fishing
             ResolveAttemptAsync(resolution).Forget();
         }
 
+        private FishingCatchResult _result;
+        
         private async UniTaskVoid ResolveAttemptAsync(FishingMinigameResolution resolution)
         {
             View.ShowResolvingState();
@@ -71,7 +73,7 @@ namespace Game.Fishing
             FishingCatchResult result = null;
             try
             {
-                result = await _fishingService.CompleteFishingAsync(Args.AttemptId, resolution.IsSuccess, CancellationToken.None);
+                _result = await _fishingService.CompleteFishingAsync(Args.AttemptId, resolution.IsSuccess, CancellationToken.None);
                 Debug.LogWarning($"[FishingMinigameController] CompleteFishingAsync finished. AttemptId='{Args.AttemptId}', Success={result?.Success ?? false}, Error={result?.Error ?? FishingError.ConfigInvalid}, FishId='{result?.FishId ?? string.Empty}', Weight={result?.Weight ?? 0f:0.##}, State={(result != null ? result.State.ToString() : string.Empty)}.");
             }
             catch (Exception exception)
@@ -79,13 +81,25 @@ namespace Game.Fishing
                 Debug.LogError($"[FishingMinigameController] Completing fishing attempt '{Args.AttemptId}' failed. {exception}");
             }
 
-            var isCatchSuccessful = result != null && result.Success;
+            var isCatchSuccessful = _result is { Success: true };
             var title = BuildResultTitle(isCatchSuccessful, resolution.IsPerfect, resolution.IsTimeout);
 
             ShowInfoResult(title);
             await View.ShowResultAsync(isCatchSuccessful, resolution.IsPerfect && isCatchSuccessful, CancellationToken.None);
             Debug.LogWarning($"[FishingMinigameController] Result shown. AttemptId='{Args.AttemptId}', CatchSuccessful={isCatchSuccessful}, Title='{title}'.");
             UIManager.Hide<FishingMinigameController>();
+        }
+
+        protected override void OnHideComplete(bool isClosed)
+        {
+            base.OnHideComplete(isClosed);
+            if (_result.Success)
+            {
+                //TODO need to get MaxWeight
+                // TODO need to get isNew
+                var args = new NewFishArgs(_result.FishId, true, _result.Weight);
+                UIManager.Show<NewFishController>(args);
+            }
         }
 
         private async UniTaskVoid CompletePendingAttemptAsFailedAsync(FishingAttemptId attemptId)
