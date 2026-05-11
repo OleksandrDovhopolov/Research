@@ -69,7 +69,7 @@ namespace CameraModule
                     ChangeState<CameraOneHandZoomState>();
                     return;
                 }
-                //ChangeState<CameraDragState>();
+                ChangeState<CameraDragState>();
             }
         }
     }

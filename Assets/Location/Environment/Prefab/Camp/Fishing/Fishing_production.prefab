@@ -57,7 +57,7 @@ Transform:
   m_GameObject: {fileID: 3428214055698577732}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5, y: 0, z: 5}
+  m_LocalPosition: {x: 3, y: 0, z: 10}
   m_LocalScale: {x: 4, y: 4, z: 4}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -521,7 +521,7 @@ MonoBehaviour:
   _priority: 0
   _isInteractionEnabled: 1
   _hudAnchor: {fileID: 4632212000576617679}
-  _hudOffset: {x: 5, y: 0, z: 5}
+  _hudOffset: {x: 3, y: 0, z: 10}
   _collider: {fileID: 542474368722798641}
   _colliderIsTrigger: 1
   _runtimeVisualRoot: {fileID: 3305857868183859579}
