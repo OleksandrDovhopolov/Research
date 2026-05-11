@@ -127,6 +127,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a5d2251c522437c4d932990cd4efe032
+    m_Address: FishingMinigameWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a84c9fa6ba424384087929fc2036dda5
     m_Address: quillback
     m_ReadOnly: 0
@@ -224,11 +229,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e337c4c84d04fac43b63e8bdccbb8521
     m_Address: northern_pike
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e5f70123456789abcdef012349abcde0
-    m_Address: FishingMinigameWindow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

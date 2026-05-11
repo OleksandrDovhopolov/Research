@@ -29,11 +29,13 @@ namespace Game.Fishing
         [SerializeField] private Sprite _circleSuccessFlash;
         [SerializeField] private Sprite _circleFailFlash;
         [SerializeField] private Sprite _circlePulse;
+        [SerializeField] private RectTransform _root;
+        [SerializeField] private Button _screenTapButton;
 
-        private Button _screenTapButton;
-        private RawImage _background;
-        private RawImage _panel;
-        private RectTransform _circleRoot;
+        //private Button _screenTapButton;
+        //private RawImage _background;
+        //private RawImage _panel;
+        //private RectTransform _circleRoot;
         private Image _pulseRing;
         private Image _targetRing;
         private Image _shrinkingRing;
@@ -56,6 +58,7 @@ namespace Game.Fishing
         {
             base.Awake();
             EnsureBuilt();
+            _screenTapButton.onClick.AddListener(OnScreenTap);
         }
 
         private void Update()
@@ -143,11 +146,16 @@ namespace Game.Fishing
                 ct);
         }
 
+        private bool _isBuilt;
         private void EnsureBuilt()
         {
-            if (_screenTapButton != null)
+            /*if (_screenTapButton != null)
+                return;*/
+            if (_isBuilt)
                 return;
-
+            
+            _isBuilt = true;
+            
             var rootRect = transform as RectTransform;
             if (rootRect == null)
                 throw new InvalidOperationException("FishingMinigameView requires a RectTransform root.");
@@ -157,14 +165,14 @@ namespace Game.Fishing
             rootRect.offsetMin = Vector2.zero;
             rootRect.offsetMax = Vector2.zero;
 
-            _background = CreateRawImage("FullscreenTapTarget", rootRect, new Color32(8, 15, 28, 196));
-            Stretch(_background.rectTransform);
+            /*_background = CreateRawImage("FullscreenTapTarget", rootRect, new Color32(8, 15, 28, 196));
+            Stretch(_background.rectTransform);*/
 
-            _screenTapButton = _background.gameObject.AddComponent<Button>();
+            /*_screenTapButton = _background.gameObject.AddComponent<Button>();
             _screenTapButton.targetGraphic = _background;
-            _screenTapButton.onClick.AddListener(OnScreenTap);
+            _screenTapButton.onClick.AddListener(OnScreenTap);*/
 
-            _panel = CreateRawImage("PopupPanel", rootRect, new Color32(248, 242, 224, 255));
+            /*_panel = CreateRawImage("PopupPanel", rootRect, new Color32(248, 242, 224, 255));
             _panel.raycastTarget = false;
 
             var panelRect = _panel.rectTransform;
@@ -181,13 +189,13 @@ namespace Game.Fishing
                 new Vector2(0.5f, 0.48f),
                 new Vector2(0.5f, 0.5f),
                 Vector2.zero,
-                new Vector2(520f, 520f));
+                new Vector2(520f, 520f));*/
 
-            _pulseRing = CreateSpriteImage("PulseRing", _circleRoot, _circlePulse, new Color(1f, 1f, 1f, 0.72f));
-            _targetRing = CreateSpriteImage("TargetRing", _circleRoot, _timingCircleTarget, Color.white);
-            _shrinkingRing = CreateSpriteImage("ShrinkingRing", _circleRoot, _timingCircleShrinking, Color.white);
-            _successFlash = CreateSpriteImage("SuccessFlash", _circleRoot, _circleSuccessFlash, new Color(1f, 1f, 1f, 0.96f));
-            _failFlash = CreateSpriteImage("FailFlash", _circleRoot, _circleFailFlash, new Color(1f, 1f, 1f, 0.96f));
+            _pulseRing = CreateSpriteImage("PulseRing", _root, _circlePulse, new Color(1f, 1f, 1f, 0.72f));
+            _targetRing = CreateSpriteImage("TargetRing", _root, _timingCircleTarget, Color.white);
+            _shrinkingRing = CreateSpriteImage("ShrinkingRing", _root, _timingCircleShrinking, Color.white);
+            _successFlash = CreateSpriteImage("SuccessFlash", _root, _circleSuccessFlash, new Color(1f, 1f, 1f, 0.96f));
+            _failFlash = CreateSpriteImage("FailFlash", _root, _circleFailFlash, new Color(1f, 1f, 1f, 0.96f));
 
             SetGraphicVisible(_successFlash, false);
             SetGraphicVisible(_failFlash, false);
