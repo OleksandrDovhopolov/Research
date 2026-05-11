@@ -96,6 +96,10 @@ namespace Game.Fishing
             ResetGraphicState(_successFlash);
             ResetGraphicState(_failFlash);
 
+            SetGraphicVisible(_pulseRing, true);
+            SetGraphicVisible(_targetRing, true);
+            SetGraphicVisible(_shrinkingRing, true);
+
             SetGraphicVisible(_successFlash, false);
             SetGraphicVisible(_failFlash, false);
 
@@ -213,6 +217,10 @@ namespace Game.Fishing
             ApplySprite(_successFlash, _circleSuccessFlash, new Color(1f, 1f, 1f, 0.96f));
             ApplySprite(_failFlash, _circleFailFlash, new Color(1f, 1f, 1f, 0.96f));
 
+            SetGraphicVisible(_pulseRing, true);
+            SetGraphicVisible(_targetRing, true);
+            SetGraphicVisible(_shrinkingRing, true);
+            
             SetGraphicVisible(_successFlash, false);
             SetGraphicVisible(_failFlash, false);
         }
@@ -280,116 +288,54 @@ namespace Game.Fishing
         {
             KillAnimations();
 
-            Image flash = isSuccess ? _successFlash : _failFlash;
-            Image otherFlash = isSuccess ? _failFlash : _successFlash;
+            var flash = isSuccess ? _successFlash : _failFlash;
+            var otherFlash = isSuccess ? _failFlash : _successFlash;
 
-            if (flash == null)
-                return;
+            if (flash == null) return;
 
             SetGraphicVisible(otherFlash, false);
 
+            // На результате скрываем игровые кольца, чтобы был виден только success/fail flash.
+            SetGraphicVisible(_pulseRing, false);
+            SetGraphicVisible(_targetRing, false);
+            SetGraphicVisible(_shrinkingRing, false);
+
             var resultDiameter = Mathf.Max(1f, _resolutionRadius * 2f);
 
-            // Flash стартует ровно с размера shrinking ring в момент результата.
+            // Flash стартует ровно с размера shrinking ring в момент клика/таймаута.
             SetCircleDiameter(flash.rectTransform, resultDiameter);
             SetGraphicVisible(flash, true);
 
             ResetGraphicState(flash);
-            ResetGraphicState(_shrinkingRing);
-            ResetGraphicState(_targetRing);
-            ResetGraphicState(_pulseRing);
 
             var flashColor = flash.color;
             flashColor.a = isPerfect ? 1f : 0.92f;
             flash.color = flashColor;
 
             var flashTargetScale = ResultFlashScale + (isPerfect ? ResultPerfectFlashScaleBonus : 0f);
-            var punchScale = HitPunchScale + (isPerfect ? PerfectHitPunchScaleBonus : 0f);
 
-            _resultSequence = DOTween.Sequence()
-                .SetUpdate(true);
+            _resultSequence = DOTween.Sequence().SetUpdate(true);
 
-            _resultSequence.AppendCallback(() =>
-            {
-                flash.rectTransform.localScale = Vector3.one;
+            _resultSequence.AppendCallback(() => { flash.rectTransform.localScale = Vector3.one; });
 
-                if (_shrinkingRing != null)
-                    _shrinkingRing.rectTransform.localScale = Vector3.one;
-
-                if (_targetRing != null)
-                    _targetRing.rectTransform.localScale = Vector3.one;
-
-                if (_pulseRing != null)
-                    _pulseRing.rectTransform.localScale = Vector3.one;
-            });
-
-            if (_shrinkingRing != null)
-            {
-                _resultSequence.Append(
-                    _shrinkingRing.rectTransform
-                        .DOPunchScale(Vector3.one * punchScale, 0.18f, 8, 0.65f)
-                        .SetUpdate(true));
-            }
-
-            _resultSequence.Join(
-                flash.rectTransform
-                    .DOScale(flashTargetScale, ResultFlashDuration)
-                    .SetEase(isSuccess ? Ease.OutBack : Ease.OutQuad)
-                    .SetUpdate(true));
-
-            if (_targetRing != null)
-            {
-                _resultSequence.Join(
-                    _targetRing.rectTransform
-                        .DOScale(isSuccess ? 1.08f : 0.94f, 0.18f)
-                        .SetEase(Ease.OutQuad)
-                        .SetUpdate(true));
-            }
-
-            if (_pulseRing != null)
-            {
-                _resultSequence.Join(
-                    _pulseRing.rectTransform
-                        .DOScale(isSuccess ? 1.28f : 1.12f, 0.28f)
-                        .SetEase(Ease.OutCubic)
-                        .SetUpdate(true));
-                
-                _resultSequence.Join(
-                    DOTween.To(
-                            () => _pulseRing.color.a,
-                            alpha =>
-                            {
-                                var color = _pulseRing.color;
-                                color.a = alpha;
-                                _pulseRing.color = color;
-                            },
-                            0f,
-                            0.28f)
-                        .SetEase(Ease.OutQuad)
-                        .SetUpdate(true));
-            }
+            _resultSequence.Append(flash.rectTransform.DOScale(flashTargetScale, ResultFlashDuration)
+                .SetEase(isSuccess ? Ease.OutBack : Ease.OutQuad)
+                .SetUpdate(true));
 
             _resultSequence.AppendInterval(0.08f);
 
-            _resultSequence.Append(
-                DOTween.To(
-                        () => flash.color.a,
-                        alpha =>
-                        {
-                            var color = flash.color;
-                            color.a = alpha;
-                            flash.color = color;
-                        },
-                        0f,
-                        ResultFlashFadeOutDuration)
-                    .SetEase(Ease.InQuad)
-                    .SetUpdate(true));
+            _resultSequence.Append(DOTween.To(() => flash.color.a, alpha =>
+                {
+                    var color = flash.color;
+                    color.a = alpha;
+                    flash.color = color;
+                }, 0f, ResultFlashFadeOutDuration)
+                .SetEase(Ease.InQuad)
+                .SetUpdate(true));
 
-            _resultSequence.Join(
-                flash.rectTransform
-                    .DOScale(flashTargetScale + 0.16f, ResultFlashFadeOutDuration)
-                    .SetEase(Ease.InQuad)
-                    .SetUpdate(true));
+            _resultSequence.Join(flash.rectTransform.DOScale(flashTargetScale + 0.16f, ResultFlashFadeOutDuration)
+                .SetEase(Ease.InQuad)
+                .SetUpdate(true));
         }
 
         private void KillAnimations()
