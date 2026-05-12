@@ -119,11 +119,6 @@ namespace Game.Crafting
         UniTask<CraftCollectResult> CompleteAndCollectAsync(CraftTaskId taskId, CancellationToken ct = default);
     }
 
-    public interface ICraftingInventoryGateway
-    {
-        UniTask AddItemAsync(string itemId, int amount, CancellationToken ct = default);
-    }
-
     public interface ICraftingRewardApplier
     {
         UniTask ApplyAsync(string outputItemId, int outputCount, CancellationToken ct = default);
