@@ -12,20 +12,24 @@ namespace Game.Fishing
     public sealed class FishingMinigameController : WindowController<FishingMinigameView>
     {
         private IFishingService _fishingService;
+        private IFishBookService _fishBookService;
 
         private FishingMinigameArgs Args => (FishingMinigameArgs)Arguments;
 
         private bool _attemptCompletionDispatched;
 
         [Inject]
-        private void Construct(IFishingService fishingService)
+        private void Construct(IFishingService fishingService, IFishBookService fishBookService)
         {
             _fishingService = fishingService ?? throw new ArgumentNullException(nameof(fishingService));
+            _fishBookService = fishBookService ?? throw new ArgumentNullException(nameof(fishBookService));
         }
 
         protected override void OnShowStart()
         {
             _attemptCompletionDispatched = false;
+            _result = null;
+            _newFishArgs = null;
             Debug.LogWarning($"[FishingMinigameController] OnShowStart. ZoneId='{Args.ZoneId}', AttemptId='{Args.AttemptId}', FishId='{Args.SelectedFish?.Id ?? string.Empty}'.");
             View.Initialize(Args);
         }
@@ -64,17 +68,22 @@ namespace Game.Fishing
         }
 
         private FishingCatchResult _result;
-        
+        private NewFishArgs _newFishArgs;
+
         private async UniTaskVoid ResolveAttemptAsync(FishingMinigameResolution resolution)
         {
             View.ShowResolvingState();
             Debug.LogWarning($"[FishingMinigameController] Resolving attempt. AttemptId='{Args.AttemptId}', MinigameSuccess={resolution.IsSuccess}.");
 
-            FishingCatchResult result = null;
             try
             {
                 _result = await _fishingService.CompleteFishingAsync(Args.AttemptId, resolution.IsSuccess, CancellationToken.None);
-                Debug.LogWarning($"[FishingMinigameController] CompleteFishingAsync finished. AttemptId='{Args.AttemptId}', Success={result?.Success ?? false}, Error={result?.Error ?? FishingError.ConfigInvalid}, FishId='{result?.FishId ?? string.Empty}', Weight={result?.Weight ?? 0f:0.##}, State={(result != null ? result.State.ToString() : string.Empty)}.");
+                if (_result is { Success: true })
+                {
+                    _newFishArgs = await BuildNewFishArgsAsync(_result);
+                }
+
+                Debug.LogWarning($"[FishingMinigameController] CompleteFishingAsync finished. AttemptId='{Args.AttemptId}', Success={_result?.Success ?? false}, Error={_result?.Error ?? FishingError.ConfigInvalid}, FishId='{_result?.FishId ?? string.Empty}', Weight={_result?.Weight ?? 0f:0.##}, State={(_result != null ? _result.State.ToString() : string.Empty)}.");
             }
             catch (Exception exception)
             {
@@ -93,13 +102,8 @@ namespace Game.Fishing
         protected override void OnHideComplete(bool isClosed)
         {
             base.OnHideComplete(isClosed);
-            if (_result.Success)
-            {
-                //TODO need to get MaxWeight
-                // TODO need to get isNew
-                var args = new NewFishArgs(_result.FishId, true, _result.Weight);
-                UIManager.Show<NewFishController>(args);
-            }
+            if (_newFishArgs != null)
+                UIManager.Show<NewFishController>(_newFishArgs);
         }
 
         private async UniTaskVoid CompletePendingAttemptAsFailedAsync(FishingAttemptId attemptId)
@@ -123,6 +127,22 @@ namespace Game.Fishing
         private void ShowInfoResult(string title)
         {
             UIManager.Show<InfoWidgetController>(new InfoWidgetArg(title));
+        }
+
+        private async UniTask<NewFishArgs> BuildNewFishArgsAsync(FishingCatchResult result)
+        {
+            FishBookProgress progress = null;
+
+            try
+            {
+                progress = await _fishBookService.GetProgressAsync(result.FishId, CancellationToken.None);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"[FishingMinigameController] Failed to load fish progress for '{result.FishId}'. {exception}");
+            }
+
+            return NewFishArgs.FromCatchResult(result, progress);
         }
     }
 }

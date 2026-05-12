@@ -78,6 +78,44 @@ namespace Game.Tests.Editor.FishingCrafting
             presenter.Present(result, progress);
         }
 
+        [Test]
+        public void NewFishArgs_FromCatchResult_UsesPersistedProgressValues()
+        {
+            var result = FishingCatchResult.Ok("salmon", "item_salmon", 4.5f, FishWeightState.Epic);
+            var progress = new FishBookProgress
+            {
+                FishId = "salmon",
+                IsDiscovered = true,
+                IsNew = false,
+                BestWeight = 6.25f,
+                UnlockedWeightStates = new List<string> { "common", "rare", "epic" }
+            };
+
+            var args = NewFishArgs.FromCatchResult(result, progress);
+
+            Assert.That(args.FishId, Is.EqualTo("salmon"));
+            Assert.That(args.IsNew, Is.False);
+            Assert.That(args.CaughtWeight, Is.EqualTo(4.5f));
+            Assert.That(args.BestCaughtWeight, Is.EqualTo(6.25f));
+            Assert.That(args.IsDiscovered, Is.True);
+            Assert.That(args.UnlockedWeightStates, Is.EqualTo(new[] { "common", "rare", "epic" }));
+        }
+
+        [Test]
+        public void NewFishArgs_FromCatchResult_FallsBackToCatchData_WhenProgressMissing()
+        {
+            var result = FishingCatchResult.Ok("trout", "item_trout", 2.2f, FishWeightState.Legendary);
+
+            var args = NewFishArgs.FromCatchResult(result, null);
+
+            Assert.That(args.FishId, Is.EqualTo("trout"));
+            Assert.That(args.IsNew, Is.True);
+            Assert.That(args.CaughtWeight, Is.EqualTo(2.2f));
+            Assert.That(args.BestCaughtWeight, Is.EqualTo(2.2f));
+            Assert.That(args.IsDiscovered, Is.True);
+            Assert.That(args.UnlockedWeightStates, Is.EqualTo(new[] { "legendary" }));
+        }
+
         private static FishingStaticData CreateStaticData()
         {
             return new FishingStaticData(
@@ -146,6 +184,7 @@ namespace Game.Tests.Editor.FishingCrafting
         private sealed class StubFishBookService : IFishBookService
         {
             public List<FishingCatchResult> Registered { get; } = new();
+            public int MarkAsViewedCalls { get; private set; }
             private readonly Dictionary<string, FishBookProgress> _progressByFishId = new(StringComparer.Ordinal);
 
             public UniTask RegisterCatchAsync(FishingCatchResult result, CancellationToken ct = default)
@@ -181,6 +220,11 @@ namespace Game.Tests.Editor.FishingCrafting
 
             public UniTask MarkAsViewedAsync(string fishId, CancellationToken ct = default)
             {
+                MarkAsViewedCalls++;
+
+                if (_progressByFishId.TryGetValue(fishId, out var progress) && progress != null)
+                    progress.IsNew = false;
+
                 return UniTask.CompletedTask;
             }
         }
