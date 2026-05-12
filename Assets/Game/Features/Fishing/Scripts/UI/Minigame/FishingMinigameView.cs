@@ -15,8 +15,10 @@ namespace Game.Fishing
         [Serializable]
         private sealed class FishingMinigamePreStartSettings
         {
-            [Min(0f)] public float StartDelaySeconds = 0.75f;
-            [Min(0f)] public float StartWarningDurationSeconds = 0.5f;
+            [Min(0f)] public float StartDelayMinSeconds = 2f;
+            [Min(0f)] public float StartDelayMaxSeconds = 4f;
+            [Min(0f)] public float StartWarningDurationSeconds = 1f;
+            [Min(0f)] public float StartWarningFadeDurationSeconds = 0.5f;
             [TextArea] public string DefaultInstructionText = "Wait for the signal, then tap when the circles overlap.";
         }
 
@@ -70,7 +72,9 @@ namespace Game.Fishing
 
         private Sequence _resultSequence;
         private Tween _pulseTween;
+        private Tween _startWarningTween;
         private CancellationTokenSource _startSequenceCts;
+        private CanvasGroup _startWarningCanvasGroup;
 
         public event Action<FishingMinigameResolution> ResolutionCommitted;
 
@@ -114,7 +118,7 @@ namespace Game.Fishing
             EnsureBuilt();
             ApplyLayout();
             ApplyInstructionText(_preStartSettings?.DefaultInstructionText);
-            SetStartWarningVisible(false);
+            SetStartWarningVisibleImmediate(false);
 
             ResetGraphicState(_pulseRing);
             ResetGraphicState(_targetRing);
@@ -122,9 +126,7 @@ namespace Game.Fishing
             ResetGraphicState(_successFlash);
             ResetGraphicState(_failFlash);
 
-            SetGraphicVisible(_pulseRing, true);
-            SetGraphicVisible(_targetRing, true);
-            SetGraphicVisible(_shrinkingRing, true);
+            SetGameplayRingsVisible(false);
 
             SetGraphicVisible(_successFlash, false);
             SetGraphicVisible(_failFlash, false);
@@ -147,7 +149,7 @@ namespace Game.Fishing
         {
             CancelStartSequence();
             _phase = FishingMinigamePhase.Resolved;
-            SetStartWarningVisible(false);
+            SetStartWarningVisibleImmediate(false);
 
             _pulseTween?.Kill();
             _pulseTween = null;
@@ -160,7 +162,7 @@ namespace Game.Fishing
         {
             CancelStartSequence();
             _phase = FishingMinigamePhase.Resolved;
-            SetStartWarningVisible(false);
+            SetStartWarningVisibleImmediate(false);
 
             if (_screenTapButton != null)
                 _screenTapButton.interactable = false;
@@ -253,9 +255,7 @@ namespace Game.Fishing
             ApplySprite(_successFlash, _circleSuccessFlash, new Color(1f, 1f, 1f, 0.96f));
             ApplySprite(_failFlash, _circleFailFlash, new Color(1f, 1f, 1f, 0.96f));
 
-            SetGraphicVisible(_pulseRing, true);
-            SetGraphicVisible(_targetRing, true);
-            SetGraphicVisible(_shrinkingRing, true);
+            SetGameplayRingsVisible(false);
             
             SetGraphicVisible(_successFlash, false);
             SetGraphicVisible(_failFlash, false);
@@ -293,7 +293,11 @@ namespace Game.Fishing
 
             try
             {
-                var startDelaySeconds = Mathf.Max(0f, _preStartSettings?.StartDelaySeconds ?? 0f);
+                var minDelaySeconds = Mathf.Max(0f, _preStartSettings?.StartDelayMinSeconds ?? 0f);
+                var maxDelaySeconds = Mathf.Max(minDelaySeconds, _preStartSettings?.StartDelayMaxSeconds ?? minDelaySeconds);
+                var startDelaySeconds = maxDelaySeconds > minDelaySeconds
+                    ? UnityEngine.Random.Range(minDelaySeconds, maxDelaySeconds)
+                    : minDelaySeconds;
                 var warningDurationSeconds = Mathf.Max(0f, _preStartSettings?.StartWarningDurationSeconds ?? 0f);
 
                 if (startDelaySeconds > 0f)
@@ -312,7 +316,7 @@ namespace Game.Fishing
 
                     if (warningLeadSeconds > 0f)
                     {
-                        SetStartWarningVisible(true);
+                        SetStartWarningVisibleAnimated(true);
                         await UniTask.Delay(
                             TimeSpan.FromSeconds(warningLeadSeconds),
                             DelayType.UnscaledDeltaTime,
@@ -324,7 +328,7 @@ namespace Game.Fishing
                 if (startSequenceCts.IsCancellationRequested || _resolutionCommitted || _phase != FishingMinigamePhase.Preparing)
                     return;
 
-                SetStartWarningVisible(false);
+                SetStartWarningVisibleAnimated(false);
                 StartActivePhase();
             }
             catch (OperationCanceledException)
@@ -332,7 +336,8 @@ namespace Game.Fishing
             }
             finally
             {
-                SetStartWarningVisible(false);
+                if (_phase != FishingMinigamePhase.Running)
+                    SetStartWarningVisibleImmediate(false);
 
                 if (ReferenceEquals(_startSequenceCts, startSequenceCts))
                     _startSequenceCts = null;
@@ -345,6 +350,11 @@ namespace Game.Fishing
         {
             _elapsed = 0f;
             _phase = FishingMinigamePhase.Running;
+            SetGameplayRingsVisible(true);
+            ResetGraphicState(_pulseRing);
+            ResetGraphicState(_targetRing);
+            ResetGraphicState(_shrinkingRing);
+            ApplyShrinkingRadius(_args?.RuntimeConfig.StartRadius ?? _currentRadius);
             StartPulseTween();
         }
 
@@ -368,7 +378,7 @@ namespace Game.Fishing
 
             _resolutionCommitted = true;
             _phase = FishingMinigamePhase.Resolved;
-            SetStartWarningVisible(false);
+            SetStartWarningVisibleImmediate(false);
 
             _pulseTween?.Kill();
             _pulseTween = null;
@@ -401,7 +411,7 @@ namespace Game.Fishing
             _phase = FishingMinigamePhase.Resolved;
             CancelStartSequence();
             KillAnimations();
-            SetStartWarningVisible(false);
+            SetStartWarningVisibleImmediate(false);
             _resolutionRadius = _currentRadius;
 
             ResolutionCommitted?.Invoke(new FishingMinigameResolution(
@@ -419,7 +429,7 @@ namespace Game.Fishing
 
             _resolutionCommitted = true;
             _phase = FishingMinigamePhase.Resolved;
-            SetStartWarningVisible(false);
+            SetStartWarningVisibleImmediate(false);
 
             _pulseTween?.Kill();
             _pulseTween = null;
@@ -494,6 +504,8 @@ namespace Game.Fishing
 
             _pulseTween?.Kill();
             _pulseTween = null;
+            _startWarningTween?.Kill();
+            _startWarningTween = null;
 
             _pulseRing?.rectTransform.DOKill();
             _targetRing?.rectTransform.DOKill();
@@ -550,8 +562,87 @@ namespace Game.Fishing
 
         private void SetStartWarningVisible(bool isVisible)
         {
-            if (_startWarningObject != null)
+            SetStartWarningVisibleImmediate(isVisible);
+        }
+
+        private void SetStartWarningVisibleImmediate(bool isVisible)
+        {
+            _startWarningTween?.Kill();
+            _startWarningTween = null;
+
+            if (_startWarningObject == null)
+                return;
+
+            var canvasGroup = GetOrCreateStartWarningCanvasGroup();
+            if (canvasGroup != null)
+                canvasGroup.alpha = isVisible ? 1f : 0f;
+
+            _startWarningObject.SetActive(isVisible);
+        }
+
+        private void SetStartWarningVisibleAnimated(bool isVisible)
+        {
+            if (_startWarningObject == null)
+                return;
+
+            _startWarningTween?.Kill();
+            _startWarningTween = null;
+
+            var canvasGroup = GetOrCreateStartWarningCanvasGroup();
+            if (canvasGroup == null)
+            {
                 _startWarningObject.SetActive(isVisible);
+                return;
+            }
+
+            var fadeDuration = Mathf.Max(0f, _preStartSettings?.StartWarningFadeDurationSeconds ?? 0f);
+            if (fadeDuration <= 0f)
+            {
+                canvasGroup.alpha = isVisible ? 1f : 0f;
+                _startWarningObject.SetActive(isVisible);
+                return;
+            }
+
+            if (isVisible)
+            {
+                _startWarningObject.SetActive(true);
+                canvasGroup.alpha = 0f;
+                _startWarningTween = DOTween
+                    .To(() => canvasGroup.alpha, value => canvasGroup.alpha = value, 1f, fadeDuration)
+                    .SetEase(Ease.OutQuad)
+                    .SetUpdate(true);
+                return;
+            }
+
+            canvasGroup.alpha = Mathf.Clamp01(canvasGroup.alpha);
+            _startWarningTween = DOTween
+                .To(() => canvasGroup.alpha, value => canvasGroup.alpha = value, 0f, fadeDuration)
+                .SetEase(Ease.InQuad)
+                .SetUpdate(true)
+                .OnComplete(() =>
+                {
+                    _startWarningTween = null;
+                    if (_startWarningObject != null)
+                        _startWarningObject.SetActive(false);
+                });
+        }
+
+        private CanvasGroup GetOrCreateStartWarningCanvasGroup()
+        {
+            if (_startWarningObject == null)
+                return null;
+
+            if (_startWarningCanvasGroup == null)
+                _startWarningCanvasGroup = _startWarningObject.GetComponent<CanvasGroup>() ?? _startWarningObject.AddComponent<CanvasGroup>();
+
+            return _startWarningCanvasGroup;
+        }
+
+        private void SetGameplayRingsVisible(bool isVisible)
+        {
+            SetGraphicVisible(_pulseRing, isVisible);
+            SetGraphicVisible(_targetRing, isVisible);
+            SetGraphicVisible(_shrinkingRing, isVisible);
         }
 
         private void ApplyInstructionText(string value)
