@@ -88,7 +88,8 @@ namespace BattlePass
             string purchaseToken,
             CancellationToken ct = default)
         {
-            var playerId = _playerIdentityProvider.GetPlayerId();
+            throw new NotImplementedException();
+            /*var playerId = _playerIdentityProvider.GetPlayerId();
             if (string.IsNullOrWhiteSpace(playerId))
             {
                 throw new InvalidOperationException("Player id is empty.");
@@ -120,7 +121,7 @@ namespace BattlePass
                 BattlePassConfig.Api.VerifyPurchasePath,
                 request,
                 ct);
-            return MapPurchaseVerificationResult(response);
+            return MapPurchaseVerificationResult(response);*/
         }
 
         private static BattlePassSnapshot MapResponse(BattlePassCurrentResponse response)
