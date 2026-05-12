@@ -55,6 +55,7 @@ namespace Game.Bootstrap
             builder.Register<ScreenPointConverter>(Lifetime.Singleton);
             builder.RegisterInstance(_cameraSettings);
             builder.RegisterComponent(_cameraBehaviour);
+            builder.RegisterInstance<ICameraFocusService>(_cameraBehaviour);
 
             // Location
             if (_mainLocationBootstrap != null)

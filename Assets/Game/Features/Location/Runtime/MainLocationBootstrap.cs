@@ -21,6 +21,9 @@ namespace Game.Features.Locations
 
         public Location CurrentLocation => _location;
         public IReadOnlyList<ILocationInteractable> InteractionObjects => _interactionObjects;
+        public Vector2 GridSize => new(
+            Mathf.Approximately(_tileEditorSettings != null ? _tileEditorSettings.gridSizeX : 0f, 0f) ? 1f : _tileEditorSettings.gridSizeX,
+            Mathf.Approximately(_tileEditorSettings != null ? _tileEditorSettings.gridSizeY : 0f, 0f) ? 1f : _tileEditorSettings.gridSizeY);
 
         private IObjectResolver _diContainer;
         
