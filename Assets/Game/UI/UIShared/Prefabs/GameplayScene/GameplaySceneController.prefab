@@ -2123,11 +2123,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5719926737733591572, guid: f5f356439a1e32a4382e558d36e04d95, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0.887
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5719926737733591572, guid: f5f356439a1e32a4382e558d36e04d95, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6214822788535833949, guid: f5f356439a1e32a4382e558d36e04d95, type: 3}
       propertyPath: m_SortingLayer
@@ -2219,7 +2219,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6214822789793147303, guid: f5f356439a1e32a4382e558d36e04d95, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -46,19 +46,17 @@ namespace BattlePass
         private const string PurchaseStatusVerifyFailed = "verify_failed";
 
         private IBattlePassPurchaseService _battlePassPurchaseService;
-        private IBattlePassServerService _battlePassServerService;
+        private IBattlePassPurchaseVerify _battlePassPurchaseVerify;
         private CancellationTokenSource _purchaseCts;
         private bool _isVerificationInFlight;
 
         private BattlePassIAPWindowArgs Args => (BattlePassIAPWindowArgs)Arguments;
 
         [Inject]
-        private void Construct(
-            IBattlePassPurchaseService battlePassPurchaseService,
-            IBattlePassServerService battlePassServerService)
+        private void Construct(IBattlePassPurchaseService battlePassPurchaseService, IBattlePassPurchaseVerify battlePassPurchaseVerify)
         {
             _battlePassPurchaseService = battlePassPurchaseService;
-            _battlePassServerService = battlePassServerService;
+            _battlePassPurchaseVerify = battlePassPurchaseVerify;
         }
 
         protected override void OnShowStart()
@@ -181,7 +179,7 @@ namespace BattlePass
                     $"[BattlePassIAPWindowController] Starting backend verify. " +
                     $"SeasonId='{Args.SeasonId}', ProductId='{Args.ProductId}', " +
                     $"TokenPrefix='{GetTokenPrefix(purchaseResult.PurchaseToken)}'.");
-                var result = await _battlePassServerService.VerifyGooglePurchaseAsync(
+                var result = await _battlePassPurchaseVerify.VerifyGooglePurchaseAsync(
                     Args.SeasonId,
                     Args.ProductId,
                     purchaseResult.PurchaseToken,
