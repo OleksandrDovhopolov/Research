@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using TMPro;
 using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,6 +12,21 @@ namespace Game.Fishing
 {
     public sealed class FishingMinigameView : WindowView
     {
+        [Serializable]
+        private sealed class FishingMinigamePreStartSettings
+        {
+            [Min(0f)] public float StartDelaySeconds = 0.75f;
+            [Min(0f)] public float StartWarningDurationSeconds = 0.5f;
+            [TextArea] public string DefaultInstructionText = "Wait for the signal, then tap when the circles overlap.";
+        }
+
+        private enum FishingMinigamePhase
+        {
+            Preparing = 0,
+            Running = 1,
+            Resolved = 2
+        }
+
         private const float ResultDisplaySeconds = 1.1f;
 
         private const float PulseAmplitude = 0.08f;
@@ -31,6 +47,9 @@ namespace Game.Fishing
         [SerializeField] private Sprite _circlePulse;
         [SerializeField] private RectTransform _root;
         [SerializeField] private Button _screenTapButton;
+        [SerializeField] private FishingMinigamePreStartSettings _preStartSettings = new();
+        [SerializeField] private TextMeshProUGUI _instructionText;
+        [SerializeField] private GameObject _startWarningObject;
 
         //private Button _screenTapButton;
         //private RawImage _background;
@@ -46,11 +65,12 @@ namespace Game.Fishing
         private float _elapsed;
         private float _currentRadius;
         private float _resolutionRadius;
-        private bool _isRunning;
         private bool _resolutionCommitted;
+        private FishingMinigamePhase _phase = FishingMinigamePhase.Resolved;
 
         private Sequence _resultSequence;
         private Tween _pulseTween;
+        private CancellationTokenSource _startSequenceCts;
 
         public event Action<FishingMinigameResolution> ResolutionCommitted;
 
@@ -63,7 +83,7 @@ namespace Game.Fishing
 
         private void Update()
         {
-            if (!_isRunning || _args == null)
+            if (_phase != FishingMinigamePhase.Running || _args == null)
                 return;
 
             var config = _args.RuntimeConfig;
@@ -76,7 +96,7 @@ namespace Game.Fishing
             ApplyShrinkingRadius(_currentRadius);
 
             if (progress >= 1f)
-                CommitResolution(isTap: false, isTimeout: true);
+                CommitTimeoutResolution();
         }
 
         public void Initialize(FishingMinigameArgs args)
@@ -85,13 +105,16 @@ namespace Game.Fishing
             _elapsed = 0f;
             _currentRadius = Mathf.Max(1f, args?.RuntimeConfig.StartRadius ?? 1f);
             _resolutionRadius = _currentRadius;
-            _isRunning = false;
             _resolutionCommitted = false;
+            _phase = FishingMinigamePhase.Preparing;
 
+            CancelStartSequence();
             KillAnimations();
 
             EnsureBuilt();
             ApplyLayout();
+            ApplyInstructionText(_preStartSettings?.DefaultInstructionText);
+            SetStartWarningVisible(false);
 
             ResetGraphicState(_pulseRing);
             ResetGraphicState(_targetRing);
@@ -112,16 +135,19 @@ namespace Game.Fishing
 
         public void BeginRunning()
         {
+            CancelStartSequence();
             _elapsed = 0f;
-            _isRunning = true;
             _resolutionCommitted = false;
+            _phase = FishingMinigamePhase.Preparing;
 
-            StartPulseTween();
+            RunStartSequenceAsync(this.GetCancellationTokenOnDestroy()).Forget();
         }
 
         public void ShowResolvingState()
         {
-            _isRunning = false;
+            CancelStartSequence();
+            _phase = FishingMinigamePhase.Resolved;
+            SetStartWarningVisible(false);
 
             _pulseTween?.Kill();
             _pulseTween = null;
@@ -132,7 +158,9 @@ namespace Game.Fishing
 
         public async UniTask ShowResultAsync(bool isSuccess, bool isPerfect, CancellationToken ct)
         {
-            _isRunning = false;
+            CancelStartSequence();
+            _phase = FishingMinigamePhase.Resolved;
+            SetStartWarningVisible(false);
 
             if (_screenTapButton != null)
                 _screenTapButton.interactable = false;
@@ -258,21 +286,89 @@ namespace Game.Fishing
                 .SetUpdate(true);
         }
 
-        private void OnScreenTap()
+        private async UniTaskVoid RunStartSequenceAsync(CancellationToken destroyToken)
         {
-            if (!_isRunning)
-                return;
+            var startSequenceCts = CancellationTokenSource.CreateLinkedTokenSource(destroyToken);
+            _startSequenceCts = startSequenceCts;
 
-            CommitResolution(isTap: true, isTimeout: false);
+            try
+            {
+                var startDelaySeconds = Mathf.Max(0f, _preStartSettings?.StartDelaySeconds ?? 0f);
+                var warningDurationSeconds = Mathf.Max(0f, _preStartSettings?.StartWarningDurationSeconds ?? 0f);
+
+                if (startDelaySeconds > 0f)
+                {
+                    var warningLeadSeconds = Mathf.Min(warningDurationSeconds, startDelaySeconds);
+                    var delayBeforeWarningSeconds = Mathf.Max(0f, startDelaySeconds - warningLeadSeconds);
+
+                    if (delayBeforeWarningSeconds > 0f)
+                    {
+                        await UniTask.Delay(
+                            TimeSpan.FromSeconds(delayBeforeWarningSeconds),
+                            DelayType.UnscaledDeltaTime,
+                            PlayerLoopTiming.Update,
+                            startSequenceCts.Token);
+                    }
+
+                    if (warningLeadSeconds > 0f)
+                    {
+                        SetStartWarningVisible(true);
+                        await UniTask.Delay(
+                            TimeSpan.FromSeconds(warningLeadSeconds),
+                            DelayType.UnscaledDeltaTime,
+                            PlayerLoopTiming.Update,
+                            startSequenceCts.Token);
+                    }
+                }
+
+                if (startSequenceCts.IsCancellationRequested || _resolutionCommitted || _phase != FishingMinigamePhase.Preparing)
+                    return;
+
+                SetStartWarningVisible(false);
+                StartActivePhase();
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            finally
+            {
+                SetStartWarningVisible(false);
+
+                if (ReferenceEquals(_startSequenceCts, startSequenceCts))
+                    _startSequenceCts = null;
+
+                startSequenceCts.Dispose();
+            }
         }
 
-        private void CommitResolution(bool isTap, bool isTimeout)
+        private void StartActivePhase()
+        {
+            _elapsed = 0f;
+            _phase = FishingMinigamePhase.Running;
+            StartPulseTween();
+        }
+
+        private void OnScreenTap()
+        {
+            switch (_phase)
+            {
+                case FishingMinigamePhase.Preparing:
+                    CommitEarlyTapResolution();
+                    break;
+                case FishingMinigamePhase.Running:
+                    CommitTapResolution();
+                    break;
+            }
+        }
+
+        private void CommitTapResolution()
         {
             if (_resolutionCommitted || _args == null)
                 return;
 
             _resolutionCommitted = true;
-            _isRunning = false;
+            _phase = FishingMinigamePhase.Resolved;
+            SetStartWarningVisible(false);
 
             _pulseTween?.Kill();
             _pulseTween = null;
@@ -282,14 +378,59 @@ namespace Game.Fishing
             _resolutionRadius = _currentRadius;
 
             var distance = Mathf.Abs(_currentRadius - _args.RuntimeConfig.TargetRadius);
-            var isSuccess = isTap && distance <= _args.RuntimeConfig.SuccessRadiusThreshold;
+            var isSuccess = distance <= _args.RuntimeConfig.SuccessRadiusThreshold;
             var isPerfect = isSuccess && distance <= _args.RuntimeConfig.PerfectRadiusThreshold;
+            var endReason = isSuccess
+                ? FishingMinigameEndReason.SuccessfulTap
+                : FishingMinigameEndReason.MissedTap;
 
             ResolutionCommitted?.Invoke(new FishingMinigameResolution(
                 isSuccess,
                 isPerfect,
-                isTimeout,
-                _currentRadius));
+                false,
+                _currentRadius,
+                endReason));
+        }
+
+        private void CommitEarlyTapResolution()
+        {
+            if (_resolutionCommitted || _args == null)
+                return;
+
+            _resolutionCommitted = true;
+            _phase = FishingMinigamePhase.Resolved;
+            CancelStartSequence();
+            KillAnimations();
+            SetStartWarningVisible(false);
+            _resolutionRadius = _currentRadius;
+
+            ResolutionCommitted?.Invoke(new FishingMinigameResolution(
+                false,
+                false,
+                false,
+                _currentRadius,
+                FishingMinigameEndReason.EarlyTap));
+        }
+
+        private void CommitTimeoutResolution()
+        {
+            if (_resolutionCommitted || _args == null)
+                return;
+
+            _resolutionCommitted = true;
+            _phase = FishingMinigamePhase.Resolved;
+            SetStartWarningVisible(false);
+
+            _pulseTween?.Kill();
+            _pulseTween = null;
+            _resolutionRadius = _currentRadius;
+
+            ResolutionCommitted?.Invoke(new FishingMinigameResolution(
+                false,
+                false,
+                true,
+                _currentRadius,
+                FishingMinigameEndReason.Timeout));
         }
 
         private void PlayResultAnimation(bool isSuccess, bool isPerfect)
@@ -367,6 +508,16 @@ namespace Game.Fishing
             _failFlash?.DOKill();
         }
 
+        private void CancelStartSequence()
+        {
+            if (_startSequenceCts == null)
+                return;
+
+            _startSequenceCts.Cancel();
+            _startSequenceCts.Dispose();
+            _startSequenceCts = null;
+        }
+
         private static void ResetGraphicState(Graphic graphic)
         {
             if (graphic == null)
@@ -395,6 +546,20 @@ namespace Game.Fishing
         {
             if (graphic != null)
                 graphic.gameObject.SetActive(isVisible);
+        }
+
+        private void SetStartWarningVisible(bool isVisible)
+        {
+            if (_startWarningObject != null)
+                _startWarningObject.SetActive(isVisible);
+        }
+
+        private void ApplyInstructionText(string value)
+        {
+            if (_instructionText == null)
+                return;
+
+            _instructionText.text = value ?? string.Empty;
         }
 
         private static RectTransform CreateRect(string name, RectTransform parent)
@@ -468,6 +633,7 @@ namespace Game.Fishing
 
         protected override void OnDestroy()
         {
+            CancelStartSequence();
             KillAnimations();
 
             if (_screenTapButton != null)

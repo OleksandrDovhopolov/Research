@@ -63,7 +63,7 @@ namespace Game.Fishing
             }
 
             _attemptCompletionDispatched = true;
-            Debug.LogWarning($"[FishingMinigameController] Resolution committed. AttemptId='{Args.AttemptId}', Success={resolution.IsSuccess}, Perfect={resolution.IsPerfect}, Timeout={resolution.IsTimeout}, Radius={resolution.CurrentRadius:0.###}.");
+            Debug.LogWarning($"[FishingMinigameController] Resolution committed. AttemptId='{Args.AttemptId}', Success={resolution.IsSuccess}, Perfect={resolution.IsPerfect}, Timeout={resolution.IsTimeout}, EndReason={resolution.EndReason}, Radius={resolution.CurrentRadius:0.###}.");
             ResolveAttemptAsync(resolution).Forget();
         }
 

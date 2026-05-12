@@ -221,19 +221,34 @@ namespace Game.Fishing
         public float PerfectRadiusThreshold { get; }
     }
 
+    public enum FishingMinigameEndReason
+    {
+        SuccessfulTap = 0,
+        MissedTap = 1,
+        EarlyTap = 2,
+        Timeout = 3
+    }
+
     public readonly struct FishingMinigameResolution
     {
-        public FishingMinigameResolution(bool isSuccess, bool isPerfect, bool isTimeout, float currentRadius)
+        public FishingMinigameResolution(
+            bool isSuccess,
+            bool isPerfect,
+            bool isTimeout,
+            float currentRadius,
+            FishingMinigameEndReason endReason)
         {
             IsSuccess = isSuccess;
             IsPerfect = isPerfect;
             IsTimeout = isTimeout;
             CurrentRadius = currentRadius;
+            EndReason = endReason;
         }
 
         public bool IsSuccess { get; }
         public bool IsPerfect { get; }
         public bool IsTimeout { get; }
         public float CurrentRadius { get; }
+        public FishingMinigameEndReason EndReason { get; }
     }
 }
