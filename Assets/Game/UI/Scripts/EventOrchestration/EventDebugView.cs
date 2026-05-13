@@ -14,11 +14,13 @@ namespace GameplayUI
         public string EventId;
         public string SpriteAddress;
         public EventDebugItemView View;
+        public bool ReleaseSpriteAddress;
     }
     
     public class EventDebugView : MonoBehaviour
     {
         [SerializeField] private UIListPool<EventDebugItemView> _uiListPool;
+        [SerializeField] private Sprite _fallbackPreviewSprite;
 
         private readonly List<EventViewData> _idToView = new();
 
@@ -56,7 +58,8 @@ namespace GameplayUI
 
                 if (_idToView.Find(data => data.EventId == eventId) != null) return;
 
-                var sprite = await LoadCollectionSprite(spriteAddress, ct);
+                var spriteLoadResult = await LoadCollectionSprite(spriteAddress, ct);
+                var sprite = spriteLoadResult.Sprite;
                 if (sprite == null) return;
 
                 var view = _uiListPool.GetNext();
@@ -66,7 +69,8 @@ namespace GameplayUI
                 {
                     EventId = eventId,
                     SpriteAddress = spriteAddress,
-                    View = view
+                    View = view,
+                    ReleaseSpriteAddress = spriteLoadResult.ReleaseSpriteAddress,
                 });
             }
             finally
@@ -75,18 +79,25 @@ namespace GameplayUI
             }
         }
         
-        public async UniTask<Sprite> LoadCollectionSprite(string spriteAddress, CancellationToken ct)
+        private async UniTask<SpriteLoadResult> LoadCollectionSprite(string spriteAddress, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
 
             try
             {
-                return await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, ct);
+                var sprite = await ProdAddressablesWrapper.LoadAsync<Sprite>(spriteAddress, ct);
+                return new SpriteLoadResult(sprite, releaseSpriteAddress: true);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 Debug.LogWarning($"Failed to load sprite for EventId='{spriteAddress}'. {ex.Message}");
-                return null;
+                if (_fallbackPreviewSprite != null)
+                {
+                    Debug.LogWarning($"[EventDebugView] Using serialized fallback preview sprite for '{spriteAddress}'.");
+                    return new SpriteLoadResult(_fallbackPreviewSprite, releaseSpriteAddress: false);
+                }
+
+                return default;
             }
         }
         
@@ -100,10 +111,25 @@ namespace GameplayUI
                 viewData.View.ResetSprite();
                 _uiListPool.Return(viewData.View);
                 _idToView.Remove(viewData);
-                ProdAddressablesWrapper.Release(viewData.SpriteAddress);
+                if (viewData.ReleaseSpriteAddress && !string.IsNullOrWhiteSpace(viewData.SpriteAddress))
+                {
+                    ProdAddressablesWrapper.Release(viewData.SpriteAddress);
+                }
             }
             
             _uiListPool.DisableNonActive();
+        }
+
+        private readonly struct SpriteLoadResult
+        {
+            public SpriteLoadResult(Sprite sprite, bool releaseSpriteAddress)
+            {
+                Sprite = sprite;
+                ReleaseSpriteAddress = releaseSpriteAddress;
+            }
+
+            public Sprite Sprite { get; }
+            public bool ReleaseSpriteAddress { get; }
         }
     }
 }

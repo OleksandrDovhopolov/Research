@@ -53,7 +53,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   idText: {fileID: 9177498953946744754}
-  timeText: {fileID: 1776894315408513944}
   _timerDisplay: {fileID: 4698745222689405378}
   icon: {fileID: 5414679688580898139}
 --- !u!114 &4698745222689405378
@@ -269,9 +268,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 59b8e3bf51998fd4b839b06558866b43, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
