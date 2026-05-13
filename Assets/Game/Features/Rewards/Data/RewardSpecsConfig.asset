@@ -204,3 +204,48 @@ MonoBehaviour:
       Amount: 1
       Category: none
       Icon: {fileID: 21300000, guid: a128d81974fbf44c4867f31f6a2c6aa0, type: 3}
+  - RewardId: item_red_lure
+    Icon: {fileID: 21300000, guid: d047a66d26e4e0f419c6bc0ad660685c, type: 3}
+    TotalAmountForUi: 1
+    Resources:
+    - ResourceId: item_red_lure
+      Kind: 2
+      Amount: 1
+      Category: regular
+      Icon: {fileID: 21300000, guid: d047a66d26e4e0f419c6bc0ad660685c, type: 3}
+  - RewardId: item_blue_lure
+    Icon: {fileID: 21300000, guid: c8e063cd4eee14741b8b95299a374122, type: 3}
+    TotalAmountForUi: 1
+    Resources:
+    - ResourceId: item_blue_lure
+      Kind: 2
+      Amount: 1
+      Category: regular
+      Icon: {fileID: 21300000, guid: c8e063cd4eee14741b8b95299a374122, type: 3}
+  - RewardId: item_green_lure
+    Icon: {fileID: 21300000, guid: be3dd2bdac9135245bfd0d759460741b, type: 3}
+    TotalAmountForUi: 1
+    Resources:
+    - ResourceId: item_green_lure
+      Kind: 2
+      Amount: 1
+      Category: regular
+      Icon: {fileID: 21300000, guid: be3dd2bdac9135245bfd0d759460741b, type: 3}
+  - RewardId: item_purple_lure
+    Icon: {fileID: 21300000, guid: c22784e1fe9d2614482ff161b44c141f, type: 3}
+    TotalAmountForUi: 1
+    Resources:
+    - ResourceId: item_purple_lure
+      Kind: 2
+      Amount: 1
+      Category: regular
+      Icon: {fileID: 21300000, guid: c22784e1fe9d2614482ff161b44c141f, type: 3}
+  - RewardId: item_gold_lure
+    Icon: {fileID: 21300000, guid: f50a0c1218de7d34f94710cbc9bc4422, type: 3}
+    TotalAmountForUi: 1
+    Resources:
+    - ResourceId: item_gold_lure
+      Kind: 2
+      Amount: 1
+      Category: regular
+      Icon: {fileID: 21300000, guid: f50a0c1218de7d34f94710cbc9bc4422, type: 3}

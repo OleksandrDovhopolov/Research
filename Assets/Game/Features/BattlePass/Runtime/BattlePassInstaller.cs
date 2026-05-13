@@ -16,13 +16,23 @@ namespace BattlePass
             builder.Register<IOptimisticResourceApplyService, ResourceManagerOptimisticResourceApplyService>(Lifetime.Singleton);
             builder.Register<IBattlePassOptimisticRewardApplier, BattlePassOptimisticRewardApplier>(Lifetime.Singleton);
             builder.Register<IBattlePassServerService, BattlePassServerService>(Lifetime.Singleton);
+#if DEV_BUILD
+            builder.Register<IBattlePassPurchaseVerify, StubBattlePassPurchaseVerify>(Lifetime.Singleton);
+#else
+            builder.Register<IBattlePassPurchaseVerify, BattlePassPurchaseVerify>(Lifetime.Singleton);
+#endif
             builder.Register<IBattlePassPurchaseService>(_ =>
             {
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if DEV_BUILD
+                return new MockBattlePassPurchaseService();
+#else
+                return new UnityIapBattlePassPurchaseService();
+#endif
+/*#if UNITY_ANDROID && !UNITY_EDITOR
                 return new UnityIapBattlePassPurchaseService();
 #else
                 return new MockBattlePassPurchaseService();
-#endif
+#endif*/
             }, Lifetime.Singleton);
             builder.Register<BattlePassLifecycleState>(Lifetime.Singleton);
             builder.Register<IBattlePassLifecycleState>(resolver => resolver.Resolve<BattlePassLifecycleState>(), Lifetime.Singleton);

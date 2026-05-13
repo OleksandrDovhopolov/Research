@@ -88,7 +88,6 @@ namespace Infrastructure
             {
                 _semaphore.Release();
             }
-
             OnAfterLoad?.Invoke();
 
             if (shouldPersistMigration)
@@ -135,7 +134,6 @@ namespace Infrastructure
             {
                 _semaphore.Release();
             }
-
             await _storage.SaveAsync(jsonToSave, cancellationToken);
 
             await _semaphore.WaitAsync(cancellationToken);
@@ -306,6 +304,10 @@ namespace Infrastructure
             data.EventStates ??= new List<EventStateSaveData>();
             data.Resources ??= new ResourcesModuleSaveData();
             data.FortuneWheel ??= new FortuneWheelModuleSaveData();
+            data.Crafting ??= new CraftingModuleSaveData();
+            data.Crafting.Tasks ??= new List<CraftTaskSaveData>();
+            data.Fishing ??= new FishingModuleSaveData();
+            data.Fishing.CaughtFish ??= new List<CaughtFishSaveData>();
             data.CustomModulesJson ??= new Dictionary<string, string>();
             data.Meta.SaveId ??= Guid.NewGuid().ToString("N");
             data.Meta.Hash ??= string.Empty;
@@ -319,6 +321,33 @@ namespace Infrastructure
             data.Resources.Version = Math.Max(1, data.Resources.Version);
             data.FortuneWheel.AvailableSpins = Math.Max(0, data.FortuneWheel.AvailableSpins);
             data.FortuneWheel.UpdatedAt = Math.Max(0, data.FortuneWheel.UpdatedAt);
+            data.Crafting.Version = Math.Max(1, data.Crafting.Version);
+            data.Crafting.Tasks ??= new List<CraftTaskSaveData>();
+            data.Crafting.Tasks = data.Crafting.Tasks
+                .Where(task => task != null &&
+                               !string.IsNullOrWhiteSpace(task.TaskId) &&
+                               !string.IsNullOrWhiteSpace(task.RecipeId) &&
+                               !string.IsNullOrWhiteSpace(task.StationId))
+                .Select(task =>
+                {
+                    task.StartedAtUnixSeconds = Math.Max(0, task.StartedAtUnixSeconds);
+                    task.CompleteAtUnixSeconds = Math.Max(task.StartedAtUnixSeconds, task.CompleteAtUnixSeconds);
+                    return task;
+                })
+                .ToList();
+
+            data.Fishing.Version = Math.Max(1, data.Fishing.Version);
+            data.Fishing.CaughtFish ??= new List<CaughtFishSaveData>();
+            data.Fishing.CaughtFish = data.Fishing.CaughtFish
+                .Where(entry => entry != null && !string.IsNullOrWhiteSpace(entry.FishId))
+                .Select(entry =>
+                {
+                    entry.CaughtStatesMask = Math.Max(0, entry.CaughtStatesMask) & 0b1111;
+                    entry.BestWeight = Math.Max(0f, entry.BestWeight);
+                    entry.CaughtCount = Math.Max(0, entry.CaughtCount);
+                    return entry;
+                })
+                .ToList();
 
             foreach (var owner in data.Inventory.Owners)
             {

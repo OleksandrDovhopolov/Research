@@ -10,6 +10,7 @@ namespace BattlePass
         public const string AddXpPath = "battle-pass/xp/add";
         public const string ClaimPath = "battle-pass/claim";
         public const string VerifyPurchasePath = "iap/google/verify";
+        public const string DevGrantBattlePassPath = "battle-pass/dev/grant-battle-pass";
     }
 
         public static class Ui

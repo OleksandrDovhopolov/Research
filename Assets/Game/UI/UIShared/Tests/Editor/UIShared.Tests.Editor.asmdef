@@ -1,0 +1,22 @@
+{
+    "name": "UIShared.Tests.Editor",
+    "rootNamespace": "UIShared.Tests.Editor",
+    "references": [
+        "UIShared",
+        "UniTask",
+        "VContainer"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

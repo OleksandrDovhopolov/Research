@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94b5132a88a75d94799f0839902d5ce8, type: 3}
+  m_Name: TileEditorLocationContainer
+  m_EditorClassIdentifier: 
+  _editorLocationInfos:
+  - <Location>k__BackingField: {fileID: 4900000, guid: 900bd254bde267943b50aa2f3e188118, type: 3}
+    <GroupName>k__BackingField: main_location
+    <PrefabFolders>k__BackingField:
+    - main_location
+  - <Location>k__BackingField: {fileID: 4900000, guid: 6f945bdf9ba313445ab4be62b9f3ffb4, type: 3}
+    <GroupName>k__BackingField: Fishing
+    <PrefabFolders>k__BackingField:
+    - Fishing

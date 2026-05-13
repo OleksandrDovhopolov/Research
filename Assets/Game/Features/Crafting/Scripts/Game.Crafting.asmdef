@@ -1,0 +1,21 @@
+{
+    "name": "Game.Crafting",
+    "rootNamespace": "Game.Crafting",
+    "references": [
+        "UniTask",
+        "VContainer",
+        "Inventory.API",
+        "Infrastructure",
+        "Core.Models",
+        "EventOrchestration"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

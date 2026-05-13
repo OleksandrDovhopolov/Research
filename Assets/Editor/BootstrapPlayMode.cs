@@ -13,6 +13,7 @@ public static class BootstrapPlayMode
 
     private static void OnPlayModeChanged(PlayModeStateChange state)
     {
+        return;
         if (state == PlayModeStateChange.ExitingEditMode)
         {
             if (EditorSceneManager.GetActiveScene().path != BootstrapScenePath)

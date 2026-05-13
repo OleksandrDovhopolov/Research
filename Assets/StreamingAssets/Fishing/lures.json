@@ -1,0 +1,44 @@
+{
+  "lures": [
+    {
+      "id": "red_lure",
+      "display_name": "Red Lure",
+      "item_id": "item_red_lure",
+      "craft_recipe_id": "craft_red_lure",
+      "rarity": "common",
+      "sort_order": 1
+    },
+    {
+      "id": "green_lure",
+      "display_name": "Green Lure",
+      "item_id": "item_green_lure",
+      "craft_recipe_id": "craft_green_lure",
+      "rarity": "uncommon",
+      "sort_order": 2
+    },
+    {
+      "id": "blue_lure",
+      "display_name": "Blue Lure",
+      "item_id": "item_blue_lure",
+      "craft_recipe_id": "craft_blue_lure",
+      "rarity": "rare",
+      "sort_order": 3
+    },
+    {
+      "id": "purple_lure",
+      "display_name": "Purple Lure",
+      "item_id": "item_purple_lure",
+      "craft_recipe_id": "craft_purple_lure",
+      "rarity": "epic",
+      "sort_order": 4
+    },
+    {
+      "id": "gold_lure",
+      "display_name": "Gold Lure",
+      "item_id": "item_gold_lure",
+      "craft_recipe_id": "craft_gold_lure",
+      "rarity": "legendary",
+      "sort_order": 5
+    }
+  ]
+}

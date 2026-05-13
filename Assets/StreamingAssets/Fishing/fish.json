@@ -1,0 +1,978 @@
+{
+    "fish":  [
+                 {
+                     "id":  "arctic_charr",
+                     "display_name":  "Arctic Charr",
+                     "available_lure_ids":  [
+                                                "purple_lure",
+                                                "gold_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "medium_depth",
+                                              "deep_water"
+                                          ],
+                     "circle_size":  "medium",
+                     "behavior_type":  "heavy",
+                     "spawn_weight":  40,
+                     "xp":  18,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  2.0,
+                                               "rare":  4.0,
+                                               "epic":  6.5,
+                                               "legendary":  9.0
+                                           }
+                 },
+                 {
+                     "id":  "asp",
+                     "display_name":  "Asp",
+                     "available_lure_ids":  [
+                                                "purple_lure",
+                                                "gold_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "rocky_water"
+                                          ],
+                     "circle_size":  "medium",
+                     "behavior_type":  "light",
+                     "spawn_weight":  45,
+                     "xp":  18,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  1.0,
+                                               "rare":  2.0,
+                                               "epic":  3.0,
+                                               "legendary":  4.5
+                                           }
+                 },
+                 {
+                     "id":  "bitterling",
+                     "display_name":  "Bitterling",
+                     "available_lure_ids":  [
+                                                "purple_lure",
+                                                "gold_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "deep_water"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "medium",
+                     "spawn_weight":  55,
+                     "xp":  16,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.2,
+                                               "rare":  0.4,
+                                               "epic":  0.7,
+                                               "legendary":  1.0
+                                           }
+                 },
+                 {
+                     "id":  "black_bullhead",
+                     "display_name":  "Black Bullhead",
+                     "available_lure_ids":  [
+                                                "gold_lure",
+                                                "red_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "reed_water",
+                                              "deep_water"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "light",
+                     "spawn_weight":  45,
+                     "xp":  14,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.8,
+                                               "rare":  1.5,
+                                               "epic":  2.4,
+                                               "legendary":  3.5
+                                           }
+                 },
+                 {
+                     "id":  "bluegill",
+                     "display_name":  "Bluegill",
+                     "available_lure_ids":  [
+                                                "blue_lure",
+                                                "purple_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "coastal"
+                                          ],
+                     "circle_size":  "medium",
+                     "behavior_type":  "heavy",
+                     "spawn_weight":  60,
+                     "xp":  16,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.5,
+                                               "rare":  1.0,
+                                               "epic":  1.6,
+                                               "legendary":  2.4
+                                           }
+                 },
+                 {
+                     "id":  "bluespotted_sunfish",
+                     "display_name":  "Bluespotted Sunfish",
+                     "available_lure_ids":  [
+                                                "purple_lure",
+                                                "gold_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "medium_depth"
+                                          ],
+                     "circle_size":  "medium",
+                     "behavior_type":  "heavy",
+                     "spawn_weight":  50,
+                     "xp":  14,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.4,
+                                               "rare":  0.8,
+                                               "epic":  1.2,
+                                               "legendary":  1.8
+                                           }
+                 },
+                 {
+                     "id":  "brook_trout",
+                     "display_name":  "Brook Trout",
+                     "available_lure_ids":  [
+                                                "green_lure",
+                                                "blue_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "rocky_water"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "medium",
+                     "spawn_weight":  70,
+                     "xp":  10,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.7,
+                                               "rare":  1.3,
+                                               "epic":  2.0,
+                                               "legendary":  3.0
+                                           }
+                 },
+                 {
+                     "id":  "carp",
+                     "display_name":  "Carp",
+                     "available_lure_ids":  [
+                                                "gold_lure",
+                                                "red_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "coastal",
+                                              "medium_depth"
+                                          ],
+                     "circle_size":  "event",
+                     "behavior_type":  "very_heavy",
+                     "spawn_weight":  25,
+                     "xp":  14,
+                     "event_only":  true,
+                     "event_ids":  [
+                                       "fishing_event"
+                                   ],
+                     "weight_thresholds":  {
+                                               "common":  3.0,
+                                               "rare":  6.0,
+                                               "epic":  9.0,
+                                               "legendary":  13.0
+                                           }
+                 },
+                 {
+                     "id":  "coho_salmon",
+                     "display_name":  "Coho Salmon",
+                     "available_lure_ids":  [
+                                                "green_lure",
+                                                "blue_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "coastal"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "heavy",
+                     "spawn_weight":  50,
+                     "xp":  12,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  2.0,
+                                               "rare":  4.0,
+                                               "epic":  6.0,
+                                               "legendary":  8.5
+                                           }
+                 },
+                 {
+                     "id":  "copper_redhorse",
+                     "display_name":  "Copper Redhorse",
+                     "available_lure_ids":  [
+                                                "red_lure",
+                                                "green_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "coastal"
+                                          ],
+                     "circle_size":  "large",
+                     "behavior_type":  "medium",
+                     "spawn_weight":  120,
+                     "xp":  4,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  1.0,
+                                               "rare":  2.0,
+                                               "epic":  3.5,
+                                               "legendary":  5.0
+                                           }
+                 },
+                 {
+                     "id":  "fallfish",
+                     "display_name":  "Fallfish",
+                     "available_lure_ids":  [
+                                                "blue_lure",
+                                                "purple_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "reed_water"
+                                          ],
+                     "circle_size":  "medium",
+                     "behavior_type":  "medium",
+                     "spawn_weight":  75,
+                     "xp":  12,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.6,
+                                               "rare":  1.2,
+                                               "epic":  2.0,
+                                               "legendary":  3.0
+                                           }
+                 },
+                 {
+                     "id":  "giant_barb",
+                     "display_name":  "Giant Barb",
+                     "available_lure_ids":  [
+                                                "purple_lure",
+                                                "gold_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "medium_depth",
+                                              "deep_water"
+                                          ],
+                     "circle_size":  "event",
+                     "behavior_type":  "very_heavy",
+                     "spawn_weight":  20,
+                     "xp":  14,
+                     "event_only":  true,
+                     "event_ids":  [
+                                       "fishing_event"
+                                   ],
+                     "weight_thresholds":  {
+                                               "common":  10.0,
+                                               "rare":  20.0,
+                                               "epic":  35.0,
+                                               "legendary":  50.0
+                                           }
+                 },
+                 {
+                     "id":  "golden_trout",
+                     "display_name":  "Golden Trout",
+                     "available_lure_ids":  [
+                                                "gold_lure",
+                                                "red_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "medium_depth"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "light",
+                     "spawn_weight":  20,
+                     "xp":  20,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  1.0,
+                                               "rare":  2.0,
+                                               "epic":  3.5,
+                                               "legendary":  5.0
+                                           }
+                 },
+                 {
+                     "id":  "goldfish",
+                     "display_name":  "Goldfish",
+                     "available_lure_ids":  [
+                                                "gold_lure",
+                                                "red_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "deep_water"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "heavy",
+                     "spawn_weight":  20,
+                     "xp":  20,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.2,
+                                               "rare":  0.5,
+                                               "epic":  0.8,
+                                               "legendary":  1.2
+                                           }
+                 },
+                 {
+                     "id":  "grass_carp",
+                     "display_name":  "Grass Carp",
+                     "available_lure_ids":  [
+                                                "green_lure",
+                                                "blue_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "coastal",
+                                              "reed_water"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "light",
+                     "spawn_weight":  70,
+                     "xp":  12,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  2.0,
+                                               "rare":  4.0,
+                                               "epic":  6.0,
+                                               "legendary":  9.0
+                                           }
+                 },
+                 {
+                     "id":  "greater_redhorse",
+                     "display_name":  "Greater Redhorse",
+                     "available_lure_ids":  [
+                                                "gold_lure",
+                                                "red_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "reed_water"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "medium",
+                     "spawn_weight":  40,
+                     "xp":  18,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  1.5,
+                                               "rare":  3.0,
+                                               "epic":  5.0,
+                                               "legendary":  7.5
+                                           }
+                 },
+                 {
+                     "id":  "green_sunfish",
+                     "display_name":  "Green Sunfish",
+                     "available_lure_ids":  [
+                                                "green_lure",
+                                                "blue_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "medium_depth"
+                                          ],
+                     "circle_size":  "large",
+                     "behavior_type":  "heavy",
+                     "spawn_weight":  65,
+                     "xp":  14,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.3,
+                                               "rare":  0.6,
+                                               "epic":  1.0,
+                                               "legendary":  1.5
+                                           }
+                 },
+                 {
+                     "id":  "huchen",
+                     "display_name":  "Huchen",
+                     "available_lure_ids":  [
+                                                "red_lure",
+                                                "green_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "rocky_water"
+                                          ],
+                     "circle_size":  "large",
+                     "behavior_type":  "light",
+                     "spawn_weight":  100,
+                     "xp":  4,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  4.0,
+                                               "rare":  8.0,
+                                               "epic":  12.0,
+                                               "legendary":  18.0
+                                           }
+                 },
+                 {
+                     "id":  "lake_sturgeon",
+                     "display_name":  "Lake Sturgeon",
+                     "available_lure_ids":  [
+                                                "blue_lure",
+                                                "purple_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "rocky_water",
+                                              "deep_water"
+                                          ],
+                     "circle_size":  "event",
+                     "behavior_type":  "very_heavy",
+                     "spawn_weight":  20,
+                     "xp":  14,
+                     "event_only":  true,
+                     "event_ids":  [
+                                       "fishing_event"
+                                   ],
+                     "weight_thresholds":  {
+                                               "common":  8.0,
+                                               "rare":  16.0,
+                                               "epic":  25.0,
+                                               "legendary":  40.0
+                                           }
+                 },
+                 {
+                     "id":  "lake_whitefish",
+                     "display_name":  "Lake Whitefish",
+                     "available_lure_ids":  [
+                                                "blue_lure",
+                                                "purple_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "medium_depth"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "light",
+                     "spawn_weight":  80,
+                     "xp":  10,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  1.0,
+                                               "rare":  2.0,
+                                               "epic":  3.0,
+                                               "legendary":  4.5
+                                           }
+                 },
+                 {
+                     "id":  "largemouth_bass",
+                     "display_name":  "Largemouth Bass",
+                     "available_lure_ids":  [
+                                                "green_lure",
+                                                "blue_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "medium_depth"
+                                          ],
+                     "circle_size":  "large",
+                     "behavior_type":  "heavy",
+                     "spawn_weight":  85,
+                     "xp":  8,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  1.0,
+                                               "rare":  2.0,
+                                               "epic":  3.5,
+                                               "legendary":  5.0
+                                           }
+                 },
+                 {
+                     "id":  "longear_sunfish",
+                     "display_name":  "Longear Sunfish",
+                     "available_lure_ids":  [
+                                                "purple_lure",
+                                                "gold_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "medium_depth"
+                                          ],
+                     "circle_size":  "medium",
+                     "behavior_type":  "heavy",
+                     "spawn_weight":  45,
+                     "xp":  16,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.3,
+                                               "rare":  0.6,
+                                               "epic":  1.0,
+                                               "legendary":  1.5
+                                           }
+                 },
+                 {
+                     "id":  "nile_perch",
+                     "display_name":  "Nile Perch",
+                     "available_lure_ids":  [
+                                                "purple_lure",
+                                                "gold_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "coastal",
+                                              "deep_water"
+                                          ],
+                     "circle_size":  "event",
+                     "behavior_type":  "very_heavy",
+                     "spawn_weight":  20,
+                     "xp":  14,
+                     "event_only":  true,
+                     "event_ids":  [
+                                       "fishing_event"
+                                   ],
+                     "weight_thresholds":  {
+                                               "common":  8.0,
+                                               "rare":  16.0,
+                                               "epic":  28.0,
+                                               "legendary":  45.0
+                                           }
+                 },
+                 {
+                     "id":  "northern_pike",
+                     "display_name":  "Northern Pike",
+                     "available_lure_ids":  [
+                                                "green_lure",
+                                                "blue_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "rocky_water"
+                                          ],
+                     "circle_size":  "large",
+                     "behavior_type":  "light",
+                     "spawn_weight":  60,
+                     "xp":  14,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  2.0,
+                                               "rare":  4.0,
+                                               "epic":  7.0,
+                                               "legendary":  10.0
+                                           }
+                 },
+                 {
+                     "id":  "northern_studfish",
+                     "display_name":  "Northern Studfish",
+                     "available_lure_ids":  [
+                                                "blue_lure",
+                                                "purple_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "rocky_water"
+                                          ],
+                     "circle_size":  "medium",
+                     "behavior_type":  "light",
+                     "spawn_weight":  80,
+                     "xp":  10,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.2,
+                                               "rare":  0.4,
+                                               "epic":  0.7,
+                                               "legendary":  1.0
+                                           }
+                 },
+                 {
+                     "id":  "perch",
+                     "display_name":  "Perch",
+                     "available_lure_ids":  [
+                                                "green_lure",
+                                                "blue_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "reed_water"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "medium",
+                     "spawn_weight":  90,
+                     "xp":  10,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.4,
+                                               "rare":  0.8,
+                                               "epic":  1.2,
+                                               "legendary":  1.8
+                                           }
+                 },
+                 {
+                     "id":  "quillback",
+                     "display_name":  "Quillback",
+                     "available_lure_ids":  [
+                                                "blue_lure",
+                                                "purple_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "reed_water"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "medium",
+                     "spawn_weight":  65,
+                     "xp":  14,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  1.0,
+                                               "rare":  2.0,
+                                               "epic":  3.0,
+                                               "legendary":  4.5
+                                           }
+                 },
+                 {
+                     "id":  "rainbow_smelt",
+                     "display_name":  "Rainbow Smelt",
+                     "available_lure_ids":  [
+                                                "blue_lure",
+                                                "purple_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "medium_depth"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "light",
+                     "spawn_weight":  75,
+                     "xp":  12,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.1,
+                                               "rare":  0.2,
+                                               "epic":  0.4,
+                                               "legendary":  0.7
+                                           }
+                 },
+                 {
+                     "id":  "rainbowfish",
+                     "display_name":  "Rainbowfish",
+                     "available_lure_ids":  [
+                                                "purple_lure",
+                                                "gold_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "rocky_water"
+                                          ],
+                     "circle_size":  "medium",
+                     "behavior_type":  "light",
+                     "spawn_weight":  55,
+                     "xp":  12,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.2,
+                                               "rare":  0.4,
+                                               "epic":  0.7,
+                                               "legendary":  1.0
+                                           }
+                 },
+                 {
+                     "id":  "red_tailed_catfish",
+                     "display_name":  "Red-Tailed Catfish",
+                     "available_lure_ids":  [
+                                                "green_lure",
+                                                "blue_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "reed_water",
+                                              "deep_water"
+                                          ],
+                     "circle_size":  "event",
+                     "behavior_type":  "very_heavy",
+                     "spawn_weight":  20,
+                     "xp":  14,
+                     "event_only":  true,
+                     "event_ids":  [
+                                       "fishing_event"
+                                   ],
+                     "weight_thresholds":  {
+                                               "common":  5.0,
+                                               "rare":  10.0,
+                                               "epic":  18.0,
+                                               "legendary":  30.0
+                                           }
+                 },
+                 {
+                     "id":  "roach",
+                     "display_name":  "Roach",
+                     "available_lure_ids":  [
+                                                "green_lure",
+                                                "blue_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "coastal"
+                                          ],
+                     "circle_size":  "large",
+                     "behavior_type":  "medium",
+                     "spawn_weight":  90,
+                     "xp":  8,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.3,
+                                               "rare":  0.6,
+                                               "epic":  1.0,
+                                               "legendary":  1.5
+                                           }
+                 },
+                 {
+                     "id":  "rudd",
+                     "display_name":  "Rudd",
+                     "available_lure_ids":  [
+                                                "gold_lure",
+                                                "red_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "coastal"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "heavy",
+                     "spawn_weight":  45,
+                     "xp":  14,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.3,
+                                               "rare":  0.6,
+                                               "epic":  1.0,
+                                               "legendary":  1.5
+                                           }
+                 },
+                 {
+                     "id":  "salmon",
+                     "display_name":  "Salmon",
+                     "available_lure_ids":  [
+                                                "blue_lure",
+                                                "purple_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "rocky_water"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "light",
+                     "spawn_weight":  60,
+                     "xp":  14,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  2.0,
+                                               "rare":  4.0,
+                                               "epic":  6.5,
+                                               "legendary":  9.0
+                                           }
+                 },
+                 {
+                     "id":  "sauger",
+                     "display_name":  "Sauger",
+                     "available_lure_ids":  [
+                                                "purple_lure",
+                                                "gold_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "coastal"
+                                          ],
+                     "circle_size":  "medium",
+                     "behavior_type":  "medium",
+                     "spawn_weight":  55,
+                     "xp":  14,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  1.0,
+                                               "rare":  2.0,
+                                               "epic":  3.5,
+                                               "legendary":  5.0
+                                           }
+                 },
+                 {
+                     "id":  "shadow_bass",
+                     "display_name":  "Shadow Bass",
+                     "available_lure_ids":  [
+                                                "green_lure",
+                                                "blue_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "coastal"
+                                          ],
+                     "circle_size":  "large",
+                     "behavior_type":  "medium",
+                     "spawn_weight":  65,
+                     "xp":  12,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  1.0,
+                                               "rare":  2.0,
+                                               "epic":  3.5,
+                                               "legendary":  5.0
+                                           }
+                 },
+                 {
+                     "id":  "sockeye_salmon",
+                     "display_name":  "Sockeye Salmon",
+                     "available_lure_ids":  [
+                                                "red_lure",
+                                                "green_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "coastal"
+                                          ],
+                     "circle_size":  "large",
+                     "behavior_type":  "heavy",
+                     "spawn_weight":  100,
+                     "xp":  4,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  2.0,
+                                               "rare":  4.0,
+                                               "epic":  6.5,
+                                               "legendary":  9.0
+                                           }
+                 },
+                 {
+                     "id":  "speckled_dace",
+                     "display_name":  "Speckled Dace",
+                     "available_lure_ids":  [
+                                                "gold_lure",
+                                                "red_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "deep_water"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "medium",
+                     "spawn_weight":  20,
+                     "xp":  20,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.1,
+                                               "rare":  0.3,
+                                               "epic":  0.5,
+                                               "legendary":  0.8
+                                           }
+                 },
+                 {
+                     "id":  "spotted_sunfish",
+                     "display_name":  "Spotted Sunfish",
+                     "available_lure_ids":  [
+                                                "purple_lure",
+                                                "gold_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "medium_depth"
+                                          ],
+                     "circle_size":  "medium",
+                     "behavior_type":  "heavy",
+                     "spawn_weight":  60,
+                     "xp":  12,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.3,
+                                               "rare":  0.6,
+                                               "epic":  1.0,
+                                               "legendary":  1.5
+                                           }
+                 },
+                 {
+                     "id":  "striped_bass",
+                     "display_name":  "Striped Bass",
+                     "available_lure_ids":  [
+                                                "blue_lure",
+                                                "purple_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "coastal"
+                                          ],
+                     "circle_size":  "medium",
+                     "behavior_type":  "heavy",
+                     "spawn_weight":  65,
+                     "xp":  12,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  1.0,
+                                               "rare":  2.0,
+                                               "epic":  3.5,
+                                               "legendary":  5.0
+                                           }
+                 },
+                 {
+                     "id":  "white_catfish",
+                     "display_name":  "White Catfish",
+                     "available_lure_ids":  [
+                                                "blue_lure",
+                                                "purple_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "reed_water",
+                                              "deep_water"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "very_heavy",
+                     "spawn_weight":  45,
+                     "xp":  12,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  2.0,
+                                               "rare":  4.0,
+                                               "epic":  7.0,
+                                               "legendary":  10.0
+                                           }
+                 },
+                 {
+                     "id":  "yellow_bass",
+                     "display_name":  "Yellow Bass",
+                     "available_lure_ids":  [
+                                                "gold_lure",
+                                                "red_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "coastal"
+                                          ],
+                     "circle_size":  "small",
+                     "behavior_type":  "heavy",
+                     "spawn_weight":  45,
+                     "xp":  16,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.4,
+                                               "rare":  0.8,
+                                               "epic":  1.2,
+                                               "legendary":  1.8
+                                           }
+                 },
+                 {
+                     "id":  "yellow_perch",
+                     "display_name":  "Yellow Perch",
+                     "available_lure_ids":  [
+                                                "green_lure",
+                                                "blue_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "reed_water"
+                                          ],
+                     "circle_size":  "large",
+                     "behavior_type":  "medium",
+                     "spawn_weight":  65,
+                     "xp":  14,
+                     "event_only":  false,
+                     "weight_thresholds":  {
+                                               "common":  0.4,
+                                               "rare":  0.8,
+                                               "epic":  1.2,
+                                               "legendary":  1.8
+                                           }
+                 },
+                 {
+                     "id":  "zander",
+                     "display_name":  "Zander",
+                     "available_lure_ids":  [
+                                                "green_lure",
+                                                "blue_lure"
+                                            ],
+                     "water_body_types":  [
+                                              "coastal",
+                                              "deep_water"
+                                          ],
+                     "circle_size":  "event",
+                     "behavior_type":  "very_heavy",
+                     "spawn_weight":  25,
+                     "xp":  14,
+                     "event_only":  true,
+                     "event_ids":  [
+                                       "fishing_event"
+                                   ],
+                     "weight_thresholds":  {
+                                               "common":  2.0,
+                                               "rare":  4.0,
+                                               "epic":  7.0,
+                                               "legendary":  11.0
+                                           }
+                 }
+             ]
+}

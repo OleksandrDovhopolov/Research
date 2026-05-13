@@ -1,0 +1,265 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Fishing
+  m_EditorClassIdentifier: 
+  m_GroupName: Fishing
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 22b13d02cafac0247be0e3f8025d0db0
+  m_SerializeEntries:
+  - m_GUID: 038216933fd383644bdccbfea2ba40c8
+    m_Address: perch
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 063461bedd269914ab5c7c125e9fb38d
+    m_Address: LureSelectorHudWidget
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1b23f8eeafa77564f8fc07c5bded7b89
+    m_Address: fallfish
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1bd8bf266177abb49b3a1581a44aba3e
+    m_Address: FishCollectionWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 25bb60fd9990f924ba68b078ec220fe3
+    m_Address: NewFishWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 26471b8872b649c43ab7d3bc02516321
+    m_Address: huchen
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 382335a963cf1004ea63bd187aa740e9
+    m_Address: rudd
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5628abd2c5302a44da2578a23f70fd1b
+    m_Address: black_bullhead
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6a4008d2898291d40affeb906ffe3161
+    m_Address: northern_studfish
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e4532cc2bc88804a8c26ac70cb4af20
+    m_Address: arctic_charr
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7b3cda130ff12c24892ed6e3759522d0
+    m_Address: FishingHudWidget
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 83f87e598f6f01b4d8495c650aa5ad68
+    m_Address: grass_carp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 897fb2e475568144cba2d25e692a211d
+    m_Address: brook_trout
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8a7ebadd6ce39294c95de103577dc773
+    m_Address: largemouth_bass
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8b6ce6ac3d7440a49b63dada1c9dc249
+    m_Address: speckled_dace
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8c9ac783d6d20054b93850a5697d23f1
+    m_Address: bluespotted_sunfish
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8e80ad5dd89bddc4b8330b148e557e62
+    m_Address: yellow_bass
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 936e9d8e88822514694078a3c88170fd
+    m_Address: longear_sunfish
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9e55cae51af6d1649ab258d52b9c513a
+    m_Address: yellow_perch
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9ea70c2214e50cf438f90c7094f44c23
+    m_Address: shadow_bass
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9ee8fb2c71ac1cb4084226a9875a2e03
+    m_Address: lake_whitefish
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a3e8fa606b58199428a5cdb686b94def
+    m_Address: white_catfish
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a5d2251c522437c4d932990cd4efe032
+    m_Address: FishingMinigameWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a84c9fa6ba424384087929fc2036dda5
+    m_Address: quillback
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac34b0e68eea55242a9b39094fd00acc
+    m_Address: sauger
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac6319a0f48efb04cab313f8356323a6
+    m_Address: Fishing_production
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aeba0de0c5b17b344a2a2ac795df3994
+    m_Address: sockeye_salmon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bc7e641db1e086648bea84416595994e
+    m_Address: salmon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: be3248f1780be5f498bf30468d597edd
+    m_Address: greater_redhorse
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: be3dd2bdac9135245bfd0d759460741b
+    m_Address: green_lure
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c22784e1fe9d2614482ff161b44c141f
+    m_Address: purple_lure
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c3bcc4b8e287b5b4b94a2182015dacbe
+    m_Address: rainbowfish
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c5c9a8c1714dcc44e8597c25fd7ced10
+    m_Address: rainbow_smelt
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c637cc8299cf59d48aa381dd77ba7f38
+    m_Address: copper_redhorse
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c8511520f4b47c04189f347955c0ecdc
+    m_Address: bitterling
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c8e063cd4eee14741b8b95299a374122
+    m_Address: blue_lure
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cccdf223a27342f4da1fc2a06df37a5d
+    m_Address: golden_trout
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d047a66d26e4e0f419c6bc0ad660685c
+    m_Address: red_lure
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1788fee6b58ea34f92316da554b31c4
+    m_Address: striped_bass
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d87c151bd11cd2e45b4ba7bca4cdb364
+    m_Address: coho_salmon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dd18687793b9a834eaed32743a46eacc
+    m_Address: spotted_sunfish
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dd4ff00692cc0884a89147cc9457ceb1
+    m_Address: bluegill
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e337c4c84d04fac43b63e8bdccbb8521
+    m_Address: northern_pike
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f4153eb5507ad4545833acca24917a78
+    m_Address: goldfish
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f50a0c1218de7d34f94710cbc9bc4422
+    m_Address: gold_lure
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f610e1e2998e0ac43a4977d5942be302
+    m_Address: asp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fe3bbda0705dc4c48851bd7976b54d95
+    m_Address: roach
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff6d709b3bc7686478540f30057f9712
+    m_Address: green_sunfish
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: c7236b2e70f2a9f4eb9a1c78df452a70, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 42f64af2a0d58424dada23dd9adb53bb, type: 2}
+    - {fileID: 11400000, guid: 2aca286173da7b0439bccdaceb523277, type: 2}

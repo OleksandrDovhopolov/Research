@@ -1,0 +1,59 @@
+{
+  "crafting_recipes": [
+    {
+      "id": "craft_red_lure",
+      "display_name": "Craft Red Lure",
+      "station_id": "lure_crafting_station",
+      "output_item_id": "item_red_lure",
+      "output_count": 1,
+      "craft_time_seconds": 5400,
+      "ingredients": [],
+      "requirements": [],
+      "is_enabled": true
+    },
+    {
+      "id": "craft_green_lure",
+      "display_name": "Craft Green Lure",
+      "station_id": "lure_crafting_station",
+      "output_item_id": "item_green_lure",
+      "output_count": 1,
+      "craft_time_seconds": 4500,
+      "ingredients": [],
+      "requirements": [],
+      "is_enabled": true
+    },
+    {
+      "id": "craft_blue_lure",
+      "display_name": "Craft Blue Lure",
+      "station_id": "lure_crafting_station",
+      "output_item_id": "item_blue_lure",
+      "output_count": 1,
+      "craft_time_seconds": 3600,
+      "ingredients": [],
+      "requirements": [],
+      "is_enabled": true
+    },
+    {
+      "id": "craft_purple_lure",
+      "display_name": "Craft Purple Lure",
+      "station_id": "lure_crafting_station",
+      "output_item_id": "item_purple_lure",
+      "output_count": 1,
+      "craft_time_seconds": 2700,
+      "ingredients": [],
+      "requirements": [],
+      "is_enabled": true
+    },
+    {
+      "id": "craft_gold_lure",
+      "display_name": "Craft Gold Lure",
+      "station_id": "lure_crafting_station",
+      "output_item_id": "item_gold_lure",
+      "output_count": 1,
+      "craft_time_seconds": 1800,
+      "ingredients": [],
+      "requirements": [],
+      "is_enabled": true
+    }
+  ]
+}

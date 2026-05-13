@@ -1,18 +1,23 @@
+using System.Collections.Generic;
+using BattlePass;
+using CameraModule;
 using CardCollectionImpl;
 using core;
 using CoreResources;
+using Cysharp.Threading.Tasks;
 using EventOrchestration;
-using BattlePass;
 using FortuneWheel;
+using Game.Crafting;
+using Game.Fishing;
+using Game.Features.Locations;
 using Infrastructure;
-using Inventory.API;
+using InputSystem;
 using Rewards;
-using System.Collections.Generic;
-using System.Linq;
 using UIShared;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
+using ApiConfig = Infrastructure.ApiConfig;
 
 namespace Game.Bootstrap
 {
@@ -23,6 +28,17 @@ namespace Game.Bootstrap
         [SerializeField] private RewardedAdsConfigSO _rewardedAdsConfigSo;
         [SerializeField] private string _liveOpsScheduleFile = "liveops_schedule.json";
         [SerializeField] private string _liveOpsScheduleConfigName = "cards_event_schedule";
+        
+        [SerializeField] private CameraSettings _cameraSettings;
+        [SerializeField] private CameraBehaviour _cameraBehaviour;
+        
+        [Space, Header("Location")]
+        [SerializeField] private LocationZoneInfoHudBootstrap _locationZoneInfoHudBootstrap;
+        [SerializeField] private MainLocationBootstrap _mainLocationBootstrap;
+
+        [Space, Header("HUD")]
+        [SerializeField] private HudRoot _hudRoot;
+        [SerializeField] private HudWidgetRegistryAsset _hudWidgetRegistry;
         
         public override void InstallBindings(IContainerBuilder builder)
         {
@@ -35,13 +51,35 @@ namespace Game.Bootstrap
                 ? _rewardSpecsConfigSo
                 : ScriptableObject.CreateInstance<RewardSpecsConfigSO>();
 
+            //Camera
+            builder.Register<ScreenPointConverter>(Lifetime.Singleton);
+            builder.RegisterInstance(_cameraSettings);
+            builder.RegisterComponent(_cameraBehaviour);
+            builder.RegisterInstance<ICameraFocusService>(_cameraBehaviour);
+
+            // Location
+            if (_mainLocationBootstrap != null)
+            {
+                builder.RegisterComponent(_mainLocationBootstrap);
+                builder.RegisterInstance<ILocationInteractablesSource>(_mainLocationBootstrap);
+            }
+            else
+            {
+                Debug.LogWarning("[GameInstaller] MainLocationBootstrap reference is not assigned.");
+            }
+
+            builder.RegisterLocationZoneInfoHud(_locationZoneInfoHudBootstrap);
+
             // Game Ready Gate
             builder.Register<IGameplayReadyGate, GameplayReadyGate>(Lifetime.Singleton);
-            
+
+            // HUD
+            builder.RegisterHud(_hudRoot, _hudWidgetRegistry, this.GetCancellationTokenOnDestroy());
+
             // ResourceManager
             builder.RegisterInstance(new WebClientOptions
             {
-                BaseUrl = Infrastructure.ApiConfig.BaseUrl,
+                BaseUrl = ApiConfig.BaseUrl,
                 TimeoutSeconds = 30,
                 DefaultHeaders = new Dictionary<string, string>()
             });
@@ -59,6 +97,8 @@ namespace Game.Bootstrap
             builder.Register<IInventoryItemCategoryResolver>(_ => new RewardSpecInventoryItemCategoryResolver(rewardSpecsConfig), Lifetime.Singleton);
             
             builder.RegisterInventoryService();
+            builder.RegisterFishing();
+            builder.RegisterCrafting();
             builder.RegisterCardCollectionImpl();
             builder.RegisterBattlePass();
             builder.RegisterFortuneWheel();
@@ -71,15 +111,13 @@ namespace Game.Bootstrap
             builder.Register<IPlayerStateSnapshotApplier, PlayerStateSnapshotApplier>(Lifetime.Singleton);
             builder.Register<IRewardResponseApplier, RewardResponseApplier>(Lifetime.Singleton);
             builder.Register<IRewardGrantService, ServerRewardGrantService>(Lifetime.Singleton);
+            builder.Register<ICraftingRewardApplier, GrantBackedCraftingRewardApplier>(Lifetime.Singleton);
             builder.Register<IRewardIntentService, ServerRewardIntentService>(Lifetime.Singleton);
             builder.Register<IRewardPlayerStateSyncService, ServerRewardPlayerStateSyncService>(Lifetime.Singleton);
             builder.Register<IRewardPlayerStateRefreshCoordinator, RewardPlayerStateRefreshCoordinator>(Lifetime.Singleton);
             builder.Register<IRewardSpecProvider>(_ => new RewardSpecProvider(rewardSpecsConfig), Lifetime.Singleton);
 
-            var rewardedAdsConfig = _rewardedAdsConfigSo != null
-                ? _rewardedAdsConfigSo
-                : ScriptableObject.CreateInstance<RewardedAdsConfigSO>();
-            builder.RegisterInstance(rewardedAdsConfig);
+            builder.RegisterInstance(_rewardedAdsConfigSo);
             builder.Register<IRewardedAdsProvider>(resolver =>
             {
                 var config = resolver.Resolve<RewardedAdsConfigSO>().GetOrCreate();
@@ -102,24 +140,6 @@ namespace Game.Bootstrap
             builder.RegisterBuildCallback(resolver =>
             {
                 resolver.Resolve<WindowFactoryDI>().SetResolver(resolver);
-
-                var rewardedAdPresenters = Object.FindObjectsOfType<RewardedAdButtonPresenter>(true);
-                foreach (var rewardedAdPresenter in rewardedAdPresenters)
-                {
-                    if (rewardedAdPresenter != null)
-                    {
-                        resolver.Inject(rewardedAdPresenter);
-                    }
-                }
-
-                var battlePassOpenButtons = Object.FindObjectsOfType<BattlePassOpenButton>(true);
-                foreach (var battlePassOpenButton in battlePassOpenButtons)
-                {
-                    if (battlePassOpenButton != null)
-                    {
-                        resolver.Inject(battlePassOpenButton);
-                    }
-                }
             });
         }
     }
