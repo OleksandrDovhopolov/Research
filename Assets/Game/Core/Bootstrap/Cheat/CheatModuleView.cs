@@ -39,6 +39,7 @@ namespace Game.Cheat
         private IFishingConfigProvider _fishingConfigProvider;
         private IFishCatchResolver _fishCatchResolver;
         private ICaughtFishService _caughtFishService;
+        private IFishBookService _fishBookService;
 
         [Inject]
         private void Construct(
@@ -54,6 +55,7 @@ namespace Game.Cheat
             IFishingConfigProvider fishingConfigProvider,
             IFishCatchResolver fishCatchResolver,
             ICaughtFishService caughtFishService,
+            IFishBookService fishBookService,
             RewardSpecsConfigSO rewardSpecsConfigSo)
         {
             _uiManager = uiManager;
@@ -68,6 +70,7 @@ namespace Game.Cheat
             _fishingConfigProvider = fishingConfigProvider;
             _fishCatchResolver = fishCatchResolver;
             _caughtFishService = caughtFishService;
+            _fishBookService = fishBookService;
             _rewardSpecsConfigSo = rewardSpecsConfigSo;
         }
         
@@ -128,7 +131,7 @@ namespace Game.Cheat
                 new ResourcesCheatModule(_resourceManager, _resourceOperationsService, _animateCurrency),
                 new RewardCheatModule(_uiManager, _rewardSpecsConfigSo),
                 new BattlePassCheatModule(_battlePassServerService, _battlePassSnapshotStore, destroyCt),
-                new FishingCheatModule(_fishingConfigProvider, _fishCatchResolver, _caughtFishService, destroyCt),
+                new FishingCheatModule(_fishingConfigProvider, _fishCatchResolver, _caughtFishService, _fishBookService, _uiManager, destroyCt),
                 //new InventoryCheatModule(_inventoryService),
             };
             

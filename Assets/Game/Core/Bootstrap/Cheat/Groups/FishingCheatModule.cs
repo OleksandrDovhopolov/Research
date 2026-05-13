@@ -4,6 +4,7 @@ using System.Threading;
 using cheatModule;
 using Cysharp.Threading.Tasks;
 using Game.Fishing;
+using UISystem;
 using UnityEngine;
 
 namespace Game.Cheat
@@ -15,17 +16,23 @@ namespace Game.Cheat
         private readonly IFishingConfigProvider _configProvider;
         private readonly IFishCatchResolver _fishCatchResolver;
         private readonly ICaughtFishService _caughtFishService;
+        private readonly IFishBookService _fishBookService;
+        private readonly UIManager _uiManager;
         private readonly CancellationToken _ct;
 
         public FishingCheatModule(
             IFishingConfigProvider configProvider,
             IFishCatchResolver fishCatchResolver,
             ICaughtFishService caughtFishService,
+            IFishBookService fishBookService,
+            UIManager uiManager,
             CancellationToken ct)
         {
             _configProvider = configProvider ?? throw new ArgumentNullException(nameof(configProvider));
             _fishCatchResolver = fishCatchResolver ?? throw new ArgumentNullException(nameof(fishCatchResolver));
             _caughtFishService = caughtFishService ?? throw new ArgumentNullException(nameof(caughtFishService));
+            _fishBookService = fishBookService ?? throw new ArgumentNullException(nameof(fishBookService));
+            _uiManager = uiManager ?? throw new ArgumentNullException(nameof(uiManager));
             _ct = ct;
         }
 
@@ -84,7 +91,25 @@ namespace Game.Cheat
                     return;
                 }
 
-                await _caughtFishService.HandleCatchAsync(result, _ct);
+                var handledResult = await _caughtFishService.HandleCatchAsync(result, _ct);
+                if (handledResult == null || !handledResult.Success || string.IsNullOrWhiteSpace(handledResult.FishId))
+                {
+                    return;
+                }
+
+                try
+                {
+                    var progress = await _fishBookService.GetProgressAsync(handledResult.FishId, _ct);
+                    var args = NewFishArgs.FromCatchResult(handledResult, progress);
+                    _uiManager.Show<NewFishController>(args);
+                }
+                catch (OperationCanceledException)
+                {
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError($"[FishingCheatModule] Failed to open new fish window for '{handledResult.FishId}'. {exception}");
+                }
             }
             catch (OperationCanceledException)
             {
