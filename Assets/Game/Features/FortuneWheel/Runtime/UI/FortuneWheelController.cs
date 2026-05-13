@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Rewards;
+using UIShared;
 using UISystem;
 using UnityEngine;
 using VContainer;
@@ -38,9 +39,15 @@ namespace FortuneWheel
     [Window("FortuneWheelWindow")]
     public class FortuneWheelController : WindowController<FortuneWheelView>
     {
+        private const string MockAdInProgressMessage = "Mock ad is in progress.";
+
+        private static readonly object AdSpinFlowLockType = new();
+
         private IFortuneWheelServerService _fortuneWheelServerService;
         private IFortuneWheelTimerService _fortuneWheelTimerService;
         private FortuneWheelAdSpinOrchestrator _fortuneWheelAdSpinOrchestrator;
+        private RewardedAdsConfig _rewardedAdsConfig;
+        private Lock _adSpinUiLock;
 
         private FortuneWheelArgs Args => Arguments as FortuneWheelArgs;
         private IReadOnlyList<FortuneWheelSectorArgs> Sectors => Args?.Sectors ?? Array.Empty<FortuneWheelSectorArgs>();
@@ -56,17 +63,19 @@ namespace FortuneWheel
         private TimeSpan _currentRemainingTime;
         private FortuneWheelSpinResult _lastSuccessfulSpinResult;
 
-        public override bool IsCloseBlocked => _isSpinning || _isWaitingSpinAfterAdSuccess;
+        public override bool IsCloseBlocked => _isSpinning || _isWaitingSpinAfterAdSuccess || _adSpinFlowInProgressCount > 0;
 
         [Inject]
         private void Construct(
             IFortuneWheelServerService fortuneWheelServerService,
             IFortuneWheelTimerService fortuneWheelTimerService,
-            FortuneWheelAdSpinOrchestrator fortuneWheelAdSpinOrchestrator)
+            FortuneWheelAdSpinOrchestrator fortuneWheelAdSpinOrchestrator,
+            RewardedAdsConfigSO rewardedAdsConfigSo)
         {
             _fortuneWheelServerService = fortuneWheelServerService;
             _fortuneWheelTimerService = fortuneWheelTimerService;
             _fortuneWheelAdSpinOrchestrator = fortuneWheelAdSpinOrchestrator;
+            _rewardedAdsConfig = rewardedAdsConfigSo?.GetOrCreate();
         }
 
         protected override void OnShowStart()
@@ -124,6 +133,7 @@ namespace FortuneWheel
             View.SpinAdClick -= OnSpinAdClicked;
             View.SpinClick -= OnSpinClicked;
             View.CloseClick -= CloseWindow;
+            ReleaseAdSpinUiLock();
             UnsubscribeTimerService();
             _fortuneWheelTimerService?.Stop();
             CancelRequests();
@@ -164,6 +174,12 @@ namespace FortuneWheel
             }
 
             _adSpinFlowInProgressCount++;
+            AcquireAdSpinUiLock();
+            if (IsMockAdsMode())
+            {
+                ShowInfo(MockAdInProgressMessage);
+            }
+
             UpdateInteractionState();
 
             try
@@ -193,6 +209,7 @@ namespace FortuneWheel
             finally
             {
                 _adSpinFlowInProgressCount = Math.Max(0, _adSpinFlowInProgressCount - 1);
+                ReleaseAdSpinUiLock();
                 if (!_isSpinning && !_isSpinRequestInProgress)
                 {
                     UpdateInteractionState();
@@ -300,9 +317,10 @@ namespace FortuneWheel
 
         private void UpdateInteractionState()
         {
-            var regularSpinIsBusy = !_isDataValid || _isSpinning || _isSpinRequestInProgress || _isWaitingSpinAfterAdSuccess;
+            var adSpinFlowInProgress = _adSpinFlowInProgressCount > 0;
+            var regularSpinIsBusy = !_isDataValid || _isSpinning || _isSpinRequestInProgress || _isWaitingSpinAfterAdSuccess || adSpinFlowInProgress;
             View.SetSpinButtonInteractable(!regularSpinIsBusy && _currentSpinsAmount > 0);
-            View.SetSpinAdButtonInteractable(_isDataValid && !_isSpinning && !_isWaitingSpinAfterAdSuccess);
+            View.SetSpinAdButtonInteractable(_isDataValid && !_isSpinning && !_isWaitingSpinAfterAdSuccess && !adSpinFlowInProgress);
             View.SetCloseInteractable(_isSpinning || _isWaitingSpinAfterAdSuccess);
         }
 
@@ -313,6 +331,7 @@ namespace FortuneWheel
             _isWaitingSpinAfterAdSuccess = false;
             _adSpinFlowInProgressCount = 0;
             _lastSuccessfulSpinResult = null;
+            ReleaseAdSpinUiLock();
             View.StopSpinAnimation();
             UpdateInteractionState();
         }
@@ -469,6 +488,11 @@ namespace FortuneWheel
             UIManager.Show<RewardsWindowController>(rewardArgs);
         }
 
+        protected virtual void ShowInfo(string message)
+        {
+            UIManager.Show<InfoWidgetController>(new InfoWidgetArg(message));
+        }
+
         private static bool ValidateSectors(IReadOnlyList<FortuneWheelSectorArgs> sectors)
         {
             if (sectors == null || sectors.Count != FortuneWheelConfig.Gameplay.SectorCount)
@@ -498,6 +522,32 @@ namespace FortuneWheel
             }
 
             UIManager.Hide<FortuneWheelController>();
+        }
+
+        private void AcquireAdSpinUiLock()
+        {
+            if (_adSpinUiLock != null || UIManager == null || UIManager.UiFilter == null)
+            {
+                return;
+            }
+
+            _adSpinUiLock = UIManager.SetManualLock(AdSpinFlowLockType);
+        }
+
+        private void ReleaseAdSpinUiLock()
+        {
+            if (_adSpinUiLock == null)
+            {
+                return;
+            }
+
+            _adSpinUiLock.Dispose();
+            _adSpinUiLock = null;
+        }
+
+        private bool IsMockAdsMode()
+        {
+            return _rewardedAdsConfig != null && _rewardedAdsConfig.Mode == RewardedAdsMode.Mock;
         }
 
         private static long NormalizeUnixTimestampToSeconds(long unixTimestamp)
