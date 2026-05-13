@@ -639,6 +639,22 @@ namespace EventOrchestration.Tests.Editor
         }
 
         [Test]
+        public void ServerSynchronizedClock_UsesServerBaselineAfterManualUpdate()
+        {
+            var realtime = 100d;
+            var clock = new ServerSynchronizedClock(
+                null,
+                () => realtime,
+                () => DateTimeOffset.Parse("2026-04-24T09:00:00Z"));
+
+            clock.UpdateServerUtcNow(DateTimeOffset.Parse("2026-04-24T10:00:00Z"));
+            realtime += 7d;
+
+            Assert.That(clock.UtcNow, Is.EqualTo(DateTimeOffset.Parse("2026-04-24T10:00:07Z")));
+            Assert.That(clock.IsSynchronized, Is.True);
+        }
+
+        [Test]
         public void ServerSynchronizedClock_UtcNowFallsBackBeforeFirstSync()
         {
             var fallbackNow = DateTimeOffset.Parse("2026-04-24T09:00:00Z");

@@ -9,6 +9,12 @@ namespace EventOrchestration.Abstractions
         UniTask<DateTimeOffset> GetServerUtcNowAsync(CancellationToken ct);
     }
 
+    public interface IServerTimeSyncTarget
+    {
+        bool IsSynchronized { get; }
+        void UpdateServerUtcNow(DateTimeOffset serverUtcNow);
+    }
+
     public interface IClock
     {
         DateTimeOffset UtcNow { get; }

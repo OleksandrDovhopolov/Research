@@ -11,7 +11,7 @@ namespace EventOrchestration
         public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
     }
 
-    public sealed class ServerSynchronizedClock : IClock
+    public sealed class ServerSynchronizedClock : IClock, IServerTimeSyncTarget
     {
         private readonly IServerTimeSyncSource _serverTimeSyncSource;
         private readonly Func<double> _realtimeNowProvider;
@@ -19,6 +19,11 @@ namespace EventOrchestration
 
         private DateTimeOffset _serverUtcAtSync;
         private double _realtimeAtSyncSeconds;
+
+        public ServerSynchronizedClock()
+            : this(null, () => Time.realtimeSinceStartupAsDouble, () => DateTimeOffset.UtcNow)
+        {
+        }
 
         public ServerSynchronizedClock(IServerTimeSyncSource serverTimeSyncSource)
             : this(serverTimeSyncSource, () => Time.realtimeSinceStartupAsDouble, () => DateTimeOffset.UtcNow)
@@ -30,7 +35,7 @@ namespace EventOrchestration
             Func<double> realtimeNowProvider,
             Func<DateTimeOffset> fallbackUtcNowProvider)
         {
-            _serverTimeSyncSource = serverTimeSyncSource ?? throw new ArgumentNullException(nameof(serverTimeSyncSource));
+            _serverTimeSyncSource = serverTimeSyncSource;
             _realtimeNowProvider = realtimeNowProvider ?? throw new ArgumentNullException(nameof(realtimeNowProvider));
             _fallbackUtcNowProvider = fallbackUtcNowProvider ?? throw new ArgumentNullException(nameof(fallbackUtcNowProvider));
         }
@@ -58,8 +63,19 @@ namespace EventOrchestration
 
         public async UniTask RefreshAsync(CancellationToken ct)
         {
+            if (_serverTimeSyncSource == null)
+            {
+                return;
+            }
+
             ct.ThrowIfCancellationRequested();
-            _serverUtcAtSync = await _serverTimeSyncSource.GetServerUtcNowAsync(ct);
+            var serverUtcNow = await _serverTimeSyncSource.GetServerUtcNowAsync(ct);
+            UpdateServerUtcNow(serverUtcNow);
+        }
+
+        public void UpdateServerUtcNow(DateTimeOffset serverUtcNow)
+        {
+            _serverUtcAtSync = serverUtcNow;
             _realtimeAtSyncSeconds = _realtimeNowProvider();
             IsSynchronized = true;
         }
