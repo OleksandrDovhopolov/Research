@@ -30,9 +30,10 @@ namespace Game.Fishing
         }
 
         private const float ResultDisplaySeconds = 1.1f;
+        // private const string TapNowInstructionText = "TAP!";
 
-        private const float PulseAmplitude = 0.08f;
-        private const float PulseTweenDuration = 0.42f;
+        // private const float PulseAmplitude = 0.08f;
+        // private const float PulseTweenDuration = 0.42f;
 
         private const float ResultFlashScale = 1.45f;
         private const float ResultPerfectFlashScaleBonus = 0.18f;
@@ -41,6 +42,14 @@ namespace Game.Fishing
 
         private const float HitPunchScale = 0.08f;
         private const float PerfectHitPunchScaleBonus = 0.04f;
+        private const float TapNowPunchScale = 0.1f;
+        private const float TapNowPunchDuration = 0.18f;
+
+        private static readonly Color PulseRingGuideColor = new(1f, 1f, 1f, 0.24f);
+        private static readonly Color TargetRingIdleColor = new(1f, 1f, 1f, 0.86f);
+        private static readonly Color TargetRingTapNowColor = new(1f, 0.97f, 0.72f, 1f);
+        private static readonly Color ShrinkingRingIdleColor = new(1f, 1f, 1f, 0.94f);
+        private static readonly Color ShrinkingRingTapNowColor = new(1f, 0.92f, 0.58f, 1f);
 
         [SerializeField] private Sprite _timingCircleShrinking;
         [SerializeField] private Sprite _timingCircleTarget;
@@ -68,10 +77,11 @@ namespace Game.Fishing
         private float _currentRadius;
         private float _resolutionRadius;
         private bool _resolutionCommitted;
+        private bool _isInsideSuccessWindow;
         private FishingMinigamePhase _phase = FishingMinigamePhase.Resolved;
 
         private Sequence _resultSequence;
-        private Tween _pulseTween;
+        // private Tween _pulseTween;
         private Tween _startWarningTween;
         private CancellationTokenSource _startSequenceCts;
         private CanvasGroup _startWarningCanvasGroup;
@@ -98,6 +108,7 @@ namespace Game.Fishing
 
             _currentRadius = Mathf.Lerp(config.StartRadius, config.EndRadius, progress);
             ApplyShrinkingRadius(_currentRadius);
+            UpdateTapNowState();
 
             if (progress >= 1f)
                 CommitTimeoutResolution();
@@ -125,6 +136,7 @@ namespace Game.Fishing
             ResetGraphicState(_shrinkingRing);
             ResetGraphicState(_successFlash);
             ResetGraphicState(_failFlash);
+            ApplyIdleRingVisualState();
 
             SetGameplayRingsVisible(false);
 
@@ -151,8 +163,8 @@ namespace Game.Fishing
             _phase = FishingMinigamePhase.Resolved;
             SetStartWarningVisibleImmediate(false);
 
-            _pulseTween?.Kill();
-            _pulseTween = null;
+            // _pulseTween?.Kill();
+            // _pulseTween = null;
 
             if (_screenTapButton != null)
                 _screenTapButton.interactable = false;
@@ -221,7 +233,7 @@ namespace Game.Fishing
                 Vector2.zero,
                 new Vector2(520f, 520f));*/
 
-            _pulseRing = CreateSpriteImage("PulseRing", _root, _circlePulse, new Color(1f, 1f, 1f, 0.72f));
+            _pulseRing = CreateSpriteImage("PulseRing", _root, _circlePulse, PulseRingGuideColor);
             _targetRing = CreateSpriteImage("TargetRing", _root, _timingCircleTarget, Color.white);
             _shrinkingRing = CreateSpriteImage("ShrinkingRing", _root, _timingCircleShrinking, Color.white);
             _successFlash = CreateSpriteImage("SuccessFlash", _root, _circleSuccessFlash, new Color(1f, 1f, 1f, 0.96f));
@@ -249,13 +261,14 @@ namespace Game.Fishing
 
             ApplyShrinkingRadius(config.StartRadius);
 
-            ApplySprite(_pulseRing, _circlePulse, new Color(1f, 1f, 1f, 0.72f));
-            ApplySprite(_targetRing, _timingCircleTarget, Color.white);
-            ApplySprite(_shrinkingRing, _timingCircleShrinking, Color.white);
+            ApplySprite(_pulseRing, _circlePulse, PulseRingGuideColor);
+            ApplySprite(_targetRing, _timingCircleTarget, TargetRingIdleColor);
+            ApplySprite(_shrinkingRing, _timingCircleShrinking, ShrinkingRingIdleColor);
             ApplySprite(_successFlash, _circleSuccessFlash, new Color(1f, 1f, 1f, 0.96f));
             ApplySprite(_failFlash, _circleFailFlash, new Color(1f, 1f, 1f, 0.96f));
 
             SetGameplayRingsVisible(false);
+            ApplyIdleRingVisualState();
             
             SetGraphicVisible(_successFlash, false);
             SetGraphicVisible(_failFlash, false);
@@ -269,21 +282,21 @@ namespace Game.Fishing
 
         private void StartPulseTween()
         {
-            if (_args == null || _pulseRing == null)
-                return;
-
-            _pulseTween?.Kill();
-
-            ResetGraphicState(_pulseRing);
-
-            var targetDiameter = (_args.RuntimeConfig.TargetRadius + _args.RuntimeConfig.SuccessRadiusThreshold) * 2f;
-            SetCircleDiameter(_pulseRing.rectTransform, targetDiameter);
-
-            _pulseTween = _pulseRing.rectTransform
-                .DOScale(1f + PulseAmplitude, PulseTweenDuration)
-                .SetEase(Ease.InOutSine)
-                .SetLoops(-1, LoopType.Yoyo)
-                .SetUpdate(true);
+            // if (_args == null || _pulseRing == null)
+            //     return;
+            //
+            // _pulseTween?.Kill();
+            //
+            // ResetGraphicState(_pulseRing);
+            //
+            // var targetDiameter = (_args.RuntimeConfig.TargetRadius + _args.RuntimeConfig.SuccessRadiusThreshold) * 2f;
+            // SetCircleDiameter(_pulseRing.rectTransform, targetDiameter);
+            //
+            // _pulseTween = _pulseRing.rectTransform
+            //     .DOScale(1f + PulseAmplitude, PulseTweenDuration)
+            //     .SetEase(Ease.InOutSine)
+            //     .SetLoops(-1, LoopType.Yoyo)
+            //     .SetUpdate(true);
         }
 
         private async UniTaskVoid RunStartSequenceAsync(CancellationToken destroyToken)
@@ -354,8 +367,9 @@ namespace Game.Fishing
             ResetGraphicState(_pulseRing);
             ResetGraphicState(_targetRing);
             ResetGraphicState(_shrinkingRing);
+            ApplyIdleRingVisualState();
             ApplyShrinkingRadius(_args?.RuntimeConfig.StartRadius ?? _currentRadius);
-            StartPulseTween();
+            // StartPulseTween();
         }
 
         private void OnScreenTap()
@@ -380,8 +394,8 @@ namespace Game.Fishing
             _phase = FishingMinigamePhase.Resolved;
             SetStartWarningVisibleImmediate(false);
 
-            _pulseTween?.Kill();
-            _pulseTween = null;
+            // _pulseTween?.Kill();
+            // _pulseTween = null;
 
             // Фиксируем радиус именно в момент клика или таймаута.
             // Потом success/fail flash стартует с этого же диаметра.
@@ -393,6 +407,8 @@ namespace Game.Fishing
             var endReason = isSuccess
                 ? FishingMinigameEndReason.SuccessfulTap
                 : FishingMinigameEndReason.MissedTap;
+
+            LogResolution(isSuccess, endReason, _currentRadius);
 
             ResolutionCommitted?.Invoke(new FishingMinigameResolution(
                 isSuccess,
@@ -414,6 +430,8 @@ namespace Game.Fishing
             SetStartWarningVisibleImmediate(false);
             _resolutionRadius = _currentRadius;
 
+            LogResolution(false, FishingMinigameEndReason.EarlyTap, _currentRadius);
+
             ResolutionCommitted?.Invoke(new FishingMinigameResolution(
                 false,
                 false,
@@ -431,9 +449,11 @@ namespace Game.Fishing
             _phase = FishingMinigamePhase.Resolved;
             SetStartWarningVisibleImmediate(false);
 
-            _pulseTween?.Kill();
-            _pulseTween = null;
+            // _pulseTween?.Kill();
+            // _pulseTween = null;
             _resolutionRadius = _currentRadius;
+
+            LogResolution(false, FishingMinigameEndReason.Timeout, _currentRadius);
 
             ResolutionCommitted?.Invoke(new FishingMinigameResolution(
                 false,
@@ -502,8 +522,8 @@ namespace Game.Fishing
             _resultSequence?.Kill();
             _resultSequence = null;
 
-            _pulseTween?.Kill();
-            _pulseTween = null;
+            // _pulseTween?.Kill();
+            // _pulseTween = null;
             _startWarningTween?.Kill();
             _startWarningTween = null;
 
@@ -513,7 +533,7 @@ namespace Game.Fishing
             _successFlash?.rectTransform.DOKill();
             _failFlash?.rectTransform.DOKill();
 
-            _pulseRing?.DOKill();
+            // _pulseRing?.DOKill();
             _targetRing?.DOKill();
             _shrinkingRing?.DOKill();
             _successFlash?.DOKill();
@@ -651,6 +671,89 @@ namespace Game.Fishing
                 return;
 
             _instructionText.text = value ?? string.Empty;
+        }
+
+        private void UpdateTapNowState()
+        {
+            if (_phase != FishingMinigamePhase.Running || _args == null)
+                return;
+
+            var distance = Mathf.Abs(_currentRadius - _args.RuntimeConfig.TargetRadius);
+            var isInsideSuccessWindow = distance <= _args.RuntimeConfig.SuccessRadiusThreshold;
+            if (_isInsideSuccessWindow == isInsideSuccessWindow)
+                return;
+
+            _isInsideSuccessWindow = isInsideSuccessWindow;
+
+            if (isInsideSuccessWindow)
+            {
+                ApplyTapNowVisualState();
+                return;
+            }
+
+            ApplyIdleRingVisualState();
+        }
+
+        private void ApplyIdleRingVisualState()
+        {
+            _isInsideSuccessWindow = false;
+            ApplyInstructionText(_preStartSettings?.DefaultInstructionText);
+            ApplyGraphicColor(_pulseRing, PulseRingGuideColor);
+            ApplyGraphicColor(_targetRing, TargetRingIdleColor);
+            ApplyGraphicColor(_shrinkingRing, ShrinkingRingIdleColor);
+
+            if (_targetRing != null)
+            {
+                _targetRing.rectTransform.DOKill();
+                _targetRing.rectTransform.localScale = Vector3.one;
+            }
+
+            if (_shrinkingRing != null)
+                _shrinkingRing.rectTransform.localScale = Vector3.one;
+        }
+
+        private void ApplyTapNowVisualState()
+        {
+            // ApplyInstructionText(TapNowInstructionText);
+            ApplyGraphicColor(_pulseRing, PulseRingGuideColor);
+            ApplyGraphicColor(_targetRing, TargetRingTapNowColor);
+            ApplyGraphicColor(_shrinkingRing, ShrinkingRingTapNowColor);
+
+            if (_targetRing == null)
+                return;
+
+            _targetRing.rectTransform.DOKill();
+            _targetRing.rectTransform.localScale = Vector3.one;
+            _targetRing.rectTransform
+                .DOPunchScale(Vector3.one * TapNowPunchScale, TapNowPunchDuration, 1, 0f)
+                .SetUpdate(true);
+        }
+
+        private void LogResolution(bool isSuccess, FishingMinigameEndReason endReason, float currentRadius)
+        {
+            if (_args == null)
+                return;
+
+            var config = _args.RuntimeConfig;
+            var targetRadius = config.TargetRadius;
+            var distance = Mathf.Abs(currentRadius - targetRadius);
+
+            Debug.LogWarning(
+                $"[FishingMinigameView] Result={(isSuccess ? "Success" : "Fail")}, " +
+                $"EndReason={endReason}, " +
+                $"CurrentRadius={currentRadius:0.###}, " +
+                $"TargetRadius={targetRadius:0.###}, " +
+                $"Distance={distance:0.###}, " +
+                $"SuccessThreshold={config.SuccessRadiusThreshold:0.###}, " +
+                $"PerfectThreshold={config.PerfectRadiusThreshold:0.###}.");
+        }
+
+        private static void ApplyGraphicColor(Graphic graphic, Color color)
+        {
+            if (graphic == null)
+                return;
+
+            graphic.color = color;
         }
 
         private static RectTransform CreateRect(string name, RectTransform parent)
