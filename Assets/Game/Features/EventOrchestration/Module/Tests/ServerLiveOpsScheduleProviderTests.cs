@@ -13,33 +13,37 @@ namespace EventOrchestration.Tests.Editor
         [Test]
         public void LoadAsync_WhenServerReturnsSchedule_ReturnsItemsWithoutReordering()
         {
-            var expected = new List<ScheduleItem>
+            var expected = new LiveOpsScheduleResponse
             {
-                new()
+                ServerTimeUtc = "2026-04-16T08:39:03Z",
+                Items = new List<ScheduleItem>
                 {
-                    Id = "card_collection",
-                    EventType = "CardCollection",
-                    StartTimeUtc = DateTimeOffset.Parse("2026-04-16T08:39:03Z"),
-                    EndTimeUtc = DateTimeOffset.Parse("2026-04-27T22:25:43Z"),
-                    Priority = 10,
-                    StreamId = "card_collection_seasons",
-                    CustomParams = new Dictionary<string, string>
+                    new()
                     {
-                        ["eventId"] = "Winter_Collection",
-                        ["collectionName"] = "Winter Collection",
-                        ["eventConfigAddress"] = "event_winter_collection_config",
+                        Id = "card_collection",
+                        EventType = "CardCollection",
+                        StartTimeUtc = DateTimeOffset.Parse("2026-04-16T08:39:03Z"),
+                        EndTimeUtc = DateTimeOffset.Parse("2026-04-27T22:25:43Z"),
+                        Priority = 10,
+                        StreamId = "card_collection_seasons",
+                        CustomParams = new Dictionary<string, string>
+                        {
+                            ["eventId"] = "Winter_Collection",
+                            ["collectionName"] = "Winter Collection",
+                            ["eventConfigAddress"] = "event_winter_collection_config",
+                        },
                     },
-                },
-                new()
-                {
-                    Id = "battle_pass",
-                    EventType = "BattlePass",
-                    StartTimeUtc = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
-                    EndTimeUtc = DateTimeOffset.Parse("2026-06-01T00:00:00Z"),
-                    Priority = 5,
-                    StreamId = "battle_pass",
-                    CustomParams = new Dictionary<string, string>(),
-                },
+                    new()
+                    {
+                        Id = "battle_pass",
+                        EventType = "BattlePass",
+                        StartTimeUtc = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+                        EndTimeUtc = DateTimeOffset.Parse("2026-06-01T00:00:00Z"),
+                        Priority = 5,
+                        StreamId = "battle_pass",
+                        CustomParams = new Dictionary<string, string>(),
+                    },
+                }
             };
 
             var webClient = new FakeWebClient(_ => UniTask.FromResult<object>(expected));
@@ -57,18 +61,21 @@ namespace EventOrchestration.Tests.Editor
         [Test]
         public void LoadAsync_WhenCustomParamsIsNull_NormalizesToEmptyDictionary()
         {
-            var expected = new List<ScheduleItem>
+            var expected = new LiveOpsScheduleResponse
             {
-                new()
+                Items = new List<ScheduleItem>
                 {
-                    Id = "battle_pass",
-                    EventType = "BattlePass",
-                    StartTimeUtc = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
-                    EndTimeUtc = DateTimeOffset.Parse("2026-06-01T00:00:00Z"),
-                    Priority = 5,
-                    StreamId = "battle_pass",
-                    CustomParams = null,
-                },
+                    new()
+                    {
+                        Id = "battle_pass",
+                        EventType = "BattlePass",
+                        StartTimeUtc = DateTimeOffset.Parse("2026-05-01T00:00:00Z"),
+                        EndTimeUtc = DateTimeOffset.Parse("2026-06-01T00:00:00Z"),
+                        Priority = 5,
+                        StreamId = "battle_pass",
+                        CustomParams = null,
+                    },
+                }
             };
 
             var provider = new ServerLiveOpsScheduleProvider(new FakeWebClient(_ => UniTask.FromResult<object>(expected)));
@@ -83,21 +90,24 @@ namespace EventOrchestration.Tests.Editor
         [Test]
         public void LoadAsync_WhenServerFailsAfterSuccessfulLoad_ReturnsLastValidSnapshot()
         {
-            var firstResponse = new List<ScheduleItem>
+            var firstResponse = new LiveOpsScheduleResponse
             {
-                new()
+                Items = new List<ScheduleItem>
                 {
-                    Id = "card_collection",
-                    EventType = "CardCollection",
-                    StartTimeUtc = DateTimeOffset.Parse("2026-04-16T08:39:03Z"),
-                    EndTimeUtc = DateTimeOffset.Parse("2026-04-27T22:25:43Z"),
-                    Priority = 10,
-                    StreamId = "card_collection_seasons",
-                    CustomParams = new Dictionary<string, string>
+                    new()
                     {
-                        ["eventId"] = "Winter_Collection",
+                        Id = "card_collection",
+                        EventType = "CardCollection",
+                        StartTimeUtc = DateTimeOffset.Parse("2026-04-16T08:39:03Z"),
+                        EndTimeUtc = DateTimeOffset.Parse("2026-04-27T22:25:43Z"),
+                        Priority = 10,
+                        StreamId = "card_collection_seasons",
+                        CustomParams = new Dictionary<string, string>
+                        {
+                            ["eventId"] = "Winter_Collection",
+                        },
                     },
-                },
+                }
             };
 
             var webClient = new SequencedWebClient(

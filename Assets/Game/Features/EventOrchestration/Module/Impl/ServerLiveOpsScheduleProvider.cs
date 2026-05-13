@@ -9,6 +9,13 @@ using UnityEngine;
 
 namespace EventOrchestration
 {
+    [Serializable]
+    public sealed class LiveOpsScheduleResponse
+    {
+        public string ServerTimeUtc;
+        public List<ScheduleItem> Items;
+    }
+
     public sealed class ServerLiveOpsScheduleProvider : IScheduleProvider
     {
         private const string ScheduleUrl = "liveops/schedule";
@@ -27,9 +34,10 @@ namespace EventOrchestration
 
             try
             {
-                var loadedItems = await _webClient.GetAsync<List<ScheduleItem>>(ScheduleUrl, ct);
+                var response = await _webClient.GetAsync<LiveOpsScheduleResponse>(ScheduleUrl, ct);
                 ct.ThrowIfCancellationRequested();
 
+                var loadedItems = response?.Items ?? new List<ScheduleItem>();
                 var normalizedItems = CloneAndNormalize(loadedItems);
                 _lastValidSnapshot = normalizedItems;
                 return normalizedItems;
