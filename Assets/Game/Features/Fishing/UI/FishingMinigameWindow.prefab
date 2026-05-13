@@ -267,7 +267,7 @@ MonoBehaviour:
     StartDelayMinSeconds: 2
     StartDelayMaxSeconds: 4
     StartWarningDurationSeconds: 1.5
-    StartWarningFadeDurationSeconds: 1
+    StartWarningFadeDurationSeconds: 0
     DefaultInstructionText: Wait for the signal, then tap when the circles overlap.
   _instructionText: {fileID: 2891705700035481895}
   _startWarningObject: {fileID: 8653675009090326235}

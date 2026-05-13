@@ -6,6 +6,7 @@ using Cysharp.Threading.Tasks;
 using Infrastructure;
 using Inventory.API;
 using Newtonsoft.Json.Linq;
+using UnityEngine;
 
 namespace Game.Fishing
 {
@@ -16,15 +17,21 @@ namespace Game.Fishing
         private readonly SaveService _saveService;
         private readonly IPlayerIdentityProvider _playerIdentityProvider;
         private readonly IInventorySnapshotService _inventorySnapshotService;
+        private readonly IInventoryReadService _inventoryReadService;
+        private readonly IInventoryService _inventoryService;
 
         public SaveBackedFishingInventoryGateway(
             SaveService saveService,
             IPlayerIdentityProvider playerIdentityProvider,
-            IInventorySnapshotService inventorySnapshotService)
+            IInventorySnapshotService inventorySnapshotService,
+            IInventoryReadService inventoryReadService,
+            IInventoryService inventoryService)
         {
             _saveService = saveService ?? throw new ArgumentNullException(nameof(saveService));
             _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
             _inventorySnapshotService = inventorySnapshotService ?? throw new ArgumentNullException(nameof(inventorySnapshotService));
+            _inventoryReadService = inventoryReadService ?? throw new ArgumentNullException(nameof(inventoryReadService));
+            _inventoryService = inventoryService ?? throw new ArgumentNullException(nameof(inventoryService));
         }
 
         public async UniTask<bool> HasItemAsync(string itemId, int amount, CancellationToken ct = default)
@@ -33,8 +40,10 @@ namespace Game.Fishing
             if (string.IsNullOrWhiteSpace(itemId) || amount <= 0)
                 return false;
 
-            var inventory = await _saveService.GetReadonlyModuleAsync(data => data.Inventory, ct);
-            return GetAmount(inventory, itemId) >= amount;
+            var ownerId = ResolveOwnerId();
+            var categoryId = ResolveCategoryId();
+            var inventoryItems = await _inventoryReadService.GetItemsAsync(ownerId, categoryId, ct);
+            return GetRuntimeAmount(inventoryItems, itemId) >= amount;
         }
 
         public async UniTask<bool> RemoveItemAsync(string itemId, int amount, CancellationToken ct = default)
@@ -43,21 +52,22 @@ namespace Game.Fishing
             if (string.IsNullOrWhiteSpace(itemId) || amount <= 0)
                 return false;
 
-            var removed = false;
-            await _saveService.UpdateModuleAsync(data => data.Inventory, inventory =>
+            try
             {
-                var current = GetAmount(inventory, itemId);
-                if (current < amount)
-                    return;
-
-                SetAmount(inventory, itemId, current - amount);
-                removed = true;
-            }, ct);
-
-            if (removed)
-                await ApplySnapshotAsync(ct);
-
-            return removed;
+                var ownerId = ResolveOwnerId();
+                var categoryId = ResolveCategoryId();
+                await _inventoryService.RemoveItemAsync(new InventoryItemDelta(ownerId, itemId, amount, categoryId), ct);
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"[FishingInventoryGateway] Failed to remove item '{itemId}' x{amount}. {exception}");
+                return false;
+            }
         }
 
         public async UniTask AddItemAsync(string itemId, int amount, CancellationToken ct = default)
@@ -66,21 +76,23 @@ namespace Game.Fishing
             if (string.IsNullOrWhiteSpace(itemId) || amount <= 0)
                 throw new ArgumentException("Item id and amount must be valid.");
 
+            var ownerId = ResolveOwnerId();
+            var categoryId = ResolveCategoryId();
+            var currentItems = await _inventoryReadService.GetItemsAsync(ownerId, categoryId, ct);
+
             await _saveService.UpdateModuleAsync(data => data.Inventory, inventory =>
             {
                 var current = GetAmount(inventory, itemId);
                 SetAmount(inventory, itemId, current + amount);
             }, ct);
 
-            await ApplySnapshotAsync(ct);
+            var updatedItems = AddToRuntimeSnapshot(currentItems, ownerId, itemId, amount, categoryId);
+            await _inventorySnapshotService.ApplySnapshotAsync(updatedItems, ct);
         }
 
-        private async UniTask ApplySnapshotAsync(CancellationToken ct)
+        private static string ResolveCategoryId()
         {
-            var ownerId = ResolveOwnerId();
-            var inventory = await _saveService.GetReadonlyModuleAsync(data => data.Inventory, ct);
-            var items = ReadAllItems(inventory, ownerId);
-            await _inventorySnapshotService.ApplySnapshotAsync(items, ct);
+            return RegularCategoryId;
         }
 
         private string ResolveOwnerId()
@@ -90,6 +102,56 @@ namespace Game.Fishing
                 throw new InvalidOperationException("Player id is empty.");
 
             return ownerId;
+        }
+
+        private static int GetRuntimeAmount(IReadOnlyList<InventoryItemView> inventoryItems, string itemId)
+        {
+            if (inventoryItems == null || string.IsNullOrWhiteSpace(itemId))
+                return 0;
+
+            var amount = 0;
+            for (var i = 0; i < inventoryItems.Count; i++)
+            {
+                var item = inventoryItems[i];
+                if (string.Equals(item.ItemId, itemId, StringComparison.Ordinal))
+                    amount += Math.Max(0, item.StackCount);
+            }
+
+            return amount;
+        }
+
+        private static IReadOnlyList<InventoryItemView> AddToRuntimeSnapshot(
+            IReadOnlyList<InventoryItemView> currentItems,
+            string ownerId,
+            string itemId,
+            int amount,
+            string categoryId)
+        {
+            var result = new List<InventoryItemView>();
+            var updatedAmount = Math.Max(0, amount);
+
+            if (currentItems != null)
+            {
+                for (var i = 0; i < currentItems.Count; i++)
+                {
+                    var item = currentItems[i];
+                    if (string.IsNullOrWhiteSpace(item.ItemId) || item.StackCount <= 0)
+                        continue;
+
+                    if (string.Equals(item.ItemId, itemId, StringComparison.Ordinal))
+                    {
+                        updatedAmount += Math.Max(0, item.StackCount);
+                        continue;
+                    }
+
+                    result.Add(item);
+                }
+            }
+
+            if (updatedAmount > 0)
+                result.Add(new InventoryItemView(ownerId, itemId, updatedAmount, categoryId));
+
+            return result;
         }
 
         private static int GetAmount(InventoryModuleSaveData inventory, string itemId)
@@ -135,24 +197,6 @@ namespace Game.Fishing
                 items.Remove(itemId);
             else
                 items[itemId] = amount;
-        }
-
-        private static IReadOnlyList<InventoryItemView> ReadAllItems(InventoryModuleSaveData inventory, string ownerId)
-        {
-            if (inventory?.InventoryItems is not JObject items || !items.HasValues)
-                return Array.Empty<InventoryItemView>();
-
-            var result = new List<InventoryItemView>(items.Count);
-            foreach (var property in items.Properties())
-            {
-                var amount = GetAmount(inventory, property.Name);
-                if (amount <= 0)
-                    continue;
-
-                result.Add(new InventoryItemView(ownerId, property.Name, amount, RegularCategoryId));
-            }
-
-            return result;
         }
     }
 }
