@@ -251,7 +251,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1261705890744712783}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d4e6f80123456789abcdef0123489abc, type: 3}
+  m_Script: {fileID: 11500000, guid: 0f5c41373ef08d546a58c365ef21153d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _animation: {fileID: 6073050975724252820}
@@ -266,8 +266,8 @@ MonoBehaviour:
   _preStartSettings:
     StartDelayMinSeconds: 2
     StartDelayMaxSeconds: 4
-    StartWarningDurationSeconds: 1.5
-    StartWarningFadeDurationSeconds: 0
+    StartWarningDurationSeconds: 1
+    StartWarningFadeDurationSeconds: 0.5
     DefaultInstructionText: Wait for the signal, then tap when the circles overlap.
   _instructionText: {fileID: 2891705700035481895}
   _startWarningObject: {fileID: 8653675009090326235}

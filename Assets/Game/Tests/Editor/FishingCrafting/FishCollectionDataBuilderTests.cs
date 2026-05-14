@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Game.Fishing;
-using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace Game.Tests.Editor.FishingCrafting
@@ -99,7 +98,7 @@ namespace Game.Tests.Editor.FishingCrafting
         private static FishCollectionDataBuilder CreateBuilder()
         {
             return new FishCollectionDataBuilder(
-                new FakeFishingConfigContentSource(),
+                new FakeFishingConfigProvider(),
                 new FakeFishBookService(new Dictionary<string, FishBookProgress>
                 {
                     ["roach"] = new FishBookProgress
@@ -112,83 +111,79 @@ namespace Game.Tests.Editor.FishingCrafting
                 }));
         }
 
-        private sealed class FakeFishingConfigContentSource : IFishingConfigContentSource
+        private sealed class FakeFishingConfigProvider : IFishingConfigProvider
         {
-            public UniTask<string> LoadJsonAsync(string relativePath, CancellationToken ct)
+            public UniTask<FishingStaticData> LoadAsync(CancellationToken ct)
             {
-                return relativePath switch
-                {
-                    FishingConfigPaths.Fish => UniTask.FromResult(JsonConvert.SerializeObject(new FishConfigRoot
+                return UniTask.FromResult(new FishingStaticData(
+                    new List<FishConfig>
                     {
-                        Fish = new List<FishConfig>
+                        new()
                         {
-                            new()
+                            Id = "roach",
+                            DisplayName = "Roach",
+                            AvailableLureIds = new List<string> { "red_lure", "green_lure" },
+                            WaterBodyTypes = new List<string> { "lake" },
+                            BehaviorType = "calm",
+                            WeightThresholds = new FishWeightThresholds
                             {
-                                Id = "roach",
-                                DisplayName = "Roach",
-                                AvailableLureIds = new List<string> { "red_lure", "green_lure" },
-                                WaterBodyTypes = new List<string> { "lake" },
-                                BehaviorType = "calm",
-                                WeightThresholds = new FishWeightThresholds
-                                {
-                                    Common = 1f,
-                                    Rare = 2f,
-                                    Epic = 3f,
-                                    Legendary = 4f
-                                }
-                            },
-                            new()
+                                Common = 1f,
+                                Rare = 2f,
+                                Epic = 3f,
+                                Legendary = 4f
+                            }
+                        },
+                        new()
+                        {
+                            Id = "pike",
+                            DisplayName = "Pike",
+                            AvailableLureIds = new List<string> { "green_lure" },
+                            WaterBodyTypes = new List<string> { "fresh", "river" },
+                            BehaviorType = "aggressive",
+                            WeightThresholds = new FishWeightThresholds
                             {
-                                Id = "pike",
-                                DisplayName = "Pike",
-                                AvailableLureIds = new List<string> { "green_lure" },
-                                WaterBodyTypes = new List<string> { "fresh", "river" },
-                                BehaviorType = "aggressive",
-                                WeightThresholds = new FishWeightThresholds
-                                {
-                                    Common = 2f,
-                                    Rare = 4f,
-                                    Epic = 6f,
-                                    Legendary = 8f
-                                }
-                            },
-                            new()
+                                Common = 2f,
+                                Rare = 4f,
+                                Epic = 6f,
+                                Legendary = 8f
+                            }
+                        },
+                        new()
+                        {
+                            Id = "event_fish",
+                            DisplayName = "Event Fish",
+                            WaterBodyTypes = new List<string> { "lake" },
+                            BehaviorType = "heavy",
+                            EventOnly = true,
+                            EventIds = new List<string> { "spring_event" },
+                            WeightThresholds = new FishWeightThresholds
                             {
-                                Id = "event_fish",
-                                DisplayName = "Event Fish",
-                                WaterBodyTypes = new List<string> { "lake" },
-                                BehaviorType = "heavy",
-                                EventOnly = true,
-                                EventIds = new List<string> { "spring_event" },
-                                WeightThresholds = new FishWeightThresholds
-                                {
-                                    Common = 5f,
-                                    Rare = 6f,
-                                    Epic = 7f,
-                                    Legendary = 8f
-                                }
+                                Common = 5f,
+                                Rare = 6f,
+                                Epic = 7f,
+                                Legendary = 8f
                             }
                         }
-                    })),
-                    FishingConfigPaths.Zones => UniTask.FromResult(JsonConvert.SerializeObject(new FishingZonesConfigRoot
+                    },
+                    System.Array.Empty<FishingZoneConfig>(),
+                    new List<WaterBodyTypeConfig>
                     {
-                        WaterBodyTypes = new List<WaterBodyTypeConfig>
-                        {
-                            new() { Id = "lake", DisplayName = "Lake" },
-                            new() { Id = "fresh", DisplayName = "Fresh Water" },
-                            new() { Id = "river", DisplayName = "River" }
-                        }
-                    })),
-                    FishingConfigPaths.Lures => UniTask.FromResult(JsonConvert.SerializeObject(new LuresConfigRoot
+                        new() { Id = "lake", DisplayName = "Lake" },
+                        new() { Id = "fresh", DisplayName = "Fresh Water" },
+                        new() { Id = "river", DisplayName = "River" }
+                    },
+                    new List<LureConfig>
                     {
-                        Lures = new List<LureConfig>
-                        {
-                            new() { Id = "red_lure", DisplayName = "Red Lure" },
-                            new() { Id = "green_lure", DisplayName = "Green Lure" }
-                        }
-                    })),
-                    _ => UniTask.FromResult(string.Empty)
-                };
+                        new() { Id = "red_lure", DisplayName = "Red Lure" },
+                        new() { Id = "green_lure", DisplayName = "Green Lure" }
+                    },
+                    System.Array.Empty<FishingItemConfig>(),
+                    new FishingSettingsConfigRoot(),
+                    System.Array.Empty<string>()));
+            }
+
+            public void ClearCache()
+            {
             }
         }
 

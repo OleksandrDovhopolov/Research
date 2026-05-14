@@ -222,12 +222,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 9116022024800548273}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8956a44d73de406fbeb014f79f6f0512, type: 3}
+  m_Script: {fileID: 11500000, guid: 8022e30d9c14a4d4f97e1d219c046581, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _canvas: {fileID: 7693258829092251922}
-  _button: {fileID: 5854946874379515867}
-  _label: {fileID: 0}
 --- !u!114 &3558131021551274911
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -237,6 +234,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 9116022024800548273}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b8a6aab24bb49ad8797210ce5d02a3e, type: 3}
+  m_Script: {fileID: 11500000, guid: 0be6c780036932142ac5f845577c2996, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _canvas: {fileID: 7693258829092251922}
+  _button: {fileID: 5854946874379515867}
