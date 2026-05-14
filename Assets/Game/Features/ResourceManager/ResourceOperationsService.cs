@@ -50,7 +50,7 @@ namespace CoreResources
                 return;
             }
 
-            await AdjustInternalAsync(type, amount, reason, ct);
+            await AdjustInternalAsync(type, amount, reason, treatInsufficientResourcesAsFalse: false, ct);
         }
 
         public async UniTask<bool> RemoveAsync(
@@ -65,8 +65,7 @@ namespace CoreResources
                 return false;
             }
 
-            await AdjustInternalAsync(type, -amount, reason, ct);
-            return true;
+            return await AdjustInternalAsync(type, -amount, reason, treatInsufficientResourcesAsFalse: true, ct);
         }
 
         public void Dispose()
@@ -80,7 +79,12 @@ namespace CoreResources
             _adjustSemaphore.Dispose();
         }
 
-        private async UniTask AdjustInternalAsync(ResourceType type, int delta, string reason, CancellationToken ct)
+        private async UniTask<bool> AdjustInternalAsync(
+            ResourceType type,
+            int delta,
+            string reason,
+            bool treatInsufficientResourcesAsFalse,
+            CancellationToken ct)
         {
             ThrowIfDisposed();
             ct.ThrowIfCancellationRequested();
@@ -103,7 +107,18 @@ namespace CoreResources
                     Reason = string.IsNullOrWhiteSpace(reason) ? ResourceManager.RewardGrantReason : reason
                 };
 
-                var response = await _resourceAdjustApi.AdjustAsync(command, ct);
+                AdjustResourceResponse response;
+                try
+                {
+                    response = await _resourceAdjustApi.AdjustAsync(command, ct);
+                }
+                catch (WebClientHttpException exception) when (
+                    treatInsufficientResourcesAsFalse &&
+                    WebClientErrorResponseParser.IsInsufficientResources(exception.StatusCode, exception.ResponseBody))
+                {
+                    return false;
+                }
+
                 if (response == null)
                 {
                     throw new InvalidOperationException("Resource adjust response is null.");
@@ -111,6 +126,12 @@ namespace CoreResources
 
                 if (!response.Success)
                 {
+                    if (treatInsufficientResourcesAsFalse &&
+                        string.Equals(response.ErrorCode, "insufficient_resources", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return false;
+                    }
+
                     throw new InvalidOperationException(
                         $"Resource adjust rejected. Code={response.ErrorCode ?? "<none>"}, Message={response.ErrorMessage ?? "<none>"}");
                 }
@@ -121,6 +142,7 @@ namespace CoreResources
                 }
 
                 await _resourceManager.ApplySnapshotAsync(response.Resources, instantUpdate: true, ct : ct);
+                return true;
             }
             finally
             {

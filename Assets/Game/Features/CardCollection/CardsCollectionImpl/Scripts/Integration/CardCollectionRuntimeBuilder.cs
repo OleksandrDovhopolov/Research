@@ -54,7 +54,7 @@ namespace CardCollectionImpl
     
     public class CardCollectionStaticData
     {
-        public EventConfig EventConfig { private get; set; }
+        public EventConfig EventConfig { get; set; }
         public IReadOnlyList<CardConfig> Cards  => EventConfig.cards;
         public IReadOnlyList<CardCollectionGroupConfig> Groups => EventConfig.groups;
         public IReadOnlyList<RewardConfig> Rewards => EventConfig.rewards;

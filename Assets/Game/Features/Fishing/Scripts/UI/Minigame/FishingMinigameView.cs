@@ -32,8 +32,8 @@ namespace Game.Fishing
         private const float ResultDisplaySeconds = 1.1f;
         // private const string TapNowInstructionText = "TAP!";
 
-        // private const float PulseAmplitude = 0.08f;
-        // private const float PulseTweenDuration = 0.42f;
+         private const float PulseAmplitude = 0.08f;
+         private const float PulseTweenDuration = 0.42f;
 
         private const float ResultFlashScale = 1.45f;
         private const float ResultPerfectFlashScaleBonus = 0.18f;

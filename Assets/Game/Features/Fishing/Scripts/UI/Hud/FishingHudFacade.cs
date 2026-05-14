@@ -150,7 +150,7 @@ namespace Game.Fishing
             catch (Exception exception)
             {
                 Debug.LogWarning($"[FishingHudFacade] Failed to spend gems for lure speed-up. Amount={amount}. {exception}");
-                return false;
+                throw;
             }
         }
 

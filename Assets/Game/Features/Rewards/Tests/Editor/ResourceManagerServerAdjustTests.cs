@@ -167,6 +167,74 @@ namespace Rewards.Tests.Editor
         }
 
         [Test]
+        public void Remove_ResponseHasInsufficientResources_ReturnsFalseAndDoesNotMutate()
+        {
+            var fixture = CreateFixture(_ => UniTask.FromResult(new AdjustResourceResponse
+            {
+                Success = false,
+                ErrorCode = "insufficient_resources",
+                ErrorMessage = "Insufficient 'Gems'.",
+                Resources = null
+            }));
+
+            fixture.SaveService
+                .UpdateModuleAsync(data => data.Resources, resources =>
+                {
+                    resources.Gold = 1;
+                    resources.Energy = 2;
+                    resources.Gems = 10;
+                }, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            var manager = fixture.CreateManager();
+            manager.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+            var operationsService = fixture.CreateOperationsService(manager);
+
+            var removed = operationsService.RemoveAsync(ResourceType.Gems, 50, ResourceManager.CheatRemoveReason, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.IsFalse(removed);
+            Assert.AreEqual(1, manager.Get(ResourceType.Gold));
+            Assert.AreEqual(2, manager.Get(ResourceType.Energy));
+            Assert.AreEqual(10, manager.Get(ResourceType.Gems));
+        }
+
+        [Test]
+        public void Remove_Http409InsufficientResources_ReturnsFalseAndDoesNotMutate()
+        {
+            var fixture = CreateFixture(_ => UniTask.FromException<AdjustResourceResponse>(
+                new WebClientHttpException(
+                    "https://example.test/resources/adjust",
+                    409,
+                    "{\"success\":false,\"errorCode\":\"insufficient_resources\",\"errorMessage\":\"Insufficient 'Gems'.\",\"resources\":null}")));
+
+            fixture.SaveService
+                .UpdateModuleAsync(data => data.Resources, resources =>
+                {
+                    resources.Gold = 3;
+                    resources.Energy = 4;
+                    resources.Gems = 5;
+                }, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            var manager = fixture.CreateManager();
+            manager.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+            var operationsService = fixture.CreateOperationsService(manager);
+
+            var removed = operationsService.RemoveAsync(ResourceType.Gems, 50, ResourceManager.CheatRemoveReason, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.IsFalse(removed);
+            Assert.AreEqual(3, manager.Get(ResourceType.Gold));
+            Assert.AreEqual(4, manager.Get(ResourceType.Energy));
+            Assert.AreEqual(5, manager.Get(ResourceType.Gems));
+        }
+
+        [Test]
         public void Add_ServerRejects_ThrowsAndDoesNotMutate()
         {
             var fixture = CreateFixture(_ => UniTask.FromResult(new AdjustResourceResponse
