@@ -85,7 +85,7 @@ namespace Infrastructure
                 var body = request.downloadHandler?.text;
                 if (exception.ResponseCode >= 400 && exception.ResponseCode <= 599)
                 {
-                    Debug.LogError($"[WebClient] HTTP error Url={request.url}, Status={exception.ResponseCode}, Body={body}");
+                    LogHttpError(request.url, exception.ResponseCode, body);
                     throw new WebClientHttpException(request.url, exception.ResponseCode, body);
                 }
 
@@ -105,11 +105,22 @@ namespace Infrastructure
 
             if (request.responseCode is < 200 or >= 300)
             {
-                Debug.LogError($"[WebClient] HTTP error Url={request.url}, Status={request.responseCode}, Body={responseBody}");
+                LogHttpError(request.url, request.responseCode, responseBody);
                 throw new WebClientHttpException(request.url, request.responseCode, responseBody);
             }
 
             return responseBody;
+        }
+
+        private static void LogHttpError(string url, long statusCode, string responseBody)
+        {
+            if (WebClientErrorResponseParser.IsInsufficientResources(statusCode, responseBody))
+            {
+                Debug.LogWarning($"[WebClient] HTTP business reject Url={url}, Status={statusCode}, Body={responseBody}");
+                return;
+            }
+
+            Debug.LogError($"[WebClient] HTTP error Url={url}, Status={statusCode}, Body={responseBody}");
         }
 
         private async UniTask ApplyHeadersAsync(UnityWebRequest request, CancellationToken ct)
