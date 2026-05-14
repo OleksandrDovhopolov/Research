@@ -634,31 +634,13 @@ namespace BattlePass.Tests.Editor
             }
         }
 
-        private sealed class StubBattlePassServerService : IBattlePassServerService
+        private sealed class StubBattlePassServerService : IBattlePassPurchaseVerify
         {
             public int VerifyPurchaseCalls { get; private set; }
             public string LastSeasonId { get; private set; }
             public string LastProductId { get; private set; }
             public string LastPurchaseToken { get; private set; }
             public Func<string, string, string, UniTask<BattlePassPurchaseVerificationResult>> VerifyPurchaseResponseFactory { get; set; }
-
-            public UniTask<BattlePassSnapshot> GetCurrentAsync(CancellationToken ct = default)
-            {
-                ct.ThrowIfCancellationRequested();
-                throw new NotImplementedException();
-            }
-
-            public UniTask<BattlePassAddXpResult> AddXpAsync(int amount, CancellationToken ct = default)
-            {
-                ct.ThrowIfCancellationRequested();
-                throw new NotImplementedException();
-            }
-
-            public UniTask<BattlePassClaimResult> ClaimAsync(string seasonId, int level, BattlePassRewardTrack rewardTrack, CancellationToken ct = default)
-            {
-                ct.ThrowIfCancellationRequested();
-                throw new NotImplementedException();
-            }
 
             public UniTask<BattlePassPurchaseVerificationResult> VerifyGooglePurchaseAsync(
                 string seasonId,

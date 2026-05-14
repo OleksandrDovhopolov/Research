@@ -5,7 +5,9 @@
         "Bootstrap",
         "BattlePass",
         "CheatModule",
-        "UniTask"
+        "UniTask",
+        "BattlePass.Application",
+        "BattlePass.Domain"
     ],
     "includePlatforms": [
         "Editor"

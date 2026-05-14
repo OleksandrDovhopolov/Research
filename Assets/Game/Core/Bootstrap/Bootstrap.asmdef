@@ -19,7 +19,9 @@
         "GUID:c81646b860f85574eaf3d172bf79c7b8",
         "GUID:62d0b9477bdb47bb93b42d70ed8aa101",
         "GUID:14d6712f9055a054d94520bbae6526ab",
-        "Unity.Services.Core"
+        "Unity.Services.Core",
+        "GUID:5edb791dc1e67c0419b498fa55a691f5",
+        "GUID:b4c04fa0c5330954ca44df8e16f62437"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

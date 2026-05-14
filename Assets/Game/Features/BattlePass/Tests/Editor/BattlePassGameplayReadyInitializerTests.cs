@@ -10,26 +10,25 @@ namespace BattlePass.Tests.Editor
         [Test]
         public void InitializeAsync_RefreshesSnapshotStore()
         {
-            var snapshotStore = new StubBattlePassSnapshotStore();
-            var initializer = new BattlePassGameplayReadyInitializer(snapshotStore);
+            var startupSync = new StubBattlePassStartupSync();
+            var initializer = new BattlePassGameplayReadyInitializer(startupSync);
 
             initializer.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
 
-            Assert.That(snapshotStore.RefreshCalls, Is.EqualTo(1));
-            Assert.That(snapshotStore.LastForceValue, Is.True);
+            Assert.That(startupSync.InitializeCalls, Is.EqualTo(1));
         }
 
         [Test]
         public void InitializeAsync_WhenRefreshFails_DoesNotThrow()
         {
-            var snapshotStore = new StubBattlePassSnapshotStore
+            var startupSync = new StubBattlePassStartupSync
             {
-                RefreshAsyncFactory = (_, _) => ThrowStubFailureAsync()
+                InitializeAsyncFactory = _ => ThrowStubFailureAsync()
             };
-            var initializer = new BattlePassGameplayReadyInitializer(snapshotStore);
+            var initializer = new BattlePassGameplayReadyInitializer(startupSync);
 
             Assert.DoesNotThrow(() => initializer.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult());
-            Assert.That(snapshotStore.RefreshCalls, Is.EqualTo(1));
+            Assert.That(startupSync.InitializeCalls, Is.EqualTo(1));
         }
 
         private static async UniTask ThrowStubFailureAsync()
@@ -38,41 +37,15 @@ namespace BattlePass.Tests.Editor
             throw new InvalidOperationException("stub failure");
         }
 
-        private sealed class StubBattlePassSnapshotStore : IBattlePassSnapshotStore
+        private sealed class StubBattlePassStartupSync : IBattlePassStartupSync
         {
-            public event Action<BattlePassSnapshot> SnapshotChanged;
+            public Func<CancellationToken, UniTask> InitializeAsyncFactory { get; set; }
+            public int InitializeCalls { get; private set; }
 
-            public Func<CancellationToken, bool, UniTask> RefreshAsyncFactory { get; set; }
-            public int RefreshCalls { get; private set; }
-            public bool LastForceValue { get; private set; }
-
-            public bool IsInitialized => false;
-            public bool HasSnapshot => false;
-            public bool LastSyncFailed => false;
-            public BattlePassSnapshot CurrentSnapshot => null;
-            public DateTimeOffset LastSyncUtc => default;
-            public DateTimeOffset LastOpenRefreshUtc => default;
-
-            public bool IsStale(DateTimeOffset nowUtc)
+            public UniTask InitializeAsync(CancellationToken ct)
             {
-                return true;
-            }
-
-            public UniTask RefreshAsync(CancellationToken ct, bool force = false)
-            {
-                RefreshCalls++;
-                LastForceValue = force;
-                return RefreshAsyncFactory?.Invoke(ct, force) ?? UniTask.CompletedTask;
-            }
-
-            public void ReplaceSnapshot(BattlePassSnapshot snapshot)
-            {
-                SnapshotChanged?.Invoke(snapshot);
-            }
-
-            public bool TryApplyUserState(BattlePassUserState updatedUserState)
-            {
-                return false;
+                InitializeCalls++;
+                return InitializeAsyncFactory?.Invoke(ct) ?? UniTask.CompletedTask;
             }
         }
     }

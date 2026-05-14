@@ -1,8 +1,9 @@
-using EventOrchestration;
+using EventOrchestration.Abstractions;
 using GameplayUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EventOrchestration;
 using TMPro;
 using UIShared;
 using UISystem;
@@ -23,7 +24,6 @@ namespace BattlePass
         private UIManager _uiManager;
         private IBattlePassLifecycleState _lifecycleState;
         private IBattlePassSnapshotStore _snapshotStore;
-        private EventOrchestrator _eventOrchestrator;
         private IGlobalTimerService _globalTimerService;
         private string _boundTimerEventId;
         private bool _isStarted;
@@ -33,13 +33,11 @@ namespace BattlePass
             UIManager uiManager,
             IBattlePassLifecycleState lifecycleState,
             IBattlePassSnapshotStore snapshotStore,
-            EventOrchestrator eventOrchestrator,
             IGlobalTimerService globalTimerService)
         {
             _uiManager = uiManager;
             _lifecycleState = lifecycleState;
             _snapshotStore = snapshotStore;
-            _eventOrchestrator = eventOrchestrator;
             _globalTimerService = globalTimerService;
         }
 
@@ -176,14 +174,6 @@ namespace BattlePass
                 return;
             }
 
-            var remainingFromServer = snapshot.Season.EndAtUtc - snapshot.ServerTimeUtc;
-            if (remainingFromServer < TimeSpan.Zero)
-            {
-                remainingFromServer = TimeSpan.Zero;
-            }
-
-            var localEndUtc = DateTimeOffset.UtcNow + remainingFromServer;
-
             if (!string.Equals(_boundTimerEventId, seasonId, StringComparison.Ordinal) &&
                 !string.IsNullOrWhiteSpace(_boundTimerEventId))
             {
@@ -191,7 +181,7 @@ namespace BattlePass
                 _boundTimerEventId = null;
             }
 
-            _globalTimerService.Register(seasonId, localEndUtc);
+            _globalTimerService.Register(seasonId, snapshot.Season.EndAtUtc);
             _boundTimerEventId = seasonId;
             _eventTimerDisplay?.Bind(seasonId, _globalTimerService);
         }

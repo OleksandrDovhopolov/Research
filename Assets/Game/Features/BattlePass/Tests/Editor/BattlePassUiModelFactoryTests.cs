@@ -404,7 +404,7 @@ namespace BattlePass.Tests.Editor
             };
         }
 
-        private sealed class StubRewardSpecProvider : IRewardSpecProvider
+        private sealed class StubRewardSpecProvider : IRewardSpecProvider, IBattlePassRewardCatalog
         {
             private readonly Dictionary<string, RewardSpec> _specs;
 
@@ -416,6 +416,22 @@ namespace BattlePass.Tests.Editor
             public bool TryGet(string rewardId, out RewardSpec spec)
             {
                 return _specs.TryGetValue(rewardId, out spec);
+            }
+
+            public bool TryGet(string rewardId, out BattlePassRewardDefinition rewardDefinition)
+            {
+                rewardDefinition = null;
+                if (!_specs.TryGetValue(rewardId, out var spec) || spec == null)
+                {
+                    return false;
+                }
+
+                rewardDefinition = new BattlePassRewardDefinition(
+                    rewardId,
+                    spec.Icon,
+                    spec.TotalAmountForUi,
+                    new Dictionary<string, int>());
+                return true;
             }
         }
     }

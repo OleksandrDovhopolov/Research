@@ -60,7 +60,7 @@ namespace BattlePass.Tests.Editor
             Assert.That(xp2, Is.EqualTo(0));
         }
 
-        private sealed class StubPlayerIdentityProvider : Infrastructure.IPlayerIdentityProvider
+        private sealed class StubPlayerIdentityProvider : IBattlePassPlayerContext
         {
             public string PlayerId { get; set; } = "player_1";
 

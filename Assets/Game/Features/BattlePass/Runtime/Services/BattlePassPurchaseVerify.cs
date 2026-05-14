@@ -12,17 +12,17 @@ namespace BattlePass
     public class BattlePassPurchaseVerify : IBattlePassPurchaseVerify
     {
         private readonly IWebClient _webClient;
-        private readonly IPlayerIdentityProvider _playerIdentityProvider;
+        private readonly IBattlePassPlayerContext _playerContext;
 
-        public BattlePassPurchaseVerify(IWebClient webClient, IPlayerIdentityProvider playerIdentityProvider)
+        public BattlePassPurchaseVerify(IWebClient webClient, IBattlePassPlayerContext playerContext)
         {
             _webClient = webClient ?? throw new ArgumentNullException(nameof(webClient));
-            _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
+            _playerContext = playerContext ?? throw new ArgumentNullException(nameof(playerContext));
         }
         
         public async UniTask<BattlePassPurchaseVerificationResult> VerifyGooglePurchaseAsync(string seasonId, string productId, string purchaseToken, CancellationToken ct = default)
         {
-            var playerId = _playerIdentityProvider.GetPlayerId();
+            var playerId = _playerContext.GetPlayerId();
             if (string.IsNullOrWhiteSpace(playerId))
             {
                 throw new InvalidOperationException("Player id is empty.");

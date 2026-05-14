@@ -766,31 +766,6 @@ namespace BattlePass.Tests.Editor
                     null));
             }
 
-            public UniTask<BattlePassPurchaseVerificationResult> VerifyGooglePurchaseAsync(
-                string seasonId,
-                string productId,
-                string purchaseToken,
-                CancellationToken ct = default)
-            {
-                ct.ThrowIfCancellationRequested();
-
-                if (VerifyPurchaseResponseFactory != null)
-                {
-                    return VerifyPurchaseResponseFactory(seasonId, productId, purchaseToken);
-                }
-
-                return UniTask.FromResult(new BattlePassPurchaseVerificationResult(
-                    true,
-                    "verified_and_acknowledged",
-                    (GetCurrentSnapshot ?? _initialSnapshot)?.UserState,
-                    "ent_default",
-                    "battle_pass",
-                    productId,
-                    "active",
-                    "acknowledged",
-                    null,
-                    null));
-            }
         }
 
         private sealed class FakeRealtimeClock : IBattlePassRealtimeClock
@@ -804,7 +779,7 @@ namespace BattlePass.Tests.Editor
             public double RealtimeSinceStartup => 0d;
         }
 
-        private sealed class StubPlayerIdentityProvider : Infrastructure.IPlayerIdentityProvider
+        private sealed class StubPlayerIdentityProvider : IBattlePassPlayerContext
         {
             public string PlayerId { get; set; } = "player_1";
 
@@ -851,7 +826,7 @@ namespace BattlePass.Tests.Editor
             }
         }
 
-        private sealed class StubRewardSpecProvider : IRewardSpecProvider
+        private sealed class StubRewardSpecProvider : IRewardSpecProvider, IBattlePassRewardCatalog
         {
             private readonly Dictionary<string, RewardSpec> _specs;
 
@@ -863,6 +838,22 @@ namespace BattlePass.Tests.Editor
             public bool TryGet(string rewardId, out RewardSpec spec)
             {
                 return _specs.TryGetValue(rewardId, out spec);
+            }
+
+            public bool TryGet(string rewardId, out BattlePassRewardDefinition rewardDefinition)
+            {
+                rewardDefinition = null;
+                if (!_specs.TryGetValue(rewardId, out var spec) || spec == null)
+                {
+                    return false;
+                }
+
+                rewardDefinition = new BattlePassRewardDefinition(
+                    rewardId,
+                    spec.Icon,
+                    spec.TotalAmountForUi,
+                    new Dictionary<string, int>());
+                return true;
             }
         }
 

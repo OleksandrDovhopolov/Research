@@ -14,17 +14,17 @@ namespace BattlePass
     public sealed class BattlePassServerService : IBattlePassServerService
     {
         private readonly IWebClient _webClient;
-        private readonly IPlayerIdentityProvider _playerIdentityProvider;
+        private readonly IBattlePassPlayerContext _playerContext;
 
-        public BattlePassServerService(IWebClient webClient, IPlayerIdentityProvider playerIdentityProvider)
+        public BattlePassServerService(IWebClient webClient, IBattlePassPlayerContext playerContext)
         {
             _webClient = webClient ?? throw new ArgumentNullException(nameof(webClient));
-            _playerIdentityProvider = playerIdentityProvider ?? throw new ArgumentNullException(nameof(playerIdentityProvider));
+            _playerContext = playerContext ?? throw new ArgumentNullException(nameof(playerContext));
         }
 
         public async UniTask<BattlePassSnapshot> GetCurrentAsync(CancellationToken ct = default)
         {
-            var playerId = _playerIdentityProvider.GetPlayerId();
+            var playerId = _playerContext.GetPlayerId();
             if (string.IsNullOrWhiteSpace(playerId))
             {
                 throw new InvalidOperationException("Player id is empty.");
@@ -38,7 +38,7 @@ namespace BattlePass
 
         public async UniTask<BattlePassAddXpResult> AddXpAsync(int amount, CancellationToken ct = default)
         {
-            var playerId = _playerIdentityProvider.GetPlayerId();
+            var playerId = _playerContext.GetPlayerId();
             if (string.IsNullOrWhiteSpace(playerId))
             {
                 throw new InvalidOperationException("Player id is empty.");
@@ -55,7 +55,7 @@ namespace BattlePass
 
         public async UniTask<BattlePassClaimResult> ClaimAsync(string seasonId, int level, BattlePassRewardTrack rewardTrack, CancellationToken ct = default)
         {
-            var playerId = _playerIdentityProvider.GetPlayerId();
+            var playerId = _playerContext.GetPlayerId();
             if (string.IsNullOrWhiteSpace(playerId))
             {
                 throw new InvalidOperationException("Player id is empty.");
@@ -80,48 +80,6 @@ namespace BattlePass
             };
             var response = await _webClient.PostAsync<BattlePassClaimRequest, BattlePassClaimResponse>(BattlePassConfig.Api.ClaimPath, request, ct);
             return MapClaimResult(response);
-        }
-
-        public async UniTask<BattlePassPurchaseVerificationResult> VerifyGooglePurchaseAsync(
-            string seasonId,
-            string productId,
-            string purchaseToken,
-            CancellationToken ct = default)
-        {
-            throw new NotImplementedException();
-            /*var playerId = _playerIdentityProvider.GetPlayerId();
-            if (string.IsNullOrWhiteSpace(playerId))
-            {
-                throw new InvalidOperationException("Player id is empty.");
-            }
-
-            if (string.IsNullOrWhiteSpace(seasonId))
-            {
-                throw new InvalidOperationException("Season id is empty.");
-            }
-
-            if (string.IsNullOrWhiteSpace(productId))
-            {
-                throw new InvalidOperationException("Product id is empty.");
-            }
-
-            if (string.IsNullOrWhiteSpace(purchaseToken))
-            {
-                throw new InvalidOperationException("Purchase token is empty.");
-            }
-
-            var request = new BattlePassPurchaseVerificationRequest
-            {
-                PlayerId = playerId,
-                ProductId = productId,
-                PurchaseToken = purchaseToken,
-                SeasonId = seasonId
-            };
-            var response = await _webClient.PostAsync<BattlePassPurchaseVerificationRequest, BattlePassPurchaseVerificationResponse>(
-                BattlePassConfig.Api.VerifyPurchasePath,
-                request,
-                ct);
-            return MapPurchaseVerificationResult(response);*/
         }
 
         private static BattlePassSnapshot MapResponse(BattlePassCurrentResponse response)
@@ -183,56 +141,6 @@ namespace BattlePass
                 MapUserState(response.BattlePass),
                 response.ErrorCode,
                 response.ErrorMessage);
-        }
-
-        private static BattlePassPurchaseVerificationResult MapPurchaseVerificationResult(BattlePassPurchaseVerificationResponse response)
-        {
-            if (response == null)
-            {
-                return new BattlePassPurchaseVerificationResult(
-                    false,
-                    string.Empty,
-                    null,
-                    string.Empty,
-                    string.Empty,
-                    string.Empty,
-                    string.Empty,
-                    string.Empty,
-                    "empty_response",
-                    "Battle pass purchase verification response is empty.");
-            }
-
-            var entitlementId = GetFirstNonEmpty(
-                response.Entitlement?.EntitlementId,
-                response.Entitlement?.Key);
-            var entitlementType = GetFirstNonEmpty(
-                response.Entitlement?.EntitlementType,
-                response.Entitlement?.Type);
-            var entitlementKey = GetFirstNonEmpty(
-                response.Entitlement?.Key,
-                response.Entitlement?.EntitlementId);
-
-            return new BattlePassPurchaseVerificationResult(
-                response.Success,
-                response.PurchaseStatus,
-                MapUserState(response.BattlePass),
-                entitlementId,
-                entitlementType,
-                entitlementKey,
-                response.Entitlement?.Status,
-                response.GoogleFinalizeStatus,
-                response.ErrorCode,
-                response.ErrorMessage);
-        }
-
-        private static string GetFirstNonEmpty(string primary, string fallback)
-        {
-            if (!string.IsNullOrWhiteSpace(primary))
-            {
-                return primary;
-            }
-
-            return fallback ?? string.Empty;
         }
 
         private static BattlePassSeason MapSeason(BattlePassSeasonResponse response)
@@ -552,22 +460,6 @@ namespace BattlePass
         }
 
         [Serializable]
-        private sealed class BattlePassPurchaseVerificationRequest
-        {
-            [JsonProperty("playerId")]
-            public string PlayerId { get; set; }
-
-            [JsonProperty("productId")]
-            public string ProductId { get; set; }
-
-            [JsonProperty("purchaseToken")]
-            public string PurchaseToken { get; set; }
-
-            [JsonProperty("seasonId")]
-            public string SeasonId { get; set; }
-        }
-
-        [Serializable]
         private sealed class BattlePassSeasonResponse
         {
             [JsonProperty("id")]
@@ -665,51 +557,6 @@ namespace BattlePass
             public string ErrorMessage { get; set; }
         }
 
-        [Serializable]
-        private sealed class BattlePassPurchaseVerificationResponse
-        {
-            [JsonProperty("success")]
-            public bool Success { get; set; }
-
-            [JsonProperty("purchaseStatus")]
-            public string PurchaseStatus { get; set; }
-
-            [JsonProperty("entitlement")]
-            public BattlePassEntitlementResponse Entitlement { get; set; }
-
-            [JsonProperty("battlePass")]
-            public BattlePassUserStateResponse BattlePass { get; set; }
-
-            [JsonProperty("googleFinalizeStatus")]
-            public string GoogleFinalizeStatus { get; set; }
-
-            [JsonProperty("errorCode")]
-            public string ErrorCode { get; set; }
-
-            [JsonProperty("errorMessage")]
-            public string ErrorMessage { get; set; }
-        }
-
-        [Serializable]
-        private sealed class BattlePassEntitlementResponse
-        {
-            [JsonProperty("entitlementId")]
-            public string EntitlementId { get; set; }
-
-            [JsonProperty("entitlementType")]
-            public string EntitlementType { get; set; }
-
-            [JsonProperty("type")]
-            public string Type { get; set; }
-
-            [JsonProperty("key")]
-            public string Key { get; set; }
-
-            [JsonProperty("status")]
-            public string Status { get; set; }
-        }
-
-        [Serializable]
         private sealed class BattlePassClaimedRewardCellResponse
         {
             [JsonProperty("level")]
