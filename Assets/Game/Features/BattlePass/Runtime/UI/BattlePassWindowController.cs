@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Rewards;
 using UIShared;
 using UISystem;
 using UnityEngine;
@@ -20,11 +19,10 @@ namespace BattlePass
         private IBattlePassRealtimeClock _realtimeClock;
         private IBattlePassOptimisticRewardApplier _optimisticRewardApplier;
         private BattlePassUiModelFactory _uiModelFactory;
-        private IRewardPlayerStateRefreshCoordinator _rewardPlayerStateRefreshCoordinator;
-        private IRewardSpecProvider _rewardSpecProvider;
-        private Lock _claimFlowUiLock;
-
-        private static readonly object ClaimFlowLockType = new();
+        private IBattlePassWindowRouter _windowRouter;
+        private IBattlePassClaimFlowLock _claimFlowLock;
+        private IBattlePassPostClaimSync _postClaimSync;
+        private IDisposable _claimFlowUiLock;
 
         private CancellationTokenSource _loadCts;
         private BattlePassSnapshot _currentSnapshot;
@@ -39,8 +37,9 @@ namespace BattlePass
             IBattlePassRealtimeClock realtimeClock,
             BattlePassUiModelFactory uiModelFactory,
             IBattlePassOptimisticRewardApplier optimisticRewardApplier,
-            IRewardPlayerStateRefreshCoordinator rewardPlayerStateRefreshCoordinator,
-            IRewardSpecProvider rewardSpecProvider)
+            IBattlePassWindowRouter windowRouter,
+            IBattlePassClaimFlowLock claimFlowLock,
+            IBattlePassPostClaimSync postClaimSync)
         {
             _battlePassServerService = battlePassServerService;
             _battlePassSnapshotStore = battlePassSnapshotStore;
@@ -49,8 +48,9 @@ namespace BattlePass
             _realtimeClock = realtimeClock;
             _uiModelFactory = uiModelFactory;
             _optimisticRewardApplier = optimisticRewardApplier;
-            _rewardPlayerStateRefreshCoordinator = rewardPlayerStateRefreshCoordinator;
-            _rewardSpecProvider = rewardSpecProvider;
+            _windowRouter = windowRouter;
+            _claimFlowLock = claimFlowLock;
+            _postClaimSync = postClaimSync;
         }
 
         protected override void OnShowStart()
@@ -113,7 +113,7 @@ namespace BattlePass
                 Debug.LogError($"[BattlePassWindowController] Failed to load Battle Pass data. {exception}");
                 if (!TryApplySnapshotFromStore())
                 {
-                    View.ShowUnavailableState(BattlePassConfig.Ui.UnavailableText);
+                    View.ShowUnavailableState(BattlePassPresentationText.UnavailableText);
                 }
             }
         }
@@ -177,8 +177,8 @@ namespace BattlePass
                     {
                         ReleaseClaimFlowLock();
                         _optimisticRewardApplier?.Apply(claimResult.GrantedRewards);
-                        TryShowRewardWindow(claimResult.GrantedRewards);
-                        _rewardPlayerStateRefreshCoordinator?.RequestBackgroundRefresh();
+                        ShowGrantedRewards(claimResult.GrantedRewards);
+                        _postClaimSync?.RequestBackgroundRefresh();
                         return;
                     }
 
@@ -205,24 +205,6 @@ namespace BattlePass
             }
         }
 
-        private void TryShowRewardWindow(System.Collections.Generic.IReadOnlyList<BattlePassGrantedRewardCell> grantedRewards)
-        {
-            var rewardId = grantedRewards?.FirstOrDefault()?.RewardId;
-            if (string.IsNullOrWhiteSpace(rewardId))
-            {
-                Debug.LogWarning("[BattlePassWindowController] Claim succeeded, but grantedRewards is empty.");
-                return;
-            }
-
-            if (_rewardSpecProvider != null && !_rewardSpecProvider.TryGet(rewardId, out _))
-            {
-                return;
-            }
-
-            var rewardArgs = new RewardsWindowArgs(rewardId);
-            UIManager.Show<RewardsWindowController>(rewardArgs);
-        }
-        
         private async UniTask ReloadCurrentAsync(CancellationToken ct)
         {
             try
@@ -238,7 +220,7 @@ namespace BattlePass
                 Debug.LogError($"[BattlePassWindowController] Failed to reload Battle Pass state after claim. {exception}");
                 if (!TryApplySnapshotFromStore())
                 {
-                    View.ShowUnavailableState(BattlePassConfig.Ui.UnavailableText);
+                    View.ShowUnavailableState(BattlePassPresentationText.UnavailableText);
                     _battlePassTimerService?.Stop();
                 }
             }
@@ -250,7 +232,7 @@ namespace BattlePass
 
             if (snapshot?.Season == null)
             {
-                View.ShowUnavailableState(BattlePassConfig.Ui.UnavailableText);
+                View.ShowUnavailableState(BattlePassPresentationText.UnavailableText);
                 _battlePassTimerService?.Stop();
                 return;
             }
@@ -295,12 +277,17 @@ namespace BattlePass
 
         protected virtual void ShowInfo(string message)
         {
-            UIManager.Show<InfoWidgetController>(new InfoWidgetArg(message));
+            _windowRouter?.ShowInfo(message);
         }
 
         protected virtual void ShowPremiumPurchaseWindow(BattlePassIAPWindowArgs args)
         {
-            UIManager.Show<BattlePassIAPWindowController>(args);
+            _windowRouter?.ShowPremiumPurchase(args);
+        }
+
+        protected virtual void ShowGrantedRewards(System.Collections.Generic.IReadOnlyList<BattlePassGrantedRewardCell> grantedRewards)
+        {
+            _windowRouter?.ShowGrantedRewards(grantedRewards);
         }
 
         private bool TryGetClaimableCell(int level, BattlePassRewardTrack rewardTrack, out string seasonId)
@@ -319,7 +306,7 @@ namespace BattlePass
 
         private void CloseWindow()
         {
-            UIManager.Hide<BattlePassWindowController>();
+            _windowRouter?.HideBattlePassWindow();
         }
 
         private void SubscribeTimer()
@@ -426,12 +413,12 @@ namespace BattlePass
 
         private void AcquireClaimFlowLock()
         {
-            if (_claimFlowUiLock != null || UIManager == null || UIManager.UiFilter == null)
+            if (_claimFlowUiLock != null)
             {
                 return;
             }
 
-            _claimFlowUiLock = UIManager.SetManualLock(ClaimFlowLockType);
+            _claimFlowUiLock = _claimFlowLock?.Acquire();
         }
 
         private void ReleaseClaimFlowLock()

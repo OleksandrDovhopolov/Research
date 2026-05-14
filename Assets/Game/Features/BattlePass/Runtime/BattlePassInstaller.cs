@@ -8,6 +8,8 @@ namespace BattlePass
         public static void RegisterBattlePass(this IContainerBuilder builder)
         {
             RegisterBattlePassCore(builder);
+            RegisterBattlePassPresentation(builder);
+            RegisterBattlePassIntegration(builder);
             RegisterBattlePassGameplayReadyIntegration(builder);
             RegisterBattlePassLiveOpsIntegration(builder);
         }
@@ -18,7 +20,6 @@ namespace BattlePass
             builder.Register<IBattlePassRealtimeClock, UnityBattlePassRealtimeClock>(Lifetime.Singleton);
             builder.Register<IBattlePassTimerService, BattlePassTimerService>(Lifetime.Singleton);
             builder.Register<IBattlePassRewardCatalog, RewardSpecBattlePassRewardCatalog>(Lifetime.Singleton);
-            builder.Register<BattlePassUiModelFactory>(Lifetime.Singleton);
             builder.Register<IBattlePassSnapshotStore, BattlePassSnapshotStore>(Lifetime.Singleton);
             builder.Register<IBattlePassXpPresentationTracker, BattlePassXpPresentationTracker>(Lifetime.Singleton);
             builder.Register<IBattlePassStartupSync, BattlePassStartupSync>(Lifetime.Singleton);
@@ -38,6 +39,19 @@ namespace BattlePass
                 return new UnityIapBattlePassPurchaseService();
 #endif
             }, Lifetime.Singleton);
+        }
+
+        private static void RegisterBattlePassPresentation(IContainerBuilder builder)
+        {
+            builder.Register<IBattlePassRewardPresentationCatalog, RewardSpecBattlePassRewardPresentationCatalog>(Lifetime.Singleton);
+            builder.Register<BattlePassUiModelFactory>(Lifetime.Singleton);
+        }
+
+        private static void RegisterBattlePassIntegration(IContainerBuilder builder)
+        {
+            builder.Register<IBattlePassWindowRouter, UiManagerBattlePassWindowRouter>(Lifetime.Transient);
+            builder.Register<IBattlePassClaimFlowLock, UiManagerBattlePassClaimFlowLock>(Lifetime.Transient);
+            builder.Register<IBattlePassPostClaimSync, RewardPlayerStateRefreshBattlePassPostClaimSync>(Lifetime.Transient);
         }
 
         private static void RegisterBattlePassGameplayReadyIntegration(IContainerBuilder builder)

@@ -49,9 +49,38 @@ namespace BattlePass
 
             rewardDefinition = new BattlePassRewardDefinition(
                 rewardId,
-                rewardSpec.Icon,
                 rewardSpec.TotalAmountForUi,
                 resourceDeltas);
+            return true;
+        }
+    }
+
+    public sealed class RewardSpecBattlePassRewardPresentationCatalog : IBattlePassRewardPresentationCatalog
+    {
+        private readonly IRewardSpecProvider _rewardSpecProvider;
+
+        public RewardSpecBattlePassRewardPresentationCatalog(IRewardSpecProvider rewardSpecProvider)
+        {
+            _rewardSpecProvider = rewardSpecProvider ?? throw new ArgumentNullException(nameof(rewardSpecProvider));
+        }
+
+        public bool TryGet(string rewardId, out BattlePassRewardPresentationDefinition rewardDefinition)
+        {
+            rewardDefinition = null;
+            if (string.IsNullOrWhiteSpace(rewardId))
+            {
+                return false;
+            }
+
+            if (!_rewardSpecProvider.TryGet(rewardId, out var rewardSpec) || rewardSpec == null)
+            {
+                return false;
+            }
+
+            rewardDefinition = new BattlePassRewardPresentationDefinition(
+                rewardId,
+                rewardSpec.Icon,
+                rewardSpec.TotalAmountForUi);
             return true;
         }
     }

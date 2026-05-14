@@ -404,7 +404,7 @@ namespace BattlePass.Tests.Editor
             };
         }
 
-        private sealed class StubRewardSpecProvider : IRewardSpecProvider, IBattlePassRewardCatalog
+        private sealed class StubRewardSpecProvider : IRewardSpecProvider, IBattlePassRewardPresentationCatalog
         {
             private readonly Dictionary<string, RewardSpec> _specs;
 
@@ -418,7 +418,7 @@ namespace BattlePass.Tests.Editor
                 return _specs.TryGetValue(rewardId, out spec);
             }
 
-            public bool TryGet(string rewardId, out BattlePassRewardDefinition rewardDefinition)
+            public bool TryGet(string rewardId, out BattlePassRewardPresentationDefinition rewardDefinition)
             {
                 rewardDefinition = null;
                 if (!_specs.TryGetValue(rewardId, out var spec) || spec == null)
@@ -426,11 +426,10 @@ namespace BattlePass.Tests.Editor
                     return false;
                 }
 
-                rewardDefinition = new BattlePassRewardDefinition(
+                rewardDefinition = new BattlePassRewardPresentationDefinition(
                     rewardId,
                     spec.Icon,
-                    spec.TotalAmountForUi,
-                    new Dictionary<string, int>());
+                    spec.TotalAmountForUi);
                 return true;
             }
         }

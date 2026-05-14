@@ -440,7 +440,7 @@ namespace BattlePass.Tests.Editor
             controller.SetEventHandler(new StubEventHandler());
 
             var constructMethod = typeof(BattlePassIAPWindowController).GetMethod("Construct", BindingFlags.Instance | BindingFlags.NonPublic);
-            constructMethod.Invoke(controller, new object[] { purchaseService, serverService });
+            constructMethod.Invoke(controller, new object[] { purchaseService, serverService, null });
 
             return controller;
         }

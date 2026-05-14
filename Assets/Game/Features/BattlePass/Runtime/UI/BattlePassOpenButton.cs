@@ -1,12 +1,9 @@
-using EventOrchestration.Abstractions;
+using EventOrchestration;
 using GameplayUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using EventOrchestration;
 using TMPro;
-using UIShared;
-using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
@@ -21,24 +18,24 @@ namespace BattlePass
         [SerializeField] private TMP_Text _seasonTitleText;
         [SerializeField] private Slider _xpSlider;
 
-        private UIManager _uiManager;
         private IBattlePassLifecycleState _lifecycleState;
         private IBattlePassSnapshotStore _snapshotStore;
         private IGlobalTimerService _globalTimerService;
+        private IBattlePassWindowRouter _windowRouter;
         private string _boundTimerEventId;
         private bool _isStarted;
 
         [Inject]
         private void Construct(
-            UIManager uiManager,
             IBattlePassLifecycleState lifecycleState,
             IBattlePassSnapshotStore snapshotStore,
-            IGlobalTimerService globalTimerService)
+            IGlobalTimerService globalTimerService,
+            IBattlePassWindowRouter windowRouter)
         {
-            _uiManager = uiManager;
             _lifecycleState = lifecycleState;
             _snapshotStore = snapshotStore;
             _globalTimerService = globalTimerService;
+            _windowRouter = windowRouter;
         }
 
         private void Awake()
@@ -344,34 +341,17 @@ namespace BattlePass
 
         protected virtual void ShowInfo(string message)
         {
-            if (string.IsNullOrWhiteSpace(message))
-            {
-                return;
-            }
-
-            _uiManager?.Show<InfoWidgetController>(new InfoWidgetArg(message));
+            _windowRouter?.ShowInfo(message);
         }
 
         protected virtual void ShowBattlePassWindow()
         {
-            if (_uiManager == null)
-            {
-                Debug.LogWarning("[BattlePassOpenButton] UIManager is not injected.");
-                return;
-            }
-
-            _uiManager.Show<BattlePassWindowController>();
+            _windowRouter?.ShowBattlePassWindow();
         }
 
         protected virtual void ShowPremiumPurchaseWindow(BattlePassIAPWindowArgs args)
         {
-            if (_uiManager == null)
-            {
-                Debug.LogWarning("[BattlePassOpenButton] UIManager is not injected.");
-                return;
-            }
-
-            _uiManager.Show<BattlePassIAPWindowController>(args);
+            _windowRouter?.ShowPremiumPurchase(args);
         }
 
         private void OnDestroy()

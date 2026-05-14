@@ -13,11 +13,6 @@ namespace BattlePass
         public const string DevGrantBattlePassPath = "battle-pass/dev/grant-battle-pass";
     }
 
-        public static class Ui
-        {
-            public const string UnavailableText = "Battle Pass currently unavailable";
-        }
-
         public static class Cache
         {
             public static readonly TimeSpan SnapshotTtl = TimeSpan.FromMinutes(3);

@@ -138,7 +138,6 @@ namespace BattlePass.Tests.Editor
 
                 rewardDefinition = new BattlePassRewardDefinition(
                     rewardId,
-                    spec.Icon,
                     spec.TotalAmountForUi,
                     resourceDeltas);
                 return true;

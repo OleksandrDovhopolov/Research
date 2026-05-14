@@ -7,9 +7,9 @@ namespace BattlePass
 {
     public sealed class BattlePassUiModelFactory
     {
-        private readonly IBattlePassRewardCatalog _rewardCatalog;
+        private readonly IBattlePassRewardPresentationCatalog _rewardCatalog;
 
-        public BattlePassUiModelFactory(IBattlePassRewardCatalog rewardCatalog)
+        public BattlePassUiModelFactory(IBattlePassRewardPresentationCatalog rewardCatalog)
         {
             _rewardCatalog = rewardCatalog ?? throw new ArgumentNullException(nameof(rewardCatalog));
         }

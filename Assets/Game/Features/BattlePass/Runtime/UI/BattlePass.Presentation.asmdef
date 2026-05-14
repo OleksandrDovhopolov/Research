@@ -1,20 +1,16 @@
 {
-    "name": "BattlePass",
+    "name": "BattlePass.Presentation",
     "rootNamespace": "BattlePass",
     "references": [
         "BattlePass.Domain",
         "BattlePass.Application",
-        "BattlePass.Presentation",
-        "CoreResources",
-        "Infrastructure",
         "EventOrchestration",
+        "GameplayUI",
         "UIShared",
         "UISystem",
         "UniTask",
         "VContainer",
-        "Rewards",
-        "UnityEngine.Purchasing",
-        "UnityEngine.Purchasing.Stores"
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
