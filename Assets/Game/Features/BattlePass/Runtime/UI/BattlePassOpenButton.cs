@@ -4,8 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
-using UIShared;
-using UISystem;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
@@ -20,27 +18,24 @@ namespace BattlePass
         [SerializeField] private TMP_Text _seasonTitleText;
         [SerializeField] private Slider _xpSlider;
 
-        private UIManager _uiManager;
         private IBattlePassLifecycleState _lifecycleState;
         private IBattlePassSnapshotStore _snapshotStore;
-        private EventOrchestrator _eventOrchestrator;
         private IGlobalTimerService _globalTimerService;
+        private IBattlePassWindowRouter _windowRouter;
         private string _boundTimerEventId;
         private bool _isStarted;
 
         [Inject]
         private void Construct(
-            UIManager uiManager,
             IBattlePassLifecycleState lifecycleState,
             IBattlePassSnapshotStore snapshotStore,
-            EventOrchestrator eventOrchestrator,
-            IGlobalTimerService globalTimerService)
+            IGlobalTimerService globalTimerService,
+            IBattlePassWindowRouter windowRouter)
         {
-            _uiManager = uiManager;
             _lifecycleState = lifecycleState;
             _snapshotStore = snapshotStore;
-            _eventOrchestrator = eventOrchestrator;
             _globalTimerService = globalTimerService;
+            _windowRouter = windowRouter;
         }
 
         private void Awake()
@@ -176,14 +171,6 @@ namespace BattlePass
                 return;
             }
 
-            var remainingFromServer = snapshot.Season.EndAtUtc - snapshot.ServerTimeUtc;
-            if (remainingFromServer < TimeSpan.Zero)
-            {
-                remainingFromServer = TimeSpan.Zero;
-            }
-
-            var localEndUtc = DateTimeOffset.UtcNow + remainingFromServer;
-
             if (!string.Equals(_boundTimerEventId, seasonId, StringComparison.Ordinal) &&
                 !string.IsNullOrWhiteSpace(_boundTimerEventId))
             {
@@ -191,7 +178,7 @@ namespace BattlePass
                 _boundTimerEventId = null;
             }
 
-            _globalTimerService.Register(seasonId, localEndUtc);
+            _globalTimerService.Register(seasonId, snapshot.Season.EndAtUtc);
             _boundTimerEventId = seasonId;
             _eventTimerDisplay?.Bind(seasonId, _globalTimerService);
         }
@@ -354,34 +341,17 @@ namespace BattlePass
 
         protected virtual void ShowInfo(string message)
         {
-            if (string.IsNullOrWhiteSpace(message))
-            {
-                return;
-            }
-
-            _uiManager?.Show<InfoWidgetController>(new InfoWidgetArg(message));
+            _windowRouter?.ShowInfo(message);
         }
 
         protected virtual void ShowBattlePassWindow()
         {
-            if (_uiManager == null)
-            {
-                Debug.LogWarning("[BattlePassOpenButton] UIManager is not injected.");
-                return;
-            }
-
-            _uiManager.Show<BattlePassWindowController>();
+            _windowRouter?.ShowBattlePassWindow();
         }
 
         protected virtual void ShowPremiumPurchaseWindow(BattlePassIAPWindowArgs args)
         {
-            if (_uiManager == null)
-            {
-                Debug.LogWarning("[BattlePassOpenButton] UIManager is not injected.");
-                return;
-            }
-
-            _uiManager.Show<BattlePassIAPWindowController>(args);
+            _windowRouter?.ShowPremiumPurchase(args);
         }
 
         private void OnDestroy()

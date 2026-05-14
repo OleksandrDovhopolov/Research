@@ -68,7 +68,7 @@ namespace BattlePass.Tests.Editor
             RunCoroutine(controller.Show(null));
 
             Assert.That(view.RenderedModel, Is.Null);
-            Assert.That(view.UnavailableMessage, Is.EqualTo(BattlePassConfig.Ui.UnavailableText));
+            Assert.That(view.UnavailableMessage, Is.EqualTo(BattlePassPresentationText.UnavailableText));
         }
 
         [Test]
@@ -217,7 +217,7 @@ namespace BattlePass.Tests.Editor
             var updatedSnapshot = CreateActiveSnapshot(xp: 220);
             var executionOrder = new List<string>();
             var optimisticRewardApplier = new StubBattlePassOptimisticRewardApplier(executionOrder);
-            var refreshCoordinator = new StubRewardPlayerStateRefreshCoordinator(executionOrder);
+            var postClaimSync = new StubBattlePassPostClaimSync(executionOrder);
             var serverService = new StubBattlePassServerService(initialSnapshot)
             {
                 ClaimResponseFactory = (_, _, _) => UniTask.FromResult(new BattlePassClaimResult(
@@ -235,7 +235,7 @@ namespace BattlePass.Tests.Editor
                 new StubBattlePassTimerService(),
                 out var view,
                 optimisticRewardApplier,
-                refreshCoordinator,
+                postClaimSync,
                 seededSnapshot: initialSnapshot);
 
             RunCoroutine(controller.Show(null));
@@ -248,7 +248,7 @@ namespace BattlePass.Tests.Editor
             Assert.That(view.RenderedModel, Is.Not.Null);
             Assert.That(view.RenderedModel.CurrentXp, Is.EqualTo(220));
             Assert.That(optimisticRewardApplier.Calls, Is.EqualTo(1));
-            Assert.That(refreshCoordinator.BackgroundRequestCalls, Is.EqualTo(1));
+            Assert.That(postClaimSync.BackgroundRequestCalls, Is.EqualTo(1));
             Assert.That(executionOrder, Is.EqualTo(new[] { "apply", "refresh" }));
         }
 
@@ -258,7 +258,7 @@ namespace BattlePass.Tests.Editor
             var initialSnapshot = CreateActiveSnapshot(xp: 180);
             var refreshedSnapshot = CreateActiveSnapshot(xp: 260);
             var optimisticRewardApplier = new StubBattlePassOptimisticRewardApplier();
-            var refreshCoordinator = new StubRewardPlayerStateRefreshCoordinator();
+            var postClaimSync = new StubBattlePassPostClaimSync();
             var serverService = new StubBattlePassServerService(initialSnapshot)
             {
                 GetCurrentSnapshot = refreshedSnapshot,
@@ -274,7 +274,7 @@ namespace BattlePass.Tests.Editor
                 new StubBattlePassTimerService(),
                 out var view,
                 optimisticRewardApplier,
-                refreshCoordinator);
+                postClaimSync);
 
             RunCoroutine(controller.Show(null));
             LogAssert.Expect(
@@ -286,7 +286,7 @@ namespace BattlePass.Tests.Editor
             Assert.That(view.RenderedModel, Is.Not.Null);
             Assert.That(view.RenderedModel.CurrentXp, Is.EqualTo(260));
             Assert.That(optimisticRewardApplier.Calls, Is.EqualTo(0));
-            Assert.That(refreshCoordinator.BackgroundRequestCalls, Is.EqualTo(0));
+            Assert.That(postClaimSync.BackgroundRequestCalls, Is.EqualTo(0));
         }
 
         [Test]
@@ -460,7 +460,7 @@ namespace BattlePass.Tests.Editor
             IBattlePassTimerService timerService,
             out TestBattlePassView view,
             StubBattlePassOptimisticRewardApplier optimisticRewardApplier = null,
-            StubRewardPlayerStateRefreshCoordinator refreshCoordinator = null,
+            StubBattlePassPostClaimSync postClaimSync = null,
             StubRewardSpecProvider rewardSpecProvider = null,
             BattlePassSnapshot seededSnapshot = null,
             DateTimeOffset? seededSnapshotSyncUtc = null,
@@ -485,7 +485,7 @@ namespace BattlePass.Tests.Editor
                 ["reward_premium"] = CreateRewardSpec("reward_premium", 25)
             });
             optimisticRewardApplier ??= new StubBattlePassOptimisticRewardApplier();
-            refreshCoordinator ??= new StubRewardPlayerStateRefreshCoordinator();
+            postClaimSync ??= new StubBattlePassPostClaimSync();
             var factory = new BattlePassUiModelFactory(rewardSpecProvider);
             var realtimeClock = new FakeRealtimeClock(clockNow ?? DateTimeOffset.Parse("2026-04-24T10:00:00Z"));
             var playerIdentityProvider = new StubPlayerIdentityProvider();
@@ -510,8 +510,9 @@ namespace BattlePass.Tests.Editor
                 realtimeClock,
                 factory,
                 optimisticRewardApplier,
-                refreshCoordinator,
-                rewardSpecProvider
+                null,
+                null,
+                postClaimSync
             });
 
             return controller;
@@ -766,31 +767,6 @@ namespace BattlePass.Tests.Editor
                     null));
             }
 
-            public UniTask<BattlePassPurchaseVerificationResult> VerifyGooglePurchaseAsync(
-                string seasonId,
-                string productId,
-                string purchaseToken,
-                CancellationToken ct = default)
-            {
-                ct.ThrowIfCancellationRequested();
-
-                if (VerifyPurchaseResponseFactory != null)
-                {
-                    return VerifyPurchaseResponseFactory(seasonId, productId, purchaseToken);
-                }
-
-                return UniTask.FromResult(new BattlePassPurchaseVerificationResult(
-                    true,
-                    "verified_and_acknowledged",
-                    (GetCurrentSnapshot ?? _initialSnapshot)?.UserState,
-                    "ent_default",
-                    "battle_pass",
-                    productId,
-                    "active",
-                    "acknowledged",
-                    null,
-                    null));
-            }
         }
 
         private sealed class FakeRealtimeClock : IBattlePassRealtimeClock
@@ -804,7 +780,7 @@ namespace BattlePass.Tests.Editor
             public double RealtimeSinceStartup => 0d;
         }
 
-        private sealed class StubPlayerIdentityProvider : Infrastructure.IPlayerIdentityProvider
+        private sealed class StubPlayerIdentityProvider : IBattlePassPlayerContext
         {
             public string PlayerId { get; set; } = "player_1";
 
@@ -851,7 +827,7 @@ namespace BattlePass.Tests.Editor
             }
         }
 
-        private sealed class StubRewardSpecProvider : IRewardSpecProvider
+        private sealed class StubRewardSpecProvider : IRewardSpecProvider, IBattlePassRewardPresentationCatalog
         {
             private readonly Dictionary<string, RewardSpec> _specs;
 
@@ -863,6 +839,21 @@ namespace BattlePass.Tests.Editor
             public bool TryGet(string rewardId, out RewardSpec spec)
             {
                 return _specs.TryGetValue(rewardId, out spec);
+            }
+
+            public bool TryGet(string rewardId, out BattlePassRewardPresentationDefinition rewardDefinition)
+            {
+                rewardDefinition = null;
+                if (!_specs.TryGetValue(rewardId, out var spec) || spec == null)
+                {
+                    return false;
+                }
+
+                rewardDefinition = new BattlePassRewardPresentationDefinition(
+                    rewardId,
+                    spec.Icon,
+                    spec.TotalAmountForUi);
+                return true;
             }
         }
 
@@ -886,31 +877,21 @@ namespace BattlePass.Tests.Editor
             }
         }
 
-        private sealed class StubRewardPlayerStateRefreshCoordinator : IRewardPlayerStateRefreshCoordinator
+        private sealed class StubBattlePassPostClaimSync : IBattlePassPostClaimSync
         {
             private readonly List<string> _executionOrder;
 
-            public StubRewardPlayerStateRefreshCoordinator(List<string> executionOrder = null)
+            public StubBattlePassPostClaimSync(List<string> executionOrder = null)
             {
                 _executionOrder = executionOrder;
             }
 
-            public bool HasPendingRefresh { get; set; }
             public int BackgroundRequestCalls { get; private set; }
-            public int ForegroundRequestCalls { get; private set; }
 
             public void RequestBackgroundRefresh()
             {
                 BackgroundRequestCalls++;
                 _executionOrder?.Add("refresh");
-            }
-
-            public UniTask RequestForegroundRefreshAsync(CancellationToken ct = default)
-            {
-                ct.ThrowIfCancellationRequested();
-                ForegroundRequestCalls++;
-                HasPendingRefresh = false;
-                return UniTask.CompletedTask;
             }
         }
 

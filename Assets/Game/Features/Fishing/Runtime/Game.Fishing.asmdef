@@ -1,0 +1,30 @@
+{
+    "name": "Game.Fishing",
+    "rootNamespace": "Game.Fishing",
+    "references": [
+        "Game.Fishing.Domain",
+        "Game.Fishing.Application",
+        "Game.Fishing.Presentation",
+        "UIShared",
+        "UniTask",
+        "VContainer",
+        "Inventory.API",
+        "CoreResources",
+        "Infrastructure",
+        "Core.Models",
+        "Location",
+        "UISystem",
+        "Game.Crafting",
+        "EventOrchestration",
+        "UniTask.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

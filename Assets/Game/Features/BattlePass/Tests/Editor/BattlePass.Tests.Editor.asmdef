@@ -3,6 +3,9 @@
     "rootNamespace": "BattlePass.Tests.Editor",
     "references": [
         "BattlePass",
+        "BattlePass.Domain",
+        "BattlePass.Application",
+        "BattlePass.Presentation",
         "CoreResources",
         "EventOrchestration",
         "GameplayUI",

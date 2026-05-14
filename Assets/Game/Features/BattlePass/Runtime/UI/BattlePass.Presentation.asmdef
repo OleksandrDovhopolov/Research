@@ -1,0 +1,24 @@
+{
+    "name": "BattlePass.Presentation",
+    "rootNamespace": "BattlePass",
+    "references": [
+        "BattlePass.Domain",
+        "BattlePass.Application",
+        "EventOrchestration",
+        "GameplayUI",
+        "UIShared",
+        "UISystem",
+        "UniTask",
+        "VContainer",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

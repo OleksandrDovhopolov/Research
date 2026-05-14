@@ -8,24 +8,18 @@ namespace BattlePass
 {
     public sealed class BattlePassGameplayReadyInitializer : IGameplayReadyInitializer
     {
-        private readonly IBattlePassSnapshotStore _battlePassSnapshotStore;
-        private bool _isCompleted;
+        private readonly IBattlePassStartupSync _startupSync;
 
-        public BattlePassGameplayReadyInitializer(IBattlePassSnapshotStore battlePassSnapshotStore)
+        public BattlePassGameplayReadyInitializer(IBattlePassStartupSync startupSync)
         {
-            _battlePassSnapshotStore = battlePassSnapshotStore ?? throw new ArgumentNullException(nameof(battlePassSnapshotStore));
+            _startupSync = startupSync ?? throw new ArgumentNullException(nameof(startupSync));
         }
 
         public async UniTask InitializeAsync(CancellationToken ct)
         {
-            if (_isCompleted)
-            {
-                return;
-            }
-
             try
             {
-                await _battlePassSnapshotStore.RefreshAsync(ct, force: true);
+                await _startupSync.InitializeAsync(ct);
             }
             catch (OperationCanceledException)
             {
@@ -34,10 +28,6 @@ namespace BattlePass
             catch (Exception exception)
             {
                 Debug.LogWarning($"[BattlePassGameplayReadyInitializer] Initial Battle Pass sync failed. {exception.Message}");
-            }
-            finally
-            {
-                _isCompleted = true;
             }
         }
     }

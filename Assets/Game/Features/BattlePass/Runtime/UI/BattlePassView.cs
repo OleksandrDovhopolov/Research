@@ -147,7 +147,7 @@ namespace BattlePass
         {
             if (model == null)
             {
-                ShowUnavailableState(BattlePassConfig.Ui.UnavailableText);
+                ShowUnavailableState(BattlePassPresentationText.UnavailableText);
                 return;
             }
 
@@ -192,7 +192,7 @@ namespace BattlePass
             ClearRewardBindings();
             SetWindowInteraction(true);
             SetContentVisible(false);
-            SetUnavailableVisible(true, string.IsNullOrWhiteSpace(message) ? BattlePassConfig.Ui.UnavailableText : message);
+            SetUnavailableVisible(true, string.IsNullOrWhiteSpace(message) ? BattlePassPresentationText.UnavailableText : message);
             SetLevel(0);
             SetXpText(0, 0);
             SetXpProgress(0f);

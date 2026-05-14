@@ -18,8 +18,13 @@
         "GUID:303506028f9befd4094e71a1f9916f2b",
         "GUID:c81646b860f85574eaf3d172bf79c7b8",
         "GUID:62d0b9477bdb47bb93b42d70ed8aa101",
-        "GUID:14d6712f9055a054d94520bbae6526ab",
-        "Unity.Services.Core"
+        "GUID:fe25561d224ed4743af4c60938a59d0b",
+        "GUID:5edb791dc1e67c0419b498fa55a691f5",
+        "GUID:b4c04fa0c5330954ca44df8e16f62437",
+        "GUID:60da84009176dfa4d8e810d442fa99e8",
+        "GUID:45cafdb782561cf4e9f92921ff665796",
+        "GUID:9d6b6df2b651b65429b9230a83392b81",
+        "GUID:6875dfc9622e3014ba8e5865d7a6d1b6"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

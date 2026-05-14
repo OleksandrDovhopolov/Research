@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using UIShared;
 using UISystem;
 using UnityEngine;
 using VContainer;
@@ -47,16 +46,21 @@ namespace BattlePass
 
         private IBattlePassPurchaseService _battlePassPurchaseService;
         private IBattlePassPurchaseVerify _battlePassPurchaseVerify;
+        private IBattlePassWindowRouter _windowRouter;
         private CancellationTokenSource _purchaseCts;
         private bool _isVerificationInFlight;
 
         private BattlePassIAPWindowArgs Args => (BattlePassIAPWindowArgs)Arguments;
 
         [Inject]
-        private void Construct(IBattlePassPurchaseService battlePassPurchaseService, IBattlePassPurchaseVerify battlePassPurchaseVerify)
+        private void Construct(
+            IBattlePassPurchaseService battlePassPurchaseService,
+            IBattlePassPurchaseVerify battlePassPurchaseVerify,
+            IBattlePassWindowRouter windowRouter)
         {
             _battlePassPurchaseService = battlePassPurchaseService;
             _battlePassPurchaseVerify = battlePassPurchaseVerify;
+            _windowRouter = windowRouter;
         }
 
         protected override void OnShowStart()
@@ -313,12 +317,12 @@ namespace BattlePass
 
         protected virtual void ShowInfo(string message)
         {
-            UIManager.Show<InfoWidgetController>(new InfoWidgetArg(message));
+            _windowRouter?.ShowInfo(message);
         }
 
         protected virtual void CloseWindow()
         {
-            UIManager.Hide<BattlePassIAPWindowController>();
+            _windowRouter?.HideBattlePassPurchaseWindow();
         }
 
         private void ResetPurchaseCts()

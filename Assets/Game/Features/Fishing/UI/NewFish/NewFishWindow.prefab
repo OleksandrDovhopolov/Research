@@ -279,9 +279,8 @@ GameObject:
   - component: {fileID: 6649377803392936952}
   - component: {fileID: 4012333594080542356}
   - component: {fileID: 5472811749548134964}
-  - component: {fileID: 6073050975724252820}
   - component: {fileID: 5401052186530313071}
-  - component: {fileID: 5784979459379104010}
+  - component: {fileID: 3758737823239586638}
   m_Layer: 5
   m_Name: NewFishWindow
   m_TagString: Untagged
@@ -363,20 +362,6 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
---- !u!114 &6073050975724252820
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1261705890744712783}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 44fc1c65e8a48674194cc56675af8c67, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _animationDuration: 0.18
-  _canvasGroup: {fileID: 5472811749548134964}
 --- !u!114 &5401052186530313071
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -386,30 +371,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1261705890744712783}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1221627bb1ffb6b4e8511ffe9e688446, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _animation: {fileID: 5784979459379104010}
-  _closeButtons:
-  - {fileID: 4875904500695864368}
-  _fishImage: {fileID: 1804475237536175922}
-  _isNewFishGameObject: {fileID: 6286235776578837264}
-  _caughtWeightText: {fileID: 709086644068308226}
-  _bestCaughtWeightText: {fileID: 3221592895929217381}
-  _commonCollectedObject: {fileID: 1804475237663641458}
-  _rareCollectedObject: {fileID: 1804475237937285740}
-  _epicCollectedObject: {fileID: 1804475238053813450}
-  _legendaryCollectedObject: {fileID: 1804475238726900313}
---- !u!114 &5784979459379104010
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1261705890744712783}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c224b5d0356646d6b0d35b0b6cdf4f21, type: 3}
+  m_Script: {fileID: 11500000, guid: 08d987f025f4e524cb9ccde007910d71, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _rootCanvasGroup: {fileID: 2085749516004648743}
@@ -420,6 +382,29 @@ MonoBehaviour:
   _contentFadeDelay: 0.03
   _backgroundTargetAlpha: 0.6
   _hiddenScale: {x: 0.92, y: 0.92, z: 1}
+--- !u!114 &3758737823239586638
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1261705890744712783}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc13496492ead1a4e8909a3beccd5e72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _animation: {fileID: 5401052186530313071}
+  _closeButtons:
+  - {fileID: 4875904500695864368}
+  _fishImage: {fileID: 1804475237536175922}
+  _isNewFishGameObject: {fileID: 6286235776578837264}
+  _caughtWeightText: {fileID: 709086644068308226}
+  _bestCaughtWeightText: {fileID: 3221592895929217381}
+  _commonCollectedObject: {fileID: 1804475237663641458}
+  _rareCollectedObject: {fileID: 1804475237937285740}
+  _epicCollectedObject: {fileID: 1804475238053813450}
+  _legendaryCollectedObject: {fileID: 1804475238726900313}
 --- !u!1 &1804475237508208018
 GameObject:
   m_ObjectHideFlags: 0
@@ -431,7 +416,7 @@ GameObject:
   - component: {fileID: 1804475237508208019}
   - component: {fileID: 1804475237508208017}
   - component: {fileID: 1804475237508208016}
-  - component: {fileID: 5760593910007069699}
+  - component: {fileID: 5336127255352343754}
   m_Layer: 5
   m_Name: FishView
   m_TagString: Untagged
@@ -501,7 +486,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &5760593910007069699
+--- !u!114 &5336127255352343754
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -510,7 +495,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1804475237508208018}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea262c79c73af67488aa5ebae082757e, type: 3}
+  m_Script: {fileID: 11500000, guid: 7f339b0e6f9daa744a277a1b2e8db1f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _icon: {fileID: 1804475237536175922}

@@ -95,7 +95,7 @@ namespace BattlePass.Tests.Editor
             Assert.That(resourceManager.Get(ResourceType.Gold), Is.EqualTo(0));
         }
 
-        private sealed class StubRewardSpecProvider : IRewardSpecProvider
+        private sealed class StubRewardSpecProvider : IRewardSpecProvider, IBattlePassRewardCatalog
         {
             private readonly IReadOnlyDictionary<string, RewardSpec> _rewardSpecs;
 
@@ -107,6 +107,40 @@ namespace BattlePass.Tests.Editor
             public bool TryGet(string rewardId, out RewardSpec spec)
             {
                 return _rewardSpecs.TryGetValue(rewardId, out spec);
+            }
+
+            public bool TryGet(string rewardId, out BattlePassRewardDefinition rewardDefinition)
+            {
+                rewardDefinition = null;
+                if (!_rewardSpecs.TryGetValue(rewardId, out var spec) || spec == null)
+                {
+                    return false;
+                }
+
+                var resourceDeltas = new Dictionary<string, int>(System.StringComparer.OrdinalIgnoreCase);
+                if (spec.Resources != null)
+                {
+                    for (var i = 0; i < spec.Resources.Count; i++)
+                    {
+                        var resource = spec.Resources[i];
+                        if (resource == null ||
+                            resource.Kind != RewardKind.Resource ||
+                            resource.Amount <= 0 ||
+                            string.IsNullOrWhiteSpace(resource.ResourceId))
+                        {
+                            continue;
+                        }
+
+                        resourceDeltas.TryGetValue(resource.ResourceId, out var currentAmount);
+                        resourceDeltas[resource.ResourceId] = currentAmount + resource.Amount;
+                    }
+                }
+
+                rewardDefinition = new BattlePassRewardDefinition(
+                    rewardId,
+                    spec.TotalAmountForUi,
+                    resourceDeltas);
+                return true;
             }
         }
     }

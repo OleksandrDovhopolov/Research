@@ -1,0 +1,17 @@
+{
+    "name": "Game.Fishing.Application",
+    "rootNamespace": "Game.Fishing",
+    "references": [
+        "Game.Fishing.Domain",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

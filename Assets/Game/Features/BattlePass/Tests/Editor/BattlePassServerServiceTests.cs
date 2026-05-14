@@ -646,7 +646,7 @@ namespace BattlePass.Tests.Editor
             Assert.That(result.ErrorMessage, Is.EqualTo("Premium track is unavailable."));
         }
 
-        private sealed class StubPlayerIdentityProvider : IPlayerIdentityProvider
+        private sealed class StubPlayerIdentityProvider : IBattlePassPlayerContext
         {
             private readonly string _playerId;
 

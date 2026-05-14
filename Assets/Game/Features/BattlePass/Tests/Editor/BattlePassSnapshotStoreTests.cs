@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Infrastructure;
 using NUnit.Framework;
 
 namespace BattlePass.Tests.Editor
@@ -158,10 +157,6 @@ namespace BattlePass.Tests.Editor
                 throw new NotImplementedException();
             }
 
-            public UniTask<BattlePassPurchaseVerificationResult> VerifyGooglePurchaseAsync(string seasonId, string productId, string purchaseToken, CancellationToken ct = default)
-            {
-                throw new NotImplementedException();
-            }
         }
 
         private sealed class FakeRealtimeClock : IBattlePassRealtimeClock
@@ -175,7 +170,7 @@ namespace BattlePass.Tests.Editor
             public double RealtimeSinceStartup => 0d;
         }
 
-        private sealed class StubPlayerIdentityProvider : IPlayerIdentityProvider
+        private sealed class StubPlayerIdentityProvider : IBattlePassPlayerContext
         {
             public string PlayerId { get; set; } = "player_1";
 
