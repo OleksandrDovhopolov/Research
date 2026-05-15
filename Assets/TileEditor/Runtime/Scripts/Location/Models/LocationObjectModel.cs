@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public sealed class LocationObjectModel
     {

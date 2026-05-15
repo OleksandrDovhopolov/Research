@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     [RequireComponent(typeof(LocationObject))]
     public class DecorationIdPropertyGenerator : MonoBehaviour

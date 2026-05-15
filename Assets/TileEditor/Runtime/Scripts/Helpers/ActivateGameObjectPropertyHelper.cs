@@ -1,6 +1,6 @@
-﻿using UnityEngine;
+using UnityEngine;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public class ActivateGameObjectPropertyHelper : EnumPropertyHelper
     {

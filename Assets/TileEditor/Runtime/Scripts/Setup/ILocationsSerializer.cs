@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public interface ILocationsSerializer : ILocationsLoader
     {

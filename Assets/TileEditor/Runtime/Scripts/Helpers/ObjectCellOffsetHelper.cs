@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     [RequireComponent(typeof(LocationObject))]
     public class ObjectCellOffsetHelper : MonoBehaviour

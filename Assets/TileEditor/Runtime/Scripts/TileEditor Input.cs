@@ -1,11 +1,10 @@
 using System;
 using System.Collections;
-using Fabros.TileEditor.CameraController;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public partial class TileEditor
     {

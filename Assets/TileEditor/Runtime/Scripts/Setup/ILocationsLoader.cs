@@ -1,4 +1,4 @@
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public interface ILocationsLoader
     {

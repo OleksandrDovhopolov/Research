@@ -1,6 +1,6 @@
 using UnityEngine.Events;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public class EnumListenerHelper : EnumPropertyHelper
     {

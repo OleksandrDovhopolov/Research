@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace MergeMansion.TileEditor.PropertyGenerators
+namespace TileEditor
 {
     public class StylePropertyStaticObjectGenerator : BaseStylePropertyGenerator
     {

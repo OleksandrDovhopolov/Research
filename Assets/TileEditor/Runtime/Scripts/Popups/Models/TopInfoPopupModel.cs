@@ -1,6 +1,6 @@
 using System;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public class TopInfoPopupModel : BasePopupModel
     {

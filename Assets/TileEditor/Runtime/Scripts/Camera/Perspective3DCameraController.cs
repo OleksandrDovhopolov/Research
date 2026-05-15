@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace Fabros.TileEditor.CameraController
+namespace TileEditor
 {
     public class Perspective3DCameraController : BaseCameraController
     {

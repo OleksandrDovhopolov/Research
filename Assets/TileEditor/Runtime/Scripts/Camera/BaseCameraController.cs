@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Fabros.TileEditor.CameraController
+namespace TileEditor
 {
     public abstract class BaseCameraController : MonoBehaviour
     {

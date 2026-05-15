@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace BlmbM23SDK
+namespace TileEditor
 {
 
     public static class UIDGenerator

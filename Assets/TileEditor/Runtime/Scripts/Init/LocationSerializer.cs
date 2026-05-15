@@ -1,13 +1,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Fabros.TileEditor;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 using VContainer;
 
-namespace Module.TileEditor
+namespace TileEditor
 {
     public class LocationSerializer : ILocationsSerializer
     {

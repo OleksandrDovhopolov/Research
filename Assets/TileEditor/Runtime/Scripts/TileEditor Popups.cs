@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public partial class TileEditor
     {

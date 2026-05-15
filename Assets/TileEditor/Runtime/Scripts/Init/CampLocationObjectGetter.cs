@@ -1,14 +1,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Fabros.TileEditor;
 using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
-namespace Module.TileEditor
+namespace TileEditor
 {
     public class CampLocationObjectGetter : MonoBehaviour, ILocationObjectsGetter
     {

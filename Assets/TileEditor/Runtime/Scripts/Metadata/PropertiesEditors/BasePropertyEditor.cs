@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public abstract class BasePropertyEditor : MonoBehaviour
     {

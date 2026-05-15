@@ -1,5 +1,3 @@
-using Fabros.TileEditor;
-using MergeMansion.TileEditor.PropertyGenerators;
 using UnityEngine;
 
 [RequireComponent(typeof(LocationObject))]

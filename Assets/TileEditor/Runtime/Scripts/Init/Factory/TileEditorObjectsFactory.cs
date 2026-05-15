@@ -2,12 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Fabros.TileEditor;
 using Infrastructure;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Module.TileEditor
+namespace TileEditor
 {
     public class TileEditorObjectsFactory : ILocationObjectsFactory, IDisposable
     {

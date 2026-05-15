@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public partial class TileEditor : MonoBehaviour
     {

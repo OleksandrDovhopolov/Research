@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public class EditorTileCell : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {

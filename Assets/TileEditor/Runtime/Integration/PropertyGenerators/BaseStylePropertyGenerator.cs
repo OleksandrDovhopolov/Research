@@ -1,7 +1,6 @@
-using Fabros.TileEditor;
 using UnityEngine;
 
-namespace MergeMansion.TileEditor.PropertyGenerators
+namespace TileEditor
 {
     public abstract class BaseStylePropertyGenerator : MonoBehaviour
     {

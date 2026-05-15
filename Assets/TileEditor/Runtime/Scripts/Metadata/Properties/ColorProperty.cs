@@ -2,7 +2,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public class ColorProperty : BaseProperty
     {

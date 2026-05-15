@@ -1,7 +1,7 @@
 using Game.Features.Locations;
 using UnityEngine;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     [RequireComponent(typeof(LocationObject))]
     [RequireComponent(typeof(LocationInteractableView))]
