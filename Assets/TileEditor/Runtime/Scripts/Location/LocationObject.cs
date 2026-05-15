@@ -2,10 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using BlmbM23SDK;
 using UnityEngine;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     [DisallowMultipleComponent]
     public class LocationObject : MonoBehaviour

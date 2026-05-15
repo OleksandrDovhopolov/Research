@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Fabros.TileEditor.CameraController;
 using UnityEngine;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public partial class TileEditor
     {
@@ -24,7 +23,7 @@ namespace Fabros.TileEditor
         {
             if (SetupComplete)
             {
-                Debug.LogWarning("[Fabros.TileEditor] : tried to setup already setuped editor!");
+                Debug.LogWarning("[TileEditor] : tried to setup already setuped editor!");
                 return;
             }
 
@@ -33,7 +32,7 @@ namespace Fabros.TileEditor
             _locationObjects = locationObjectsGetter.GetAllLocationObjects();
             Settings = settings;
 
-            Debug.Log($"[Fabros.TileEditor] : setup complete. Found {_locationsSerializer.GetAllLocations().Count} exits locations and {_locationObjects.Count} available location objects.");
+            Debug.Log($"[TileEditor] : setup complete. Found {_locationsSerializer.GetAllLocations().Count} exits locations and {_locationObjects.Count} available location objects.");
 
             GenerateGrid();
             _locationsPanel.SetActive(true);

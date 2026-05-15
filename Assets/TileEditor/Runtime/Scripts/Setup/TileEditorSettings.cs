@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public enum CameraType { Orthographic2D, Perspective3D }
 

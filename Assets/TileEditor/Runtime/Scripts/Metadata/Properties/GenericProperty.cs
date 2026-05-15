@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public abstract class GenericProperty<T> : BaseProperty
     {

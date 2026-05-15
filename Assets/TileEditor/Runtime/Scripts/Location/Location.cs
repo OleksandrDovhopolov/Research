@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public class Location : MonoBehaviour
     {

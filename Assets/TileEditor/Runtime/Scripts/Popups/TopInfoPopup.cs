@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using UnityEngine;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public class TopInfoPopup : BasePopup
     {

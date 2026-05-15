@@ -1,4 +1,3 @@
-using Fabros.TileEditor;
 using UnityEngine;
 
 [RequireComponent(typeof(LocationObject))]

@@ -1,14 +1,13 @@
-using Fabros.TileEditor;
 using UnityEngine;
 using VContainer;
 
-namespace Module.TileEditor
+namespace TileEditor
 {
     public class TileEditorInitiator : MonoBehaviour
     {
         private LocationSerializer _locationSerializer;
 
-        [SerializeField] private Fabros.TileEditor.TileEditor _tileEditor;
+        [SerializeField] private TileEditor _tileEditor;
         [SerializeField] private CampLocationObjectGetter _locationObjectsGetter;
         [SerializeField] private TileEditorSettings _tileEditorSettings;
 

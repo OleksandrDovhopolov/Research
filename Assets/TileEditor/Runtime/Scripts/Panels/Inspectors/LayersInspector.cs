@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public class LayersInspector : MonoBehaviour
     {

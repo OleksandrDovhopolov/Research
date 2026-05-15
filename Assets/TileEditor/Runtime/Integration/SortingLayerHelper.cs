@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public class SortingLayerHelper : MonoBehaviour
     {

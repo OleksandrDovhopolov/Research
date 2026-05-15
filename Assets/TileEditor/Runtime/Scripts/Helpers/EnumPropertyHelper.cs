@@ -1,6 +1,6 @@
-﻿using UnityEngine;
+using UnityEngine;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     [RequireComponent(typeof(LocationObject))]
     public abstract class EnumPropertyHelper : MonoBehaviour

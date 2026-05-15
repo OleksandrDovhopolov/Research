@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public sealed class MoveObjectsCommand : BaseCommand
     {

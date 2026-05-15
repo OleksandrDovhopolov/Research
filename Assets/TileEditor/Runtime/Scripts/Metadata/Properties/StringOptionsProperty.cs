@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public class StringOptionsProperty : StringProperty
     {

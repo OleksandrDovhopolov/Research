@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public abstract class GenericRangedProperty<T> : GenericProperty<T>
     {

@@ -7,7 +7,7 @@ using UnityEditor;
 #endif
 using UnityEngine;
 
-namespace Module.TileEditor
+namespace TileEditor
 {
     [CreateAssetMenu(fileName = "TileEditorLocationContainer", menuName = "TileEditor/Create LocationContainer")]
     public class EditorLocationContainer : ScriptableObject

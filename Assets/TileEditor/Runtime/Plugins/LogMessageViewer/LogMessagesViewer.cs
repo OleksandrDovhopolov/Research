@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     [RequireComponent(typeof(CanvasGroup))]
     public class LogMessagesViewer : MonoBehaviour

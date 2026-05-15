@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public sealed class AddToGroupCommand : BaseCommand
     {

@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public abstract class BasePopup : MonoBehaviour
     {

@@ -4,7 +4,7 @@ using Game.Features.Locations;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     [RequireComponent(typeof(LocationObject))]
     [RequireComponent(typeof(LocationInteractableView))]

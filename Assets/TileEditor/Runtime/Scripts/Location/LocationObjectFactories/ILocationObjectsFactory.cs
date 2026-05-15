@@ -2,7 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace Fabros.TileEditor
+namespace TileEditor
 {
     public interface ILocationObjectsFactory
     {
