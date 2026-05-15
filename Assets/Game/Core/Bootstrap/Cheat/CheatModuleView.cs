@@ -29,7 +29,6 @@ namespace Game.Cheat
         private UIManager _uiManager;
         private ResourceManager _resourceManager;
         private IResourceOperationsService _resourceOperationsService;
-        private IInventoryService _inventoryService;
         private OrchestratorRunner _orchestratorRunner;
         private AnimateCurrency _animateCurrency;
         private ICardCollectionSessionFacade _cardCollectionSessionFacade;
@@ -47,7 +46,6 @@ namespace Game.Cheat
             AnimateCurrency animateCurrency,
             ResourceManager resourceManager,
             IResourceOperationsService resourceOperationsService,
-            IInventoryService inventoryService, 
             OrchestratorRunner orchestratorRunner,
             ICardCollectionSessionFacade cardCollectionSessionFacade,
             IBattlePassServerService battlePassServerService,
@@ -59,7 +57,6 @@ namespace Game.Cheat
             RewardSpecsConfigSO rewardSpecsConfigSo)
         {
             _uiManager = uiManager;
-            _inventoryService = inventoryService;
             _resourceManager = resourceManager;
             _resourceOperationsService = resourceOperationsService;
             _animateCurrency = animateCurrency;
