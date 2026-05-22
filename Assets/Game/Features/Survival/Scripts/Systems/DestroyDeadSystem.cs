@@ -18,8 +18,25 @@ namespace Survival
         {
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()
                 .CreateCommandBuffer(state.WorldUnmanaged);
-            var query = SystemAPI.QueryBuilder().WithAll<DeadTag>().Build();
-            ecb.DestroyEntity(query, EntityQueryCaptureMode.AtPlayback);
+
+            new DestroyDeadJob
+            {
+                Ecb = ecb.AsParallelWriter()
+            }.ScheduleParallel();
+        }
+    }
+
+    [BurstCompile]
+    [WithAll(typeof(DeadTag))]
+    public partial struct DestroyDeadJob : IJobEntity
+    {
+        public EntityCommandBuffer.ParallelWriter Ecb;
+
+        // Per-entity DestroyEntity unrolls each entity's LinkedEntityGroup,
+        // so child mesh entities are destroyed together with the enemy root.
+        private void Execute([ChunkIndexInQuery] int chunkIndex, Entity entity)
+        {
+            Ecb.DestroyEntity(chunkIndex, entity);
         }
     }
 }
