@@ -1,13 +1,12 @@
 using CameraModule;
 using Unity.Entities;
-using Unity.Transforms;
 using UnityEngine;
 
 namespace Survival
 {
     // Top-down follow camera for the Survivors mode. Disables the location
     // CameraBehaviour on the same GameObject and keeps the camera centered on
-    // the player ECS entity. Removing this component re-enables CameraBehaviour.
+    // the player. Removing this component re-enables CameraBehaviour.
     public class FollowCamera : MonoBehaviour
     {
         [SerializeField] private float _followSpeed = 10f;
@@ -31,15 +30,18 @@ namespace Survival
 
             if (!_hasQuery)
             {
-                _query = world.EntityManager.CreateEntityQuery(
-                    typeof(PlayerTag), typeof(LocalTransform));
+                // PlayerPosition is written only by the main-thread PlayerMoveJob,
+                // so reading it here never conflicts with parallel jobs.
+                _query = world.EntityManager.CreateEntityQuery(typeof(PlayerPosition));
                 _hasQuery = true;
             }
 
             if (_query.CalculateEntityCount() != 1)
                 return;
 
-            var playerPos = _query.GetSingleton<LocalTransform>().Position;
+            // Complete simulation jobs before reading ECS data from the main thread.
+            world.EntityManager.CompleteAllTrackedJobs();
+            var playerPos = _query.GetSingleton<PlayerPosition>().Value;
             var current = transform.position;
             var target = new Vector3(playerPos.x, current.y, playerPos.z);
 

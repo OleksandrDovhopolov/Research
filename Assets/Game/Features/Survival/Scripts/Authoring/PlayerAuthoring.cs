@@ -43,6 +43,11 @@ namespace Survival
                 {
                     Value = authoring.rotationSpeed
                 });
+
+                AddComponent(entity, new PlayerPosition
+                {
+                    Value = float3.zero
+                });
             }
         }
     }

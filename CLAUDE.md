@@ -148,7 +148,7 @@ Assets/
 
 ### Текущий день
 > Обновляй эту строку при смене задачи.  
-> **Сейчас:** День 2 — Player movement (keyboard + touch joystick)
+> **Сейчас:** День 3 — Enemy spawn + EnemyMoveToPlayerSystem
 
 ### Статус DOTS чеклист
 - [ ] Компоненты определены
