@@ -25,12 +25,15 @@ namespace Survival
                 max = bounds.Max;
             }
 
+            // Run on the main thread: the player is a single entity, so parallel
+            // scheduling gains nothing and would leave LocalTransform written by an
+            // in-flight job that the FollowCamera MonoBehaviour reads in LateUpdate.
             new PlayerMoveJob
             {
                 DeltaTime = SystemAPI.Time.DeltaTime,
                 Min = min,
                 Max = max
-            }.ScheduleParallel();
+            }.Run();
         }
     }
 

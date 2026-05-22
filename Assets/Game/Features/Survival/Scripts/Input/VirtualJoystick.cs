@@ -39,10 +39,12 @@ namespace Survival
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 _background, eventData.position, _uiCamera, out var local);
 
-            Vector2 size = _background.sizeDelta;
+            // local is relative to the pivot; subtracting rect.center makes the
+            // math independent of the background's pivot and anchors.
+            Rect rect = _background.rect;
             Vector2 normalized = new Vector2(
-                local.x / (size.x * 0.5f),
-                local.y / (size.y * 0.5f));
+                (local.x - rect.center.x) / (rect.width * 0.5f),
+                (local.y - rect.center.y) / (rect.height * 0.5f));
 
             _input = normalized.magnitude > 1f ? normalized.normalized : normalized;
             if (_input.magnitude < _deadZone)

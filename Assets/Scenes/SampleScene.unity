@@ -836,12 +836,25 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1714708837}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 510c9b32cc4420e439b424dda117f919, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   camera: {fileID: 519420031}
+--- !u!114 &1714708840
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1714708837}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b582c2d5ccf14b429083261da434ab0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _followSpeed: 10
 --- !u!1 &1787613426
 GameObject:
   m_ObjectHideFlags: 0
@@ -1363,6 +1376,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Joystick
       objectReference: {fileID: 0}
+    - target: {fileID: 8708819548181396828, guid: c39267eef1788aa43977de2cc9ed4deb, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1726,7 +1743,62 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7974451566693395181, guid: ccdecefd6361c2040be07192f6d62b45, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1714708839}
+    - targetCorrespondingSourceObject: {fileID: 7974451566693395181, guid: ccdecefd6361c2040be07192f6d62b45, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1714708840}
+    - targetCorrespondingSourceObject: {fileID: 6219230822132383291, guid: ccdecefd6361c2040be07192f6d62b45, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3418673630670355978}
   m_SourcePrefab: {fileID: 100100000, guid: ccdecefd6361c2040be07192f6d62b45, type: 3}
+--- !u!1 &3418673630670355977 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6219230822132383291, guid: ccdecefd6361c2040be07192f6d62b45, type: 3}
+  m_PrefabInstance: {fileID: 3418673630670355976}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3418673630670355978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3418673630670355977}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_Version: 2
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
 --- !u!1001 &8502796839665870844
 PrefabInstance:
   m_ObjectHideFlags: 0
