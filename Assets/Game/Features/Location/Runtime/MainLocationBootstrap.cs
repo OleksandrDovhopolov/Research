@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Fabros.TileEditor;
+using TileEditor;
 using Newtonsoft.Json;
 using UnityEngine;
 using VContainer;

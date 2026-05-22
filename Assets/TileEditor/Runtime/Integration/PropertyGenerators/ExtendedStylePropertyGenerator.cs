@@ -1,3 +1,4 @@
+using TileEditor;
 using UnityEngine;
 
 public class ExtendedStylePropertyGenerator : StylePropertyGenerator
