@@ -133,7 +133,7 @@ GameObject:
   - component: {fileID: 7693258829092251922}
   - component: {fileID: 2970046362018972012}
   - component: {fileID: 5995000599775412421}
-  - component: {fileID: 3558131021551274911}
+  - component: {fileID: 1280797079991982202}
   m_Layer: 0
   m_Name: LocationZoneInfoHud
   m_TagString: Untagged
@@ -225,7 +225,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8022e30d9c14a4d4f97e1d219c046581, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &3558131021551274911
+--- !u!114 &1280797079991982202
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

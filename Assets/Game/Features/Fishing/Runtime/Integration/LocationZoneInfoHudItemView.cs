@@ -6,7 +6,7 @@ using VContainer;
 
 namespace Game.Fishing
 {
-    public sealed class LocationZoneInfoHudItemView : MonoBehaviour
+    public class LocationZoneInfoHudItemView : MonoBehaviour
     {
         [SerializeField] private Canvas _canvas;
         [SerializeField] private Button _button;
