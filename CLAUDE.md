@@ -1,7 +1,7 @@
 # CLAUDE.md — Mini Vampire Survivors (Pet Project)
 
 ## Project Overview
-Unity **2022.3.51f1** · Built-in Render Pipeline · Target: **Mobile**
+Unity **2022.3.51f1** · **URP** (Universal Render Pipeline) · Target: **Mobile**
 
 Проект состоит из **двух слоёв**:
 - **Основной проект** — существующий код написан на **MonoBehaviour / GameObject** (не трогаем без явной просьбы)
