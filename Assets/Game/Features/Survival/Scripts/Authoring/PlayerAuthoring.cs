@@ -7,6 +7,7 @@ namespace Survival
     public class PlayerAuthoring : MonoBehaviour
     {
         public float moveSpeed = 6f;
+        public float rotationSpeed = 12f;
         public float health = 100f;
         public float pickupRadius = 2f;
 
@@ -36,6 +37,11 @@ namespace Survival
                 AddComponent(entity, new MoveDirection
                 {
                     Value = float3.zero
+                });
+
+                AddComponent(entity, new RotationSpeed
+                {
+                    Value = authoring.rotationSpeed
                 });
             }
         }

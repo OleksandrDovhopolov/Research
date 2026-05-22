@@ -11,7 +11,6 @@ namespace Survival
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<PlayerTag>();
-            Debug.Log("[Survival] PlayerInputReadSystem.OnCreate — system created");
         }
 
         // No [BurstCompile]: reads UnityEngine.Input and the managed input bridge.
@@ -31,17 +30,10 @@ namespace Survival
 
             float3 direction = new float3(combined.x, 0f, combined.y);
 
-            int playerCount = 0;
             foreach (var moveDirection in
                 SystemAPI.Query<RefRW<MoveDirection>>().WithAll<PlayerTag>())
             {
                 moveDirection.ValueRW.Value = direction;
-                playerCount++;
-            }
-
-            if (math.lengthsq(combined) > 1e-4f)
-            {
-                Debug.Log($"[Survival] PlayerInputReadSystem.OnUpdate — keyboard={keyboard} joystick={joystick} dir={direction} players matched={playerCount}");
             }
         }
     }
