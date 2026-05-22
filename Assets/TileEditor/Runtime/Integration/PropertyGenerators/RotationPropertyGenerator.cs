@@ -1,3 +1,4 @@
+using TileEditor;
 using UnityEngine;
 
 [RequireComponent(typeof(LocationObject))]

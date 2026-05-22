@@ -1,4 +1,4 @@
-using Fabros.TileEditor;
+using TileEditor;
 using UnityEngine;
 
 namespace Game.Features.Locations
