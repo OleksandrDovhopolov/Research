@@ -1,18 +1,38 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+using Unity.Burst;
+using Unity.Entities;
+using Unity.Transforms;
 
-public class PlayerMoveSystem : MonoBehaviour
+namespace Survival
 {
-    // Start is called before the first frame update
-    void Start()
+    [UpdateInGroup(typeof(SimulationSystemGroup))]
+    [BurstCompile]
+    public partial struct PlayerMoveSystem : ISystem
     {
-        
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<PlayerTag>();
+        }
+
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state)
+        {
+            new PlayerMoveJob
+            {
+                DeltaTime = SystemAPI.Time.DeltaTime
+            }.ScheduleParallel();
+        }
     }
 
-    // Update is called once per frame
-    void Update()
+    [BurstCompile]
+    [WithAll(typeof(PlayerTag))]
+    public partial struct PlayerMoveJob : IJobEntity
     {
-        
+        public float DeltaTime;
+
+        private void Execute(ref LocalTransform transform,
+            in MoveDirection direction, in MoveSpeed speed)
+        {
+            transform.Position += direction.Value * speed.Value * DeltaTime;
+        }
     }
 }

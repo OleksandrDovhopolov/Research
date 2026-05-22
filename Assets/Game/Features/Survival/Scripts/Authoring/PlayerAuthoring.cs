@@ -1,4 +1,5 @@
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace Survival
@@ -30,6 +31,11 @@ namespace Survival
                 AddComponent(entity, new PickupRadius
                 {
                     Value = authoring.pickupRadius
+                });
+
+                AddComponent(entity, new MoveDirection
+                {
+                    Value = float3.zero
                 });
             }
         }
