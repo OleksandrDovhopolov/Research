@@ -13,6 +13,12 @@ namespace Survival
         [SerializeField] private float _handleRange = 75f;
         [SerializeField] private float _deadZone = 0.1f;
 
+        [Header("Quadrant Highlights")]
+        [SerializeField] private GameObject _topLeft;
+        [SerializeField] private GameObject _topRight;
+        [SerializeField] private GameObject _botLeft;
+        [SerializeField] private GameObject _botRight;
+
         private Vector2 _input;
         private Camera _uiCamera;
 
@@ -22,6 +28,8 @@ namespace Survival
             _uiCamera = canvas != null && canvas.renderMode == RenderMode.ScreenSpaceCamera
                 ? canvas.worldCamera
                 : null;
+
+            UpdateQuadrantHighlight();
         }
 
         public void OnPointerDown(PointerEventData eventData) => OnDrag(eventData);
@@ -42,6 +50,7 @@ namespace Survival
 
             _handle.anchoredPosition = _input * _handleRange;
             Publish();
+            UpdateQuadrantHighlight();
         }
 
         public void OnPointerUp(PointerEventData eventData)
@@ -49,6 +58,7 @@ namespace Survival
             _input = Vector2.zero;
             _handle.anchoredPosition = Vector2.zero;
             Publish();
+            UpdateQuadrantHighlight();
         }
 
         private void Publish()
@@ -57,8 +67,33 @@ namespace Survival
             PlayerInputBridge.JoystickActive = true;
         }
 
+        // Highlights the single quadrant the handle currently sits in.
+        // All off when the handle is centered (within the dead zone).
+        private void UpdateQuadrantHighlight()
+        {
+            bool active = _input.sqrMagnitude > 0f;
+            bool right = _input.x >= 0f;
+            bool top = _input.y >= 0f;
+
+            SetHighlight(_topLeft, active && !right && top);
+            SetHighlight(_topRight, active && right && top);
+            SetHighlight(_botLeft, active && !right && !top);
+            SetHighlight(_botRight, active && right && !top);
+        }
+
+        private static void SetHighlight(GameObject target, bool on)
+        {
+            if (target != null && target.activeSelf != on)
+                target.SetActive(on);
+        }
+
         private void OnEnable() => PlayerInputBridge.JoystickActive = true;
 
-        private void OnDisable() => PlayerInputBridge.Reset();
+        private void OnDisable()
+        {
+            PlayerInputBridge.Reset();
+            _input = Vector2.zero;
+            UpdateQuadrantHighlight();
+        }
     }
 }
