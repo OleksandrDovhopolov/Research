@@ -3,7 +3,7 @@ using UIShared;
 
 namespace Game.Fishing
 {
-    public sealed class LocationZoneInfoHudWidget : MonoBehaviour, IHudWidget
+    public class LocationZoneInfoHudWidget : MonoBehaviour, IHudWidget
     {
         [SerializeField] private Transform _itemsRoot;
 

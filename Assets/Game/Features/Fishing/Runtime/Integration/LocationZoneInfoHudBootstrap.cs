@@ -21,7 +21,10 @@ namespace Game.Fishing
         public void Install(IHudController hudController, ILocationInteractablesSource locationSource)
         {
             if (_isInitializationStarted)
+            {
+                Debug.LogWarning("[LocationZoneInfoHudBootstrap] Already installed");
                 return;
+            }
 
             if (hudController == null)
             {

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Game.Fishing
 {
-    public sealed class LocationZoneInfoHudCanvasMarker : MonoBehaviour
+    public class LocationZoneInfoHudCanvasMarker : MonoBehaviour
     {
     }
 }
