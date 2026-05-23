@@ -43,7 +43,12 @@ namespace Survival
             }
 
             if (!found)
-                return; // no target — keep the timer ready, retry next frame
+            {
+                // Hold at "ready" — without this the timer keeps going negative
+                // while idle and the first enemy triggers a burst to catch up.
+                weapon.FireTimer = 0f;
+                return;
+            }
 
             float3 toTarget = targetPos - playerPos;
             toTarget.y = 0f;
