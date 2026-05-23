@@ -148,7 +148,7 @@ Assets/
 
 ### Текущий день
 > Обновляй эту строку при смене задачи.  
-> **Сейчас:** День 3 — Enemy spawn + EnemyMoveToPlayerSystem
+> **Сейчас:** День 4-5 — Auto shooting, projectiles, damage, enemy death
 
 ### Статус DOTS чеклист
 - [ ] Компоненты определены
