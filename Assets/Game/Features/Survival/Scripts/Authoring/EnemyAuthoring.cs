@@ -1,4 +1,5 @@
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace Survival
@@ -8,6 +9,11 @@ namespace Survival
         public float health = 30f;
         public float moveSpeed = 10f;
         public float rotationSpeed = 10f;
+
+        [Header("Fake-run visual")]
+        public float runSwayDegrees = 8f;
+        public float runBobSpeed = 6f;
+        public float runLeanDegrees = 15f;
 
         public class Baker : Baker<EnemyAuthoring>
         {
@@ -30,6 +36,17 @@ namespace Survival
                 AddComponent(entity, new RotationSpeed
                 {
                     Value = authoring.rotationSpeed
+                });
+
+                // RunBob is added to the root — EnemyRunBobSystem reaches the
+                // mesh child through the root's LinkedEntityGroup at runtime.
+                // (A Baker can't add components to entities owned by other Bakers,
+                // and the mesh child is baked by entities.graphics.)
+                AddComponent(entity, new RunBob
+                {
+                    SwayRadians = math.radians(authoring.runSwayDegrees),
+                    Speed = authoring.runBobSpeed,
+                    LeanRadians = math.radians(authoring.runLeanDegrees)
                 });
             }
         }
