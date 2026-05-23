@@ -40,8 +40,6 @@ namespace Survival
 
                 // RunBob is added to the root — EnemyRunBobSystem reaches the
                 // mesh child through the root's LinkedEntityGroup at runtime.
-                // (A Baker can't add components to entities owned by other Bakers,
-                // and the mesh child is baked by entities.graphics.)
                 AddComponent(entity, new RunBob
                 {
                     SwayRadians = math.radians(authoring.runSwayDegrees),
