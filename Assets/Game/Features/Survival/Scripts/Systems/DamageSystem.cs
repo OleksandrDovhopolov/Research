@@ -26,6 +26,7 @@ namespace Survival
 
             state.RequireForUpdate<ProjectileTag>();
             state.RequireForUpdate<EnemyTag>();
+            state.RequireForUpdate<XpDropConfig>();
         }
 
         [BurstCompile]
@@ -35,6 +36,11 @@ namespace Survival
             var enemyTransforms = _enemyQuery.ToComponentDataArray<LocalTransform>(Allocator.TempJob);
 
             _healthLookup.Update(ref state);
+
+            var xpConfig = SystemAPI.GetSingleton<XpDropConfig>();
+            LocalTransform xpBase = xpConfig.XpPrefab != Entity.Null
+                ? SystemAPI.GetComponent<LocalTransform>(xpConfig.XpPrefab)
+                : default;
 
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()
                 .CreateCommandBuffer(state.WorldUnmanaged);
@@ -46,7 +52,11 @@ namespace Survival
                 Enemies = enemies,
                 EnemyTransforms = enemyTransforms,
                 HealthLookup = _healthLookup,
-                Ecb = ecb
+                Ecb = ecb,
+                XpPrefab = xpConfig.XpPrefab,
+                XpPerKill = xpConfig.XpPerKill,
+                XpBaseTransform = xpBase,
+                XpSpawnHeightOffset = xpConfig.SpawnHeightOffset
             }.Schedule(state.Dependency);
 
             enemies.Dispose(state.Dependency);
@@ -63,6 +73,11 @@ namespace Survival
         [ReadOnly] public NativeArray<LocalTransform> EnemyTransforms;
         public ComponentLookup<Health> HealthLookup;
         public EntityCommandBuffer Ecb;
+
+        public Entity XpPrefab;
+        public int XpPerKill;
+        public LocalTransform XpBaseTransform;
+        public float XpSpawnHeightOffset;
 
         private void Execute(Entity projectile, in LocalTransform transform,
             in Damage damage, in HitRadius hitRadius)
@@ -84,9 +99,25 @@ namespace Survival
                 health.Value -= damage.Value;
                 HealthLookup[enemy] = health;
 
-                // Killing blow only — exactly one projectile marks the enemy dead.
+                // Killing blow only — exactly one projectile marks the enemy dead
+                // and exactly one XP gem is dropped at the enemy's position.
                 if (before > 0f && health.Value <= 0f)
+                {
                     Ecb.AddComponent<DeadTag>(enemy);
+
+                    if (XpPrefab != Entity.Null)
+                    {
+                        LocalTransform gemTransform = XpBaseTransform;
+                        float3 enemyPos = EnemyTransforms[i].Position;
+                        gemTransform.Position = new float3(
+                            enemyPos.x,
+                            enemyPos.y + XpSpawnHeightOffset,
+                            enemyPos.z);
+                        Entity gem = Ecb.Instantiate(XpPrefab);
+                        Ecb.SetComponent(gem, gemTransform);
+                        Ecb.SetComponent(gem, new XpValue { Value = XpPerKill });
+                    }
+                }
 
                 Ecb.AddComponent<DeadTag>(projectile); // projectile is consumed
                 break;

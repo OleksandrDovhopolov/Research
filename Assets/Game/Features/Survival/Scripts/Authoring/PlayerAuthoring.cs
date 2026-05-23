@@ -48,6 +48,11 @@ namespace Survival
                 {
                     Value = float3.zero
                 });
+
+                AddComponent(entity, new Experience
+                {
+                    Current = 0
+                });
             }
         }
     }
