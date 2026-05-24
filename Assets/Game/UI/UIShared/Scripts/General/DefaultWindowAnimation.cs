@@ -20,7 +20,7 @@ namespace UIShared
 
             while (timer < _animationDuration)
             {
-                timer += Time.deltaTime;
+                timer += Time.unscaledDeltaTime;
                 float t = timer / _animationDuration;
                 _canvasGroup.alpha = Mathf.Lerp(0f, 1f, t);
                 yield return null;
@@ -39,7 +39,7 @@ namespace UIShared
 
             while (timer < duration)
             {
-                timer += Time.deltaTime;
+                timer += Time.unscaledDeltaTime;
                 float t = timer / duration;
                 _canvasGroup.alpha = Mathf.Lerp(1f, 0f, t);
                 yield return null;

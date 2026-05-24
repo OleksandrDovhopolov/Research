@@ -10,6 +10,7 @@ namespace Survival
         public float rotationSpeed = 12f;
         public float health = 100f;
         public float pickupRadius = 2f;
+        public int firstLevelUpXp = 10;
 
         public class Baker : Baker<PlayerAuthoring>
         {
@@ -52,6 +53,12 @@ namespace Survival
                 AddComponent(entity, new Experience
                 {
                     Current = 0
+                });
+
+                AddComponent(entity, new Level
+                {
+                    Value = 1,
+                    NextThresholdXp = authoring.firstLevelUpXp
                 });
             }
         }
