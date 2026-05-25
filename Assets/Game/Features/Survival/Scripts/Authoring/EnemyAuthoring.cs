@@ -15,6 +15,11 @@ namespace Survival
         public float runBobSpeed = 6f;
         public float runLeanDegrees = 15f;
 
+        [Header("Contact damage")]
+        public float contactDamagePerHit = 5f;
+        public float contactInterval = 1f;
+        public float contactRadius = 1.5f;
+
         public class Baker : Baker<EnemyAuthoring>
         {
             public override void Bake(EnemyAuthoring authoring)
@@ -45,6 +50,14 @@ namespace Survival
                     SwayRadians = math.radians(authoring.runSwayDegrees),
                     Speed = authoring.runBobSpeed,
                     LeanRadians = math.radians(authoring.runLeanDegrees)
+                });
+
+                AddComponent(entity, new ContactDamage
+                {
+                    DamagePerHit = authoring.contactDamagePerHit,
+                    Interval = authoring.contactInterval,
+                    Timer = 0f,
+                    Radius = authoring.contactRadius
                 });
             }
         }

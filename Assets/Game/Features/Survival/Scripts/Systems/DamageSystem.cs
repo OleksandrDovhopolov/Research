@@ -42,7 +42,9 @@ namespace Survival
                 ? SystemAPI.GetComponent<LocalTransform>(xpConfig.XpPrefab)
                 : default;
 
-            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()
+            // BeginSimulation ECB so Instantiate + SetComponent for the XP gem
+            // play back before TransformSystemGroup — no one-frame flash at origin.
+            var ecb = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
                 .CreateCommandBuffer(state.WorldUnmanaged);
 
             // Single-threaded: multiple projectiles may damage the same enemy in
@@ -98,6 +100,15 @@ namespace Survival
                 float before = health.Value;
                 health.Value -= damage.Value;
                 HealthLookup[enemy] = health;
+
+                // Emit a DamageEvent so the HUD can show a floating "-X".
+                Entity dmgEvent = Ecb.CreateEntity();
+                Ecb.AddComponent(dmgEvent, new DamageEvent
+                {
+                    Position = EnemyTransforms[i].Position,
+                    Amount = damage.Value,
+                    ToPlayer = false
+                });
 
                 // Killing blow only — exactly one projectile marks the enemy dead
                 // and exactly one XP gem is dropped at the enemy's position.
