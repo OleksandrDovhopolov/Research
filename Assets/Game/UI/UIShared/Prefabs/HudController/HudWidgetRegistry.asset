@@ -25,3 +25,7 @@ MonoBehaviour:
     _addressableKey: LureSelectorHudWidget
     _layer: 0
     _createOnInitialize: 0
+  - _widgetTypeName: Survival.DamageNumbersHudWidget
+    _addressableKey: DamageNumbersHudWidget
+    _layer: 1
+    _createOnInitialize: 0

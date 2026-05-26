@@ -13,13 +13,13 @@ namespace Survival
     // archetype clears.
     public sealed class DamageVisualBridge : MonoBehaviour
     {
-        private HudController _hudController;
+        private IHudController _hudController;
         private DamageNumbersHudWidget _widget;
         private EntityQuery _eventsQuery;
         private CancellationTokenSource _cts;
 
         [Inject]
-        private void Construct(HudController hudController)
+        private void Construct(IHudController hudController)
         {
             _hudController = hudController;
         }

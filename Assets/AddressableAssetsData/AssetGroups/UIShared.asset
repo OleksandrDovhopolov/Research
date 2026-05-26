@@ -57,6 +57,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3a06601b3ff8fc94d9fafabb9390bc8f
+    m_Address: GameOverWindow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3b88badc8f9bac64991c0e64e2f32648
     m_Address: BattlePassWindow
     m_ReadOnly: 0
@@ -109,6 +114,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7f685dc587da3c24a9bad647c5835ccc
     m_Address: info_widget
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 84f0c785b59454b45bf2dd5acc3df79c
+    m_Address: DamageNumbersHudWidget
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

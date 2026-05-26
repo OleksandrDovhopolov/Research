@@ -15,48 +15,65 @@ namespace Survival
     // and the registry hookup follows the existing widgets in HudWidgetRegistry.
     public sealed class DamageNumbersHudWidget : MonoBehaviour, IHudWidget
     {
-        [SerializeField] private RectTransform _container;
-        [SerializeField] private TMP_Text _labelPrefab;
-        [SerializeField] private Camera _worldCamera;
+        [SerializeField] private Transform _container;
+        [SerializeField] private TextMeshProUGUI _labelPrefab;
         [SerializeField] private float _lifetime = 0.6f;
-        [SerializeField] private float _floatHeightPx = 60f;
+        [SerializeField] private float _spawnHeightOffset = 2f;
+        [SerializeField] private float _cameraDistanceOffset = 1f;
+        [SerializeField] private float _floatHeight = 1.5f;
         [SerializeField] private Color _enemyDamageColor = Color.white;
         [SerializeField] private Color _playerDamageColor = Color.red;
 
+        public Transform Container => _container != null ? _container : transform;
+
         private readonly Stack<TMP_Text> _pool = new();
         private readonly List<ActiveLabel> _active = new();
+
+        private void Reset()
+        {
+            _container = transform;
+        }
 
         private struct ActiveLabel
         {
             public TMP_Text Label;
             public RectTransform Rect;
-            public Vector2 StartPos;
+            public Vector3 StartPos;
             public float Age;
         }
 
         public void Show(float3 worldPosition, float amount, bool toPlayer)
         {
-            if (_labelPrefab == null || _container == null)
+            if (_labelPrefab == null)
                 return;
 
-            Camera cam = _worldCamera != null ? _worldCamera : Camera.main;
-            if (cam == null)
-                return;
-
-            TMP_Text label = _pool.Count > 0 ? _pool.Pop() : Instantiate(_labelPrefab, _container);
+            TMP_Text label = _pool.Count > 0 ? _pool.Pop() : Instantiate(_labelPrefab, Container);
             label.gameObject.SetActive(true);
             label.text = $"-{amount:0}";
             label.color = toPlayer ? _playerDamageColor : _enemyDamageColor;
 
-            Vector3 screenPos = cam.WorldToScreenPoint(worldPosition);
+            // World-space Canvas: rect.position is in WORLD units, not pixels.
+            Vector3 spawnWorldPos = (Vector3)worldPosition + Vector3.up * _spawnHeightOffset;
+
+            // Shift toward the camera so the label renders in front of the
+            // player/enemy mesh (otherwise the 3D model occludes it).
+            Camera cam = Camera.main;
+            if (cam != null)
+            {
+                Vector3 toCamera = cam.transform.position - spawnWorldPos;
+                float dist = toCamera.magnitude;
+                if (dist > 0.001f)
+                    spawnWorldPos += (toCamera / dist) * _cameraDistanceOffset;
+            }
+
             RectTransform rect = label.rectTransform;
-            rect.position = screenPos;
+            rect.position = spawnWorldPos;
 
             _active.Add(new ActiveLabel
             {
                 Label = label,
                 Rect = rect,
-                StartPos = screenPos,
+                StartPos = spawnWorldPos,
                 Age = 0f
             });
         }
@@ -81,7 +98,7 @@ namespace Survival
                     continue;
                 }
 
-                a.Rect.position = a.StartPos + Vector2.up * (_floatHeightPx * t);
+                a.Rect.position = a.StartPos + Vector3.up * (_floatHeight * t);
                 Color c = a.Label.color;
                 c.a = 1f - t;
                 a.Label.color = c;

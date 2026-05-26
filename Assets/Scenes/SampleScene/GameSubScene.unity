@@ -331,7 +331,7 @@ MonoBehaviour:
   initialDelay: 3
   spawnInterval: 10
   countPerWave: 2
-  spawnRadius: 150
+  spawnRadius: 130
   seed: 1234
 --- !u!4 &1554981347
 Transform:
