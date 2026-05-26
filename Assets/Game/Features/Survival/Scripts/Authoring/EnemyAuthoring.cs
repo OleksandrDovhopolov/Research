@@ -43,14 +43,9 @@ namespace Survival
                     Value = authoring.rotationSpeed
                 });
 
-                // RunBob is added to the root — EnemyRunBobSystem reaches the
-                // mesh child through the root's LinkedEntityGroup at runtime.
-                AddComponent(entity, new RunBob
-                {
-                    SwayRadians = math.radians(authoring.runSwayDegrees),
-                    Speed = authoring.runBobSpeed,
-                    LeanRadians = math.radians(authoring.runLeanDegrees)
-                });
+                // RunBob removed — real Animator-driven animation now lives on
+                // a separate GameObject managed by EnemyVisualPoolManager.
+                // EnemyRunBobSystem becomes dormant via RequireForUpdate<RunBob>.
 
                 AddComponent(entity, new ContactDamage
                 {

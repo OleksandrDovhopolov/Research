@@ -325,9 +325,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyPrefabs:
-  - {fileID: 7808163812613222449, guid: ba707ba09987d4849bb87e90d7c5d2c6, type: 3}
-  - {fileID: 7808163812613222449, guid: db6717a4b881e7744b25020ae45fdd4a, type: 3}
-  - {fileID: 3870147048615793588, guid: c865b5771eea2044781fbd33327c1936, type: 3}
+  - {fileID: 7320610152379956385, guid: f4f348abd453cb64997c2866392f2aa6, type: 3}
   initialDelay: 3
   spawnInterval: 10
   countPerWave: 2
