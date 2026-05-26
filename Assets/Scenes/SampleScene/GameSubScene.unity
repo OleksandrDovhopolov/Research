@@ -175,6 +175,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 873740619628383776, guid: b5fca0d5ef196ae4f997fa9c9be04e57, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2247573112932681049, guid: b5fca0d5ef196ae4f997fa9c9be04e57, type: 3}
       propertyPath: moveSpeed
       value: 30
@@ -194,6 +198,10 @@ PrefabInstance:
     - target: {fileID: 2247573112932681049, guid: b5fca0d5ef196ae4f997fa9c9be04e57, type: 3}
       propertyPath: xpMagnetRadius
       value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 2257096748525408792, guid: b5fca0d5ef196ae4f997fa9c9be04e57, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3738312828313439207, guid: b5fca0d5ef196ae4f997fa9c9be04e57, type: 3}
       propertyPath: m_Name

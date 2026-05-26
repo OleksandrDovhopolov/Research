@@ -70,11 +70,21 @@ namespace Survival
             spawnPos.y += weapon.MuzzleHeight;
             transformValue.Position = spawnPos;
 
+            // Aim the projectile's +Z axis along the flight direction so
+            // arrow-style visuals fly nose-first. Spherical bullets don't
+            // care about rotation, so this is harmless for the old prefab.
+            transformValue.Rotation = quaternion.LookRotationSafe(direction, math.up());
+
             ecb.SetComponent(projectile, transformValue);
             ecb.SetComponent(projectile, new MoveDirection { Value = direction });
             ecb.SetComponent(projectile, new MoveSpeed { Value = weapon.ProjectileSpeed });
             ecb.SetComponent(projectile, new Damage { Value = weapon.ProjectileDamage });
             ecb.SetComponent(projectile, new Lifetime { Value = weapon.ProjectileLifetime });
+
+            // Emit a one-shot event so the visual companion (PlayerVisualSync)
+            // can fire the bow Shoot animation in lockstep with the projectile.
+            Entity shotEvent = ecb.CreateEntity();
+            ecb.AddComponent<PlayerShotEvent>(shotEvent);
         }
     }
 }
