@@ -1,4 +1,3 @@
-using CameraModule;
 using Unity.Entities;
 using UnityEngine;
 
@@ -17,9 +16,16 @@ namespace Survival
 
         private void Awake()
         {
-            var cameraBehaviour = GetComponent<CameraBehaviour>();
-            if (cameraBehaviour != null)
-                cameraBehaviour.enabled = false;
+            // Look up the location-camera controller by type name so the
+            // Survival asmdef doesn't have to reference Assembly-CSharp where
+            // CameraBehaviour lives. Equivalent to GetComponent<CameraBehaviour>().
+            foreach (var behaviour in GetComponents<MonoBehaviour>())
+            {
+                if (behaviour == null) continue;
+                if (behaviour.GetType().Name != "CameraBehaviour") continue;
+                behaviour.enabled = false;
+                break;
+            }
         }
 
         private void LateUpdate()

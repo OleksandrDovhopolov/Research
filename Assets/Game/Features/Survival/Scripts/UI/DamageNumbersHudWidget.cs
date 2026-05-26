@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using TMPro;
+using UIShared;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -12,7 +13,7 @@ namespace Survival
     //
     // If the project has a HudWidget base class, change the base type below
     // and the registry hookup follows the existing widgets in HudWidgetRegistry.
-    public sealed class DamageNumbersHudWidget : MonoBehaviour
+    public sealed class DamageNumbersHudWidget : MonoBehaviour, IHudWidget
     {
         [SerializeField] private RectTransform _container;
         [SerializeField] private TMP_Text _labelPrefab;
