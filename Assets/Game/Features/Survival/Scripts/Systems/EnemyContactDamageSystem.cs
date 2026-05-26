@@ -54,7 +54,7 @@ namespace Survival
         public ComponentLookup<Health> HealthLookup;
         public EntityCommandBuffer Ecb;
 
-        private void Execute(in LocalTransform transform, ref ContactDamage cd)
+        private void Execute(Entity entity, in LocalTransform transform, ref ContactDamage cd)
         {
             cd.Timer = math.max(0f, cd.Timer - DeltaTime);
 
@@ -77,6 +77,13 @@ namespace Survival
                 Position = PlayerPos,
                 Amount = cd.DamagePerHit,
                 ToPlayer = true
+            });
+
+            // Emit an EnemyAttackEvent so the visual can play Attack animation.
+            Entity attackEvent = Ecb.CreateEntity();
+            Ecb.AddComponent(attackEvent, new EnemyAttackEvent
+            {
+                Attacker = entity
             });
         }
     }

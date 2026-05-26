@@ -10,6 +10,8 @@ namespace Survival
         public float rotationSpeed = 12f;
         public float health = 100f;
         public float pickupRadius = 2f;
+        public float xpMagnetRadius = 8f;
+        public float xpMagnetSpeed = 25f;
         public int firstLevelUpXp = 10;
 
         public class Baker : Baker<PlayerAuthoring>
@@ -33,6 +35,12 @@ namespace Survival
                 AddComponent(entity, new PickupRadius
                 {
                     Value = authoring.pickupRadius
+                });
+
+                AddComponent(entity, new XpMagnet
+                {
+                    Radius = authoring.xpMagnetRadius,
+                    Speed = authoring.xpMagnetSpeed
                 });
 
                 AddComponent(entity, new MoveDirection

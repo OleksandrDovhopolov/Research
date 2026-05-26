@@ -66,7 +66,9 @@ namespace Survival
             Entity projectile = ecb.Instantiate(prefab);
 
             LocalTransform transformValue = SystemAPI.GetComponent<LocalTransform>(prefab);
-            transformValue.Position = playerPos;
+            float3 spawnPos = playerPos;
+            spawnPos.y += weapon.MuzzleHeight;
+            transformValue.Position = spawnPos;
 
             ecb.SetComponent(projectile, transformValue);
             ecb.SetComponent(projectile, new MoveDirection { Value = direction });

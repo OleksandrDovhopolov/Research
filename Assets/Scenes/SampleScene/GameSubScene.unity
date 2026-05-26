@@ -166,7 +166,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b91bcee6e6026548a3355d0a0897463, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  size: {x: 150, y: 150}
+  size: {x: 256, y: 256}
 --- !u!1001 &831571296
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -184,8 +184,16 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2247573112932681049, guid: b5fca0d5ef196ae4f997fa9c9be04e57, type: 3}
+      propertyPath: xpMagnetSpeed
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 2247573112932681049, guid: b5fca0d5ef196ae4f997fa9c9be04e57, type: 3}
       propertyPath: firstLevelUpXp
       value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2247573112932681049, guid: b5fca0d5ef196ae4f997fa9c9be04e57, type: 3}
+      propertyPath: xpMagnetRadius
+      value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 3738312828313439207, guid: b5fca0d5ef196ae4f997fa9c9be04e57, type: 3}
       propertyPath: m_Name
@@ -326,10 +334,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyPrefabs:
   - {fileID: 7320610152379956385, guid: f4f348abd453cb64997c2866392f2aa6, type: 3}
-  initialDelay: 3
+  initialDelay: 5
   spawnInterval: 10
   countPerWave: 2
-  spawnRadius: 130
+  spawnRadius: 220
   seed: 1234
 --- !u!4 &1554981347
 Transform:
@@ -380,6 +388,7 @@ MonoBehaviour:
   projectileSpeed: 40
   projectileDamage: 5
   projectileLifetime: 3
+  muzzleHeight: 5
 --- !u!4 &2003111161
 Transform:
   m_ObjectHideFlags: 0

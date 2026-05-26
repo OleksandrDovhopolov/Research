@@ -52,4 +52,4 @@ MonoBehaviour:
   runLeanDegrees: 15
   contactDamagePerHit: 5
   contactInterval: 1
-  contactRadius: 1.5
+  contactRadius: 5

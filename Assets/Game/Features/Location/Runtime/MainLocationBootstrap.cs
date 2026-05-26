@@ -35,6 +35,7 @@ namespace Game.Features.Locations
         
         private void Start()
         {
+            return;
             LoadAsync(this.GetCancellationTokenOnDestroy()).Forget();
         }
 
