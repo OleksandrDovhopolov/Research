@@ -33,6 +33,10 @@ namespace Survival
                  "if its pivot is off, or X/Z for slight forward-lean.")]
         [SerializeField] private Vector3 _positionOffset = Vector3.zero;
 
+        [Tooltip("How fast the visual rotates toward the nearest enemy (when one is in range). " +
+                 "Higher = snappier turn. ~12 feels responsive, ~4 feels lazy.")]
+        [SerializeField] private float _aimRotationSpeed = 12f;
+
         private EntityQuery _playerQuery;
         private EntityQuery _shotEventsQuery;
         private bool _queriesReady;
@@ -77,9 +81,22 @@ namespace Survival
             LocalTransform t = em.GetComponentData<LocalTransform>(player);
             MoveDirection dir = em.GetComponentData<MoveDirection>(player);
 
-            transform.SetPositionAndRotation(
-                (Vector3)t.Position + _positionOffset,
-                t.Rotation);
+            // Position always comes from ECS.
+            transform.position = (Vector3)t.Position + _positionOffset;
+
+            // Rotation: if there's an enemy in range, face it (overrides
+            // ECS-rotation which is movement-based). Otherwise fall back to
+            // the ECS rotation so the visual still turns where you're running.
+            quaternion targetRot = t.Rotation;
+            if (em.HasComponent<AimDirection>(player))
+            {
+                AimDirection aim = em.GetComponentData<AimDirection>(player);
+                if (math.lengthsq(aim.Value) > 1e-4f)
+                    targetRot = quaternion.LookRotationSafe(aim.Value, math.up());
+            }
+
+            float lerp = math.saturate(_aimRotationSpeed * Time.deltaTime);
+            transform.rotation = math.slerp(transform.rotation, targetRot, lerp);
 
             if (_animator != null && _speedHash != 0)
             {
