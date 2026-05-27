@@ -73,26 +73,41 @@ namespace Survival
                 .CreateCommandBuffer(state.WorldUnmanaged);
 
             Entity prefab = weapon.ProjectilePrefab;
-            Entity projectile = ecb.Instantiate(prefab);
-
-            LocalTransform transformValue = SystemAPI.GetComponent<LocalTransform>(prefab);
+            LocalTransform baseTransform = SystemAPI.GetComponent<LocalTransform>(prefab);
             float3 spawnPos = playerPos;
             spawnPos.y += weapon.MuzzleHeight;
-            transformValue.Position = spawnPos;
 
-            // Aim the projectile's +Z axis along the flight direction so
-            // arrow-style visuals fly nose-first. Spherical bullets don't
-            // care about rotation, so this is harmless for the old prefab.
-            transformValue.Rotation = quaternion.LookRotationSafe(direction, math.up());
+            int shotCount = math.max(1, weapon.ProjectileCount);
+            // Total fan angle растёт от 0 (один снаряд) до SpreadAngle*(N-1).
+            // Снаряды распределяются симметрично вокруг направления на цель.
+            float totalSpreadRad = math.radians(weapon.SpreadAngle) * (shotCount - 1);
 
-            ecb.SetComponent(projectile, transformValue);
-            ecb.SetComponent(projectile, new MoveDirection { Value = direction });
-            ecb.SetComponent(projectile, new MoveSpeed { Value = weapon.ProjectileSpeed });
-            ecb.SetComponent(projectile, new Damage { Value = weapon.ProjectileDamage });
-            ecb.SetComponent(projectile, new Lifetime { Value = weapon.ProjectileLifetime });
+            for (int i = 0; i < shotCount; i++)
+            {
+                float t = shotCount > 1
+                    ? (i / (float)(shotCount - 1)) - 0.5f
+                    : 0f;
+                float angle = t * totalSpreadRad;
+                quaternion yawOffset = quaternion.RotateY(angle);
+                float3 shotDir = math.mul(yawOffset, direction);
 
-            // Emit a one-shot event so the visual companion (PlayerVisualSync)
-            // can fire the bow Shoot animation in lockstep with the projectile.
+                LocalTransform transformValue = baseTransform;
+                transformValue.Position = spawnPos;
+                // Aim the projectile's +Z axis along its own flight direction so
+                // arrow-style visuals fly nose-first.
+                transformValue.Rotation = quaternion.LookRotationSafe(shotDir, math.up());
+
+                Entity projectile = ecb.Instantiate(prefab);
+                ecb.SetComponent(projectile, transformValue);
+                ecb.SetComponent(projectile, new MoveDirection { Value = shotDir });
+                ecb.SetComponent(projectile, new MoveSpeed { Value = weapon.ProjectileSpeed });
+                ecb.SetComponent(projectile, new Damage { Value = weapon.ProjectileDamage });
+                ecb.SetComponent(projectile, new Lifetime { Value = weapon.ProjectileLifetime });
+            }
+
+            // Emit ONE PlayerShotEvent per volley (not per projectile) so the
+            // bow Shoot animation triggers once. N events would restart the
+            // anim N frames in a row.
             Entity shotEvent = ecb.CreateEntity();
             ecb.AddComponent<PlayerShotEvent>(shotEvent);
         }

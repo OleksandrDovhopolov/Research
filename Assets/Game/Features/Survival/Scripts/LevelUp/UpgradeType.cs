@@ -7,5 +7,6 @@ namespace Survival
         FireRate = 0,
         Damage = 1,
         MaxHealth = 2,
+        MultiShot = 3,
     }
 }

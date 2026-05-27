@@ -122,6 +122,91 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &723820736
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 723820738}
+  - component: {fileID: 723820737}
+  m_Layer: 0
+  m_Name: 'Difficulty '
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &723820737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 723820736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bcce6f84542f55545b886fdddf5f45ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stages:
+  - timeThreshold: 0
+    hpMultiplier: 1
+    damageMultiplier: 1
+    spawnIntervalMultiplier: 1
+    countPerWaveAddend: 0
+  - timeThreshold: 30
+    hpMultiplier: 1
+    damageMultiplier: 1
+    spawnIntervalMultiplier: 0.9
+    countPerWaveAddend: 2
+  - timeThreshold: 60
+    hpMultiplier: 1.3
+    damageMultiplier: 1.1
+    spawnIntervalMultiplier: 0.8
+    countPerWaveAddend: 4
+  - timeThreshold: 120
+    hpMultiplier: 1.6
+    damageMultiplier: 1.2
+    spawnIntervalMultiplier: 0.7
+    countPerWaveAddend: 6
+  - timeThreshold: 180
+    hpMultiplier: 2
+    damageMultiplier: 1.3
+    spawnIntervalMultiplier: 0.6
+    countPerWaveAddend: 8
+  - timeThreshold: 300
+    hpMultiplier: 3
+    damageMultiplier: 1.5
+    spawnIntervalMultiplier: 0.5
+    countPerWaveAddend: 12
+  - timeThreshold: 480
+    hpMultiplier: 5
+    damageMultiplier: 1.8
+    spawnIntervalMultiplier: 0.4
+    countPerWaveAddend: 18
+  - timeThreshold: 600
+    hpMultiplier: 8
+    damageMultiplier: 2
+    spawnIntervalMultiplier: 0.3
+    countPerWaveAddend: 25
+--- !u!4 &723820738
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 723820736}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &775272142
 GameObject:
   m_ObjectHideFlags: 0
@@ -397,6 +482,8 @@ MonoBehaviour:
   projectileDamage: 5
   projectileLifetime: 3
   muzzleHeight: 5
+  projectileCount: 1
+  spreadAngle: 12
 --- !u!4 &2003111161
 Transform:
   m_ObjectHideFlags: 0
@@ -421,3 +508,4 @@ SceneRoots:
   - {fileID: 1554981347}
   - {fileID: 2003111161}
   - {fileID: 907774402}
+  - {fileID: 723820738}

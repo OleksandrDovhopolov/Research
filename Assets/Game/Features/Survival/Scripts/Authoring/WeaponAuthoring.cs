@@ -11,6 +11,8 @@ namespace Survival
         public float projectileDamage = 10f;
         public float projectileLifetime = 3f;
         public float muzzleHeight = 10f;
+        public int projectileCount = 1;
+        public float spreadAngle = 12f;
 
         public class Baker : Baker<WeaponAuthoring>
         {
@@ -26,6 +28,8 @@ namespace Survival
                     ProjectileDamage = authoring.projectileDamage,
                     ProjectileLifetime = authoring.projectileLifetime,
                     MuzzleHeight = authoring.muzzleHeight,
+                    ProjectileCount = authoring.projectileCount,
+                    SpreadAngle = authoring.spreadAngle,
                     ProjectilePrefab = authoring.projectilePrefab != null
                         ? GetEntity(authoring.projectilePrefab, TransformUsageFlags.Dynamic)
                         : Entity.Null

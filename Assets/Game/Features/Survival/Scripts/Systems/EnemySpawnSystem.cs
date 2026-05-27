@@ -15,6 +15,7 @@ namespace Survival
             state.RequireForUpdate<SpawnState>();
             state.RequireForUpdate<PlayerPosition>();
             state.RequireForUpdate<ArenaBounds>();
+            state.RequireForUpdate<DifficultyState>();
         }
 
         [BurstCompile]
@@ -22,12 +23,14 @@ namespace Survival
         {
             var config = SystemAPI.GetSingleton<SpawnConfig>();
             var spawn = SystemAPI.GetSingletonRW<SpawnState>();
+            DifficultyState diff = SystemAPI.GetSingleton<DifficultyState>();
 
             spawn.ValueRW.Timer -= SystemAPI.Time.DeltaTime;
             if (spawn.ValueRW.Timer > 0f)
                 return;
 
-            spawn.ValueRW.Timer += config.Interval;
+            // SpawnIntervalMultiplier < 1 → волны идут чаще на поздних стадиях.
+            spawn.ValueRW.Timer += config.Interval * diff.SpawnIntervalMultiplier;
 
             var prefabs = SystemAPI.GetSingletonBuffer<EnemyPrefab>();
             if (prefabs.Length == 0)
@@ -40,7 +43,8 @@ namespace Survival
                 .CreateCommandBuffer(state.WorldUnmanaged);
 
             ref var rng = ref spawn.ValueRW.Random;
-            for (int i = 0; i < config.CountPerWave; i++)
+            int count = config.CountPerWave + diff.CountPerWaveAddend;
+            for (int i = 0; i < count; i++)
             {
                 Entity prefab = prefabs[rng.NextInt(prefabs.Length)].Value;
 
@@ -62,8 +66,24 @@ namespace Survival
                 LocalTransform transform = SystemAPI.GetComponent<LocalTransform>(prefab);
                 transform.Position = new float3(p.x, 0f, p.y);
 
+                // Read the prefab's baked stats — these are the "base" values
+                // we scale by the current difficulty multipliers.
+                Health baseHp = SystemAPI.GetComponent<Health>(prefab);
+                ContactDamage baseCd = SystemAPI.GetComponent<ContactDamage>(prefab);
+
                 Entity enemy = ecb.Instantiate(prefab);
                 ecb.SetComponent(enemy, transform);
+                ecb.SetComponent(enemy, new Health
+                {
+                    Value = baseHp.Value * diff.HpMultiplier
+                });
+                ecb.SetComponent(enemy, new ContactDamage
+                {
+                    DamagePerHit = baseCd.DamagePerHit * diff.DamageMultiplier,
+                    Interval = baseCd.Interval,
+                    Timer = 0f,
+                    Radius = baseCd.Radius
+                });
             }
         }
     }

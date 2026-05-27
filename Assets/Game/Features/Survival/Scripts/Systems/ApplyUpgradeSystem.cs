@@ -48,6 +48,12 @@ namespace Survival
                         health.ValueRW.Value += u.Value;
                         break;
                     }
+                    case UpgradeType.MultiShot:
+                    {
+                        var weapon = SystemAPI.GetSingletonRW<Weapon>();
+                        weapon.ValueRW.ProjectileCount += (int)u.Value;
+                        break;
+                    }
                 }
 
                 ecb.RemoveComponent<PendingUpgrade>(entity);
