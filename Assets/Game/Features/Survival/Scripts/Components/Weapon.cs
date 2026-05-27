@@ -16,6 +16,11 @@ namespace Survival
         // AutoShootSystem распределяет снаряды веером с углом SpreadAngle.
         public int ProjectileCount;
         public float SpreadAngle;     // полный угол веера в градусах, когда Count > 1
+        // 1 = одиночный залп. BurstShot-апгрейд инкрементит. Каждый залп —
+        // полноценный MultiShot fan; залпы идут последовательно с задержкой
+        // BurstDelay (секунд).
+        public int BurstCount;
+        public float BurstDelay;
         public Entity ProjectilePrefab;
     }
 }

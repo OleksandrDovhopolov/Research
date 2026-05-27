@@ -67,9 +67,15 @@ namespace Survival
                 transform.Position = new float3(p.x, 0f, p.y);
 
                 // Read the prefab's baked stats — these are the "base" values
-                // we scale by the current difficulty multipliers.
+                // we scale by the current difficulty multipliers + the spawner's
+                // per-enemy speed variance roll.
                 Health baseHp = SystemAPI.GetComponent<Health>(prefab);
                 ContactDamage baseCd = SystemAPI.GetComponent<ContactDamage>(prefab);
+                MoveSpeed baseMove = SystemAPI.GetComponent<MoveSpeed>(prefab);
+
+                // Each enemy rolls its own speed multiplier — stack "расслаивается"
+                // visually: часть рвётся вперёд, часть отстаёт.
+                float speedMult = rng.NextFloat(config.MoveSpeedMin, config.MoveSpeedMax);
 
                 Entity enemy = ecb.Instantiate(prefab);
                 ecb.SetComponent(enemy, transform);
@@ -83,6 +89,10 @@ namespace Survival
                     Interval = baseCd.Interval,
                     Timer = 0f,
                     Radius = baseCd.Radius
+                });
+                ecb.SetComponent(enemy, new MoveSpeed
+                {
+                    Value = baseMove.Value * speedMult
                 });
             }
         }

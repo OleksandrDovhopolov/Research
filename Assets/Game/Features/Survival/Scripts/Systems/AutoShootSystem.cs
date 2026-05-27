@@ -13,6 +13,7 @@ namespace Survival
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<Weapon>();
+            state.RequireForUpdate<WeaponBurstState>();
             state.RequireForUpdate<PlayerPosition>();
             state.RequireForUpdate<PlayerTag>();
         }
@@ -21,7 +22,11 @@ namespace Survival
         public void OnUpdate(ref SystemState state)
         {
             ref var weapon = ref SystemAPI.GetSingletonRW<Weapon>().ValueRW;
-            weapon.FireTimer -= SystemAPI.Time.DeltaTime;
+            ref var burst = ref SystemAPI.GetSingletonRW<WeaponBurstState>().ValueRW;
+
+            float dt = SystemAPI.Time.DeltaTime;
+            weapon.FireTimer -= dt;
+            burst.NextShotTimer -= dt;
 
             float3 playerPos = SystemAPI.GetSingleton<PlayerPosition>().Value;
             Entity playerEntity = SystemAPI.GetSingletonEntity<PlayerTag>();
@@ -56,24 +61,47 @@ namespace Survival
             }
             SystemAPI.SetComponent(playerEntity, new AimDirection { Value = direction });
 
-            if (weapon.FireTimer > 0f)
-                return;
-
-            if (!found || math.lengthsq(direction) <= 1e-6f)
+            if (math.lengthsq(direction) <= 1e-6f)
             {
-                // Hold at "ready" — without this the timer keeps going negative
-                // while idle and the first enemy triggers a burst to catch up.
-                weapon.FireTimer = 0f;
+                // Нет цели — холдим оба таймера на нуле чтобы не накапливалось
+                // негативное значение и не выстреливал залпом сразу при появлении.
+                weapon.FireTimer = math.max(0f, weapon.FireTimer);
+                burst.NextShotTimer = math.max(0f, burst.NextShotTimer);
                 return;
             }
-
-            weapon.FireTimer += weapon.FireInterval;
 
             var ecb = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
                 .CreateCommandBuffer(state.WorldUnmanaged);
 
             Entity prefab = weapon.ProjectilePrefab;
             LocalTransform baseTransform = SystemAPI.GetComponent<LocalTransform>(prefab);
+
+            // 1) Burst follow-up shot — приоритет выше чем main, потому что
+            //    он уже "оплачен" предыдущим FireTimer'ом.
+            if (burst.RemainingShots > 0 && burst.NextShotTimer <= 0f)
+            {
+                FireVolley(ecb, in weapon, prefab, baseTransform, playerPos, direction);
+                burst.RemainingShots--;
+                burst.NextShotTimer = weapon.BurstDelay;
+            }
+
+            // 2) Main shot — стартует следующий burst chain.
+            if (weapon.FireTimer <= 0f)
+            {
+                FireVolley(ecb, in weapon, prefab, baseTransform, playerPos, direction);
+                weapon.FireTimer += weapon.FireInterval;
+                burst.RemainingShots = math.max(0, weapon.BurstCount - 1);
+                burst.NextShotTimer = weapon.BurstDelay;
+            }
+        }
+
+        // Spawns one volley (MultiShot fan) + emits a single PlayerShotEvent.
+        // Pure static helper so it stays Burst-compatible — all dependencies
+        // passed as parameters; no SystemAPI lookups inside.
+        private static void FireVolley(EntityCommandBuffer ecb, in Weapon weapon,
+            Entity prefab, in LocalTransform baseTransform,
+            float3 playerPos, float3 direction)
+        {
             float3 spawnPos = playerPos;
             spawnPos.y += weapon.MuzzleHeight;
 
@@ -105,9 +133,8 @@ namespace Survival
                 ecb.SetComponent(projectile, new Lifetime { Value = weapon.ProjectileLifetime });
             }
 
-            // Emit ONE PlayerShotEvent per volley (not per projectile) so the
-            // bow Shoot animation triggers once. N events would restart the
-            // anim N frames in a row.
+            // ONE PlayerShotEvent per volley — анимация натяжения лука должна
+            // сработать на каждой стреле залпа (и для burst follow-up тоже).
             Entity shotEvent = ecb.CreateEntity();
             ecb.AddComponent<PlayerShotEvent>(shotEvent);
         }

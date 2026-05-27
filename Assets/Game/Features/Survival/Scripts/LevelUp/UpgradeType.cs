@@ -8,5 +8,6 @@ namespace Survival
         Damage = 1,
         MaxHealth = 2,
         MultiShot = 3,
+        BurstShot = 4,
     }
 }

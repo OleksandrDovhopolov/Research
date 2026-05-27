@@ -12,6 +12,8 @@ namespace Survival
         public float spawnInterval = 2f;
         public int countPerWave = 5;
         public float spawnRadius = 25f;
+        public float moveSpeedMin = 0.7f;
+        public float moveSpeedMax = 1.3f;
         public uint seed = 1234;
 
         public class Baker : Baker<SpawnerAuthoring>
@@ -25,7 +27,9 @@ namespace Survival
                     InitialDelay = authoring.initialDelay,
                     Interval = authoring.spawnInterval,
                     CountPerWave = authoring.countPerWave,
-                    SpawnRadius = authoring.spawnRadius
+                    SpawnRadius = authoring.spawnRadius,
+                    MoveSpeedMin = authoring.moveSpeedMin,
+                    MoveSpeedMax = authoring.moveSpeedMax
                 });
 
                 AddComponent(entity, new SpawnState

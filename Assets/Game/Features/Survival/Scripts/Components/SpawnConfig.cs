@@ -10,5 +10,9 @@ namespace Survival
         public float Interval;
         public int CountPerWave;
         public float SpawnRadius;
+        // Per-spawn random multiplier applied to each enemy's baked MoveSpeed.
+        // Typical: Min=0.7, Max=1.3 → толпа «расслаивается» по скорости.
+        public float MoveSpeedMin;
+        public float MoveSpeedMax;
     }
 }

@@ -431,6 +431,8 @@ MonoBehaviour:
   spawnInterval: 10
   countPerWave: 2
   spawnRadius: 220
+  moveSpeedMin: 0.7
+  moveSpeedMax: 1.3
   seed: 1234
 --- !u!4 &1554981347
 Transform:
@@ -478,12 +480,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   projectilePrefab: {fileID: 6537243373930553312, guid: 5dd2bccb6c2e47b469d7cbf4e8cd395c, type: 3}
   fireInterval: 1
-  projectileSpeed: 40
+  projectileSpeed: 60
   projectileDamage: 5
   projectileLifetime: 3
   muzzleHeight: 5
   projectileCount: 1
   spreadAngle: 12
+  burstCount: 1
+  burstDelay: 0.15
 --- !u!4 &2003111161
 Transform:
   m_ObjectHideFlags: 0

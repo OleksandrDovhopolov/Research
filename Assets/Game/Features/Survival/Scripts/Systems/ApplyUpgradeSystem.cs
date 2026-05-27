@@ -54,6 +54,12 @@ namespace Survival
                         weapon.ValueRW.ProjectileCount += (int)u.Value;
                         break;
                     }
+                    case UpgradeType.BurstShot:
+                    {
+                        var weapon = SystemAPI.GetSingletonRW<Weapon>();
+                        weapon.ValueRW.BurstCount += (int)u.Value;
+                        break;
+                    }
                 }
 
                 ecb.RemoveComponent<PendingUpgrade>(entity);
