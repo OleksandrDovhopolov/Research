@@ -38,10 +38,12 @@ namespace Survival
             }
         }
 
-        // Curve: 10, 15, 23, 34, 51, … (each level needs ~1.5× the previous).
+        // Curve: 8, 10, 14, 18, 23, 30, 39, 51, 66, 86, … (each level needs
+        // ~1.3× the previous). Slower growth than before so the player sees
+        // more of the 7-upgrade pool during a typical 5-min run.
         private static int NextThreshold(int level)
         {
-            return (int)math.round(10f * math.pow(1.5f, level - 1));
+            return (int)math.round(8f * math.pow(1.3f, level - 1));
         }
     }
 }

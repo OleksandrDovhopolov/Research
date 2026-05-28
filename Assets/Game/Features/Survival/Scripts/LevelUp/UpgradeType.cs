@@ -9,5 +9,7 @@ namespace Survival
         MaxHealth = 2,
         MultiShot = 3,
         BurstShot = 4,
+        MoveSpeed = 5,
+        MagnetRadius = 6,
     }
 }

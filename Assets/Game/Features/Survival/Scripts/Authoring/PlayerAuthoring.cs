@@ -12,7 +12,7 @@ namespace Survival
         public float pickupRadius = 2f;
         public float xpMagnetRadius = 8f;
         public float xpMagnetSpeed = 25f;
-        public int firstLevelUpXp = 10;
+        public int firstLevelUpXp = 8;
 
         public class Baker : Baker<PlayerAuthoring>
         {
@@ -28,6 +28,11 @@ namespace Survival
                 });
 
                 AddComponent(entity, new Health
+                {
+                    Value = authoring.health
+                });
+
+                AddComponent(entity, new MaxHealth
                 {
                     Value = authoring.health
                 });
