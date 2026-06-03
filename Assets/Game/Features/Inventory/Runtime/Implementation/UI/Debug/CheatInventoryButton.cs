@@ -24,16 +24,18 @@ namespace Inventory.Implementation
         private IItemCategoryRegistry _itemCategoryRegistry;
         private IPlayerIdentityProvider _playerIdentityProvider;
         private IRewardPlayerStateRefreshCoordinator _rewardPlayerStateRefreshCoordinator;
-        
+        private IRewardSpecProvider _rewardSpecProvider;
+
         [Inject]
         public void Install(
             UIManager uiManager,
             IInventoryService inventoryService,
-            IInventoryReadService  inventoryReadService, 
+            IInventoryReadService  inventoryReadService,
             IInventoryItemUseService inventoryItemUseService,
             IItemCategoryRegistry  itemCategoryRegistry,
             IPlayerIdentityProvider playerIdentityProvider,
-            IRewardPlayerStateRefreshCoordinator rewardPlayerStateRefreshCoordinator)
+            IRewardPlayerStateRefreshCoordinator rewardPlayerStateRefreshCoordinator,
+            IRewardSpecProvider rewardSpecProvider)
         {
             _uiManager = uiManager;
             _inventoryService = inventoryService;
@@ -42,6 +44,7 @@ namespace Inventory.Implementation
             _itemCategoryRegistry = itemCategoryRegistry;
             _playerIdentityProvider = playerIdentityProvider;
             _rewardPlayerStateRefreshCoordinator = rewardPlayerStateRefreshCoordinator;
+            _rewardSpecProvider = rewardSpecProvider;
         }
         
         private void Awake()
@@ -81,7 +84,8 @@ namespace Inventory.Implementation
                 _inventoryService,
                 _inventoryReadService,
                 _itemCategoryRegistry,
-                _rewardPlayerStateRefreshCoordinator);
+                _rewardPlayerStateRefreshCoordinator,
+                _rewardSpecProvider);
             await tabsPresenter.InitializeAsync(ct);
 
             var args = new InventoryArgs(_uiManager, _inventoryItemUseService, tabsPresenter, _itemCategoryRegistry.GetAllCategories());

@@ -1,4 +1,5 @@
 using Inventory.API;
+using UnityEngine;
 
 namespace Inventory.Implementation.UI
 {
@@ -9,13 +10,15 @@ namespace Inventory.Implementation.UI
             string title,
             int stackCount,
             ItemCategory category,
-            string subtitle = "")
+            string subtitle = "",
+            Sprite icon = null)
         {
             ItemId = itemId;
             Title = title;
             StackCount = stackCount;
             Category = category;
             Subtitle = subtitle;
+            Icon = icon;
         }
 
         public string ItemId { get; }
@@ -23,5 +26,11 @@ namespace Inventory.Implementation.UI
         public int StackCount { get; }
         public ItemCategory Category { get; }
         public string Subtitle { get; }
+
+        /// <summary>
+        /// Pre-resolved icon (e.g. from RewardSpec). When null, the view falls back
+        /// to its own Addressables-based loader.
+        /// </summary>
+        public Sprite Icon { get; }
     }
 }

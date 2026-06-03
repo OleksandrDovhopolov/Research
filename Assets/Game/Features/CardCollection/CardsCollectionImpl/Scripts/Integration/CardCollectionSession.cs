@@ -159,10 +159,12 @@ namespace CardCollectionImpl
             if (scheduleItem == null || string.IsNullOrWhiteSpace(scheduleItem.Id))
                 throw new ArgumentException("Schedule item is null or invalid.", nameof(scheduleItem));
 
-            await ProdAddressablesWrapper.DownloadDependenciesByLabelAsync(scheduleItem.Id, ct);
+            // DEBUG: force Spring_Collection label until other collection bundles ship
+            const string debugLabel = "Spring_Collection";
+            await ProdAddressablesWrapper.DownloadDependenciesByLabelAsync(debugLabel, ct);
             ct.ThrowIfCancellationRequested();
 
-            _sessionWarmedAddresses = await ProdAddressablesWrapper.WarmupGroupByLabelAsync<Sprite>(scheduleItem.Id, ct, SessionWarmupSpritesCount) ?? Array.Empty<string>();
+            _sessionWarmedAddresses = await ProdAddressablesWrapper.WarmupGroupByLabelAsync<Sprite>(debugLabel, ct, SessionWarmupSpritesCount) ?? Array.Empty<string>();
         }
         
         public UniTask UpdateAsync(CancellationToken ct)

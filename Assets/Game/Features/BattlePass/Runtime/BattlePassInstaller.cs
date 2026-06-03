@@ -26,14 +26,16 @@ namespace BattlePass
             builder.Register<IBattlePassResourceDeltaApplier, ResourceManagerOptimisticResourceApplyService>(Lifetime.Singleton);
             builder.Register<IBattlePassOptimisticRewardApplier, BattlePassOptimisticRewardApplier>(Lifetime.Singleton);
             builder.Register<IBattlePassServerService, BattlePassServerService>(Lifetime.Singleton);
-#if DEV_BUILD
+            // Мок IAP/Verify теперь включается отдельным дефайном MOCK_BATTLEPASS_IAP,
+            // чтобы боевой Unity IAP можно было гонять на тест-устройстве, не снимая DEV_BUILD.
+#if MOCK_BATTLEPASS_IAP
             builder.Register<IBattlePassPurchaseVerify, StubBattlePassPurchaseVerify>(Lifetime.Singleton);
 #else
             builder.Register<IBattlePassPurchaseVerify, BattlePassPurchaseVerify>(Lifetime.Singleton);
 #endif
             builder.Register<IBattlePassPurchaseService>(_ =>
             {
-#if DEV_BUILD
+#if MOCK_BATTLEPASS_IAP
                 return new MockBattlePassPurchaseService();
 #else
                 return new UnityIapBattlePassPurchaseService();

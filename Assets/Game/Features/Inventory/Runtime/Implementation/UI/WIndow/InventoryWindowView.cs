@@ -87,9 +87,19 @@ namespace Inventory.Implementation
                 {
                     inventoryView.gameObject.SetActive(true);
                 }
-                
+
                 _visibleItemIds.Add(item.ItemId);
-                LoadSprite(inventoryView, item.ItemId, token).Forget();
+
+                // Если presenter уже зарезолвил иконку из RewardSpec — используем её
+                // (это единый источник иконок с FortuneWheel). Иначе грузим через Addressables.
+                if (item.Icon != null)
+                {
+                    inventoryView.SetSprite(item.Icon);
+                }
+                else
+                {
+                    LoadSprite(inventoryView, item.ItemId, token).Forget();
+                }
             }
 
             foreach (var viewPair in _viewsByItemId.Where(viewPair => !_visibleItemIds.Contains(viewPair.Key)))

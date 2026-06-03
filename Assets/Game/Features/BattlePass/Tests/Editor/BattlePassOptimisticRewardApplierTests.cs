@@ -109,6 +109,12 @@ namespace BattlePass.Tests.Editor
                 return _rewardSpecs.TryGetValue(rewardId, out spec);
             }
 
+            public bool TryGetResourceIcon(string resourceId, out UnityEngine.Sprite icon)
+            {
+                icon = null;
+                return false;
+            }
+
             public bool TryGet(string rewardId, out BattlePassRewardDefinition rewardDefinition)
             {
                 rewardDefinition = null;

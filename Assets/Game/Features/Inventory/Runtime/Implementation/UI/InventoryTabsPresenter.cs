@@ -15,24 +15,27 @@ namespace Inventory.Implementation.UI
         private readonly IInventoryReadService _inventoryReadService;
         private readonly IItemCategoryRegistry _itemCategoryRegistry;
         private readonly IRewardPlayerStateRefreshCoordinator _rewardPlayerStateRefreshCoordinator;
+        private readonly IRewardSpecProvider _rewardSpecProvider;
         private IDisposable _inventoryChangedSubscription;
         private readonly List<InventoryCategoryTabViewModel> _tabs = new();
-        
+
         public IReadOnlyList<InventoryCategoryTabViewModel> Tabs => _tabs;
         public string OwnerId => _ownerId;
-        
+
         public InventoryTabsPresenter(
             string ownerId,
             IInventoryService inventoryService,
             IInventoryReadService inventoryReadService,
             IItemCategoryRegistry itemCategoryRegistry,
-            IRewardPlayerStateRefreshCoordinator rewardPlayerStateRefreshCoordinator)
+            IRewardPlayerStateRefreshCoordinator rewardPlayerStateRefreshCoordinator,
+            IRewardSpecProvider rewardSpecProvider = null)
         {
             _ownerId = ownerId;
             _inventoryService = inventoryService;
             _inventoryReadService = inventoryReadService;
             _itemCategoryRegistry = itemCategoryRegistry;
             _rewardPlayerStateRefreshCoordinator = rewardPlayerStateRefreshCoordinator;
+            _rewardSpecProvider = rewardSpecProvider;
 
             foreach (var category in _itemCategoryRegistry.GetAllCategories())
             {
@@ -84,11 +87,17 @@ namespace Inventory.Implementation.UI
             ItemCategory fallbackCategory)
         {
             var mapped = new List<InventoryItemUiModel>(source.Count);
-            
+
             foreach (var item in source)
             {
                 var category = _itemCategoryRegistry?.GetById(item.CategoryId) ?? fallbackCategory;
-                var itemUIModel = new InventoryItemUiModel(item.ItemId, "Empty", item.StackCount, category);
+
+                // Единый источник иконок: тот же RewardSpec, что использует FortuneWheel.
+                // Если spec не найден — оставляем null, и view сам подгрузит спрайт по Addressables.
+                UnityEngine.Sprite icon = null;
+                _rewardSpecProvider?.TryGetResourceIcon(item.ItemId, out icon);
+
+                var itemUIModel = new InventoryItemUiModel(item.ItemId, "Empty", item.StackCount, category, icon: icon);
                 mapped.Add(itemUIModel);
             }
 
