@@ -245,6 +245,12 @@ namespace CardCollectionImpl
                 TryGetCallsCount++;
                 return _specsByRewardId.TryGetValue(rewardId, out spec);
             }
+
+            public bool TryGetResourceIcon(string resourceId, out UnityEngine.Sprite icon)
+            {
+                icon = null;
+                return false;
+            }
         }
     }
 }

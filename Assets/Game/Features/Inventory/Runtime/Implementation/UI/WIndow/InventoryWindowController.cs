@@ -50,8 +50,9 @@ namespace Inventory.Implementation
                 .CombineLatest(SelectedCategoryId, RawItems, FilterItemsByCategory)
                 .Subscribe(items => View.Render(items));
             _subscriptions.Add(filteredItemsSubscription);
-            
+
             RawItems.Value = BuildCategorizedItemsFromPresenter();
+            LogInventoryContents(RawItems.Value);
 
             foreach (var tab in Args.TabsPresenter.Tabs)
             {
@@ -60,6 +61,54 @@ namespace Inventory.Implementation
                     .Subscribe(_ => RefreshFromPresenter());
                 _subscriptions.Add(subscription);
             }
+        }
+
+        private void LogInventoryContents(IReadOnlyList<InventoryCategorizedItemUiModel> items)
+        {
+            var ownerId = Args?.TabsPresenter?.OwnerId ?? "<unknown>";
+            if (items == null || items.Count == 0)
+            {
+                Debug.Log($"[InventoryWindow] Opened. OwnerId='{ownerId}'. Inventory is empty.");
+                return;
+            }
+
+            var totalStacks = items.Count;
+            var totalUnits = 0;
+            var withIcon = 0;
+            var withoutIcon = 0;
+            var perCategory = new Dictionary<string, int>(StringComparer.Ordinal);
+
+            var ids = new System.Text.StringBuilder();
+            for (var i = 0; i < items.Count; i++)
+            {
+                var entry = items[i];
+                var stackCount = entry.Item.StackCount;
+                totalUnits += stackCount;
+
+                if (entry.Item.Icon != null) withIcon++;
+                else withoutIcon++;
+
+                if (!perCategory.TryAdd(entry.CategoryId, 1))
+                {
+                    perCategory[entry.CategoryId]++;
+                }
+
+                if (ids.Length > 0) ids.Append(", ");
+                var iconMark = entry.Item.Icon != null ? "spec" : "addr";
+                ids.Append($"{entry.Item.ItemId}(x{stackCount}, cat={entry.CategoryId}, icon={iconMark})");
+            }
+
+            var categoriesBreakdown = string.Join(
+                ", ",
+                perCategory.OrderBy(p => p.Key, StringComparer.Ordinal)
+                           .Select(p => $"{p.Key}={p.Value}"));
+
+            Debug.Log(
+                $"[InventoryWindow] Opened. OwnerId='{ownerId}'. " +
+                $"Stacks={totalStacks}, Units={totalUnits}, " +
+                $"IconsFromRewardSpec={withIcon}, IconsFromAddressables={withoutIcon}. " +
+                $"Categories: {categoriesBreakdown}. " +
+                $"Items: [{ids}]");
         }
 
         protected override void OnShowComplete()

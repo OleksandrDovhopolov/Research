@@ -128,7 +128,8 @@ namespace Infrastructure
                 _data.Meta.Revision = Math.Max(0, _data.Meta.Revision) + 1;
                 _data.Meta.Hash = string.Empty;
                 _data.Meta.Hash = ComputeHash(_data);
-                jsonToSave = JsonConvert.SerializeObject(_data, Formatting.Indented);
+                jsonToSave = JsonConvert.SerializeObject(_data, Formatting.None);
+                LogSaveBreakdown(_data, jsonToSave);
             }
             finally
             {
@@ -457,6 +458,92 @@ namespace Infrastructure
             }
 
             return false;
+        }
+
+        private static void LogSaveBreakdown(GameSaveData data, string fullJson)
+        {
+            const int payloadLimitBytes = 30720;
+
+            int Bytes(object obj)
+            {
+                if (obj == null) return 0;
+                var json = JsonConvert.SerializeObject(obj, Formatting.None);
+                return Encoding.UTF8.GetByteCount(json);
+            }
+
+            var totalBytes = Encoding.UTF8.GetByteCount(fullJson ?? string.Empty);
+            var metaBytes = Bytes(data.Meta);
+            var resourcesBytes = Bytes(data.Resources);
+            var inventoryBytes = Bytes(data.Inventory);
+            var inventoryOwnersBytes = Bytes(data.Inventory?.Owners);
+            var inventoryItemsBytes = Bytes(data.Inventory?.InventoryItems);
+            var cardCollectionsBytes = Bytes(data.CardCollections);
+            var eventStatesBytes = Bytes(data.EventStates);
+            var fortuneWheelBytes = Bytes(data.FortuneWheel);
+            var craftingBytes = Bytes(data.Crafting);
+            var fishingBytes = Bytes(data.Fishing);
+            var customModulesBytes = Bytes(data.CustomModulesJson);
+
+            var overLimit = totalBytes > payloadLimitBytes;
+            var header =
+                $"[SaveService] Save payload breakdown (UTF-8 bytes). " +
+                $"Total={totalBytes} (limit={payloadLimitBytes}, {(overLimit ? "OVER" : "ok")})";
+
+            var body =
+                $" | Meta={metaBytes}" +
+                $", Resources={resourcesBytes}" +
+                $", Inventory={inventoryBytes} (Owners={inventoryOwnersBytes} count={data.Inventory?.Owners?.Count ?? 0}, " +
+                    $"InventoryItems={inventoryItemsBytes})" +
+                $", CardCollections={cardCollectionsBytes} (count={data.CardCollections?.Count ?? 0})" +
+                $", EventStates={eventStatesBytes} (count={data.EventStates?.Count ?? 0})" +
+                $", FortuneWheel={fortuneWheelBytes}" +
+                $", Crafting={craftingBytes} (tasks={data.Crafting?.Tasks?.Count ?? 0})" +
+                $", Fishing={fishingBytes} (caught={data.Fishing?.CaughtFish?.Count ?? 0})" +
+                $", CustomModulesJson={customModulesBytes} (keys={data.CustomModulesJson?.Count ?? 0})";
+
+            if (overLimit)
+            {
+                Debug.LogWarning(header + body);
+            }
+            else
+            {
+                Debug.Log(header + body);
+            }
+
+            // Per-key dump for CustomModulesJson (частый источник раздутого сейва).
+            if (data.CustomModulesJson != null && data.CustomModulesJson.Count > 0)
+            {
+                foreach (var kvp in data.CustomModulesJson
+                             .OrderByDescending(p => p.Value == null ? 0 : Encoding.UTF8.GetByteCount(p.Value)))
+                {
+                    var len = kvp.Value == null ? 0 : Encoding.UTF8.GetByteCount(kvp.Value);
+                    Debug.Log($"[SaveService]   CustomModule '{kvp.Key}' = {len} bytes");
+                }
+            }
+
+            // Per-collection dump для CardCollections — обычно второй главный источник.
+            if (data.CardCollections != null && data.CardCollections.Count > 0)
+            {
+                foreach (var coll in data.CardCollections
+                             .OrderByDescending(c => Bytes(c)))
+                {
+                    Debug.Log(
+                        $"[SaveService]   CardCollection eventId='{coll.EventId}' bytes={Bytes(coll)} " +
+                        $"cards={coll.Cards?.Count ?? 0} points={coll.Points}");
+                }
+            }
+
+            // Per-owner для Inventory — третий частый источник.
+            if (data.Inventory?.Owners != null && data.Inventory.Owners.Count > 0)
+            {
+                foreach (var owner in data.Inventory.Owners
+                             .OrderByDescending(o => Bytes(o)))
+                {
+                    Debug.Log(
+                        $"[SaveService]   InventoryOwner ownerId='{owner.OwnerId}' bytes={Bytes(owner)} " +
+                        $"items={owner.Items?.Count ?? 0}");
+                }
+            }
         }
 
         private static string ComputeHash(GameSaveData data)
