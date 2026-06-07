@@ -265,6 +265,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2247573112932681049, guid: b5fca0d5ef196ae4f997fa9c9be04e57, type: 3}
+      propertyPath: health
+      value: 100000
+      objectReference: {fileID: 0}
+    - target: {fileID: 2247573112932681049, guid: b5fca0d5ef196ae4f997fa9c9be04e57, type: 3}
       propertyPath: moveSpeed
       value: 30
       objectReference: {fileID: 0}
@@ -433,6 +437,7 @@ MonoBehaviour:
   spawnRadius: 220
   moveSpeedMin: 0.7
   moveSpeedMax: 1.3
+  initialBurstCount: 300
   seed: 1234
 --- !u!4 &1554981347
 Transform:

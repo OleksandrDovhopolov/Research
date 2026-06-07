@@ -8,5 +8,8 @@ namespace Survival
     {
         public float Timer;
         public Random Random;
+        // Latches true after the one-shot initial burst (if configured) has
+        // been spawned, so subsequent OnUpdate ticks skip it.
+        public bool InitialBurstDone;
     }
 }

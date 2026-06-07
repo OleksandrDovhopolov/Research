@@ -25,6 +25,24 @@ namespace Survival
             var spawn = SystemAPI.GetSingletonRW<SpawnState>();
             DifficultyState diff = SystemAPI.GetSingleton<DifficultyState>();
 
+            var prefabs = SystemAPI.GetSingletonBuffer<EnemyPrefab>();
+            if (prefabs.Length == 0)
+                return;
+
+            ArenaBounds bounds = SystemAPI.GetSingleton<ArenaBounds>();
+
+            var ecb = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
+                .CreateCommandBuffer(state.WorldUnmanaged);
+
+            // One-shot initial burst (stress-test / Burst-benchmark scenarios).
+            // Runs once on the first tick after all dependencies are baked.
+            if (!spawn.ValueRO.InitialBurstDone && config.InitialBurstCount > 0)
+            {
+                SpawnBatch(ref state, config.InitialBurstCount, ecb, prefabs, bounds,
+                    ref spawn.ValueRW.Random, config, diff);
+                spawn.ValueRW.InitialBurstDone = true;
+            }
+
             spawn.ValueRW.Timer -= SystemAPI.Time.DeltaTime;
             if (spawn.ValueRW.Timer > 0f)
                 return;
@@ -32,25 +50,26 @@ namespace Survival
             // SpawnIntervalMultiplier < 1 → волны идут чаще на поздних стадиях.
             spawn.ValueRW.Timer += config.Interval * diff.SpawnIntervalMultiplier;
 
-            var prefabs = SystemAPI.GetSingletonBuffer<EnemyPrefab>();
-            if (prefabs.Length == 0)
-                return;
+            int waveCount = config.CountPerWave + diff.CountPerWaveAddend;
+            SpawnBatch(ref state, waveCount, ecb, prefabs, bounds,
+                ref spawn.ValueRW.Random, config, diff);
+        }
 
-            ArenaBounds bounds = SystemAPI.GetSingleton<ArenaBounds>();
-            const float wallInset = 0.5f;  // не лепить ровно по стене
+        // Спавнит N врагов одним вызовом. Используется и для обычной волны,
+        // и для one-shot initial burst в начале матча.
+        [BurstCompile]
+        private void SpawnBatch(ref SystemState state, int count,
+            EntityCommandBuffer ecb, DynamicBuffer<EnemyPrefab> prefabs,
+            ArenaBounds bounds, ref Random rng,
+            in SpawnConfig config, in DifficultyState diff)
+        {
+            const float wallInset = 0.5f;
 
-            var ecb = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
-                .CreateCommandBuffer(state.WorldUnmanaged);
-
-            ref var rng = ref spawn.ValueRW.Random;
-            int count = config.CountPerWave + diff.CountPerWaveAddend;
             for (int i = 0; i < count; i++)
             {
                 Entity prefab = prefabs[rng.NextInt(prefabs.Length)].Value;
 
-                // Случайная точка на rect-периметре арены (не на кольце вокруг
-                // игрока). Сторона выбирается равновероятно, позиция вдоль
-                // стороны — равномерно.
+                // Случайная точка на rect-периметре арены.
                 int side = rng.NextInt(0, 4);
                 float t = rng.NextFloat(0f, 1f);
                 float2 p;
@@ -66,15 +85,11 @@ namespace Survival
                 LocalTransform transform = SystemAPI.GetComponent<LocalTransform>(prefab);
                 transform.Position = new float3(p.x, 0f, p.y);
 
-                // Read the prefab's baked stats — these are the "base" values
-                // we scale by the current difficulty multipliers + the spawner's
-                // per-enemy speed variance roll.
+                // Базовые статы из bake'нутого префаба × множители difficulty + speed variance.
                 Health baseHp = SystemAPI.GetComponent<Health>(prefab);
                 ContactDamage baseCd = SystemAPI.GetComponent<ContactDamage>(prefab);
                 MoveSpeed baseMove = SystemAPI.GetComponent<MoveSpeed>(prefab);
 
-                // Each enemy rolls its own speed multiplier — stack "расслаивается"
-                // visually: часть рвётся вперёд, часть отстаёт.
                 float speedMult = rng.NextFloat(config.MoveSpeedMin, config.MoveSpeedMax);
 
                 Entity enemy = ecb.Instantiate(prefab);

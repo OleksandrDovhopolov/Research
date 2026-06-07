@@ -14,6 +14,9 @@ namespace Survival
         public float spawnRadius = 25f;
         public float moveSpeedMin = 0.7f;
         public float moveSpeedMax = 1.3f;
+        [Tooltip("One-shot burst spawned at game start. 0 = disabled. " +
+                 "Set to 300-500 for Burst-benchmarking / stress-test scenarios.")]
+        public int initialBurstCount = 0;
         public uint seed = 1234;
 
         public class Baker : Baker<SpawnerAuthoring>
@@ -29,7 +32,8 @@ namespace Survival
                     CountPerWave = authoring.countPerWave,
                     SpawnRadius = authoring.spawnRadius,
                     MoveSpeedMin = authoring.moveSpeedMin,
-                    MoveSpeedMax = authoring.moveSpeedMax
+                    MoveSpeedMax = authoring.moveSpeedMax,
+                    InitialBurstCount = authoring.initialBurstCount
                 });
 
                 AddComponent(entity, new SpawnState

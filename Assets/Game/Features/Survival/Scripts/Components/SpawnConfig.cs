@@ -14,5 +14,9 @@ namespace Survival
         // Typical: Min=0.7, Max=1.3 → толпа «расслаивается» по скорости.
         public float MoveSpeedMin;
         public float MoveSpeedMax;
+        // One-shot burst spawned at game start (helpful for stress-testing /
+        // Burst-benchmarking). 0 = disabled. After spawn, SpawnState marks
+        // InitialBurstDone = true and normal waves continue as usual.
+        public int InitialBurstCount;
     }
 }
