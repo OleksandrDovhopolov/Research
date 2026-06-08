@@ -160,7 +160,7 @@ namespace CardCollectionImpl
                 throw new ArgumentException("Schedule item is null or invalid.", nameof(scheduleItem));
 
             // DEBUG: force Spring_Collection label until other collection bundles ship
-            //TODO LIVEOPS bug. if there is no group in addressables - error.
+            //TODO LIVEOPS bug. if there is no group in addressables - error. hotfix required
             const string debugLabel = "Spring_Collection";
             await ProdAddressablesWrapper.DownloadDependenciesByLabelAsync(debugLabel, ct);
             ct.ThrowIfCancellationRequested();
