@@ -17,6 +17,11 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: 93ea60d844c04b34796939054c296755
   m_SerializeEntries:
+  - m_GUID: 09027443aa5444a78c2c4cd250437538
+    m_Address: LocationZoneInfoHudWidget
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0d46c2ab7dc4589428601072bb9f6fae
     m_Address: GameplaySceneController
     m_ReadOnly: 0
@@ -24,6 +29,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0df89b3f7fa7f453f97b65522ee1a7fa
     m_Address: Assets/Game/UI/UIShared/Prefabs/Loading/Animatons/Loading_rotate_00.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1425c02c5e06432459cc53acb83ef276
+    m_Address: LevelUpWindow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -44,6 +54,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 23f481e52262190499b9ba9c4e39ee30
     m_Address: Assets/Game/UI/UIShared/Sprites/ContentWidget/u_pop_up_default_body.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3a06601b3ff8fc94d9fafabb9390bc8f
+    m_Address: GameOverWindow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -102,6 +117,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 84f0c785b59454b45bf2dd5acc3df79c
+    m_Address: DamageNumbersHudWidget
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 91d868d22903b4f3a80d0c6647c42842
     m_Address: Assets/Game/UI/UIShared/Prefabs/Loading/Animatons/Loading_rotate_06.png
     m_ReadOnly: 0
@@ -150,11 +170,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ee2d30905e5eae24b859eac69959cb5b
     m_Address: LocationZoneInfoHud
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 09027443aa5444a78c2c4cd250437538
-    m_Address: LocationZoneInfoHudWidget
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
